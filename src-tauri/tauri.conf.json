@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "noia2",
+  "version": "0.1.0",
+  "identifier": "com.noia2.noia2",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "NOIA2 | 永恒诺亚",
+        "width": 1920,
+        "height": 1080,
+        "decorations": false,
+        "center": true
+      },
+      {
+        "title": "DPS Meter",
+        "width": 500,
+        "height": 100,
+        "decorations": false,
+        "transparent": true,
+        "resizable": true,
+        "url": "/dps",
+        "label": "dps",
+        "alwaysOnTop": true,
+        "shadow": false,
+        "skipTaskbar": true
+      }
+    ],
+    "security": {
+      "csp": null,
+      "dangerousDisableAssetCspModification": false
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["bin/"]
+  }
+}
