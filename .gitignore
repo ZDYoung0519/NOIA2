@@ -16,6 +16,10 @@ dist-ssr
 src-python/build/*
 src-python/dist/*
 
+# tauri
+src-tauri/bin/*
+src-tauri/target
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
