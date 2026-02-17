@@ -13,8 +13,8 @@ dist-ssr
 *.local
 
 # python
-src-python/build/*
-src-python/dist/*
+src-python/build
+src-python/dist
 /src-python/*.spec
 src-python/**/*.spec
 
