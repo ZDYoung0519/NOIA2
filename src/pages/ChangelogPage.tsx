@@ -31,9 +31,15 @@ interface ChangelogEntry {
 
 const CHANGELOG_DATA: ChangelogEntry[] = [
   {
+<<<<<<< HEAD
     id: "v0.1.0",
     version: "v0.1.0",
     date: "2026-02-17",
+=======
+    id: "v1.0.0",
+    version: "v1.0.0",
+    date: "2025-10-01",
+>>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
     title: "永恒诺亚 NOIA2 首次发布",
     type: "major",
     summary: "发布：首个公开版本，支持DPS统计和角色评分查询。",

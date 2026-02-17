@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NOIA2 - 永恒之塔2 次世代辅助工具
 
 <p align="center">
@@ -162,3 +163,12 @@ NOIA2 采用混合架构，结合了现代前端技术与高性能后端：
   <br>
   <sub>AION is a trademark of NCSOFT Corporation. This project is not affiliated with NCSOFT.</sub>
 </p>
+=======
+# Tauri + React + Typescript
+
+This template should help get you started developing with Tauri, React and Typescript in Vite.
+
+## Recommended IDE Setup
+
+- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+>>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318

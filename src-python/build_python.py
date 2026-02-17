@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-<<<<<<< HEAD
-=======
 """
 打包脚本：将 src-python/server.py 打包为可执行文件，并复制相关资源到 Tauri 后端目录。
 用法：在项目根目录下运行 python build.py
 """
->>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
 
 import os
 import sys
