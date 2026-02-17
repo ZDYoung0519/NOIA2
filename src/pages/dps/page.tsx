@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useWebSocket, WebSocketMessage } from "./hooks/useWebSocket";
-import { usePacketServer } from "./hooks/usePacketServer";
 import { listen } from "@tauri-apps/api/event";
-
+import { invoke } from "@tauri-apps/api/core";
 import {
   X,
   Swords,
@@ -75,7 +74,6 @@ const StatusDot = ({ active }: { active: boolean }) => (
 function DPSMeterPage() {
   const { t } = useTranslation(["aion2dps"]);
 
-  const { status: serverStatus, startServer, stopServer } = usePacketServer();
   const [combatStats, setCombatStats] = useState<CombatStats | null>(null);
   const [view, setView] = useState<string>("dps");
   const [currentTarget, setCurrentTarget] = useState<number | null>(null);
@@ -151,11 +149,16 @@ function DPSMeterPage() {
   }, [send]);
 
   const handleClose = useCallback(async () => {
-    stopServer();
+    await new Promise((r) => setTimeout(r, 10));
     send({ type: "command:quit" });
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 10));
     if (windowRef.current) await windowRef.current.hide();
   }, [send]);
+
+  const handleStartClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    await invoke<string>("start_packet_server");
+  };
 
   // 设置
   const { settings, saveSettings } = useAppSettings(handleReset);
@@ -273,12 +276,9 @@ function DPSMeterPage() {
             >
               {mainPlayerName}
             </span>
-            {!(serverStatus === "running") && (
+            {!isConnected && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startServer();
-                }}
+                onClick={handleStartClick}
                 className="ml-2 flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-white/60 transition-colors"
                 style={{ WebkitAppRegion: "no-drag" } as any}
               >

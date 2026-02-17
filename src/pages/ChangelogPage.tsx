@@ -31,6 +31,16 @@ interface ChangelogEntry {
 
 const CHANGELOG_DATA: ChangelogEntry[] = [
   {
+    id: "v0.1.1",
+    version: "v0.1.1",
+    date: "2026-02-17",
+    title: "DPS统计后台服务修复",
+    type: "fix",
+    summary: "修复了DPS统计在打开时不显示“启动”按钮的问题，并增加使用说明",
+    downloads: 1200,
+    details: ["修复了DPS统计在打开时不显示“启动”按钮的问题，并增加使用说明"],
+  },
+  {
     id: "v0.1.0",
     version: "v0.1.0",
     date: "2026-02-17",

@@ -29,8 +29,9 @@ export default function DPSViewPage() {
               </p>
               <ul className="space-y-4">
                 {[
-                  "零延迟数据抓取技术",
-                  "自适应 UI 缩放 (4K/带鱼屏完美支持)",
+                  "NpCap低延迟数据抓取技术，自适应Dps、技能伤害统计",
+                  "使用方法：点击“打开DPS统计”，点击弹窗上的“启动”，等待指示灯变绿",
+                  "耐心等待后台抓包服务启动，尽量不要重复点击，退出程序前请先关闭DPS窗口",
                 ].map((item, i) => (
                   <li
                     key={i}
