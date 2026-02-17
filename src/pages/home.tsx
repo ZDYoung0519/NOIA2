@@ -149,11 +149,7 @@ export default function Home() {
         ))}
 
         {/* Grid Overlay */}
-<<<<<<< HEAD
         <div className="absolute inset-0  opacity-20" />
-=======
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
->>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -168,11 +164,7 @@ export default function Home() {
       {/* Hero Section */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-24 flex flex-col items-center text-center">
         {/* Badge */}
-<<<<<<< HEAD
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full  text-purple-300 text-xs font-medium mb-8 animate-fade-in-up">
-=======
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-medium mb-8 animate-fade-in-up">
->>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
           <Sparkles className="w-3 h-3" />
           <span>为 AION2 打造的次世代辅助工具</span>
         </div>
@@ -383,7 +375,6 @@ export default function Home() {
         </div>
       </section>
 
-<<<<<<< HEAD
       {/* Role Score Section */}
       <section className="relative z-10 py-24 bg-slate-900/30 border-y border-white/5">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-16">
@@ -498,8 +489,6 @@ export default function Home() {
         </div>
       </section>
 
-=======
->>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
       {/* Footer */}
       <footer className="relative z-10 py-12 border-t border-white/5 bg-black">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">

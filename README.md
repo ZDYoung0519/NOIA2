@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # NOIA2 - 永恒之塔2 次世代辅助工具
 
 <p align="center">
@@ -96,6 +95,14 @@ NOIA2 采用混合架构，结合了现代前端技术与高性能后端：
 
 ### 安装步骤
 
+0. **前置条件**
+
+   ```bash
+   node
+   tauri
+   python
+   ```
+
 1. **克隆仓库**
 
    ```bash
@@ -107,14 +114,14 @@ NOIA2 采用混合架构，结合了现代前端技术与高性能后端：
 
    ```bash
    npm install
-   # 或
-   yarn
+
    ```
 
-3. **安装 Python 依赖**
+3. **安装并构建Python 依赖**
 
    ```bash
-   pip install -r requirements.txt
+   pip install -r ./src-python/requirements.txt
+   python build_python.py
    ```
 
 4. **启动开发服务器（前端 + Tauri）**
@@ -161,14 +168,5 @@ NOIA2 采用混合架构，结合了现代前端技术与高性能后端：
 <p align="center">
   <sub>Made with ❤️ by NOIA2 Team</sub>
   <br>
-  <sub>AION is a trademark of NCSOFT Corporation. This project is not affiliated with NCSOFT.</sub>
+  <sub>NOIA2 is a trademark of NCSOFT Corporation. This project is not affiliated with NCSOFT.</sub>
 </p>
-=======
-# Tauri + React + Typescript
-
-This template should help get you started developing with Tauri, React and Typescript in Vite.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
->>>>>>> 3246e5074c31db9f7e78814ef8fa0df320a93318
