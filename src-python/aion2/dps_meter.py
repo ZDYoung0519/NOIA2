@@ -12,13 +12,14 @@ import time
 
 
 class DPSMeter():
-    def __init__(self, dps_callback=None, memory_callback=None):
+    def __init__(self, dps_callback=None, memory_callback=None, reset_callback=None):
         self.channel = Channel()
         self.capturer = ScapyCapture(
             self.channel
         )
 
         self.dataStorage = DataStorage()
+        self.dataStorage.reset_call_back = reset_callback
         self.dispatcher = CaptureDispatcher(
             channel=self.channel,
             data_storage = self.dataStorage
@@ -67,14 +68,14 @@ class DPSMeter():
             self.running = False
             print("抓包已停止")
     
-    def rest(self):
+    def reset(self):
         self.dps_calculator.reset()
         self.dataStorage.reset()
         self.channel.clear()
         for k, v in self.dispatcher.assemblers.items():
             assert isinstance(v, StreamAssembler)
             v.buffer.reset()
-            del self.dispatcher.assemblers[k]
+        self.dispatcher.assemblers = {}
     
     def wait(self):
         """等待用户中断"""
@@ -87,4 +88,5 @@ class DPSMeter():
 
 
 # dps_meter = DPSMeter()
+
 

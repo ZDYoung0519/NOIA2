@@ -28,23 +28,24 @@ export function useCombatStats({
     const parsedSkillCodeMap = combatStats?.parsed_skill_code || {};
     const mobCodeMap = combatStats?.mob_code || {};
 
-    // 获取玩家统计数据
+    // 获取当前目标下，玩家统计数据，如果没有当前目标，那么默认为所有
     const playerStats = currentTarget
       ? combatStats?.overview_stats_by_target_player?.[currentTarget] || {}
       : combatStats?.overview_stats_by_player || {};
 
+    // 玩家过滤并排序
     const playerStatsArray = Object.entries(playerStats)
       .map(([playerId, stats]) => ({
         playerId: parseInt(playerId, 10),
         ...(stats as any),
       }))
-      .filter((p) => !isNaN(p.playerId) && p.total_damage > 0)
+      .filter((p) => !isNaN(p.playerId) && p.total_damage > 10000)
       .sort((a, b) => b.total_damage - a.total_damage)
       .slice(0, 10);
 
     const maxDamagePlayer = playerStatsArray[0]?.total_damage || 0;
 
-    // 获取当前玩家的详细技能统计
+    // 获取当前玩家，对当前目标的详细技能统计
     const getCurPlayerTargetDetailedSkills = () => {
       if (currentPlayer && currentTarget) {
         return (
@@ -59,7 +60,6 @@ export function useCombatStats({
       }
       return {};
     };
-
     const curPlayerTargetDetailedSkills = getCurPlayerTargetDetailedSkills();
     const curPlayerTargetDetailedSkillsArray = Object.entries(
       curPlayerTargetDetailedSkills,

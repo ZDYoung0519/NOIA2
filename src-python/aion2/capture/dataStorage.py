@@ -1,12 +1,12 @@
 # data_storage.py
-import bisect
 import time
-from typing import List, Dict, Optional
-from copy import deepcopy
+from typing import List, Dict, Optional, TypedDict
 import logging
 import json
 
+
 logger = logging.getLogger("DataStorage")
+
 
 class SpecialDamage:
     BACK = "BACK"
@@ -76,11 +76,12 @@ class ParsedDamagePacket:
             }
         }
 
-from typing import TypedDict, List, Optional, Dict
+
 class SkillStats(TypedDict):
     total_damage: int
     counts: int
     special_counts: Dict[str, int]
+
 
 class DataStorage:
     def __init__(self):
@@ -102,10 +103,10 @@ class DataStorage:
         self.start_time = None
         self.last_damage_time = None
 
-        with open('./data/skill_code.json', 'r', encoding='utf-8') as f:
-            self.skill_code = json.load(f)
         self.parsed_skill_code = {}
         self.failed_skill_code = {}
+
+        self.reset_call_back = None
     
     def getStartTime(self):
         return self.start_time
@@ -196,6 +197,10 @@ class DataStorage:
 
     def appendNickname(self, actor_id: int, name: str) -> None:
         self.nickname_map[actor_id] = name
+        if self._main_player == name:
+            if self.reset_call_back:
+                print(f"检测到主角色：{name}, 触发DPS重置")
+                self.reset_call_back()
         # print('[Actor-name] {}: {}'.format(actor_id, name))
     
     def setMainPlayer(self, name):
@@ -254,15 +259,22 @@ class DataStorage:
         return sorted(slots)  # 返回排序后的列表
     
     def inferActorClass(self, skill_code: int) -> str:
-        skill_map = {
-            11020000: "GLADIATOR",
-            12010000: "TEMPLAR",
-            14340000: "RANGER",
-            13010000: "ASSASSIN",
-            15210000: "SORCERER",  # 마도 확인 필요함
-            17010000: "CLERIC",
-            16010000: "ELEMENTALIST",
-            18010000: "CHANTER"
-        }        
-        return skill_map.get(int(skill_code), None)
+        # 定义每个职业的技能ID列表
+        skill_code = int(skill_code)
+        class_skills = {
+            "GLADIATOR": [11020000, 11420000, 11440000, 11170000],
+            "TEMPLAR": [12010000],
+            "RANGER": [14340000],
+            "ASSASSIN": [13010000],
+            "SORCERER": [15210000],
+            "CLERIC": [17010000],
+            "ELEMENTALIST": [16010000],
+            "CHANTER": [18010000]
+        }
+        for class_name, skills in class_skills.items():
+            if skill_code in skills:
+                return class_name
+        return None
+
+
 

@@ -7,18 +7,43 @@ from aion2.capture.dataStorage import (
     VarIntOutput
 )
 
+from dataclasses import dataclass
+from typing import Dict, Optional, Tuple, Set
+
+
+
+
 logger = logging.getLogger("StreamProcessor")
 MAGIC_PACKET = b"\x06\x00\x36"
 
-class ActorAnchor():
-    def __init__(self, 
-                 actor_id: int,
-                start_index: int,
-                end_index: int):
-        self.actor_id = actor_id
-        self.start_index = start_index
-        self.end_index = end_index
 
+
+@dataclass
+class ActorAnchor:
+    actor_id: int
+    start_index: int
+    end_index: int
+
+def read_utf8_name(packet: bytes, anchor_index: int):
+    length_index = anchor_index + 1
+    if length_index >= len(packet):
+        return None
+    name_length = packet[length_index]  # 已经是0-255
+    if not (1 <= name_length <= 16):
+        return None
+    name_start = length_index + 1
+    name_end = name_start + name_length
+    if name_end > len(packet):
+        return None
+    name_bytes = packet[name_start:name_end]
+    try:
+        possible_name = name_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        return None
+    sanitized_name = sanitize_nickname(possible_name)
+    if sanitized_name is None or sanitized_name == '':
+        return None
+    return (name_start, name_length)
 
 
 def to_hex(data: bytes) -> str:
@@ -95,6 +120,7 @@ def sanitize_nickname(nickname: str) -> Optional[str]:
 
     return result
 
+
 def read_varint(data: bytes, offset: int = 0) -> VarIntOutput:
     value = 0
     shift = 0
@@ -131,7 +157,7 @@ def parse_uint32_le(data: bytes, offset: int) -> int:
     )
 
 class StreamProcessor:
-    def __init__(self, data_storage):
+    def __init__(self, data_storage: DataStorage):
         self.data_storage = data_storage
         self.mask = 0x0F
         self.main_loop = None  # 👈 新增：保存主事件循环
@@ -141,8 +167,8 @@ class StreamProcessor:
         self.main_loop = loop
 
     def on_packet_received(self, packet: bytes) -> None:
-        if len(packet) <= 3:
-            return
+        # if len(packet) <= 3:
+        #     return
 
         packet_length_info = read_varint(packet)
         if packet_length_info.length == -1:
@@ -179,7 +205,8 @@ class StreamProcessor:
             return
         if self.parsing_damage(packet):
             return
-        if self.parsing_nickname(packet):
+            
+        if self.parse_actor_name_binding_rules(packet) or self.parsing_nickname(packet):
             return
         # if self.parse_entity_name_binding_rules(packet):
         #     return
@@ -360,10 +387,9 @@ class StreamProcessor:
         if not sanitizedName:
             return False
 
-        logger.debug(f"Confirmed nickname: {sanitizedName}")
-        self.data_storage.appendNickname(player_info.value, sanitizedName)
         
-        # print({"type": "dps:character:name", "data": {"actor": player_info.value, "name": sanitizedName}})
+        self.data_storage.appendNickname(player_info.value, sanitizedName)
+        print(f"Detected confirmed nickname: {sanitizedName} ({player_info.value})")
         return True
 
     def parse_summon_packet(self, packet: bytes) -> bool:
@@ -476,6 +502,8 @@ class StreamProcessor:
 
             if flag and not processed:
                 self.parse_nickname_from_broken_length_packet(packet)
+                # parse_loot_attribution_actor_name(packet)
+                self.parse_actor_name_binding_rules(packet)
             return
 
         # 是特殊标记：跳过前 10 字节
@@ -522,14 +550,10 @@ class StreamProcessor:
                         sanitizedName = sanitize_nickname(name_str)
                         if sanitizedName:
                             print(
-                                f"Potential nickname found in pattern 1: {sanitizedName} "
+                                f"Potential nickname found in pattern 1: {sanitizedName} {varint_value}"
                                 f"(hex={to_hex(name_bytes)})"
                             )
                             self.data_storage.appendNickname(varint_value, sanitizedName)
-                            print({
-                                "type": "dps:character:name",
-                                "data": {"actor": varint_value, "name": sanitizedName}
-                            })
                             found = True
                     except UnicodeDecodeError:
                         pass
@@ -547,14 +571,10 @@ class StreamProcessor:
                         sanitizedName = sanitize_nickname(name_str)
                         if sanitizedName:
                             print(
-                                f"Potential nickname found in new pattern: {sanitizedName} "
+                                f"Potential nickname found in new pattern: {sanitizedName} {varint_value}"
                                 f"(hex={to_hex(name_bytes)})"
                             )
                             self.data_storage.appendNickname(varint_value, sanitizedName)
-                            print({
-                                "type": "dps:character:name",
-                                "data": {"actor": varint_value, "name": sanitizedName}
-                            })
                             found = True
                     except UnicodeDecodeError:
                         pass
@@ -571,11 +591,111 @@ class StreamProcessor:
                         if sanitizedName:
                             self.data_storage.appendNickname(varint_value, sanitizedName)
                             self.data_storage.setMainPlayer(sanitizedName)
+                            print(
+                                f"Potential nickname found in pattern 3: {sanitizedName} {varint_value}"
+                                f"(hex={to_hex(name_bytes)})"
+                            )
                             return
                     except UnicodeDecodeError:
                         pass
 
             origin_offset += 1
+    
+    def register_utf8_nickname(
+            self,
+            packet: bytes,
+            actor_id: int,
+            name_start: int,
+            name_length: int,
+
+        ) -> bool:
+        # 如果 actor_id 已经有昵称，返回 False
+        if self.data_storage.nickname_map.get(actor_id) is not None:
+            return False
+
+        # 检查名字长度
+        if not (1 <= name_length <= 16):
+            return False
+
+        name_end = name_start + name_length
+        # 检查索引范围
+        if name_start < 0 or name_end > len(packet):
+            return False
+
+        possible_name_bytes = packet[name_start:name_end]
+        try:
+            possible_name = possible_name_bytes.decode('utf-8')
+        except:
+            possible_name = None
+        if possible_name is None:
+            return False
+
+        sanitized_name = sanitize_nickname(possible_name)
+        if sanitized_name is None:
+            return False
+        
+        self.data_storage.appendNickname(actor_id, sanitized_name)
+        print(
+            f"Potential nickname found in binding rules: {sanitized_name} ({actor_id})"
+            f"(hex={to_hex(possible_name_bytes)})"
+        )
+
+
+    def parse_actor_name_binding_rules(self, packet: bytes) -> bool:
+        """
+        解析字节包中的角色名绑定规则。
+        如果找到并成功绑定一个名字，返回 True；否则返回 False。
+        """
+        i = 0
+        last_anchor: Optional[ActorAnchor] = None
+        named_actors: Set[int] = set()
+        packet_len = len(packet)
+
+        while i < packet_len:
+            # 检查 0x36 标记：可能的 actor ID 锚点
+            if packet[i] == 0x36:
+                # 尝试从 i+1 读取 VarInt
+                actor_info = read_varint(packet, i + 1)
+                if actor_info is not None:
+                    value, length = actor_info.value, actor_info.length
+                    if length > 0 and value >= 100:
+                        last_anchor = ActorAnchor(
+                            actor_id=value,
+                            start_index=i,
+                            end_index=i + 1 + length
+                        )
+                    else:
+                        last_anchor = None
+                else:
+                    last_anchor = None
+                i += 1
+                continue
+
+            # 检查 0x07 标记：可能的 UTF-8 名字
+            if packet[i] == 0x07:
+                name_info = read_utf8_name(packet, i)
+                if name_info is not None:
+                    name_start, name_length = name_info
+                    if last_anchor is not None and last_anchor.actor_id not in named_actors:
+                        distance = i - last_anchor.end_index
+                        if distance >= 0:
+                            can_bind = self.register_utf8_nickname(
+                                packet,
+                                last_anchor.actor_id,
+                                name_start,
+                                name_length,
+
+                            )
+                            if can_bind:
+                                named_actors.add(last_anchor.actor_id)
+                                last_anchor = None
+                                return True
+                i += 1
+                continue
+
+            i += 1
+
+        return False
 
     def parse_special_damage_flags(self, data: bytes) -> List[str]:
         if len(data) < 10:
@@ -591,3 +711,5 @@ class StreamProcessor:
         if flag_byte & 0x40: flags.append(SpecialDamage.UNKNOWN4)
         if flag_byte & 0x80: flags.append(SpecialDamage.POWER_SHARD)
         return flags
+
+

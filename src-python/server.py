@@ -129,25 +129,7 @@ class Aion2DpsServer:
             elif msg_type == "command:reset":
                 # 重置 DPS 数据
                 if self.dps_meter:
-                    try:
-                        # 尝试 reset 或 rest 方法
-                        reset_method = getattr(self.dps_meter, 'reset', None) or getattr(self.dps_meter, 'rest', None)
-                        if reset_method:
-                            reset_method()
-                            await self.send_to_client(websocket, {
-                                "type": "reset_confirmed",
-                                "message": "DPS 数据已重置"
-                            })
-                        else:
-                            await self.send_to_client(websocket, {
-                                "type": "error",
-                                "message": "DPS Meter重置方法不可用"
-                            })
-                    except Exception as e:
-                        await self.send_to_client(websocket, {
-                            "type": "error",
-                            "message": f"重置失败: {str(e)}"
-                        })
+                    self.send_and_reset()
                 else:
                     await self.send_to_client(websocket, {
                         "type": "error",
@@ -193,6 +175,29 @@ class Aion2DpsServer:
                 
         except json.JSONDecodeError:
             logger.warning(f"客户端 {client_id} 发送了非JSON消息: {message[:100]}")
+
+    def send_and_reset(self):
+        """
+        获取最后一次数据（作为历史保存），并重置
+        """
+        data = self.dps_meter.dps_calculator.process_data()
+        self.dps_meter.reset()
+
+        if not self._loop:
+            logger.warning("事件循环未初始化，无法广播数据")
+            return
+            
+        message = {
+            "type": "dps:summary",
+            "payload": data,
+            "timestamp": self._loop.time()
+        }
+        asyncio.run_coroutine_threadsafe(
+            self._async_broadcast(message),
+            self._loop
+        )
+
+        print("DPS is reseted!")
             
     def broadcast_dps_data(self, data: dict):
         """
@@ -230,7 +235,7 @@ class Aion2DpsServer:
             "payload": data,
             "timestamp": self._loop.time()
         }
-        print(message)
+        # print(message)
         
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(
@@ -266,16 +271,14 @@ class Aion2DpsServer:
         logger.info("=" * 50)
         
         try:
-            # 尝试导入DPS Meter
-            try:
-                from aion2.dps_meter import DPSMeter
-                # 初始化DPS Meter（传入同步回调）
-                self.dps_meter = DPSMeter(dps_callback=self.broadcast_dps_data, memory_callback=self.broadcast_memory_data)
-                self.dps_meter.start()
-                logger.info("DPS Meter已启动")
-            except ImportError as e:
-                logger.warning(f"无法导入DPS Meter，使用模拟数据: {e}")
-                self.dps_meter = None
+            from aion2.dps_meter import DPSMeter
+            self.dps_meter = DPSMeter(
+                dps_callback=self.broadcast_dps_data, 
+                memory_callback=self.broadcast_memory_data,
+                reset_callback=self.send_and_reset
+            )
+            self.dps_meter.start()
+            logger.info("DPS Meter已启动")
             
             # 启动健康检查任务
             asyncio.create_task(self.health_check())

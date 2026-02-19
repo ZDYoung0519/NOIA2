@@ -49,10 +49,10 @@ class MemoryMonitor():
         assemblers_size = {}
         for k, assembler in self.dispatcher.assemblers.items():
             assemblers_size[k] = assembler.buffer.size
+            channel_size += assembler.buffer.size
             
         return {
             "channel_size": channel_size,
-            "assembler_size": assemblers_size,
             "cpu_percent": cpu_percent,
             "rss": rss,
             "vms": vms,
