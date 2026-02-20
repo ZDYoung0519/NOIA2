@@ -128,6 +128,7 @@ class Aion2DpsServer:
                 
             elif msg_type == "command:reset":
                 # 重置 DPS 数据
+                print("recevie reset")
                 if self.dps_meter:
                     self.send_and_reset()
                 else:
@@ -183,10 +184,10 @@ class Aion2DpsServer:
         data = self.dps_meter.dps_calculator.process_data()
         self.dps_meter.reset()
 
-        if not self._loop:
+        if not self._loop or not data:
             logger.warning("事件循环未初始化，无法广播数据")
             return
-            
+        
         message = {
             "type": "dps:summary",
             "payload": data,
@@ -292,7 +293,6 @@ class Aion2DpsServer:
                 ping_timeout=60,
                 max_size=10 * 1024 * 1024  # 10MB
             )
-            
             self.running = True
             logger.info(f"WebSocket服务器已启动: ws://{self.host}:{self.port}")
             

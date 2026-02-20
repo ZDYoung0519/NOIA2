@@ -13,7 +13,7 @@ import {
 
 import { getCurrentWindow, Window, PhysicalSize } from "@tauri-apps/api/window";
 import { useTranslation } from "react-i18next";
-import { CombatStats, PlayerStats } from "./types";
+import { CombatStats, PlayerStats, CombatSummaryStats } from "./types";
 
 import { TargetCarousel } from "./components/TargetCarousel";
 import { useAppSettings } from "./hooks/useSettings";
@@ -22,6 +22,8 @@ import SkillList from "./components/SkillList";
 import { MemoryStatsRow, MemoryStats } from "./components/MemoryStatsRow";
 
 import { useCombatStats } from "./hooks/useCombatStats";
+import { Aion2CombatHistory } from "@/lib/localStorageHistory";
+import { time } from "node:console";
 
 const renderClassIcon = (className: string) => {
   const iconPath = `images/class/${className.toLowerCase()}.webp`;
@@ -81,30 +83,86 @@ function DPSMeterPage() {
   const [currentTarget, setCurrentTarget] = useState<number | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
 
+  const handleMessage = useCallback((msg: WebSocketMessage) => {
+    if (msg.type === "dps:data") setCombatStats(msg.payload as CombatStats);
+    else if (msg.type === "dps:memory") setMemoryData(msg.payload);
+    else if (msg.type === "dps:summary") {
+      const combatData = msg.payload as CombatStats;
+
+      const targetList = Object.entries(
+        combatData.overview_stats_by_target,
+      ).map(([id, stats]) => {
+        const start = combatData.target_start_time?.[Number(id)];
+        const last = combatData.target_last_time?.[Number(id)];
+        const durationMs = last && start ? last - start : 0;
+        const durationSec = durationMs / 1000;
+        const dps = durationSec > 0 ? stats.total_damage / durationSec : 0;
+        const mobCode = combatData.mob_code[Number(id)];
+
+        return {
+          id: Number(id),
+          mobCode: Number(mobCode),
+          total_damage: stats.total_damage,
+          duration: durationMs,
+          dps: Math.round(dps * 100) / 100,
+          player_stats: combatData.overview_stats_by_target_player[Number(id)],
+        };
+      });
+
+      // 保留mob，并且受到伤害大于500000
+      const filteredTargetList = targetList.filter(
+        (tgt) => tgt.mobCode != null && tgt.total_damage > 500000,
+      );
+
+      if (filteredTargetList.length <= 0) return null;
+
+      const combatSummary = {
+        id: crypto.randomUUID(),
+
+        data: msg.payload,
+        created_at: Date.now().toLocaleString(),
+      } as CombatSummaryStats;
+
+      Aion2CombatHistory.updateOne(combatSummary);
+    }
+  }, []);
+
+  const { isConnected, send } = useWebSocket({
+    url: "ws://localhost:51985",
+    onMessage: handleMessage,
+  });
+
+  const handleReset = useCallback(() => {
+    console.log(getCurrentWindow().label);
+    send({ type: "command:reset" });
+    setView("dps");
+    setCurrentTarget(null);
+    setCurrentPlayer(null);
+  }, [send]);
+
+  const { settings, saveSettings } = useAppSettings(handleReset);
+
   const {
     totalDamage,
-    duration,
-    running_time,
+    // duration,
+    actual_running_time,
     playerStatsArray,
     maxDamagePlayer,
     nicknameMap,
     targetList,
+
     mainPlayerName,
     curPlayerTargetDetailedSkillsArray,
     actorClassMap,
     actorSkillSlots,
     parsedSkillCodeMap,
     mobCodeMap,
-  } = useCombatStats({ combatStats, view, currentPlayer, currentTarget });
-
-  const handleMessage = useCallback((msg: WebSocketMessage) => {
-    if (msg.type === "dps:data") setCombatStats(msg.payload as CombatStats);
-    else if (msg.type === "dps:memory") setMemoryData(msg.payload);
-  }, []);
-
-  const { isConnected, send } = useWebSocket({
-    url: "ws://localhost:51985",
-    onMessage: handleMessage,
+  } = useCombatStats({
+    combatStats,
+    view,
+    currentPlayer,
+    currentTarget,
+    settings,
   });
 
   // 窗口高度管理
@@ -144,13 +202,6 @@ function DPSMeterPage() {
     updateWindowHeight();
   }, [combatStats, view, currentTarget, currentPlayer, updateWindowHeight]);
 
-  const handleReset = useCallback(() => {
-    send({ type: "command:reset" });
-    setView("dps");
-    setCurrentTarget(null);
-    setCurrentPlayer(null);
-  }, [send]);
-
   const handleClose = useCallback(async () => {
     await new Promise((r) => setTimeout(r, 10));
     send({ type: "command:quit" });
@@ -162,9 +213,6 @@ function DPSMeterPage() {
     e.stopPropagation();
     await invoke<string>("start_packet_server");
   };
-
-  // 设置
-  const { settings, saveSettings } = useAppSettings(handleReset);
 
   useEffect(() => {
     let unlisten: () => void;
@@ -202,8 +250,6 @@ function DPSMeterPage() {
       actorClassMap[player.playerId]?.toLowerCase() ?? "unknown";
 
     const isMob = mobCodeMap.hasOwnProperty(player.playerId);
-
-    if (isMob && !settings.showMobStats) return;
 
     // 使用设置中的颜色
     const barColor = isMainPlayer
@@ -257,7 +303,6 @@ function DPSMeterPage() {
 
   // 计算背景样式
   const bgOpacity = settings.bgOpacity / 100; // 0-1
-  // const showMob = settings?.showMob | true
 
   return (
     <div
@@ -342,7 +387,7 @@ function DPSMeterPage() {
           )}
           <div className="flex-1 flex items-center justify-between">
             <div className="text-xs font-medium text-white/70 truncate max-w-[120px] select-none">
-              Time: {duration.toFixed(1)}s
+              Time: {actual_running_time.toFixed(1)}s
             </div>
 
             <TargetCarousel
@@ -378,7 +423,7 @@ function DPSMeterPage() {
                   index,
                   totalDamage,
                   maxDamagePlayer,
-                  running_time,
+                  actual_running_time,
                   nicknameMap,
                   actorClassMap,
                   mobCodeMap,
@@ -411,6 +456,7 @@ function DPSMeterPage() {
             <MemoryStatsRow
               cpu_percent={memoryData.cpu_percent}
               rss={memoryData.rss}
+              channel_size={memoryData.channel_size}
             />
           )}
         </div>

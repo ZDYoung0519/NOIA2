@@ -426,7 +426,7 @@ class StreamProcessor:
                 if mob_info.value == mob_info2.value:
                     logger.debug(f"mid: {summon_info.value}, code: {mob_info.value}")
                     self.data_storage.appendMob(summon_info.value, mob_info.value)
-                    # print("[Mob]", self.data_storage.mobStorage)
+                    print(f"Found Mob Code {summon_info.value} ({mob_info.value})")
 
         # 查找8个0xFF的序列
         key_idx = find_array_index(packet, b"\xff\xff\xff\xff\xff\xff\xff\xff")
@@ -449,7 +449,7 @@ class StreamProcessor:
         
         logger.debug(f"소환몹 맵핑 성공 {real_actor_id},{summon_info.value}")
         self.data_storage.appendSummon(real_actor_id, summon_info.value)
-        # print("[Summon]", self.data_storage.summonStorage)
+        print(f"Found summon_info {real_actor_id} ({summon_info.value})"
         return True
     
     def parse_broken_length_packet(self, packet: bytes, flag: bool = True) -> None:
@@ -566,8 +566,6 @@ class StreamProcessor:
                     name_bytes = packet[inner_offset + 6 : end_pos]
                     try:
                         name_str = name_bytes.decode("utf-8")
-                        if '\p' in name_str:
-                            continue
                         sanitizedName = sanitize_nickname(name_str)
                         if sanitizedName:
                             print(

@@ -6,20 +6,18 @@ export interface AppSettings {
   mainPlayerColor: string; // rgba格式
   otherPlayerColor: string; // rgba格式
   resetShortcut: string; // 快捷键，如 "Alt+Q"
-  showMob: boolean;
   maxDisplayCount: number; // 最大显示数量
   showMobStats: boolean; // 显示怪物统计
   showMemory: boolean;
 }
 
 const defaultSettings: AppSettings = {
-  bgOpacity: 85,
+  bgOpacity: 70,
   mainPlayerColor: "rgba(212, 112, 12, 0.66)",
   otherPlayerColor: "rgba(22, 53, 228, 0.44)",
   resetShortcut: "Alt+Q",
-  showMob: true,
   maxDisplayCount: 8,
-  showMobStats: true,
+  showMobStats: false,
   showMemory: true,
 };
 
@@ -39,8 +37,16 @@ const registerResetShortcut = async (
       await unregister(currentRegisteredShortcut);
     }
 
+    let lastTriggerTime = 0;
+    const handleShortcut = () => {
+      const now = Date.now();
+      if (now - lastTriggerTime < 200) return;
+      lastTriggerTime = now;
+      callback();
+    };
     // 注册新的
-    await register(shortcut, callback);
+    await register(shortcut, handleShortcut);
+
     currentRegisteredShortcut = shortcut;
     console.log(`快捷键已注册: ${shortcut}`);
     return true;

@@ -1,5 +1,6 @@
 import { CharacterSearchResult } from "@/pages/character/types";
 import { CharacterProps } from "@/pages/character_view/types";
+import { CombatSummaryStats } from "@/pages/dps/types";
 
 export class GenericLocalHistory<T extends Record<string, any>> {
   private readonly storageKey: string;
@@ -76,6 +77,12 @@ export const Aion2SearchHistory =
     "characterId", // 主键字段
     50, // 最大条数
   );
+
+export const Aion2CombatHistory = new GenericLocalHistory<CombatSummaryStats>(
+  "AION2COMBATHISTORY", // localStorage key
+  "id",
+  200,
+);
 
 // export const Aion2BUILDHistory = new GenericLocalHistory<CharacterBuildProps>(
 //   "AION2BUILD",

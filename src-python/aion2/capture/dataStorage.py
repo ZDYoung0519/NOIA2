@@ -103,6 +103,9 @@ class DataStorage:
         self.start_time = None
         self.last_damage_time = None
 
+        self.target_start_time = {}
+        self.target_last_time = {}
+
         self.parsed_skill_code = {}
         self.failed_skill_code = {}
 
@@ -133,6 +136,11 @@ class DataStorage:
         if isCrit:
             specials.append(SpecialDamage.CRITICAL)
 
+        if damage <= 0:
+            return
+        if actor_id == 0:
+            return
+
         self._last_target = target_id
 
         actor_name = self.nickname_map.get(actor_id, None)
@@ -140,8 +148,6 @@ class DataStorage:
         if actor_name and self._main_player is not None and self._main_player == actor_name:
             self._last_target_by_me = target_id
         
-        logger.debug(f"Damage: actor={actor_id}, target={target_id}, skill={skill_code}, damage={damage}, specials={specials}, dot={dot}")
-
         key = f"{target_id}->{actor_id}->{skill_code}"
         if not key in self.combat_stats:
             self.combat_stats[key] = {
@@ -159,6 +165,10 @@ class DataStorage:
 
         if not target_id in self.target_list:
             self.target_list.append(target_id)
+            self.target_start_time[target_id] = time.time()
+            self.target_last_time[target_id] = time.time() + 1e-5
+
+        self.target_last_time[target_id] = time.time()
         
         original_code = self.inferOriginalSkillCode(skill_code)
         if original_code:
@@ -167,8 +177,6 @@ class DataStorage:
             actor_class = self.inferActorClass(original_code)
             if actor_class:
                 self.actorClassMap[actor_id] = actor_class
-
-
             skill_speciality = self.parse_specialty_slots(skill_code)
             if not actor_id in self.actorSkillSlots:
                 self.actorSkillSlots[actor_id] = {}
@@ -177,6 +185,8 @@ class DataStorage:
             self.failed_skill_code[skill_code] = -1
             print(f"Debug: Falied inferred original skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")        
         
+        logger.debug(f"Damage: actor={actor_id}, target={target_id}, skill={skill_code}, damage={damage}, specials={specials}, dot={dot}")
+
     def appendMobCode(self, code, name):
         self.mobCodeData[code] = name
 
@@ -191,6 +201,8 @@ class DataStorage:
     def reset(self):
         self.actor_list = []
         self.target_list = []
+        self.target_start_time = {}
+        self.target_last_time = {}
         self.start_time = None
         if hasattr(self, 'combat_stats'):
             del self.combat_stats

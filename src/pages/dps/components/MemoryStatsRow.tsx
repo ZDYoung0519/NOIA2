@@ -4,6 +4,7 @@ import React from "react";
 export interface MemoryStats {
   cpu_percent: number; // CPU 使用率 (%)
   rss: number; // 物理内存使用量 (bytes)
+  channel_size: number;
 }
 
 // 辅助函数：将字节转换为带单位的字符串 (KB/MB/GB)
@@ -23,10 +24,14 @@ const getColorForPercentage = (percent: number): string => {
 };
 
 // 组件：单行显示 CPU、内存、GPU、显存占用
-export const MemoryStatsRow: React.FC<MemoryStats> = ({ cpu_percent, rss }) => {
+export const MemoryStatsRow: React.FC<MemoryStats> = ({
+  cpu_percent,
+  rss,
+  channel_size,
+}) => {
   return (
     <div
-      className="items-center justify-center p-0 gap-2 selet-none"
+      className="items-center justify-center p-0 gap-5 selet-none"
       style={{
         display: "flex",
 
@@ -43,6 +48,7 @@ export const MemoryStatsRow: React.FC<MemoryStats> = ({ cpu_percent, rss }) => {
 
       {/* 内存占用 (rss) */}
       <span>MEM: {formatBytes(rss * 1024 * 1024)}</span>
+      <span>Chann: {channel_size}</span>
     </div>
   );
 };

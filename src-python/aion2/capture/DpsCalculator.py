@@ -132,8 +132,10 @@ class DpsCalculator():
 
         # 每个目标受到每个玩家的总览信息（技能聚合）
         overview_stats = {"total_damage": 0, "counts": 0}
+        overview_stats_by_target = {}
         overview_stats_by_target_player = {}
         for target in target_list:
+
             for actor in actor_list:
                 if target not in overview_stats_by_target_player:
                     overview_stats_by_target_player[target] = {}
@@ -141,8 +143,15 @@ class DpsCalculator():
                     overview_stats_by_target_player[target][actor] ={}
                 tgt_stat = self.get_overview_stats(actor, target, raw_stats)
                 overview_stats_by_target_player[target][actor] = tgt_stat
+
+                if target not in overview_stats_by_target:
+                    overview_stats_by_target[target] = {"total_damage": 0, "counts": 0}
+                overview_stats_by_target[target]['total_damage'] += tgt_stat['total_damage']
+                overview_stats_by_target[target]['counts'] += tgt_stat['counts']
+
                 overview_stats['total_damage'] += tgt_stat['total_damage']
                 overview_stats['counts'] += tgt_stat['counts']
+        
 
         # 所有目标受到每个玩家的总览信息（按照目标聚合）
         overview_stats_by_player = {}
@@ -166,11 +175,14 @@ class DpsCalculator():
         return {
             "target_list": target_list,
             "actort_list": actor_list,
+            "target_start_time": self.data_storage.target_start_time,
+            "target_last_time": self.data_storage.target_last_time,
             "nickname_map": nickname_map,
             "actor_class_map": actor_class_map,
             "running_time": (last_time - start_time)+1e-5,
             "duration": time.time() - start_time,
             "overview_stats": overview_stats, 
+            "overview_stats_by_target": overview_stats_by_target,
             "overview_stats_by_target_player":overview_stats_by_target_player,
             "overview_stats_by_player": overview_stats_by_player,
             "detailed_skills_stats_by_tagert_player": detailed_skills_stats_by_tagert_player,
