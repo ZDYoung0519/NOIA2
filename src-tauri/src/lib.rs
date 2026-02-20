@@ -1,6 +1,6 @@
 
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
 
@@ -68,8 +68,9 @@ async fn start_packet_server(
     println!("启动路径: {:?}", server_path);
 
     let child = Command::new(&server_path)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .env("PYTHONUNBUFFERED", "1")
+        // .stdout(Stdio::piped())
+        // .stderr(Stdio::piped())
         // 关键：设置工作目录，Python exe 经常依赖相对路径
         .current_dir(server_path.parent().unwrap())
         .spawn()

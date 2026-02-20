@@ -203,7 +203,7 @@ class Aion2DpsServer:
         if not self._loop:
             logger.warning("事件循环未初始化，无法广播数据")
             return
-            
+    
         message = {
             "type": "dps:data",
             "payload": data,
@@ -216,7 +216,9 @@ class Aion2DpsServer:
             self._async_broadcast(message),
             self._loop
         )
-    
+        logger.info(f"DPS is broadcast: {str(data)}")
+
+
     def broadcast_memory_data(self, data: dict):
         """
         广播DPS数据到所有客户端（同步回调方法）
@@ -225,18 +227,19 @@ class Aion2DpsServer:
         if not self._loop:
             logger.warning("事件循环未初始化，无法广播数据")
             return
-            
+        logger.info(f"DPS memory is broadcast111 {data}")
         message = {
             "type": "dps:memory",
             "payload": data,
             "timestamp": self._loop.time()
         }
-        
+        logger.info(f"DPS memory is broadcast222{data}")
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(
             self._async_broadcast(message),
             self._loop
         )
+        logger.info(f"DPS memory is broadcast333 {data}")
     
     async def _async_broadcast(self, message: dict):
         """实际的异步广播逻辑"""
@@ -296,7 +299,7 @@ class Aion2DpsServer:
                     signal.signal(sig, lambda s, f: asyncio.create_task(self.stop()))
             except ValueError:
                 # Windows 下可能不支持某些信号
-                pass
+                logger.error("Error, 下可能不支持某些信号")
             
             # 保持服务器运行
             await self.server.wait_closed()

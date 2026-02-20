@@ -31,3 +31,13 @@ def setup_logger(debug_mode):
 
 
 logger = setup_logger(cfg.DEBUG)
+def handle_exception(exc_type, exc_value, exc_traceback):
+    """自定义异常钩子，记录异常到日志"""
+    if issubclass(exc_type, KeyboardInterrupt):
+        # 对于 Ctrl+C，直接调用默认处理（避免日志文件过大）
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.error("未捕获的异常", exc_info=(exc_type, exc_value, exc_traceback))
+
+# 设置全局异常钩子
+sys.excepthook = handle_exception

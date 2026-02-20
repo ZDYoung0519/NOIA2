@@ -54,7 +54,8 @@ def main():
     print(f"当前工作目录: {os.getcwd()}")
 
     step("2. 执行 PyInstaller 打包")
-    pyinstaller_cmd = "pyinstaller -F --noconsole server.py"
+    # pyinstaller_cmd = "pyinstaller -F --noconsole server.py"
+    pyinstaller_cmd = "pyinstaller -F server.py"
     run_command(pyinstaller_cmd)
 
     step("3. 将额外文件/目录复制到 dist 中")
