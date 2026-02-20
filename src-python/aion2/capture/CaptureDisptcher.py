@@ -1,10 +1,8 @@
-import time
+
 from aion2.capture.StreamProcesser import StreamProcessor
 from aion2.capture.channel import Channel
 from aion2.capture.dataStorage import DataStorage
 from aion2.capture.StreamAssembler import StreamAssembler
-
-
 
 from scapy.all import IP, TCP
 import threading
@@ -55,7 +53,6 @@ class CaptureDispatcher:
 
     def run(self):
         while self.is_running:
-            # time.sleep(0.0001)
             packet = self.channel.try_receive()
             if packet is None:
                 continue

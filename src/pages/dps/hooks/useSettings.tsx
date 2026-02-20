@@ -9,6 +9,7 @@ export interface AppSettings {
   maxDisplayCount: number; // 最大显示数量
   showMobStats: boolean; // 显示怪物统计
   showMemory: boolean;
+  autoTarget: boolean; // 自动切换目标
 }
 
 const defaultSettings: AppSettings = {
@@ -19,6 +20,7 @@ const defaultSettings: AppSettings = {
   maxDisplayCount: 8,
   showMobStats: false,
   showMemory: true,
+  autoTarget: true,
 };
 
 const STORAGE_KEY = "dps-settings";

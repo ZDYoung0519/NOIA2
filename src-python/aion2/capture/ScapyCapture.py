@@ -6,7 +6,7 @@ from typing import Callable, Optional, Tuple
 from scapy.all import sniff, IP, TCP, conf
 from .channel import Channel
 from scapy.arch.windows import get_windows_if_list
-
+from utils.logger import logger
 
 
 def get_all_devices():
@@ -37,12 +37,12 @@ def auto_detect_device():
     # 优先选择非回环设备
     loopbacks = get_loopbacks(all_devices)
     if loopbacks:
-        print(f"选择非回环设备: {loopbacks[0]['name']}")
+        logger.info(f"选择非回环设备: {loopbacks[0]['name']}")
         return loopbacks[0]
     else:
         loopbacks = get_loopbacks(all_devices)
         if loopbacks:
-            print(f"选择回环设备: {loopbacks[0]['name']}")
+            logger.info(f"选择回环设备: {loopbacks[0]['name']}")
             return loopbacks[0]
 
     return None
@@ -51,7 +51,6 @@ class ScapyCapture:
     def __init__(
         self,
         channel: Channel,
-
     ):
         """
         :param magic_bytes: 用于识别游戏协议的魔数（如 b'\\xAA\\xBB\\xCC\\xDD'）
@@ -71,10 +70,10 @@ class ScapyCapture:
         """
         device = auto_detect_device()
         if not device:
-            print("无法找到合适的网络设备")
+            logger.info("无法找到合适的网络设备")
             return
         device_name = device['name']
-        print(f"[ScapyCapture] Starting capture on: {device_name}", file=sys.stderr)
+        logger.info(f"[ScapyCapture] Starting capture on: {device_name}")
         conf.bufsize=1024*1024*1024*10
         sniff(
             iface=device_name,

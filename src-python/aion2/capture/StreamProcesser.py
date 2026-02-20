@@ -9,11 +9,9 @@ from aion2.capture.dataStorage import (
 
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Set
+from utils.logger import logger
 
 
-
-
-logger = logging.getLogger("StreamProcessor")
 MAGIC_PACKET = b"\x06\x00\x36"
 
 
@@ -389,7 +387,7 @@ class StreamProcessor:
 
         
         self.data_storage.appendNickname(player_info.value, sanitizedName)
-        print(f"Detected confirmed nickname: {sanitizedName} ({player_info.value})")
+        logger.info(f"Detected confirmed nickname: {sanitizedName} ({player_info.value})")
         return True
 
     def parse_summon_packet(self, packet: bytes) -> bool:
@@ -424,9 +422,8 @@ class StreamProcessor:
                 if mob_info2.length < 0:
                     return False
                 if mob_info.value == mob_info2.value:
-                    logger.debug(f"mid: {summon_info.value}, code: {mob_info.value}")
                     self.data_storage.appendMob(summon_info.value, mob_info.value)
-                    print(f"Found Mob Code {summon_info.value} ({mob_info.value})")
+                    logger.info(f"Found Mob id: {summon_info.value} (mob code: {mob_info.value})")
 
         # 查找8个0xFF的序列
         key_idx = find_array_index(packet, b"\xff\xff\xff\xff\xff\xff\xff\xff")
@@ -447,9 +444,8 @@ class StreamProcessor:
         # 解析16位无符号整数（小端序）
         real_actor_id = parse_uint16_le(packet, real_offset)
         
-        logger.debug(f"소환몹 맵핑 성공 {real_actor_id},{summon_info.value}")
         self.data_storage.appendSummon(real_actor_id, summon_info.value)
-        print(f"Found summon_info {real_actor_id} ({summon_info.value})"
+        logger.info(f"Found summon_info {real_actor_id} ({summon_info.value}")
         return True
     
     def parse_broken_length_packet(self, packet: bytes, flag: bool = True) -> None:
@@ -549,7 +545,7 @@ class StreamProcessor:
                         name_str = name_bytes.decode("utf-8")
                         sanitizedName = sanitize_nickname(name_str)
                         if sanitizedName:
-                            print(
+                            logger.info(
                                 f"Potential nickname found in pattern 1: {sanitizedName} {varint_value}"
                                 f"(hex={to_hex(name_bytes)})"
                             )
@@ -568,7 +564,7 @@ class StreamProcessor:
                         name_str = name_bytes.decode("utf-8")
                         sanitizedName = sanitize_nickname(name_str)
                         if sanitizedName:
-                            print(
+                            logger.info(
                                 f"Potential nickname found in new pattern: {sanitizedName} {varint_value}"
                                 f"(hex={to_hex(name_bytes)})"
                             )
@@ -589,7 +585,7 @@ class StreamProcessor:
                         if sanitizedName:
                             self.data_storage.appendNickname(varint_value, sanitizedName)
                             self.data_storage.setMainPlayer(sanitizedName)
-                            print(
+                            logger.info(
                                 f"Potential nickname found in pattern 3: {sanitizedName} {varint_value}"
                                 f"(hex={to_hex(name_bytes)})"
                             )
@@ -633,7 +629,7 @@ class StreamProcessor:
             return False
         
         self.data_storage.appendNickname(actor_id, sanitized_name)
-        print(
+        logger.info(
             f"Potential nickname found in binding rules: {sanitized_name} ({actor_id})"
             f"(hex={to_hex(possible_name_bytes)})"
         )

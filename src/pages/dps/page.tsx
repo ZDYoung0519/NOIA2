@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useWebSocket, WebSocketMessage } from "./hooks/useWebSocket";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -23,7 +23,6 @@ import { MemoryStatsRow, MemoryStats } from "./components/MemoryStatsRow";
 
 import { useCombatStats } from "./hooks/useCombatStats";
 import { Aion2CombatHistory } from "@/lib/localStorageHistory";
-import { time } from "node:console";
 
 const renderClassIcon = (className: string) => {
   const iconPath = `images/class/${className.toLowerCase()}.webp`;
@@ -143,20 +142,19 @@ function DPSMeterPage() {
   const { settings, saveSettings } = useAppSettings(handleReset);
 
   const {
-    totalDamage,
-    // duration,
+    currentTargetDamage,
     actual_running_time,
     playerStatsArray,
     maxDamagePlayer,
     nicknameMap,
     targetList,
-
     mainPlayerName,
     curPlayerTargetDetailedSkillsArray,
     actorClassMap,
     actorSkillSlots,
     parsedSkillCodeMap,
     mobCodeMap,
+    auto_target,
   } = useCombatStats({
     combatStats,
     view,
@@ -164,6 +162,10 @@ function DPSMeterPage() {
     currentTarget,
     settings,
   });
+
+  useMemo(() => {
+    if (settings.autoTarget) setCurrentTarget(auto_target);
+  }, [auto_target]);
 
   // 窗口高度管理
   const contentRef = useRef<HTMLDivElement>(null);
@@ -238,6 +240,7 @@ function DPSMeterPage() {
     mobCodeMap: Record<number, number>,
     onClick: () => void,
   ) => {
+    if (player.total_damage <= 0) return;
     const dps = duration > 0 ? player.total_damage / duration : 0;
     const percentage =
       totalDamage > 0 ? (player.total_damage / totalDamage) * 100 : 0;
@@ -280,9 +283,10 @@ function DPSMeterPage() {
           <span
             className={`text-xs font-medium truncate ${isMainPlayer ? "text-indigo-200" : "text-white/90"}`}
           >
-            {displayName} {isMob ? "(mod)" : ""}
+            {isMob ? "[mod]" : ""}
+            {displayName} ({player.playerId})
           </span>
-          <span className="text-[10px] text-white/30">{player.counts}次</span>
+          {/* <span className="text-[10px] text-white/30">{player.counts}次</span> */}
         </div>
 
         <div className="relative z-10 flex items-baseline gap-3 text-xs font-mono">
@@ -386,8 +390,9 @@ function DPSMeterPage() {
             </button>
           )}
           <div className="flex-1 flex items-center justify-between">
-            <div className="text-xs font-medium text-white/70 truncate max-w-[120px] select-none">
-              Time: {actual_running_time.toFixed(1)}s
+            <div className="text-xs font-medium text-white/70 truncate max-w-[200px] select-none">
+              Time: {actual_running_time.toFixed(0)}s | Dmg:{" "}
+              {formatNumber(currentTargetDamage)}
             </div>
 
             <TargetCarousel
@@ -421,7 +426,7 @@ function DPSMeterPage() {
                 renderPlayerDpsRow(
                   player,
                   index,
-                  totalDamage,
+                  currentTargetDamage,
                   maxDamagePlayer,
                   actual_running_time,
                   nicknameMap,

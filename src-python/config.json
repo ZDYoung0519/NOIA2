@@ -1,0 +1,5 @@
+{
+  "DEBUG": false,
+  "SERVER": { "HOST": "localhost", "PORT": 51985 },
+  "DPS": { "DELAY_CALCULATOR": 200, "DELAY_DISPATCHER": 1 }
+}

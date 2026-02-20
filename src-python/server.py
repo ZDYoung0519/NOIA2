@@ -7,12 +7,7 @@ from typing import Set, Dict, Any, Optional
 import websockets
 from websockets.server import WebSocketServerProtocol
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from utils.logger import logger
 
 
 class Aion2DpsServer:
@@ -128,7 +123,7 @@ class Aion2DpsServer:
                 
             elif msg_type == "command:reset":
                 # 重置 DPS 数据
-                print("recevie reset")
+                logger.info("recevie reset")
                 if self.dps_meter:
                     self.send_and_reset()
                 else:
@@ -198,7 +193,7 @@ class Aion2DpsServer:
             self._loop
         )
 
-        print("DPS is reseted!")
+        logger.info("DPS is reseted!")
             
     def broadcast_dps_data(self, data: dict):
         """
@@ -214,7 +209,7 @@ class Aion2DpsServer:
             "payload": data,
             "timestamp": self._loop.time()
         }
-        # print(message)
+
         
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(
@@ -236,7 +231,6 @@ class Aion2DpsServer:
             "payload": data,
             "timestamp": self._loop.time()
         }
-        # print(message)
         
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(

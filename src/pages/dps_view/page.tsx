@@ -3,8 +3,6 @@ import { Aion2CombatHistory } from "@/lib/localStorageHistory";
 import { CombatStats, CombatSummaryStats } from "../dps/types";
 import { useEffect, useState } from "react";
 
-import { processCombatStats } from "../dps/hooks/useCombatStats";
-
 import {
   Swords,
   Target,
@@ -14,7 +12,6 @@ import {
   Zap,
   Sword,
   ChevronRight,
-  PieChart,
   Clock,
 } from "lucide-react";
 
@@ -61,7 +58,7 @@ const CombatProfileCard: React.FC<{
   const [selectedTargetId, setSelectedTargetId] = useState<number>(0);
 
   const combatData = combat.data as CombatStats;
-  const overview_stats_by_target = combatData.overview_stats_by_target;
+  // const overview_stats_by_target = combatData.overview_stats_by_target;
 
   const targetList = Object.entries(combatData.overview_stats_by_target).map(
     ([id, stats]) => {

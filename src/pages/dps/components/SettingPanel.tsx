@@ -252,16 +252,13 @@ export const SettingPanel = ({
               className="data-[state=checked]:bg-indigo-500"
             />
           </div>
-        </div>
-        {/* 显示选项区域 */}
-        <div className="space-y-3 pt-1">
-          {/* 显示怪物统计 */}
+
           <div className="flex items-center justify-between py-1">
-            <span className="text-xs text-white/60">显示怪物统计</span>
+            <span className="text-xs text-white/60">自动切换目标</span>
             <Switch
-              checked={localSettings.showMobStats}
+              checked={localSettings.autoTarget}
               onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, showMobStats: checked })
+                setLocalSettings({ ...localSettings, autoTarget: checked })
               }
               className="data-[state=checked]:bg-indigo-500"
             />
@@ -284,7 +281,7 @@ export const SettingPanel = ({
               setLocalSettings({ ...localSettings, maxDisplayCount: v[0] })
             }
             min={1}
-            max={20}
+            max={50}
             step={1}
             className="w-full"
           />

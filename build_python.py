@@ -62,7 +62,7 @@ def main():
     items_to_copy = [
         SRC_PYTHON_DIR / "data",
         SRC_PYTHON_DIR / "resource",
-        SRC_PYTHON_DIR / "config.yaml",
+        SRC_PYTHON_DIR / "config.json",
     ]
     for item in items_to_copy:
         copy_if_exists(item, DIST_DIR)

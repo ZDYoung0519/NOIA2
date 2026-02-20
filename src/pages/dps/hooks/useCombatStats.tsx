@@ -18,6 +18,10 @@ export function processCombatStats({
 }: UseCombatStatsParams) {
   const totalDamage = combatStats?.overview_stats?.total_damage || 0; // 总计伤害
   const targetDamage = combatStats?.overview_stats_by_target || {}; // 每个目标受到的统计
+  // 当前目标受到的总伤
+  const currentTargetDamage = currentTarget
+    ? targetDamage[currentTarget]?.total_damage || 0
+    : totalDamage;
 
   const duration = combatStats?.duration || 0;
   const running_time = combatStats?.running_time || 1e-5;
@@ -25,6 +29,7 @@ export function processCombatStats({
   const targetStartTime = combatStats?.target_start_time ?? {};
   const targetLastTime = combatStats?.target_last_time ?? {};
 
+  // 当前目标的实际战斗时长
   let actual_running_time = null;
   if (currentTarget === null) {
     actual_running_time = running_time;
@@ -34,6 +39,9 @@ export function processCombatStats({
   } else {
     actual_running_time = running_time;
   }
+  // 最后受到我伤害的目标
+  const auto_target =
+    combatStats?.last_target_by_me || combatStats?.last_target || null;
 
   const nicknameMap = combatStats?.nickname_map || {};
   const actorClassMap = combatStats?.actor_class_map || {};
@@ -54,18 +62,12 @@ export function processCombatStats({
       ...(stats as any),
     }))
     .filter((p) => !isNaN(p.playerId))
-    .filter((p) => settings?.showMobStats || actorClassMap[p.playerId])
+    .filter((p) => settings?.showMobStats || actorClassMap[p.playerId]) // showMobStats为False时，只显示识别出职业的player
     // .filter((p) => p.total_damage > 10000)
-    .sort((a, b) => b.total_damage - a.total_damage)
+    .sort((a, b) => b.total_damage - a.total_damage) // 排序
     .slice(0, settings?.maxDisplayCount);
 
-  // const playerStatsArray = _playerStatsArray.filter(
-  //   (p) => actorClassMap[p.playerId],
-  // );
-
-  // 过滤未知职业
-
-  const maxDamagePlayer = playerStatsArray[0]?.total_damage || 0;
+  const maxDamagePlayer = playerStatsArray[0]?.total_damage || 0; // 当前玩家最大伤害
 
   // 获取当前玩家，对当前目标的详细技能统计
   const getCurPlayerTargetDetailedSkills = () => {
@@ -92,8 +94,9 @@ export function processCombatStats({
     .sort((a, b) => b.total_damage - a.total_damage);
 
   return {
-    totalDamage,
+    currentTargetDamage,
     targetDamage,
+    auto_target,
     duration,
     actual_running_time,
     playerStatsArray,

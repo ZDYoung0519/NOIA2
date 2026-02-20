@@ -4,8 +4,7 @@ from typing import List, Dict, Optional, TypedDict
 import logging
 import json
 
-
-logger = logging.getLogger("DataStorage")
+from utils.logger import logger
 
 
 class SpecialDamage:
@@ -136,10 +135,13 @@ class DataStorage:
         if isCrit:
             specials.append(SpecialDamage.CRITICAL)
 
-        if damage <= 0:
-            return
-        if actor_id == 0:
-            return
+        if damage <= 0 or actor_id <= 1000:
+             logger.info(f"Invaid Attack: actor:{actor_id}, target: {target_id}, damage: {damage}")
+        
+        if actor_id in self.summonStorage.keys():
+            logger.info(f"Found damage by summon! summon: {actor_id}, summoner: {self.summonStorage[actor_id]}")
+            actor_id = self.summonStorage[actor_id]
+
 
         self._last_target = target_id
 
@@ -183,9 +185,9 @@ class DataStorage:
             self.actorSkillSlots[actor_id][original_code] = skill_speciality
         else:
             self.failed_skill_code[skill_code] = -1
-            print(f"Debug: Falied inferred original skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")        
+            logger.info(f"Debug: Falied inferred original skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")        
         
-        logger.debug(f"Damage: actor={actor_id}, target={target_id}, skill={skill_code}, damage={damage}, specials={specials}, dot={dot}")
+        logger.info(f"Damage: actor={actor_id}, target={target_id}, skill={skill_code}, damage={damage}, specials={specials}, dot={dot}")
 
     def appendMobCode(self, code, name):
         self.mobCodeData[code] = name
@@ -204,23 +206,29 @@ class DataStorage:
         self.target_start_time = {}
         self.target_last_time = {}
         self.start_time = None
+        self._last_target = None
+        self._last_target_by_me = None
         if hasattr(self, 'combat_stats'):
             del self.combat_stats
+        self.combat_stats = {}
 
     def appendNickname(self, actor_id: int, name: str) -> None:
+        if actor_id <= 1000:
+            logger.info(f"无效的id {name} ({actor_id})")
+
         self.nickname_map[actor_id] = name
         if self._main_player == name:
             if self.reset_call_back:
-                print(f"检测到主角色：{name}, 触发DPS重置")
+                logger.info(f"检测到主角色：{name}, 触发DPS重置")
                 self.reset_call_back()
-        # print('[Actor-name] {}: {}'.format(actor_id, name))
+        # logger.info('[Actor-name] {}: {}'.format(actor_id, name))
     
     def setMainPlayer(self, name):
         self._main_player = name
 
     def cache_pending_nickname(self, actor_id: int, name: str) -> None:
         self.pendingNicknameStorage[actor_id] = name
-        # print('[Actor-name(chache)] {}: {}'.format(actor_id, name))
+        # logger.info('[Actor-name(chache)] {}: {}'.format(actor_id, name))
     
     def get_nickname(self) -> Dict[int, str]:
         return self.nickname_map
@@ -235,23 +243,6 @@ class DataStorage:
         raise self.summonStorage
     
     def inferOriginalSkillCode(self, code:int):
-        # possible_offsets = self.skill_code['possibleOffsets']
-        # skill_codes = self.skill_code['skillCodes']
-        # sorted_skill_codes = sorted(skill_codes)
-        
-        # for offset in possible_offsets:
-        #     possible_origin = code - offset
-            
-        #     # Python 二分查找：返回插入位置，如果存在则在该位置
-        #     pos = bisect.bisect_left(sorted_skill_codes, possible_origin)
-            
-        #     # 检查是否找到（pos 在范围内且值匹配）
-        #     if pos < len(sorted_skill_codes) and sorted_skill_codes[pos] == possible_origin:
-
-        #         return possible_origin
-
-        # return None
-
         return str(code)[:4] + "0000"
 
     def parse_specialty_slots(self, skill_id: int) -> list[int]:
@@ -260,7 +251,6 @@ class DataStorage:
         slot_1 = (last_4_digits // 1000) % 10  # 千位
         slot_2 = (last_4_digits // 100) % 10   # 百位
         slot_3 = (last_4_digits // 10) % 10    # 十位
-
         slots = []
         if slot_1 > 0:
             slots.append(slot_1)

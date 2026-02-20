@@ -128,10 +128,10 @@ export default function TitleBar() {
               variant="outline"
               onClick={() => {
                 setOpen(false);
-                appWindow.minimize(); // 直接调用
+                appWindow.hide(); // 直接调用
               }}
             >
-              最小化
+              最小化到后台
             </Button>
             <Button
               size="sm"
@@ -141,7 +141,7 @@ export default function TitleBar() {
                 await invoke("exit_app");
               }}
             >
-              退出
+              退出应用
             </Button>
           </DialogFooter>
         </DialogContent>

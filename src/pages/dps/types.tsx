@@ -29,6 +29,7 @@ export interface CombatStats {
   actor_skill_slots: Record<number, Record<number, number[]>>;
   mob_code: Record<number, number>;
   last_target: number | null;
+  last_target_by_me: number | null;
   duration: number;
   running_time: number;
   main_player: string;

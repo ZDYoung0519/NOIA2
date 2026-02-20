@@ -56,7 +56,6 @@ class DpsCalculator():
         """
         用来获得actor对target的技能细节, 如果target是None, 那么是针对所有目标的
         """
-        key = f"{actor}->{target}->{skill}"
         res = {}
         for key, data in raw_stats.items():
             _target, _actor, _skill = key.split('->')
@@ -113,18 +112,7 @@ class DpsCalculator():
             raw_stats = deepcopy(self.data_storage.combat_stats)
         except:
             return
-        
-        # # 先把技能code转换成原始技能code
-        # raw_stats = {}
-        # for k, v in raw_stats.items():
-        #     target, actor, skill = k.split('->')
-        #     original_code = self.data_storage.parsed_skill_code.get(int(skill),int(skill))
-        #     k_new = f'{target}->{actor}->{original_code}'
-        #     raw_stats[k_new] = v
 
-        parsed_skill_code = self.data_storage.parsed_skill_code
-
-        # 每个目标受到每个玩家的具体信息 （包含了技能统计）
         target_list = deepcopy(self.data_storage.target_list)
         actor_list = deepcopy(self.data_storage.actor_list)
         nickname_map = deepcopy(self.data_storage.nickname_map)
@@ -135,7 +123,6 @@ class DpsCalculator():
         overview_stats_by_target = {}
         overview_stats_by_target_player = {}
         for target in target_list:
-
             for actor in actor_list:
                 if target not in overview_stats_by_target_player:
                     overview_stats_by_target_player[target] = {}
@@ -159,6 +146,7 @@ class DpsCalculator():
             res = self.get_overview_stats(actor, None, raw_stats)
             overview_stats_by_player[actor] = res
         
+        # 每个目标受到每个玩家的技能细节
         detailed_skills_stats_by_tagert_player = {}
         for target in target_list:
             for actor in actor_list:
@@ -168,32 +156,38 @@ class DpsCalculator():
                     detailed_skills_stats_by_tagert_player[target][actor] ={}
                 detailed_skills_stats_by_tagert_player[target][actor] = self.get_detailed_skills_stats(actor, target, None, raw_stats)
 
+        # 所有目标受到每个玩家的技能细节
         detailed_skills_stats_by_actor = {}
         for actor in actor_list:
             detailed_skills_stats_by_actor[actor] = self.get_detailed_skills_stats(actor, None, None, raw_stats)
         
         return {
+            "main_player": self.data_storage._main_player,
+            "last_target": self.data_storage._last_target,
+            "last_target_by_me": self.data_storage._last_target_by_me,
             "target_list": target_list,
             "actort_list": actor_list,
             "target_start_time": self.data_storage.target_start_time,
             "target_last_time": self.data_storage.target_last_time,
             "nickname_map": nickname_map,
             "actor_class_map": actor_class_map,
-            "running_time": (last_time - start_time)+1e-5,
+            "mob_code": self.data_storage.mobStorage,
+            "summon_code": self.data_storage.summonStorage,
+            "actor_skill_slots": self.data_storage.actorSkillSlots,
+            "parsed_skill_code": self.data_storage.parsed_skill_code,
             "duration": time.time() - start_time,
+            "running_time": (last_time - start_time)+1e-5,
             "overview_stats": overview_stats, 
             "overview_stats_by_target": overview_stats_by_target,
             "overview_stats_by_target_player":overview_stats_by_target_player,
             "overview_stats_by_player": overview_stats_by_player,
             "detailed_skills_stats_by_tagert_player": detailed_skills_stats_by_tagert_player,
             "detailed_skills_stats_by_actor": detailed_skills_stats_by_actor,
-            "last_target": self.data_storage._last_target,
-            "main_player": self.data_storage._main_player,
-            "actor_skill_slots": self.data_storage.actorSkillSlots,
-            "parsed_skill_code": self.data_storage.parsed_skill_code,
-            "mob_code": self.data_storage.mobStorage,
-            "summon_code": self.data_storage.summonStorage
         }
+
+
+
+
 
     def run(self):
         while self.is_running:

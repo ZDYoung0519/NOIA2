@@ -5,10 +5,10 @@ use tauri::{
 };
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
-    let show_i = MenuItem::with_id(app, "show_main", "显示主页面", true, None::<&str>)?;
-    let hide_i = MenuItem::with_id(app, "hide", "显示DPS统计", true, None::<&str>)?;
+    let show_main = MenuItem::with_id(app, "show_main", "显示主页面", true, None::<&str>)?;
+    let show_dps = MenuItem::with_id(app, "show_dps", "显示DPS统计", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &quit_i])?;
+    let menu = Menu::with_items(app, &[&show_main, &show_dps, &quit_i])?;
 
     let _ = TrayIconBuilder::with_id("tray")
         .icon(app.default_window_icon().unwrap().clone())

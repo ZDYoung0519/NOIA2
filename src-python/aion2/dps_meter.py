@@ -8,6 +8,8 @@ from aion2.capture.MemoryMonitor import MemoryMonitor
 
 from aion2.capture.StreamAssembler import StreamAssembler
 
+from utils.logger import logger
+
 import time
 
 
@@ -54,7 +56,7 @@ class DPSMeter():
             self.window_detector.start()
             self.memory_monitor.start()
         except Exception as e:
-            print(f"启动抓包失败: {e}")
+            logger.error(f"启动抓包失败: {e}")
             self.running = False
     
     def stop(self):
@@ -66,7 +68,7 @@ class DPSMeter():
             self.window_detector.stop()
             self.memory_monitor.stop()
             self.running = False
-            print("抓包已停止")
+            logger.info("抓包已停止")
     
     def reset(self):
         self.dps_calculator.reset()
@@ -83,7 +85,7 @@ class DPSMeter():
             while self.running:
                 time.sleep(1)
         except KeyboardInterrupt:
-            print("\n接收到中断信号")
+            logger.error("\n接收到中断信号")
             self.stop()
 
 
