@@ -209,14 +209,13 @@ class Aion2DpsServer:
             "payload": data,
             "timestamp": self._loop.time()
         }
-
         
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(
             self._async_broadcast(message),
             self._loop
         )
-        logger.info(f"DPS is broadcast: {str(data)}")
+        # logger.info(f"DPS is broadcast: {str(data)}")
 
 
     def broadcast_memory_data(self, data: dict):
@@ -227,19 +226,25 @@ class Aion2DpsServer:
         if not self._loop:
             logger.warning("事件循环未初始化，无法广播数据")
             return
-        logger.info(f"DPS memory is broadcast111 {data}")
+
         message = {
             "type": "dps:memory",
             "payload": data,
             "timestamp": self._loop.time()
         }
-        logger.info(f"DPS memory is broadcast222{data}")
+
         # 将异步广播提交到事件循环（线程安全）
         asyncio.run_coroutine_threadsafe(
             self._async_broadcast(message),
             self._loop
         )
-        logger.info(f"DPS memory is broadcast333 {data}")
+        # logger.info(f"DPS memory is broadcast333 {data}")
+        sizes = {}
+        from copy import deepcopy
+        for k, v in self.dps_meter.dispatcher.assemblers.items():
+            sizes[k] = v.buffer.size
+
+        logger.info(f"Assembers, {sizes}")
     
     async def _async_broadcast(self, message: dict):
         """实际的异步广播逻辑"""

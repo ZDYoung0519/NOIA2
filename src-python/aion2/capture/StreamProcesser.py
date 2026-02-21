@@ -15,7 +15,6 @@ from utils.logger import logger
 MAGIC_PACKET = b"\x06\x00\x36"
 
 
-
 @dataclass
 class ActorAnchor:
     actor_id: int
@@ -165,8 +164,7 @@ class StreamProcessor:
         self.main_loop = loop
 
     def on_packet_received(self, packet: bytes) -> None:
-        # if len(packet) <= 3:
-        #     return
+
 
         packet_length_info = read_varint(packet)
         if packet_length_info.length == -1:
@@ -177,6 +175,9 @@ class StreamProcessor:
 
         if actual_len == expected_len:
             self.parse_perfect_packet(packet[:-3])
+            return
+        
+        if len(packet) <= 3:
             return
 
         if expected_len > actual_len:
@@ -201,16 +202,14 @@ class StreamProcessor:
     def parse_perfect_packet(self, packet: bytes) -> None:
         if len(packet) < 3:
             return
-        if self.parsing_damage(packet):
-            return
-            
-        if self.parse_actor_name_binding_rules(packet) or self.parsing_nickname(packet):
-            return
-        # if self.parse_entity_name_binding_rules(packet):
-        #     return
-        if self.parse_summon_packet(packet):
-            return
-        self.parse_dot_packet(packet)
+        parsedDamage = self.parsing_damage(packet)
+        # ✅ 添加 cast_nickname_net 调用（即 parse_nickname_from_broken_length_packet）
+        parsedName = (self.parse_actor_name_binding_rules(packet) or 
+                    self.parsing_nickname(packet) or
+                    self.parse_nickname_from_broken_length_packet(packet))  # 添加这行
+        parsedSummon = self.parse_summon_packet(packet)
+        parsedDOt = self.parse_dot_packet(packet)
+        return parsedDamage or parsedName or parsedSummon or parsedDOt
 
     def parsing_damage(self, packet: bytes) -> bool:
         if not packet or packet[0] == 0x20:
@@ -450,7 +449,10 @@ class StreamProcessor:
     
     def parse_broken_length_packet(self, packet: bytes, flag: bool = True) -> None:
         # 检查是否是特殊标记：packet[2] == 0xFF and packet[3] == 0xFF
-        if len(packet) < 4 or packet[2] != 0xFF or packet[3] != 0xFF:
+        if len(packet) < 4:
+            return False
+
+        if  packet[2] != 0xFF or packet[3] != 0xFF:
             logger.debug(f"Remaining packet buffer: {to_hex(packet)}")
             target = self.data_storage.getCurrentTarget()
             processed = False
@@ -539,7 +541,7 @@ class StreamProcessor:
             if packet[inner_offset + 3] == 0x01 and packet[inner_offset + 4] == 0x07:
                 name_len = packet[inner_offset + 5]
                 end_pos = inner_offset + 6 + name_len
-                if 0 < name_len <= 72 and end_pos <= packet_len:
+                if end_pos <= packet_len:
                     name_bytes = packet[inner_offset + 6 : end_pos]
                     try:
                         name_str = name_bytes.decode("utf-8")
@@ -573,25 +575,25 @@ class StreamProcessor:
                     except UnicodeDecodeError:
                         pass
 
-            # === Pattern 3: 0x39, 0x8A ===
-            if not found and packet[inner_offset + 3] == 0x39 and packet[inner_offset + 4] == 0x8A:
-                name_len = packet[inner_offset + 5]
-                end_pos = inner_offset + 6 + name_len
-                if 0 < name_len <= 72 and end_pos <= packet_len:
-                    name_bytes = packet[inner_offset + 6 : end_pos]
-                    try:
-                        name_str = name_bytes.decode("utf-8")
-                        sanitizedName = sanitize_nickname(name_str)
-                        if sanitizedName:
-                            self.data_storage.appendNickname(varint_value, sanitizedName)
-                            self.data_storage.setMainPlayer(sanitizedName)
-                            logger.info(
-                                f"Potential nickname found in pattern 3: {sanitizedName} {varint_value}"
-                                f"(hex={to_hex(name_bytes)})"
-                            )
-                            return
-                    except UnicodeDecodeError:
-                        pass
+            # # === Pattern 3: 0x39, 0x8A ===
+            # if not found and packet[inner_offset + 3] == 0x39 and packet[inner_offset + 4] == 0x8A:
+            #     name_len = packet[inner_offset + 5]
+            #     end_pos = inner_offset + 6 + name_len
+            #     if 0 < name_len <= 72 and end_pos <= packet_len:
+            #         name_bytes = packet[inner_offset + 6 : end_pos]
+            #         try:
+            #             name_str = name_bytes.decode("utf-8")
+            #             sanitizedName = sanitize_nickname(name_str)
+            #             if sanitizedName:
+            #                 self.data_storage.appendNickname(varint_value, sanitizedName)
+            #                 self.data_storage.setMainPlayer(sanitizedName)
+            #                 logger.info(
+            #                     f"Potential nickname found in pattern 3: {sanitizedName} {varint_value}"
+            #                     f"(hex={to_hex(name_bytes)})"
+            #                 )
+            #                 return
+            #         except UnicodeDecodeError:
+            #             pass
 
             origin_offset += 1
     
@@ -618,7 +620,7 @@ class StreamProcessor:
 
         possible_name_bytes = packet[name_start:name_end]
         try:
-            possible_name = possible_name_bytes.decode('utf-8')
+            possible_name = possible_name_bytes.decode('utf-8', errors='strict')
         except:
             possible_name = None
         if possible_name is None:
@@ -640,6 +642,7 @@ class StreamProcessor:
         解析字节包中的角色名绑定规则。
         如果找到并成功绑定一个名字，返回 True；否则返回 False。
         """
+
         i = 0
         last_anchor: Optional[ActorAnchor] = None
         named_actors: Set[int] = set()
