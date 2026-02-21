@@ -57,13 +57,9 @@ def auto_detect_device():
     loopbacks = get_loopbacks(all_devices)
     nonloopbacks = get_non_loopback_devices(all_devices)
 
-    logger.info(f"发现回环设备: {[d['name'] for d in loopbacks]}")
-    logger.info(f"发现非回环设备: {[d['name'] for d in nonloopbacks]}")
-
     # 依次尝试每个设备
     for dev in loopbacks + nonloopbacks:
         if try_capture(dev['name']):
-            logger.info(f"在设备 {dev['name']} 上成功检测到特征，停止后续检查")
             return dev
 
 if __name__ == "__main__":

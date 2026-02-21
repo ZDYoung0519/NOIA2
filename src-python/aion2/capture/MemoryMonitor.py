@@ -26,7 +26,7 @@ class MemoryMonitor():
         vms = memory_info.vms / (1024 * 1024)  # 虚拟内存，单位转换为 MB
         memory_percent = self.process.memory_percent()
 
-        cap_device = self.capture.tgt_device if self.capture.tgt_device else "None"
+        cap_device = self.capture.tgt_device['name'] if self.capture.tgt_device else "None"
 
         # try:
         #     import GPUtil
@@ -54,14 +54,16 @@ class MemoryMonitor():
         for k, assembler in self.dispatcher.assemblers.items():
             assemblers_size[k] = assembler.buffer.size
             channel_size += assembler.buffer.size
-            
+        
         return {
-            "channel_size": channel_size,
+
             "cpu_percent": cpu_percent,
             "rss": rss,
             "vms": vms,
             "memory_percent": memory_percent,
-            "capture_device": cap_device,
+            "cap_device": cap_device,
+            "channel_size": channel_size,
+            "channel_num": len(self.dispatcher.assemblers)
             # "gpu_util": gpu_util['load'],
             # "memoryUtil": gpu_util['memoryUtil']
         }

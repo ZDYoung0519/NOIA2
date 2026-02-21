@@ -64,6 +64,8 @@ class CaptureDispatcher:
             key = f"{a}-{b}"
 
             if key not in self.assemblers and self.contains_magic(cap['data']):
+                self.assemblers[key] = {}
+
                 self.assemblers[key] = StreamAssembler(self.processor)
                 self.assemblers[key].process_chunk(cap["data"])
             elif key in self.assemblers:

@@ -41,6 +41,7 @@ class DPSMeter():
         self.memory_monitor = MemoryMonitor(
             self.channel, 
             self.dispatcher,
+            self.capturer,
             memory_callback if memory_callback is not None else print
         )
         self.running = False
