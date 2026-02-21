@@ -21,7 +21,9 @@ class DPSMeter():
         )
 
         self.dataStorage = DataStorage()
+        
         self.dataStorage.reset_call_back = reset_callback
+
         self.dispatcher = CaptureDispatcher(
             channel=self.channel,
             data_storage = self.dataStorage
@@ -78,6 +80,7 @@ class DPSMeter():
             assert isinstance(v, StreamAssembler)
             v.buffer.reset()
         self.dispatcher.assemblers = {}
+
     
     def wait(self):
         """等待用户中断"""

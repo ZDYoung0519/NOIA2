@@ -203,10 +203,13 @@ class StreamProcessor:
         if len(packet) < 3:
             return
         parsedDamage = self.parsing_damage(packet)
+
         # ✅ 添加 cast_nickname_net 调用（即 parse_nickname_from_broken_length_packet）
-        parsedName = (self.parse_actor_name_binding_rules(packet) or 
-                    self.parsing_nickname(packet) or
-                    self.parse_nickname_from_broken_length_packet(packet))  # 添加这行
+        parsedName = (self.parse_actor_name_binding_rules(packet) or self.parse_nickname_from_broken_length_packet(packet) or
+                    self.parsing_nickname(packet)
+                    )
+        # nameBinding
+
         parsedSummon = self.parse_summon_packet(packet)
         parsedDOt = self.parse_dot_packet(packet)
         return parsedDamage or parsedName or parsedSummon or parsedDOt
@@ -456,47 +459,46 @@ class StreamProcessor:
             logger.debug(f"Remaining packet buffer: {to_hex(packet)}")
             target = self.data_storage.getCurrentTarget()
             processed = False
-            if target is None:
-                return
 
-            target_bytes = convert_varint(target)
-            damage_keyword = b"\x04\x38" + target_bytes
-            dot_keyword = b"\x05\x38" + target_bytes
+            if target is not None:
+                target_bytes = convert_varint(target)
+                damage_keyword = b"\x04\x38" + target_bytes
+                dot_keyword = b"\x05\x38" + target_bytes
 
-            damage_idx = find_array_index(packet, damage_keyword)
-            dot_idx = find_array_index(packet, dot_keyword)
+                damage_idx = find_array_index(packet, damage_keyword)
+                dot_idx = find_array_index(packet, dot_keyword)
 
-            idx = -1
-            handler = None
+                idx = -1
+                handler = None
 
-            if damage_idx != -1 and dot_idx != -1:
-                if damage_idx < dot_idx:
+                if damage_idx != -1 and dot_idx != -1:
+                    if damage_idx < dot_idx:
+                        idx = damage_idx
+                        handler = self.parsing_damage
+                    else:
+                        idx = dot_idx
+                        handler = self.parse_dot_packet
+                elif damage_idx != -1:
                     idx = damage_idx
                     handler = self.parsing_damage
-                else:
+                elif dot_idx != -1:
                     idx = dot_idx
                     handler = self.parse_dot_packet
-            elif damage_idx != -1:
-                idx = damage_idx
-                handler = self.parsing_damage
-            elif dot_idx != -1:
-                idx = dot_idx
-                handler = self.parse_dot_packet
 
-            if idx != -1 and handler is not None:
-                # 从 idx - 1 开始读取 VarInt（即长度字段）
-                if idx - 1 >= 0:
-                    length_info = read_varint(packet, idx - 1)
-                    if length_info.length == 1:  # VarInt 占 1 字节
-                        start_idx = idx - 1
-                        end_idx = start_idx + length_info.value - 3
-                        if 0 <= start_idx < end_idx <= len(packet):
-                            extracted = packet[start_idx:end_idx]
-                            if handler(extracted):
-                                processed = True
-                                if end_idx < len(packet):
-                                    remaining = packet[end_idx:]
-                                    self.parse_broken_length_packet(remaining, False)
+                if idx != -1 and handler is not None:
+                    # 从 idx - 1 开始读取 VarInt（即长度字段）
+                    if idx - 1 >= 0:
+                        length_info = read_varint(packet, idx - 1)
+                        if length_info.length == 1:  # VarInt 占 1 字节
+                            start_idx = idx - 1
+                            end_idx = start_idx + length_info.value - 3
+                            if 0 <= start_idx < end_idx <= len(packet):
+                                extracted = packet[start_idx:end_idx]
+                                if handler(extracted):
+                                    # processed = True
+                                    if end_idx < len(packet):
+                                        remaining = packet[end_idx:]
+                                        self.parse_broken_length_packet(remaining, False)
 
             if flag and not processed:
                 self.parse_nickname_from_broken_length_packet(packet)
@@ -531,7 +533,7 @@ class StreamProcessor:
                 continue
 
             inner_offset = origin_offset + varint_len
-            if inner_offset + 6 > packet_len:
+            if inner_offset + 6 >= packet_len:
                 origin_offset += 1
                 continue
 
@@ -560,7 +562,7 @@ class StreamProcessor:
             if not found and packet[inner_offset + 3] == 0x00 and packet[inner_offset + 4] == 0x07:
                 name_len = packet[inner_offset + 5]
                 end_pos = inner_offset + 6 + name_len
-                if 0 < name_len <= 72 and end_pos <= packet_len:
+                if  end_pos <= packet_len:
                     name_bytes = packet[inner_offset + 6 : end_pos]
                     try:
                         name_str = name_bytes.decode("utf-8")
