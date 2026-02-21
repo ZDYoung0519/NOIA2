@@ -34,29 +34,40 @@ export const MemoryStatsRow: React.FC<MemoryStats> = ({
   cap_device,
 }) => {
   return (
-    <div
-      className="items-center justify-center p-0 gap-5 selet-none"
-      style={{
-        display: "flex",
+    <div>
+      {/* 第一行：原有信息 */}
+      <div
+        className="items-center justify-center p-0 gap-5 select-none"
+        style={{
+          display: "flex",
+          background: "transparent",
+          color: "#fff",
+          fontFamily: "monospace",
+          fontSize: "12px",
+        }}
+      >
+        <span style={{ color: getColorForPercentage(cpu_percent) }}>
+          CPU: {cpu_percent.toFixed(1)}%
+        </span>
+        <span>MEM: {formatBytes(rss * 1024 * 1024)}</span>
+      </div>
 
-        background: "transparent", // 透明背景
-        color: "#fff", // 基础文字颜色为白色
-        fontFamily: "monospace", // 等宽字体便于对齐
-        fontSize: "12px",
-      }}
-    >
-      {/* CPU 占用 */}
-      <span style={{ color: getColorForPercentage(cpu_percent) }}>
-        CPU: {cpu_percent.toFixed(1)}%
-      </span>
-
-      {/* 内存占用 (rss) */}
-      <span>MEM: {formatBytes(rss * 1024 * 1024)}</span>
-
-      <span>
-        Cha: {channel_num}/{channel_size}
-      </span>
-      <span>Dev: {cap_device.toString()}</span>
+      {/* 第二行：单独显示 Dev */}
+      <div
+        className="flex items-center justify-center p-0 select-none space-x-3"
+        style={{
+          background: "transparent",
+          color: "#fff",
+          fontFamily: "monospace",
+          fontSize: "12px",
+          marginTop: "0px", // 可根据需要调整间距
+        }}
+      >
+        <span className="">Dev: {cap_device.toString()}</span>
+        <span>
+          Cha: {channel_num}/{channel_size}
+        </span>
+      </div>
     </div>
   );
 };

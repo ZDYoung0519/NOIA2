@@ -263,6 +263,17 @@ export const SettingPanel = ({
               className="data-[state=checked]:bg-indigo-500"
             />
           </div>
+
+          <div className="flex items-center justify-between py-1">
+            <span className="text-xs text-white/60">显示内存和网络信息</span>
+            <Switch
+              checked={localSettings.showMemory}
+              onCheckedChange={(checked) =>
+                setLocalSettings({ ...localSettings, showMemory: checked })
+              }
+              className="data-[state=checked]:bg-indigo-500"
+            />
+          </div>
         </div>
 
         {/* 最大显示数量设置 */}
