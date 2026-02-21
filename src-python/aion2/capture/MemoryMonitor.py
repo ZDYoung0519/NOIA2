@@ -5,12 +5,14 @@ import psutil
 
 from .channel import Channel
 from .CaptureDisptcher import CaptureDispatcher
+from .ScapyCapture import ScapyCapture
 
 
 class MemoryMonitor():
-    def __init__(self, channel: Channel, dispatcher: CaptureDispatcher, call_back: str = None):
+    def __init__(self, channel: Channel, dispatcher: CaptureDispatcher, capture:  ScapyCapture, call_back: str = None):
         self.channel = channel
         self.dispatcher = dispatcher
+        self.capture = capture
         self.call_back = call_back
         self.is_running = True
         self.process = psutil.Process(os.getpid())
@@ -23,6 +25,8 @@ class MemoryMonitor():
         rss = memory_info.rss / (1024 * 1024)  # 常驻内存，单位转换为 MB
         vms = memory_info.vms / (1024 * 1024)  # 虚拟内存，单位转换为 MB
         memory_percent = self.process.memory_percent()
+
+        cap_device = self.capture.tgt_device if self.capture.tgt_device else "None"
 
         # try:
         #     import GPUtil
@@ -57,6 +61,7 @@ class MemoryMonitor():
             "rss": rss,
             "vms": vms,
             "memory_percent": memory_percent,
+            "capture_device": cap_device,
             # "gpu_util": gpu_util['load'],
             # "memoryUtil": gpu_util['memoryUtil']
         }

@@ -5,6 +5,7 @@ export interface MemoryStats {
   cpu_percent: number; // CPU 使用率 (%)
   rss: number; // 物理内存使用量 (bytes)
   channel_size: number;
+  cap_device: string;
 }
 
 // 辅助函数：将字节转换为带单位的字符串 (KB/MB/GB)
@@ -28,6 +29,7 @@ export const MemoryStatsRow: React.FC<MemoryStats> = ({
   cpu_percent,
   rss,
   channel_size,
+  cap_device,
 }) => {
   return (
     <div
@@ -48,7 +50,8 @@ export const MemoryStatsRow: React.FC<MemoryStats> = ({
 
       {/* 内存占用 (rss) */}
       <span>MEM: {formatBytes(rss * 1024 * 1024)}</span>
-      <span>Chann: {channel_size}</span>
+      <span>Cha: {channel_size}</span>
+      <span>Dev: {cap_device}</span>
     </div>
   );
 };
