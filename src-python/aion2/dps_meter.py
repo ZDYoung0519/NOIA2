@@ -77,9 +77,7 @@ class DPSMeter():
         self.dps_calculator.reset()
         self.dataStorage.reset()
         self.channel.clear()
-        for k, v in self.dispatcher.assemblers.items():
-            assert isinstance(v, StreamAssembler)
-            v.buffer.reset()
+        self.dispatcher.assembler.buffer.reset
         self.dispatcher.assemblers = {}
 
     

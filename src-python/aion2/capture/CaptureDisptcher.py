@@ -1,4 +1,5 @@
 
+import time
 from aion2.capture.StreamProcesser import StreamProcessor
 from aion2.capture.channel import Channel
 from aion2.capture.dataStorage import DataStorage
@@ -18,11 +19,13 @@ class CaptureDispatcher:
     def __init__(self, channel, data_storage, delay=1):
         self.channel = channel
         self.processor = StreamProcessor(data_storage)
-        self.assemblers = {}
+        self.assembler = StreamAssembler(self.processor)
         self.combat_port_locked = False
         self.MAGIC = b"\x06\x00\x36"
         self.is_running = False
         self.delay = delay
+
+        self.combat_port = None
 
     def contains_magic(self, data: bytes) -> bool:
         return self.MAGIC in data
@@ -46,6 +49,7 @@ class CaptureDispatcher:
         dstport = ip[TCP].dport
 
         return {
+            
                 "srcPort": srcport,
                 "dstPort": dstport,
                 "data": tcp_payload,
@@ -63,15 +67,20 @@ class CaptureDispatcher:
             a, b = min(cap["srcPort"], cap["dstPort"]), max(cap["srcPort"], cap["dstPort"])
             key = f"{a}-{b}"
 
-            if key not in self.assemblers and self.contains_magic(cap['data']):
-                self.assemblers[key] = {}
+            if self.contains_magic(cap['data']):
+                self.combat_port = key
+                self.assembler.process_chunk(cap["data"])
 
-                self.assemblers[key] = StreamAssembler(self.processor)
-                self.assemblers[key].process_chunk(cap["data"])
-            elif key in self.assemblers:
-                # 交给 assembler 重组
-                assert isinstance(self.assemblers[key], StreamAssembler)
-                self.assemblers[key].process_chunk(cap["data"])
+
+            # if key not in self.assemblers and self.contains_magic(cap['data']):
+            #     self.assemblers[key] = {}
+
+            #     self.assemblers[key] = StreamAssembler(self.processor)
+            #     self.assemblers[key].process_chunk(cap["data"])
+            # elif key in self.assemblers:
+            #     # 交给 assembler 重组
+            #     assert isinstance(self.assemblers[key], StreamAssembler)
+            #     self.assemblers[key].process_chunk(cap["data"])
 
             # if key not in self.assemblers:
             #     self.assemblers[key] = StreamAssembler(self.processor)

@@ -84,6 +84,8 @@ class SkillStats(TypedDict):
 
 class DataStorage:
     def __init__(self):
+        self.heart = 0
+        
         self.combat_stats: Dict[str, SkillStats] = {}
         self.target_list = []           # 收到伤害的目标列表
         self.actor_list = []           # 造成伤害的玩家名字
@@ -92,8 +94,9 @@ class DataStorage:
         self._last_target_by_me = None  # 我造成伤害的最近目标
         self.nickname_map: Dict[int, str] = {}  # 玩家id->玩家名称的映射表
         self.mobStorage = {}
+        # self.mobCodeData = {}
+
         self.summonStorage = {}
-        self.mobCodeData = {}
         self.pendingNicknameStorage = {}
 
         self.actorClassMap = {}
@@ -109,6 +112,11 @@ class DataStorage:
         self.failed_skill_code = {}
 
         self.reset_call_back = None
+        with open("./data/healing_skill_code.json", "r", encoding='utf-8') as f:
+            self.healing_skill_code = json.load(f)
+
+        with open("./data/mob_code.json", "r", encoding='utf-8') as f:
+            self.mobCodeData = json.load(f)
     
     def getStartTime(self):
         return self.start_time
@@ -132,46 +140,8 @@ class DataStorage:
         damage = pdp.getDamage()
         specials =  pdp.getSpecials()
         isCrit = pdp.isCrit()
-        if isCrit:
-            specials.append(SpecialDamage.CRITICAL)
-
-        if damage <= 0 or actor_id <= 1000:
-             logger.info(f"Invaid Attack: actor:{actor_id}, target: {target_id}, damage: {damage}")
-        
-        if actor_id in self.summonStorage.keys():
-            logger.info(f"Found damage by summon! summon: {actor_id}, summoner: {self.summonStorage[actor_id]}")
-            actor_id = self.summonStorage[actor_id]
-
-
-        self._last_target = target_id
 
         actor_name = self.nickname_map.get(actor_id, None)
-
-        if actor_name and self._main_player is not None and self._main_player == actor_name:
-            self._last_target_by_me = target_id
-        
-        key = f"{target_id}->{actor_id}->{skill_code}"
-        if not key in self.combat_stats:
-            self.combat_stats[key] = {
-                'total_damage': 0,
-                'counts': 0,
-                'special_counts': init_special_counter()
-            }
-        self.combat_stats[key]['total_damage'] += damage
-        self.combat_stats[key]['counts'] += 1
-        for spe in specials:
-            self.combat_stats[key]['special_counts'][spe] += 1
-        
-        if not actor_id in self.actor_list:
-            self.actor_list.append(actor_id)
-
-        if not target_id in self.target_list:
-            self.target_list.append(target_id)
-            self.target_start_time[target_id] = time.time()
-            self.target_last_time[target_id] = time.time() + 1e-5
-
-        self.target_last_time[target_id] = time.time()
-        
         original_code = self.inferOriginalSkillCode(skill_code)
         if original_code:
             if skill_code not in self.parsed_skill_code:
@@ -185,8 +155,55 @@ class DataStorage:
             self.actorSkillSlots[actor_id][original_code] = skill_speciality
         else:
             self.failed_skill_code[skill_code] = -1
-            logger.info(f"Debug: Falied inferred original skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")        
+            logger.info(f"Debug: Falied inferred original skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")     
+
+        if original_code in self.healing_skill_code.keys():
+            logger.info(f"Skill healing record: skill code: {skill_code}, damage: {damage}, actor={actor_id}, target={target_id}")  
+            return
+
+        if isCrit:
+            specials.append(SpecialDamage.CRITICAL)
+
+        if damage <= 0 or actor_id <= 1000:
+             logger.info(f"Invaid Attack: actor:{actor_id}, target: {target_id}, damage: {damage}")
         
+        if actor_id in self.summonStorage.keys():
+            logger.info(f"Found damage by summon! summon: {actor_id}, summoner: {self.summonStorage[actor_id]}")
+            actor_id = self.summonStorage[actor_id]
+
+        self._last_target = target_id
+        if actor_name and self._main_player is not None and self._main_player == actor_name and target_id not in self.nickname_map.keys():
+            self._last_target_by_me = target_id
+        
+        key = f"{target_id}->{actor_id}->{original_code}"
+        if not key in self.combat_stats:
+            self.combat_stats[key] = {
+                'total_damage': 0,
+                'counts': 0,
+                'max': 0,
+                'min': float('inf'),
+                'special_counts': init_special_counter()
+            }
+        max_damage = max(self.combat_stats[key]['max'], damage)
+        min_damage = min(self.combat_stats[key]['min'], damage)
+        self.combat_stats[key]['total_damage'] += damage
+        self.combat_stats[key]['counts'] += 1
+        self.combat_stats[key]['max'] = max_damage
+        self.combat_stats[key]['min'] = min_damage
+
+        for spe in specials:
+            self.combat_stats[key]['special_counts'][spe] += 1
+        
+        if not actor_id in self.actor_list:
+            self.actor_list.append(actor_id)
+
+        if not target_id in self.target_list:
+            self.target_list.append(target_id)
+            self.target_start_time[target_id] = time.time()
+            self.target_last_time[target_id] = time.time() + 1e-5
+
+        self.target_last_time[target_id] = time.time()
+
         logger.info(f"Damage: actor={actor_id}, target={target_id}, skill={skill_code}, damage={damage}, specials={specials}, dot={dot}")
 
     def appendMobCode(self, code, name):

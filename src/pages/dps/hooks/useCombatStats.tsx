@@ -50,6 +50,7 @@ export function processCombatStats({
   const actorSkillSlots = combatStats?.actor_skill_slots || {};
   const parsedSkillCodeMap = combatStats?.parsed_skill_code || {};
   const mobCodeMap = combatStats?.mob_code || {};
+  const mobCodeNameMap = combatStats?.mob_code_name_map || {};
 
   // 获取当前目标下，玩家统计数据，如果没有当前目标，那么默认为所有
   const playerStats = currentTarget
@@ -111,6 +112,7 @@ export function processCombatStats({
     actorSkillSlots,
     parsedSkillCodeMap,
     mobCodeMap,
+    mobCodeNameMap,
   };
 }
 

@@ -99,6 +99,32 @@ class DpsCalculator():
                 res['special_counts'][spe] += data['special_counts'][spe]
         return res
     
+    def filter_target(self, raw_stats):
+        """
+        过滤掉不应该统计的目标，比如收到伤害<10w的
+        """
+        target_damage = {}
+        for key, data in raw_stats.items():
+            _target, _actor, _skill = key.split('->')
+            _target = int(_target)
+            if _target not in target_damage.keys():
+                target_damage[_target] = 0
+            target_damage[_target] += data['total_damage']
+        
+        kept_targets = set()
+        for target, damage in target_damage.items():
+            if damage >= 100000 or str(target) in self.data_storage.mobCodeData.keys():
+                kept_targets.add(int(target))
+        
+        filtered_stats = {}
+        for key, data in raw_stats.items():
+            _target, _actor, _skill = key.split('->')
+            _target = int(_target)
+            if _target in kept_targets:
+                filtered_stats[key] = data
+        return filtered_stats, kept_targets
+
+
     def process_data(self):
         if not self.is_running:
             return
@@ -113,7 +139,14 @@ class DpsCalculator():
         except:
             return
 
-        target_list = deepcopy(self.data_storage.target_list)
+        raw_stats, kept_targets = self.filter_target(raw_stats)
+        # print(f"raw_stats: {json.dumps(raw_stats, indent=2)}")
+        # print(f"kept_targets: {kept_targets}")
+
+        target_list = list(kept_targets)
+        last_target = self.data_storage._last_target if self.data_storage._last_target in kept_targets else None
+        last_target_by_me = self.data_storage._last_target_by_me if self.data_storage._last_target_by_me in kept_targets else None
+
         actor_list = deepcopy(self.data_storage.actor_list)
         nickname_map = deepcopy(self.data_storage.nickname_map)
         actor_class_map = deepcopy(self.data_storage.actorClassMap)
@@ -163,8 +196,8 @@ class DpsCalculator():
         
         return {
             "main_player": self.data_storage._main_player,
-            "last_target": self.data_storage._last_target,
-            "last_target_by_me": self.data_storage._last_target_by_me,
+            "last_target": last_target,
+            "last_target_by_me": last_target_by_me,
             "target_list": target_list,
             "actort_list": actor_list,
             "target_start_time": self.data_storage.target_start_time,
@@ -172,6 +205,7 @@ class DpsCalculator():
             "nickname_map": nickname_map,
             "actor_class_map": actor_class_map,
             "mob_code": self.data_storage.mobStorage,
+            "mob_code_name_map": self.data_storage.mobCodeData,
             "summon_code": self.data_storage.summonStorage,
             "actor_skill_slots": self.data_storage.actorSkillSlots,
             "parsed_skill_code": self.data_storage.parsed_skill_code,

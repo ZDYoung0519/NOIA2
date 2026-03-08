@@ -15,6 +15,7 @@ dist-ssr
 # python
 src-python/build
 src-python/dist
+src-python/.venv
 /src-python/*.spec
 src-python/**/*.spec
 

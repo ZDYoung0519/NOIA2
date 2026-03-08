@@ -164,7 +164,8 @@ class StreamProcessor:
         self.main_loop = loop
 
     def on_packet_received(self, packet: bytes) -> None:
-
+        if "A8 78 1A BA CB" in to_hex(packet):
+            self.data_storage.heart += 1
 
         packet_length_info = read_varint(packet)
         if packet_length_info.length == -1:
@@ -202,6 +203,7 @@ class StreamProcessor:
     def parse_perfect_packet(self, packet: bytes) -> None:
         if len(packet) < 3:
             return
+            
         parsedDamage = self.parsing_damage(packet)
 
         # ✅ 添加 cast_nickname_net 调用（即 parse_nickname_from_broken_length_packet）
@@ -302,7 +304,7 @@ class StreamProcessor:
 
         if pdp.getActorId() != pdp.getTargetId():
             self.data_storage.appendDamage(pdp)
-
+            print('perfect damage packet', to_hex(packet))
         return True
 
     def parse_dot_packet(self, packet: bytes) -> None:

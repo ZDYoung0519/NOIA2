@@ -152,8 +152,8 @@ function DPSMeterPage() {
     curPlayerTargetDetailedSkillsArray,
     actorClassMap,
     actorSkillSlots,
-    parsedSkillCodeMap,
     mobCodeMap,
+    mobCodeNameMap,
     auto_target,
   } = useCombatStats({
     combatStats,
@@ -171,22 +171,40 @@ function DPSMeterPage() {
   const contentRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<Window | null>(null);
   const lastHeightRef = useRef<number>(0);
+  const scaleFactor = settings.scaleFactor;
   const updateWindowHeight = useCallback(async () => {
     if (!contentRef.current || !windowRef.current) return;
     const TITLEBAR_HEIGHT = 68; // 8px + 9px 两个 header 的高度
     const PADDING = 16; // 上下 padding 总和
     const MIN_HEIGHT = 100;
     const MAX_HEIGHT = 2000;
+
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    const contentHeight = Math.floor(contentRef.current.scrollHeight * 1.1);
+
+    const contentHeight = Math.floor(contentRef.current.scrollHeight * 1.3);
+
+    // 获取当前窗口的尺寸
+    const currentSize = await windowRef.current.innerSize();
+    const currentWidth = currentSize.width;
+
     const newHeight = Math.max(
       MIN_HEIGHT,
       Math.min(MAX_HEIGHT, contentHeight + TITLEBAR_HEIGHT + PADDING),
     );
+
     if (Math.abs(newHeight - lastHeightRef.current) > 5) {
       lastHeightRef.current = newHeight;
-      await windowRef.current.setSize(new PhysicalSize(400, newHeight));
-      console.log("窗口高度已更新:", newHeight, "内容高度:", contentHeight);
+      await windowRef.current.setSize(
+        new PhysicalSize(currentWidth, newHeight),
+      );
+      console.log(
+        "窗口高度已更新:",
+        newHeight,
+        "宽度:",
+        currentWidth,
+        "内容高度:",
+        contentHeight,
+      );
     }
   }, []);
 
@@ -311,7 +329,10 @@ function DPSMeterPage() {
   return (
     <div
       className="fixed inset-0 backdrop-blur-lg rounded-lg"
-      style={{ backgroundColor: `rgba(0, 0, 0, ${bgOpacity})` }}
+      style={{
+        backgroundColor: `rgba(0, 0, 0, ${bgOpacity})`,
+        zoom: scaleFactor, // 直接使用 zoom，布局会自适应
+      }}
     >
       <div className="w-full h-full flex flex-col shadow-2xl">
         <div
@@ -345,7 +366,13 @@ function DPSMeterPage() {
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
             <button
-              onClick={() => setView("settings")}
+              onClick={() => {
+                if (view != "settings") {
+                  setView("settings");
+                } else {
+                  setView("dps");
+                }
+              }}
               className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors ${
                 view === "settings"
                   ? "bg-white/20 text-white/90"
@@ -398,6 +425,8 @@ function DPSMeterPage() {
             <TargetCarousel
               targets={targetList}
               nicknameMap={nicknameMap}
+              mobCodeMap={mobCodeMap}
+              mobCodeNameMap={mobCodeNameMap}
               currentTarget={currentTarget}
               onChange={setCurrentTarget}
             />
@@ -416,7 +445,7 @@ function DPSMeterPage() {
             <SettingPanel
               settings={settings}
               saveSettings={saveSettings}
-              onClose={() => setView("dps")}
+              // onClose={() => setView("dps")}
             />
           )}
 
@@ -453,7 +482,7 @@ function DPSMeterPage() {
               t={t}
               renderSkillIcon={renderSkillIcon}
               formatNumber={formatNumber}
-              parsedSkillCodeMap={parsedSkillCodeMap}
+              // parsedSkillCodeMap={parsedSkillCodeMap}
             />
           )}
 

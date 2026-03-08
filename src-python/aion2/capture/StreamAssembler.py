@@ -1,5 +1,6 @@
 # stream_assembler.py
 import logging
+import time
 from typing import Optional, Callable, Awaitable
 import asyncio
 
@@ -85,8 +86,9 @@ class StreamAssembler:
         while True:
             suffix_index = self.buffer.index_of(MAGIC_PACKET)
             if suffix_index == -1:
-                if self.buffer.size > 1000:
-                    self.buffer.reset()
+                # if self.buffer.size > 1000:
+                #     self.buffer.reset()
+                time.sleep(0.01)
                 break  # 未找到 magic，等待更多数据
 
             cut_point = suffix_index + len(MAGIC_PACKET)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import {
   Sparkles,
   Zap,
@@ -11,21 +11,6 @@ import {
   Terminal,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-// --- Types & Interfaces ---
-
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  speedX: number;
-  speedY: number;
-  opacity: number;
-  color: string;
-}
-
-// --- Components ---
 
 const GlitchText = ({
   text,
@@ -80,74 +65,13 @@ const FeatureCard = ({
 
 export default function Home() {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [particles, setParticles] = useState<Particle[]>([]);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Particles
-  useEffect(() => {
-    const initialParticles = Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      speedX: (Math.random() - 0.5) * 0.2,
-      speedY: (Math.random() - 0.5) * 0.2,
-      opacity: Math.random() * 0.5 + 0.1,
-      color: Math.random() > 0.5 ? "#a855f7" : "#3b82f6", // Purple or Blue
-    }));
-    setParticles(initialParticles);
-  }, []);
-
-  // Animation Loop for Particles
-  useEffect(() => {
-    let animationFrameId: number;
-    const animate = () => {
-      setParticles((prev) =>
-        prev.map((p) => ({
-          ...p,
-          x: (p.x + p.speedX + 100) % 100,
-          y: (p.y + p.speedY + 100) % 100,
-        })),
-      );
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  // Mouse Parallax Effect
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    setMousePosition({
-      x: (clientX - innerWidth / 2) / 50,
-      y: (clientY - innerHeight / 2) / 50,
-    });
-  };
-
   return (
-    <div ref={containerRef} onMouseMove={handleMouseMove} className="">
+    <div ref={containerRef} className="">
       {/* Dynamic Background */}
       <div className="">
-        {/* Animated Particles */}
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute rounded-full blur-[1px] transition-transform duration-1000 ease-linear"
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
-              backgroundColor: p.color,
-              opacity: p.opacity,
-              transform: `translate(${mousePosition.x * (p.id % 5)}px, ${mousePosition.y * (p.id % 5)}px)`,
-            }}
-          />
-        ))}
-
         {/* Grid Overlay */}
         <div className="absolute inset-0  opacity-20" />
         <div
@@ -283,7 +207,7 @@ export default function Home() {
       </section>
 
       {/* Visual Demo / Interactive Section */}
-      <section className="relative z-10 py-24 bg-slate-900/30 border-y border-white/5">
+      <section className="relative z-10 py-24 ">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-16">
           <div className="flex-1 space-y-6">
             <h2 className="text-4xl font-bold text-white leading-tight">
@@ -376,7 +300,7 @@ export default function Home() {
       </section>
 
       {/* Role Score Section */}
-      <section className="relative z-10 py-24 bg-slate-900/30 border-y border-white/5">
+      <section className="relative z-10 py-24 ">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-16">
           {/* 左侧描述文本 */}
           <div className="flex-1 space-y-6">
@@ -393,8 +317,8 @@ export default function Home() {
             </p>
             <ul className="space-y-4">
               {[
-                "实时同步游戏内角色数据",
-                "动态评分算法，适配不同职业",
+                "实时同步官方API接口和蜂窝接口",
+                "根据【伤害计算公式】动态计算角色评分",
                 "属性阈值智能对比，一键生成提升路径",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-300">
@@ -490,7 +414,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 py-12 border-t border-white/5 bg-black">
+      <footer className="relative z-10 py-12 rr">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 opacity-50">
             <div className="w-6 h-6 bg-white rounded flex items-center justify-center font-bold text-black text-xs">

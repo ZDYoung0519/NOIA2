@@ -20,7 +20,6 @@ interface SkillListProps {
   t: (key: string) => string | null;
   renderSkillIcon: (skillId: number) => React.ReactNode;
   formatNumber: (num: number) => string;
-  parsedSkillCodeMap: Record<number, number>;
 }
 
 const SkillList: React.FC<SkillListProps> = ({
@@ -30,7 +29,6 @@ const SkillList: React.FC<SkillListProps> = ({
   t,
   renderSkillIcon,
   formatNumber,
-  parsedSkillCodeMap,
 }) => {
   const [expandedSkillId, setExpandedSkillId] = useState<number | null>(null);
 
@@ -77,6 +75,7 @@ const SkillList: React.FC<SkillListProps> = ({
   return (
     <div className="h-full overflow-y-auto p-0 space-y-0.5 simple-scrollbar">
       {curPlayerTargetDetailedSkillsArray.map((skill, _) => {
+        debugger;
         // const dps = duration > 0 ? skill.total_damage / duration : 0;
         const percentage =
           totalDamageSkills > 0
@@ -86,7 +85,7 @@ const SkillList: React.FC<SkillListProps> = ({
           maxDamageSkill > 0 ? (skill.total_damage / maxDamageSkill) * 100 : 0;
 
         const skillCode = skill.skillId;
-        const originalCode = (parsedSkillCodeMap[skillCode] || 0) as number;
+        const originalCode = skillCode;
         const skillName = t(`aion2skills:${originalCode.toString()}`);
         const displayName = skillName ?? `技能 ${originalCode}`;
 

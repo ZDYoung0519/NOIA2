@@ -49,11 +49,7 @@ class MemoryMonitor():
         #             "memoryTotal": 0
         #         }
 
-        channel_size = self.channel.size
-        assemblers_size = {}
-        for k, assembler in self.dispatcher.assemblers.items():
-            assemblers_size[k] = assembler.buffer.size
-            channel_size += assembler.buffer.size
+        channel_size = self.channel.size + self.dispatcher.assembler.buffer.size
         
         return {
 
@@ -63,7 +59,7 @@ class MemoryMonitor():
             "memory_percent": memory_percent,
             "cap_device": cap_device,
             "channel_size": channel_size,
-            "channel_num": len(self.dispatcher.assemblers)
+            "channel_num": 1
             # "gpu_util": gpu_util['load'],
             # "memoryUtil": gpu_util['memoryUtil']
         }

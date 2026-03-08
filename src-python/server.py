@@ -238,13 +238,6 @@ class Aion2DpsServer:
             self._async_broadcast(message),
             self._loop
         )
-        # logger.info(f"DPS memory is broadcast333 {data}")
-        sizes = {}
-        from copy import deepcopy
-        for k, v in self.dps_meter.dispatcher.assemblers.items():
-            sizes[k] = v.buffer.size
-
-        logger.info(f"Assembers, {sizes}")
     
     async def _async_broadcast(self, message: dict):
         """实际的异步广播逻辑"""

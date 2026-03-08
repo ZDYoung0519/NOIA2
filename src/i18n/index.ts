@@ -21,7 +21,7 @@ i18n
     // 调试模式，开发时可开启
     debug: process.env.NODE_ENV === "development",
     // 命名空间配置
-    ns: ["aion2skills", "aion2stats"],
+    ns: ["aion2skills", "aion2stats", "aion2mob"], // 定义多个命名空间
     defaultNS: "aion2skills", // 默认命名空间
     // 后端加载配置
     backend: {

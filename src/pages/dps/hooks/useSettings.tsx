@@ -10,6 +10,7 @@ export interface AppSettings {
   showMobStats: boolean; // 显示怪物统计
   showMemory: boolean;
   autoTarget: boolean; // 自动切换目标
+  scaleFactor: number; // ui缩放
 }
 
 const defaultSettings: AppSettings = {
@@ -21,6 +22,7 @@ const defaultSettings: AppSettings = {
   showMobStats: false,
   showMemory: true,
   autoTarget: true,
+  scaleFactor: 1,
 };
 
 const STORAGE_KEY = "dps-settings";

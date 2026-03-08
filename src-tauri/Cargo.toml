@@ -1,6 +1,6 @@
 [package]
 name = "noia2"
-version = "0.1.2"
+version = "0.2.6"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -27,4 +27,5 @@ tokio = { version = "1", features = ["full"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-window-state = "2"
 

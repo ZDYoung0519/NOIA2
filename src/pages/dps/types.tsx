@@ -28,6 +28,7 @@ export interface CombatStats {
   parsed_skill_code: Record<number, number>;
   actor_skill_slots: Record<number, Record<number, number[]>>;
   mob_code: Record<number, number>;
+  mob_code_name_map: Record<number, string>;
   last_target: number | null;
   last_target_by_me: number | null;
   duration: number;

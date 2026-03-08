@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Check, Keyboard, ChevronDown } from "lucide-react";
+import { Keyboard, ChevronDown } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import {
   Popover,
@@ -48,6 +48,11 @@ const ColorPickerButton = ({
 }: ColorPickerButtonProps) => {
   const [hex, setHex] = useState(rgbaToHex(color));
   const alpha = getAlphaFromRgba(color);
+
+  // 当外部 color 变化时同步 hex
+  useEffect(() => {
+    setHex(rgbaToHex(color));
+  }, [color]);
 
   const handleHexChange = (newHex: string) => {
     setHex(newHex);
@@ -216,148 +221,111 @@ const ShortcutInput = ({ value, onChange, label }: ShortcutInputProps) => {
 interface SettingPanelProps {
   settings: AppSettings;
   saveSettings: (settings: AppSettings) => void;
-  onClose: () => void;
 }
 
-export const SettingPanel = ({
-  settings,
-  saveSettings,
-  onClose,
-}: SettingPanelProps) => {
-  const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
+export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
+  // 移除本地状态，直接使用 settings prop
 
-  // 当外部 settings 变化时同步（比如从 localStorage 加载后）
-  useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
-
-  const handleSave = () => {
-    saveSettings(localSettings);
-    onClose();
+  // 更新单个设置并立即保存
+  const updateSetting = <K extends keyof AppSettings>(
+    key: K,
+    value: AppSettings[K],
+  ) => {
+    const newSettings = { ...settings, [key]: value };
+    saveSettings(newSettings);
   };
 
   return (
-    <div className="px-3 py-3 bg-black/40 border-b border-white/10 space-y-4 animate-in slide-in-from-top-2 duration-200">
-      <div className="space-y-3">
-        {/* 显示选项区域 */}
-        <div className="space-y-3 pt-1">
-          {/* 显示怪物统计 */}
-          <div className="flex items-center justify-between py-1">
-            <span className="text-xs text-white/60">显示怪物统计</span>
-            <Switch
-              checked={localSettings.showMobStats}
-              onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, showMobStats: checked })
-              }
-              className="data-[state=checked]:bg-indigo-500"
-            />
-          </div>
-
-          <div className="flex items-center justify-between py-1">
-            <span className="text-xs text-white/60">自动切换目标</span>
-            <Switch
-              checked={localSettings.autoTarget}
-              onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, autoTarget: checked })
-              }
-              className="data-[state=checked]:bg-indigo-500"
-            />
-          </div>
-
-          <div className="flex items-center justify-between py-1">
-            <span className="text-xs text-white/60">显示内存和网络信息</span>
-            <Switch
-              checked={localSettings.showMemory}
-              onCheckedChange={(checked) =>
-                setLocalSettings({ ...localSettings, showMemory: checked })
-              }
-              className="data-[state=checked]:bg-indigo-500"
-            />
-          </div>
-        </div>
-
-        {/* 最大显示数量设置 */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-white/80">
-              最大显示数量
-            </span>
-            <span className="text-[10px] text-white/50">
-              {localSettings.maxDisplayCount}
-            </span>
-          </div>
-          <Slider
-            value={[localSettings.maxDisplayCount]}
-            onValueChange={(v) =>
-              setLocalSettings({ ...localSettings, maxDisplayCount: v[0] })
-            }
-            min={1}
-            max={50}
-            step={1}
-            className="w-full"
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-white/80">背景透明度</span>
-          <span className="text-[10px] text-white/50">
-            {localSettings.bgOpacity}%
-          </span>
-        </div>
-        <Slider
-          value={[localSettings.bgOpacity]}
-          onValueChange={(v) =>
-            setLocalSettings({ ...localSettings, bgOpacity: v[0] })
-          }
-          min={10}
-          max={100}
-          step={1}
-          className="w-full"
+    <div className="h-full overflow-y-auto p-4 space-y-2 simple-scrollbar">
+      {/* 显示怪物统计 */}
+      <div className="flex items-center justify-between py-1">
+        <span className="text-xs text-white/60">显示怪物统计</span>
+        <Switch
+          checked={settings.showMobStats}
+          onCheckedChange={(checked) => updateSetting("showMobStats", checked)}
+          className="data-[state=checked]:bg-indigo-500"
         />
       </div>
 
+      <div className="flex items-center justify-between py-1">
+        <span className="text-xs text-white/60">自动切换目标</span>
+        <Switch
+          checked={settings.autoTarget}
+          onCheckedChange={(checked) => updateSetting("autoTarget", checked)}
+          className="data-[state=checked]:bg-indigo-500"
+        />
+      </div>
+
+      <div className="flex items-center justify-between py-1">
+        <span className="text-xs text-white/60">显示内存和网络信息</span>
+        <Switch
+          checked={settings.showMemory}
+          onCheckedChange={(checked) => updateSetting("showMemory", checked)}
+          className="data-[state=checked]:bg-indigo-500"
+        />
+      </div>
+
+      {/* 最大显示数量设置 */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-white/80">最大显示数量</span>
+        <span className="text-[10px] text-white/50">
+          {settings.maxDisplayCount}
+        </span>
+      </div>
+      <Slider
+        value={[settings.maxDisplayCount]}
+        onValueChange={(v) => updateSetting("maxDisplayCount", v[0])}
+        min={1}
+        max={50}
+        step={1}
+        className="w-full"
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-white/80">背景透明度</span>
+        <span className="text-[10px] text-white/50">{settings.bgOpacity}%</span>
+      </div>
+      <Slider
+        value={[settings.bgOpacity]}
+        onValueChange={(v) => updateSetting("bgOpacity", v[0])}
+        min={10}
+        max={100}
+        step={1}
+        className="w-full"
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-white/80">页面缩放比例</span>
+        <span className="text-[10px] text-white/50">
+          {settings.scaleFactor}%
+        </span>
+      </div>
+      <Slider
+        value={[settings.scaleFactor]}
+        onValueChange={(v) => updateSetting("scaleFactor", v[0])}
+        min={0.8}
+        max={1.4}
+        step={0.1}
+        className="w-full"
+      />
+
       <ColorPickerButton
         label="主玩家颜色 (进度条)"
-        color={localSettings.mainPlayerColor}
-        onChange={(color) =>
-          setLocalSettings({ ...localSettings, mainPlayerColor: color })
-        }
+        color={settings.mainPlayerColor}
+        onChange={(color) => updateSetting("mainPlayerColor", color)}
       />
 
       <ColorPickerButton
         label="其他玩家颜色 (进度条)"
-        color={localSettings.otherPlayerColor}
-        onChange={(color) =>
-          setLocalSettings({ ...localSettings, otherPlayerColor: color })
-        }
+        color={settings.otherPlayerColor}
+        onChange={(color) => updateSetting("otherPlayerColor", color)}
       />
 
       <ShortcutInput
         label="重置快捷键"
-        value={localSettings.resetShortcut}
-        onChange={(shortcut) =>
-          setLocalSettings({ ...localSettings, resetShortcut: shortcut })
-        }
+        value={settings.resetShortcut}
+        onChange={(shortcut) => updateSetting("resetShortcut", shortcut)}
       />
-
-      <div className="pt-2 flex justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-7 px-3 text-xs text-white/60 hover:text-white/90 hover:bg-white/10"
-        >
-          取消
-        </Button>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          className="h-7 px-3 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-200 text-xs"
-        >
-          <Check className="w-3 h-3 mr-1" />
-          完成
-        </Button>
-      </div>
     </div>
   );
 };

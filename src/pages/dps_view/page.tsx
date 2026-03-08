@@ -348,7 +348,13 @@ export function DPSHistory() {
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-500 gap-5">
-              <button className="px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 group">
+              <button
+                onClick={() => {
+                  Aion2CombatHistory.clear();
+                  setCombatHistory([]);
+                }}
+                className="px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 group"
+              >
                 清空记录
               </button>
             </div>
