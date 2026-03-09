@@ -322,9 +322,15 @@ export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
       />
 
       <ShortcutInput
-        label="重置快捷键"
+        label="重置DPS快捷键"
         value={settings.resetShortcut}
         onChange={(shortcut) => updateSetting("resetShortcut", shortcut)}
+      />
+
+      <ShortcutInput
+        label="显示/隐藏DPS快捷键"
+        value={settings.showDpsShortcut}
+        onChange={(shortcut) => updateSetting("showDpsShortcut", shortcut)}
       />
     </div>
   );

@@ -16,6 +16,9 @@
     "core:window:allow-set-size",
     "global-shortcut:allow-register",
     "global-shortcut:allow-is-registered",
-    "global-shortcut:allow-unregister"
+    "global-shortcut:allow-unregister",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

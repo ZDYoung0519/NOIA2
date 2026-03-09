@@ -33,11 +33,26 @@ export default function SkillTooltip({ skill }: { skill: any }) {
   );
 }
 
-export function renderSkillSlot({ skill }: { skill: any }) {
+export function renderSkillSlot({
+  skill,
+  scaleFactor = 1,
+  showName = false,
+  showLevel = true,
+}: {
+  skill: any;
+  scaleFactor: number;
+  showName?: boolean;
+  showLevel?: boolean;
+}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="relative rounded border-2 hover:border-orange-500 hover:brightness-130 w-14 h-14">
+        <div
+          className={`relative rounded border-2 hover:border-orange-500 hover:brightness-130 w-16 h-16`}
+          style={{
+            zoom: scaleFactor, // 直接使用 zoom，布局会自适应
+          }}
+        >
           <div className="relative w-full h-full">
             {/* 图标 */}
             <img
@@ -45,19 +60,21 @@ export function renderSkillSlot({ skill }: { skill: any }) {
               alt={skill.name}
               className="rounded-lg w-full h-full object-contain"
             />
-
             {/* 等级标签 */}
-            <span
-              className="absolute bottom-0 right-1 translate-x-1/4 translate-y-1/4
-               text-xs bg-black/70 text-white px-1 py-1 rounded-sm leading-none"
-            >
-              Lv. {skill.skillLevel}
-            </span>
-
+            {showLevel && (
+              <span
+                className={`absolute bottom-0 right-1 translate-x-1/4 translate-y-1/4
+                 text-[14px] bg-black/70 text-white px-1 py-1 rounded-sm leading-none`}
+              >
+                Lv. {skill.skillLevel}
+              </span>
+            )}
             {/* 名称 - 下方居中 */}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-white whitespace-nowrap">
-              {skill.name}
-            </span>
+            {showName && (
+              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-white whitespace-nowrap">
+                {skill.name}
+              </span>
+            )}
           </div>
         </div>
       </TooltipTrigger>

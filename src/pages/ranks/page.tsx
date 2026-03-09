@@ -3,11 +3,11 @@ import { useState, useMemo, useEffect } from "react";
 
 import { getCharacterData } from "../character_view/utils/getCharacterData";
 import { processCharacterData } from "../character_view/utils/processCharacterData";
-import { CharacterProps } from "../character_view/types";
+import { CharacterProps } from "@/types/aion2";
 
 import { uploadCharacterData } from "@/lib/uploadCharacterData";
 
-export default function RanksPage() {
+export default function RanksScrapyPage() {
   const [rankData, setRankData] = useState<CharacterProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({

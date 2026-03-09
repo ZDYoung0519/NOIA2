@@ -12,110 +12,176 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronDown, X, Grid3x3 } from "lucide-react";
 
-interface DbCharacter {
-  characterId: string;
-  serverId: string;
-  profile: {
-    characterName?: string;
-    className?: string;
-    raceName?: string;
-    serverName?: string;
-    regionName?: string;
-  };
-  scores: {
-    PvEScore: number;
-    ItemLevel: number;
-    FengwoScore: number;
-  };
+import { BuildCard, BuildCardSkeleton } from "@/components/aion2/build_card";
+import { CharacterProps } from "@/types/aion2";
+
+// 常量定义
+export const CLASSES = [
+  "殺星",
+  "劍星",
+  "護法星",
+  "治愈星",
+  "守護星",
+  "魔道星",
+  "精靈星",
+  "弓星",
+] as const;
+
+export const TIEN_SERVERS = [
+  "希埃爾",
+  "奈薩肯",
+  "白傑爾",
+  "凱西內爾",
+  "尤斯迪埃",
+  "艾瑞爾",
+  "普雷奇翁",
+  "梅斯蘭泰達",
+  "希塔尼耶",
+  "納尼亞",
+  "塔哈巴達",
+  "路特斯",
+  "菲爾諾斯",
+  "達彌努",
+  "卡薩卡",
+  "巴卡爾摩",
+  "天加隆",
+  "科奇隆",
+] as const;
+
+export const ASMODIAN_SERVERS = [
+  "伊斯拉佩爾",
+  "吉凱爾",
+  "崔妮爾",
+  "露梅爾",
+  "瑪爾庫坦",
+  "阿斯佩爾",
+  "艾萊修奇卡",
+  "布里特拉",
+  "奈蒙",
+  "哈達爾",
+  "盧德萊",
+  "鄔爾古倫",
+  "默尼",
+  "奧達爾",
+  "簡卡卡",
+  "克羅梅德",
+  "奎靈",
+  "巴巴隆",
+] as const;
+
+export type RaceType = "天族" | "魔族";
+
+interface ServerGroup {
+  race: RaceType;
+  servers: readonly string[];
 }
 
-// 筛选下拉组件
-function FilterDropdown({
+const SERVER_GROUPS: ServerGroup[] = [
+  { race: "天族", servers: TIEN_SERVERS },
+  { race: "魔族", servers: ASMODIAN_SERVERS },
+];
+
+// 排序选项
+const SORT_OPTIONS = [
+  { value: "ItemLevel", label: "装备等级", column: "scores->ItemLevel" },
+  { value: "damageTotal", label: "总攻击", column: "scores->damageTotal" },
+  { value: "FengwoScore", label: "蜂窝评分", column: "scores->FengwoScore" },
+  { value: "PvEScore", label: "综合评分", column: "scores->PvEScore" },
+] as const;
+
+type SortKey = (typeof SORT_OPTIONS)[number]["value"];
+
+// 单选筛选组件
+function SingleSelectFilter({
   title,
   options,
   selected,
   onChange,
   placeholder = "全部",
+  disabled = false,
 }: {
   title: string;
-  options: string[];
-  selected: string[];
-  onChange: (selected: string[]) => void;
+  options: readonly string[] | string[];
+  selected: string | null;
+  onChange: (value: string | null) => void;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
-  const toggleAll = () => {
-    if (selected.length === options.length) {
-      onChange([]);
+  const handleSelect = (value: string) => {
+    if (selected === value) {
+      onChange(null);
     } else {
-      onChange([...options]);
+      onChange(value);
     }
+    setOpen(false);
   };
 
-  const toggleItem = (value: string) => {
-    const newSelected = selected.includes(value)
-      ? selected.filter((v) => v !== value)
-      : [...selected, value];
-    onChange(newSelected);
-  };
-
-  const displayText =
-    selected.length === 0
-      ? placeholder
-      : selected.length === options.length
-        ? `全部 ${title}`
-        : `${selected.length} 个已选`;
+  const displayText = selected || placeholder;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="justify-between gap-2">
+        <Button
+          variant="outline"
+          className="justify-between gap-2 min-w-[140px]"
+          disabled={disabled}
+        >
           <span>{title}</span>
-          <Badge variant="secondary" className="ml-1 font-normal">
+          <Badge
+            variant={selected ? "default" : "secondary"}
+            className="ml-1 font-normal truncate max-w-[100px]"
+          >
             {displayText}
           </Badge>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-2" align="start">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{title}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={toggleAll}
-            >
-              {selected.length === options.length ? "取消全选" : "全选"}
-            </Button>
+            {selected && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => {
+                  onChange(null);
+                  setOpen(false);
+                }}
+              >
+                清除
+              </Button>
+            )}
           </div>
           <Separator />
           <div className="max-h-60 overflow-y-auto space-y-1">
             {options.map((opt) => (
-              <div key={opt} className="flex items-center space-x-2">
-                <Checkbox
-                  id={opt}
-                  checked={selected.includes(opt)}
-                  onCheckedChange={() => toggleItem(opt)}
-                />
-                <Label
-                  htmlFor={opt}
-                  className="text-sm cursor-pointer truncate flex-1"
-                >
-                  {opt}
-                </Label>
+              <div
+                key={opt}
+                className={`flex items-center px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 ${
+                  selected === opt ? "bg-white/20" : ""
+                }`}
+                onClick={() => handleSelect(opt)}
+              >
+                <span className="text-sm flex-1">{opt}</span>
+                {selected === opt && (
+                  <span className="text-xs text-blue-400">✓</span>
+                )}
               </div>
             ))}
-            {options.length === 0 && (
-              <p className="text-sm text-muted-foreground">无选项</p>
-            )}
           </div>
         </div>
       </PopoverContent>
@@ -124,20 +190,21 @@ function FilterDropdown({
 }
 
 // 加载骨架屏
-function TableSkeleton() {
+function GridSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex gap-1 flex-wrap">
+        <Skeleton className="h-10 w-32" />
+        <Skeleton className="h-10 w-32" />
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-10 w-24" />
       </div>
-      <div className="rounded-xl border border-white/10 bg-slate-900/50">
-        <div className="p-4 space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 gap-4">
+        {[...Array(5)].map((_, i) => (
+          // <Skeleton key={i} className="h-64 w-full rounded-xl" />
+          <BuildCardSkeleton key={i} />
+        ))}
       </div>
     </div>
   );
@@ -145,308 +212,296 @@ function TableSkeleton() {
 
 export default function RanksDBPage() {
   const navigate = useNavigate();
-  const [data, setData] = useState<DbCharacter[]>([]);
+  const [data, setData] = useState<CharacterProps[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof DbCharacter["scores"];
-    direction: "asc" | "desc";
-  }>({
-    key: "PvEScore",
-    direction: "desc",
-  });
 
-  // 筛选状态
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
-  const [selectedServers, setSelectedServers] = useState<string[]>([]);
+  // 筛选状态 - 改为单选
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedRace, setSelectedRace] = useState<RaceType | "所有">("所有");
+  const [selectedServer, setSelectedServer] = useState<string | null>(null);
 
+  // 排序状态
+  const [sortKey, setSortKey] = useState<SortKey>("PvEScore");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const pageSize = 5;
 
-  // 获取数据
+  // 获取当前种族可用的服务器选项
+  const availableServers = useMemo(() => {
+    if (selectedRace === "所有") {
+      return [...TIEN_SERVERS, ...ASMODIAN_SERVERS].sort();
+    }
+    const group = SERVER_GROUPS.find((g) => g.race === selectedRace);
+    return group ? [...group.servers] : [];
+  }, [selectedRace]);
+
+  // 当种族改变时，清空服务器选择
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const { data: records, error } = await supabase
-          .from("NOIA2CHARACTER")
-          .select("characterId, serverId, profile, scores");
-
-        if (error) throw error;
-
-        const filtered = (records as DbCharacter[]).filter(
-          (item) => item.scores && Object.keys(item.scores).length > 0,
-        );
-
-        setData(filtered);
-      } catch (err: any) {
-        toast.error("加载失败", { description: err.message });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // 提取可用的筛选选项
-  const classOptions = useMemo(() => {
-    const classes = new Set<string>();
-    data.forEach((item) => {
-      if (item.profile?.className) classes.add(item.profile.className);
-    });
-    return Array.from(classes).sort();
-  }, [data]);
-
-  const serverOptions = useMemo(() => {
-    const servers = new Set<string>();
-    data.forEach((item) => {
-      if (item.serverId) servers.add(item.serverId);
-    });
-    return Array.from(servers).sort();
-  }, [data]);
-
-  // 筛选数据
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      // 职业筛选
-      if (
-        selectedClasses.length > 0 &&
-        (!item.profile?.className ||
-          !selectedClasses.includes(item.profile.className))
-      ) {
-        return false;
-      }
-      // 服务器筛选
-      if (
-        selectedServers.length > 0 &&
-        (!item.serverId || !selectedServers.includes(item.serverId))
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [data, selectedClasses, selectedServers]);
-
-  // 排序
-  const sortedData = useMemo(() => {
-    if (!filteredData.length) return [];
-    return [...filteredData].sort((a, b) => {
-      const aVal = a.scores[sortConfig.key];
-      const bVal = b.scores[sortConfig.key];
-      if (aVal === undefined || bVal === undefined) return 0;
-      const compare = aVal - bVal;
-      return sortConfig.direction === "asc" ? compare : -compare;
-    });
-  }, [filteredData, sortConfig]);
-
-  // 分页
-  const totalPages = Math.ceil(sortedData.length / pageSize);
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedData.slice(start, start + pageSize);
-  }, [sortedData, currentPage]);
-
-  // 处理排序
-  const handleSort = (key: keyof DbCharacter["scores"]) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
-    }));
+    setSelectedServer(null);
     setCurrentPage(1);
+  }, [selectedRace]);
+
+  // 获取数据的函数
+  const fetchData = async () => {
+    setLoading(true);
+    setData([]);
+
+    try {
+      let query = supabase
+        .from("NOIA2CHARACTER")
+        .select("characterId, serverId, profile, scores, info, updatedAt", {
+          count: "exact",
+        });
+
+      // 应用筛选条件 - 改为单选
+      if (selectedClass) {
+        query = query.filter("profile->>className", "eq", selectedClass);
+      }
+
+      if (selectedRace !== "所有") {
+        query = query.filter("profile->>raceName", "eq", selectedRace);
+      }
+
+      if (selectedServer) {
+        query = query.eq("profile->>serverName", selectedServer);
+      }
+
+      // 只返回有评分的角色
+      query = query.not("scores", "is", null);
+
+      // 应用排序
+      const sortOption = SORT_OPTIONS.find((opt) => opt.value === sortKey);
+      if (sortOption) {
+        query = query.order(sortOption.column, {
+          ascending: sortDirection === "asc",
+          nullsFirst: false,
+        });
+      }
+
+      // 应用分页
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data: records, error, count } = await query.range(from, to);
+
+      if (error) throw error;
+
+      setData(records as CharacterProps[]);
+      setTotalCount(count || 0);
+    } catch (err: any) {
+      toast.error("加载失败", { description: err.message });
+      setData([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 排序指示符
-  const getSortIndicator = (key: keyof DbCharacter["scores"]) => {
-    if (sortConfig.key !== key) return "↕️";
-    return sortConfig.direction === "desc" ? "↓" : "↑";
-  };
-
-  // 行点击跳转
-  const handleRowClick = (characterId: string, serverId: string) => {
-    navigate(`/character/view?characterId=${characterId}&serverId=${serverId}`);
-  };
+  // 当筛选、排序或分页改变时重新获取数据
+  useEffect(() => {
+    fetchData();
+  }, [
+    selectedClass,
+    selectedRace,
+    selectedServer,
+    sortKey,
+    sortDirection,
+    currentPage,
+  ]);
 
   // 清除所有筛选
   const clearFilters = () => {
-    setSelectedClasses([]);
-    setSelectedServers([]);
+    setSelectedClass(null);
+    setSelectedRace("所有");
+    setSelectedServer(null);
     setCurrentPage(1);
   };
 
+  // 切换排序方向
+  const toggleSortDirection = () => {
+    setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"));
+    setCurrentPage(1);
+  };
+
+  // 处理排序字段变化
+  const handleSortKeyChange = (value: SortKey) => {
+    setSortKey(value);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold text-white mb-6">数据库排行榜</h1>
-        <TableSkeleton />
+      <div className="mx-auto max-w-[1500px]">
+        <GridSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-white">数据库排行榜</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* 职业筛选 */}
-          <FilterDropdown
-            title="职业"
-            options={classOptions}
-            selected={selectedClasses}
-            onChange={(val) => {
-              setSelectedClasses(val);
-              setCurrentPage(1);
-            }}
-            placeholder="全部职业"
-          />
-          {/* 服务器筛选 */}
-          <FilterDropdown
-            title="服务器"
-            options={serverOptions}
-            selected={selectedServers}
-            onChange={(val) => {
-              setSelectedServers(val);
-              setCurrentPage(1);
-            }}
-            placeholder="全部服务器"
-          />
-          {/* 清除筛选按钮 */}
-          {(selectedClasses.length > 0 || selectedServers.length > 0) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="gap-1"
+    <div className="mx-auto max-w-[1500px] py-20">
+      <div className="flex flex-col gap-2">
+        {/* 标题和筛选行 */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold text-white">数据库排行榜</h1>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* 职业筛选 - 改为单选 */}
+            <SingleSelectFilter
+              title="职业"
+              options={CLASSES}
+              selected={selectedClass}
+              onChange={(val) => {
+                setSelectedClass(val);
+                setCurrentPage(1);
+              }}
+              placeholder="全部职业"
+            />
+
+            {/* 种族筛选 */}
+            <Select
+              value={selectedRace}
+              onValueChange={(value: RaceType | "所有") => {
+                setSelectedRace(value);
+                setCurrentPage(1);
+              }}
             >
-              <X className="h-4 w-4" />
-              清除筛选
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="选择种族" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="所有">所有种族</SelectItem>
+                <SelectItem value="天族">天族</SelectItem>
+                <SelectItem value="魔族">魔族</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* 服务器筛选 - 改为单选 */}
+            <SingleSelectFilter
+              title="服务器"
+              options={availableServers}
+              selected={selectedServer}
+              onChange={(val) => {
+                setSelectedServer(val);
+                setCurrentPage(1);
+              }}
+              placeholder={
+                selectedRace === "所有"
+                  ? "全部服务器"
+                  : `全部${selectedRace}服务器`
+              }
+            />
+
+            {/* 排序选择 */}
+            <Select value={sortKey} onValueChange={handleSortKeyChange}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="排序方式" />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* 排序方向 */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleSortDirection}
+              className="w-10"
+              title={sortDirection === "desc" ? "从高到低" : "从低到高"}
+            >
+              {sortDirection === "desc" ? "↓" : "↑"}
             </Button>
-          )}
-        </div>
-      </div>
 
-      {filteredData.length === 0 ? (
-        <div className="flex items-center justify-center min-h-[300px] text-white/70 bg-slate-900/50 rounded-xl border border-white/10">
-          没有符合条件的角色
-        </div>
-      ) : (
-        <>
-          <div className="w-full overflow-x-auto rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur-sm">
-            <table className="w-full text-white">
-              <thead className="border-b border-white/20 bg-slate-800/50">
-                <tr>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    排名
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    角色
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    职业
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    种族
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    服务器
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    军团
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right text-sm font-medium cursor-pointer hover:text-blue-400"
-                    onClick={() => handleSort("PvEScore")}
-                  >
-                    PvE评分 {getSortIndicator("PvEScore")}
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right text-sm font-medium cursor-pointer hover:text-blue-400"
-                    onClick={() => handleSort("ItemLevel")}
-                  >
-                    装备等级 {getSortIndicator("ItemLevel")}
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right text-sm font-medium cursor-pointer hover:text-blue-400"
-                    onClick={() => handleSort("FengwoScore")}
-                  >
-                    蜂窝评分 {getSortIndicator("FengwoScore")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {paginatedData.map((character, index) => {
-                  const rank = (currentPage - 1) * pageSize + index + 1;
-                  const profile = character.profile || {};
-                  return (
-                    <tr
-                      key={character.characterId}
-                      className="hover:bg-white/5 cursor-pointer transition-colors"
-                      onClick={() =>
-                        handleRowClick(
-                          character.characterId,
-                          character.serverId,
-                        )
-                      }
-                    >
-                      <td className="py-2 px-4 text-sm">{rank}</td>
-                      <td className="py-2 px-4 text-sm font-medium">
-                        {profile.characterName || "-"}
-                      </td>
-                      <td className="py-2 px-4 text-sm">
-                        {profile.className || "-"}
-                      </td>
-                      <td className="py-2 px-4 text-sm">
-                        {profile.raceName || "-"}
-                      </td>
-                      <td className="py-2 px-4 text-sm">
-                        {profile.serverName || "-"}
-                      </td>
-                      <td className="py-2 px-4 text-sm">
-                        {profile.regionName || "-"}
-                      </td>
-                      <td className="py-2 px-4 text-right text-sm">
-                        {character.scores.PvEScore?.toFixed(0) ?? "-"}
-                      </td>
-                      <td className="py-2 px-4 text-right text-sm">
-                        {character.scores.ItemLevel?.toFixed(0) ?? "-"}
-                      </td>
-                      <td className="py-2 px-4 text-right text-sm">
-                        {character.scores.FengwoScore?.toFixed(0) ?? "-"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {/* 清除筛选按钮 */}
+            {(selectedClass || selectedRace !== "所有" || selectedServer) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="gap-1"
+              >
+                <X className="h-4 w-4" />
+                清除筛选
+              </Button>
+            )}
           </div>
+        </div>
 
-          {/* 分页控件 */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 mt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                上一页
-              </Button>
-              <span className="text-sm text-white/70">
-                第 {currentPage} / {totalPages} 页
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                下一页
-              </Button>
+        {/* 结果统计 */}
+        <div className="flex items-center justify-between text-sm text-white/70">
+          <span>共 {totalCount} 个角色</span>
+          <div className="flex items-center gap-2">
+            <Grid3x3 className="h-4 w-4" />
+            <span>卡片视图</span>
+          </div>
+        </div>
+
+        {/* 卡片网格 */}
+        {totalCount === 0 ? (
+          <div className="flex items-center justify-center min-h-[400px] text-white/70 bg-slate-900/50 rounded-xl border border-white/10">
+            没有符合条件的角色
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 overflow-x-hidden overflow-y-visible simple-scrollbar h-[65vh]">
+              {data.map((character, index) => (
+                <div
+                  key={character.characterId}
+                  onClick={() =>
+                    navigate(
+                      `/character/view?characterId=${character.characterId}&serverId=${character.serverId}`,
+                    )
+                  }
+                  className=""
+                >
+                  <BuildCard
+                    rank={index + 1 + (currentPage - 1) * pageSize}
+                    buildData={character}
+                    isLocal={true}
+                    onClick={() => {}}
+                  />
+                </div>
+              ))}
             </div>
-          )}
-        </>
-      )}
+
+            {/* 分页控件 */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  上一页
+                </Button>
+                <span className="text-sm text-white/70">
+                  第 {currentPage} / {totalPages} 页
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages || loading}
+                >
+                  下一页
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

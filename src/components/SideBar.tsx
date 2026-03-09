@@ -12,9 +12,20 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+
+import { SettingPanel } from "./SettingsPanel";
+import { useGlobalAppSettings } from "@/hooks/useSettings";
 
 const Aion2Navigation = {
   name: "永恒之塔2",
@@ -92,6 +103,8 @@ const SideNavigationBar = () => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+
   // 初始化：从 localStorage 读取
   useEffect(() => {
     setIsCollapsed(getStoredCollapseState());
@@ -111,6 +124,8 @@ const SideNavigationBar = () => {
     }));
   };
 
+  const { settings, saveSettings } = useGlobalAppSettings();
+
   return (
     <motion.div
       className={`bg-background border-r flex flex-col py-4 z-50 hidden md:flex h-full items-center `}
@@ -126,6 +141,16 @@ const SideNavigationBar = () => {
           </Link>
         </Button>
       </div>
+
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>应用设置</DialogTitle>
+            <DialogDescription></DialogDescription>
+            <SettingPanel settings={settings} saveSettings={saveSettings} />
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-2 py-10">
@@ -197,7 +222,9 @@ const SideNavigationBar = () => {
             <Button
               variant="ghost"
               className="w-full justify-center px-3 py-2"
-              onClick={() => console.log("Settings")}
+              onClick={() => {
+                setShowSettings(true);
+              }}
             >
               <Settings className="mr-3 h-4 w-4" />
               整体设置

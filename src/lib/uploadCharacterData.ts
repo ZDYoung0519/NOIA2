@@ -1,4 +1,5 @@
-import { CharacterProps } from "@/pages/character_view/types";
+import { CharacterProps } from "@/types/aion2";
+
 import { supabase } from "@/lib/supabase";
 
 export const uploadCharacterData = async (data: CharacterProps[]) => {

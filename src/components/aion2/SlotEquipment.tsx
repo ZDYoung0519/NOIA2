@@ -28,7 +28,7 @@ export const renderDiamond = ({ solid, value, w, h }: RenderDiamondProps) => {
     >
       {/* 外层菱形 */}
       <div
-        className="absolute inset-0 bg-teal-400"
+        className="absolute inset-0 bg-teal-500"
         style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
       />
 
@@ -330,14 +330,14 @@ export function renderEquipSlotSmall({
   eq,
   size = 15,
 }: {
-  eq: Record<string, any>;
+  eq: any;
   size: Number;
 }) {
   const cfg = gradeConfig[eq.grade as GradeType] || gradeConfig.Common;
   return (
     <div
       className={`
-        relative flex items-center gap-1 px-2 border-2  max-w
+        relative flex items-center gap-0 px-0 border-2  max-w
         bg-cover bg-center
         ${cfg.bgDark} ${cfg.border} hover:border-teal-200 
         hover:brightness-130  transition w-${size} h-${size}
@@ -345,14 +345,14 @@ export function renderEquipSlotSmall({
       style={{ backgroundImage: cfg.bg }} /* 整张卡片背景 */
     >
       <div>
-        <img src={eq.icon} alt={eq.name} className="p-0" />
+        <img src={eq.icon} alt={eq.name} className="p-0 w-full h-full" />
         <div className="absolute bottom-0 right-0 text-[12px] font-bold text-white drop-shadow translate-y-1/4">
           {eq.exceedLevel > 0 ? (
             renderDiamond({
               solid: true,
               value: String(eq.exceedLevel),
-              w: 16,
-              h: 24,
+              w: 14,
+              h: 18,
             })
           ) : (
             <span>+{eq.enchantLevel}</span>

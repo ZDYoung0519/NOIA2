@@ -1,4 +1,4 @@
-import { CharacterProps } from "../types";
+import { CharacterProps } from "@/types/aion2";
 import { fetchURL } from "@/lib/fetch";
 
 const getCharacterInfoData = async (
@@ -106,6 +106,7 @@ export const getCharacterData = async (
       statEntriesMap: {},
       parts: [],
       finalScore: 0,
+      statsProfile: {} as Record<string, number>,
     },
     scores: {},
   };

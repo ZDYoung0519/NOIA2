@@ -139,7 +139,17 @@ function DPSMeterPage() {
     setCurrentPlayer(null);
   }, [send]);
 
-  const { settings, saveSettings } = useAppSettings(handleReset);
+  const [_, setIsWindowVisible] = useState(false);
+  const showHideDps = useCallback(async () => {
+    setIsWindowVisible((prevState) => {
+      const newState = !prevState;
+      console.warn(newState);
+      invoke("toggle_window", { label: "dps", shouldShow: newState });
+      return newState;
+    });
+  }, []);
+
+  const { settings, saveSettings } = useAppSettings(handleReset, showHideDps);
 
   const {
     currentTargetDamage,
@@ -223,6 +233,7 @@ function DPSMeterPage() {
   }, [combatStats, view, currentTarget, currentPlayer, updateWindowHeight]);
 
   const handleClose = useCallback(async () => {
+    setIsWindowVisible(false);
     await new Promise((r) => setTimeout(r, 10));
     send({ type: "command:quit" });
     await new Promise((r) => setTimeout(r, 10));

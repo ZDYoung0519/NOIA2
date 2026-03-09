@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const classIconMap: Record<string, React.ElementType> = {
   GLADIATOR: Swords,
@@ -370,8 +371,6 @@ export function DPSHistory() {
   );
 }
 export default function DPSViewPage() {
-  const [view, setView] = useState<string | null>("history");
-
   const handleOpenDPS = async () => {
     try {
       await invoke("show_window", { label: "dps" });
@@ -403,6 +402,25 @@ export default function DPSViewPage() {
                   "NpCap低延迟数据抓取技术，自适应Dps、技能伤害统计",
                   "使用方法：点击“打开DPS统计”，点击弹窗上的“启动”，等待指示灯变绿",
                   "耐心等待后台抓包服务启动，尽量不要重复点击，退出程序前请先关闭DPS窗口",
+                ].map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-slate-300"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <p className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 text-4xl font-bold text-white leading-tight">
+                常见问题
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "【DPS一直红灯】请确保使用管理员启动了程序",
+                  "【绿灯但无法检测】请在DPS设置中打开，“显示内存和网络”，查看Dev是否为None，如果是，大概率是因为没有安装NpCap，或者加速器不支持",
+                  "【其他问题】请先更新程序本体，然后在本页面更新DPS插件",
                 ].map((item, i) => (
                   <li
                     key={i}
@@ -483,24 +501,26 @@ export default function DPSViewPage() {
             >
               打开DPS统计
             </button>
+
             <button
-              onClick={() => setView("history")}
-              className="px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 group"
+              className="px-8 py-4 bg-white text-slate-950 rounded-xl font-bold text-lg hover:bg-slate-200 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2"
+              onClick={handleOpenDPS}
             >
-              查看战斗历史
+              更新DPS插件
             </button>
 
             <button
-              onClick={() => setView("rank")}
+              onClick={() => {
+                toast.error("开发中，敬请期待！");
+              }}
               className="px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-white/10 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 group"
             >
-              DPS 排行榜
+              DPS 榜单
             </button>
           </div>
         </div>
       </section>
-      {view == "history" && <DPSHistory />}
-      {view == "rank" && <></>}
+      <DPSHistory />
     </>
   );
 }

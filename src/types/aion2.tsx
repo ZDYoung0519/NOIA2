@@ -1,3 +1,74 @@
+// 服务器相关
+export type RaceType = "天族" | "魔族";
+
+export interface ServerGroup {
+  race: RaceType;
+  servers: string[];
+}
+
+export interface ServerDropdownProps {
+  value?: string;
+  groups: ServerGroup[];
+  onChange: (server: string, faction: RaceType) => void;
+  disabled?: boolean;
+}
+
+export const TIEN_SERVERS = [
+  "所有",
+  "希埃爾",
+  "奈薩肯",
+  "白傑爾",
+  "凱西內爾",
+  "尤斯迪埃",
+  "艾瑞爾",
+  "普雷奇翁",
+  "梅斯蘭泰達",
+  "希塔尼耶",
+  "納尼亞",
+  "塔哈巴達",
+  "路特斯",
+  "菲爾諾斯",
+  "達彌努",
+  "卡薩卡",
+  "巴卡爾摩",
+  "天加隆",
+  "科奇隆",
+] as const;
+
+export const ASMODIAN_SERVERS = [
+  "所有",
+  "伊斯拉佩爾",
+  "吉凱爾",
+  "崔妮爾",
+  "露梅爾",
+  "瑪爾庫坦",
+  "阿斯佩爾",
+  "艾萊修奇卡",
+  "布里特拉",
+  "奈蒙",
+  "哈達爾",
+  "盧德萊",
+  "鄔爾古倫",
+  "默尼",
+  "奧達爾",
+  "簡卡卡",
+  "克羅梅德",
+  "奎靈",
+  "巴巴隆",
+] as const;
+
+// 职业
+export const CLASSES = [
+  "殺星",
+  "劍星",
+  "護法星",
+  "治愈星",
+  "守護星",
+  "魔道星",
+  "精靈星",
+  "弓星",
+] as const;
+
 export type StatEntry = {
   type: string;
   name: string;
@@ -66,41 +137,58 @@ export const templates = {
 
 export type StatType = keyof typeof templates;
 
-// export interface CharacterProps {
-//   characterId: string;
-//   serverId: string;
-//   updatedAt: string;
-//   equipment: {
-//     equipmentList: any[];
-//     skinList: any[];
-//   };
-//   petwing: {
-//     pet: { icon: string; name: string; level: string };
-//     wing: { icon: string; name: string; grade: string };
-//   };
-//   skill: {
-//     skillList: any[];
-//   };
-//   info: {
-//     profile: any;
-//     ranking: any;
-//     title: any;
-//     stat: { statList: Record<string, any>[] };
-//     daevanion: any;
-//   };
-//   processed: {
-//     statEntriesMap: Record<string, any[]>;
-//     parts: Array<{ name: string; value: number; details: string[] }>;
-//     finalScore: Number;
-//   };
-//   scores: Record<string, number>;
-// }
-
 export interface CharacterProps {
   characterId: string;
   serverId: string;
   updatedAt: string;
-  profile: Record<string, any>;
+  profile: {
+    pcId: number;
+    gender: number;
+    raceId: number;
+    titleId: number;
+    raceName: string;
+    serverId: number;
+    className: string;
+    titleName: string;
+    genderName: string;
+    regionName: string;
+    serverName: string;
+    titleGrade: string;
+    characterId: string;
+    profileImage: string;
+    characterName: string;
+    characterLevel: string;
+  };
+  info: {
+    equipmentList: any[];
+    skinList: any[];
+    pet: Record<string, any>;
+    wing: Record<string, any>;
+    skillList: any[];
+    daevanion: any;
+    ranking: Record<string, any>;
+    title: Record<string, any>;
+    stat: Record<string, any>;
+  };
+  processed: {
+    statEntriesMap: Record<string, any[]>;
+    parts: Array<{ name: string; value: number; details: string[] }>;
+    statsProfile: Record<string, any>;
+    finalScore: Number;
+  };
+  scores: Record<string, number>;
+}
+
+export interface BuildDataProps {
+  id: string;
+  updatedAt: string;
+  profile: {
+    buildName: string;
+    className: string;
+    labels: string[];
+    author: string | null;
+    authorId: string | null;
+  };
   info: {
     equipmentList: any[];
     skinList: any[];

@@ -1,4 +1,3 @@
-
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
@@ -7,8 +6,8 @@ use tauri::{Manager, State};
 use std::time::Duration;
 use tauri::Emitter; // 导入 Emitter trait
 
-mod tray;
 mod http;
+mod tray;
 // use std::io::{BufRead, BufReader};
 // use std::thread;
 
@@ -100,10 +99,6 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-
-
-
-
 #[tauri::command]
 fn exit_app(app: tauri::AppHandle) {
     let _ = app.emit("app-exit", "application is exiting");
@@ -122,20 +117,110 @@ fn show_window(app_handle: tauri::AppHandle, label: String) -> Result<String, St
     }
 }
 
+#[tauri::command]
+fn toggle_window(
+    app_handle: tauri::AppHandle,
+    label: String,
+    should_show: bool,
+) -> Result<String, String> {
+    if let Some(window) = app_handle.get_webview_window(&label) {
+        if should_show {
+            let _ = window.show();
+            let _ = window.set_focus();
+            Ok(format!("Window '{}' shown", label))
+        } else {
+            let _ = window.hide();
+            Ok(format!("Window '{}' hidden", label))
+        }
+    } else {
+        Err(format!("Window with label '{}' not found", label))
+    }
+}
+
+
+
+use tauri::async_runtime::spawn;
+use tauri::{AppHandle};
+// use tokio::time::{sleep};
+
+struct SetupState {
+    frontend_task: bool,
+    backend_task: bool,
+}
+
+async fn setup(app: AppHandle) -> Result<(), ()> {
+    // Fake performing some heavy action for 3 seconds
+    println!("Performing really heavy backend setup task...");
+    // sleep(Duration::from_secs(3)).await;
+    println!("Backend setup task completed!");
+    // Set the backend task as being completed
+    // Commands can be ran as regular functions as long as you take
+    // care of the input arguments yourself
+    set_complete(
+        app.clone(),
+        app.state::<Mutex<SetupState>>(),
+        "backend".to_string(),
+    )
+    .await?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn set_complete(
+    app: AppHandle,
+    state: State<'_, Mutex<SetupState>>,
+    task: String,
+) -> Result<(), ()> {
+    // Lock the state without write access. A poisoned mutex shouldn't crash the
+    // whole runtime; if it happens we just recover the inner data.
+    let mut state_lock = match state.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    match task.as_str() {
+        "frontend" => state_lock.frontend_task = true,
+        "backend" => state_lock.backend_task = true,
+        _ => panic!("invalid task completed!"),
+    }
+    // Check if both tasks are completed
+    if state_lock.backend_task && state_lock.frontend_task {
+        // Setup is complete, we can close the splashscreen
+        // and unhide the main window!
+        if let Some(splash_window) = app.get_webview_window("splash") {
+            let _ = splash_window.close();
+        }
+        if let Some(main_window) = app.get_webview_window("main") {
+            let _ = main_window.show();
+        }
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(ServerProcess(Arc::new(Mutex::new(None))))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         // .plugin(tauri_plugin_window_state::Builder::new().build())
+        .manage(Mutex::new(SetupState {
+            frontend_task: false,
+            backend_task: false,
+        }))
         .invoke_handler(tauri::generate_handler![
             greet,
             exit_app,
             start_packet_server,
             end_packet_server,
             http::http_request,
-            show_window
+            show_window,
+            toggle_window,
+            set_complete
         ])
         .setup(|app| {
             #[cfg(all(desktop))]
@@ -146,6 +231,8 @@ pub fn run() {
 
                 let window = app.get_webview_window("main").unwrap();
                 window.set_decorations(false).unwrap();
+                
+                spawn(setup(app.handle().clone()));
             }
             Ok(())
         })

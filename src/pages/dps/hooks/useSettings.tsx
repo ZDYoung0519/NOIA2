@@ -6,6 +6,7 @@ export interface AppSettings {
   mainPlayerColor: string; // rgba格式
   otherPlayerColor: string; // rgba格式
   resetShortcut: string; // 快捷键，如 "Alt+Q"
+  showDpsShortcut: string; //
   maxDisplayCount: number; // 最大显示数量
   showMobStats: boolean; // 显示怪物统计
   showMemory: boolean;
@@ -18,6 +19,7 @@ const defaultSettings: AppSettings = {
   mainPlayerColor: "rgba(212, 112, 12, 0.66)",
   otherPlayerColor: "rgba(22, 53, 228, 0.44)",
   resetShortcut: "Alt+Q",
+  showDpsShortcut: "Alt+W",
   maxDisplayCount: 8,
   showMobStats: false,
   showMemory: true,
@@ -72,7 +74,7 @@ const unregisterResetShortcut = async (): Promise<void> => {
   }
 };
 
-export const useAppSettings = (onReset?: () => void) => {
+export const useAppSettings = (onReset: () => void, onShowDps: () => void) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -92,6 +94,13 @@ export const useAppSettings = (onReset?: () => void) => {
         // 注册快捷键
         if (onReset && loadedSettings.resetShortcut) {
           await registerResetShortcut(loadedSettings.resetShortcut, onReset);
+        }
+
+        if (onShowDps && loadedSettings.showDpsShortcut) {
+          await registerResetShortcut(
+            loadedSettings.showDpsShortcut,
+            onShowDps,
+          );
         }
       } catch (error) {
         console.error("加载设置失败:", error);
@@ -117,6 +126,13 @@ export const useAppSettings = (onReset?: () => void) => {
       // 如果快捷键改变了，重新注册
       if (newSettings.resetShortcut !== settings.resetShortcut && onReset) {
         await registerResetShortcut(newSettings.resetShortcut, onReset);
+      }
+
+      if (
+        newSettings.showDpsShortcut !== settings.showDpsShortcut &&
+        onShowDps
+      ) {
+        await registerResetShortcut(newSettings.showDpsShortcut, onShowDps);
       }
     } catch (error) {
       console.error("保存设置失败:", error);

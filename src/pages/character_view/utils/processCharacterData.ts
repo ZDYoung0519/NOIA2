@@ -4,7 +4,7 @@ import {
   StatType,
   templates,
   STAT_NAME_MAP,
-} from "../types";
+} from "@/types/aion2";
 
 export const REVERSE_STAT_NAME_MAP = Object.fromEntries(
   Object.entries(STAT_NAME_MAP).map(([key, value]) => [value, key]),
@@ -281,7 +281,10 @@ export function calCharacterScore(
 ): {
   parts: Array<{ name: string; value: number; details: string[] }>;
   finalScore: number;
+  statProfile: Record<string, number>;
 } {
+  const statProfile = {} as Record<string, number>;
+
   const targetDefense = 3000;
   const targetEvasion = 0;
   const targetCriticalResist = 0;
@@ -331,13 +334,15 @@ export function calCharacterScore(
   const minFixingDamage = getSum("FixingDamage", "min");
 
   // ---------- 攻击乘区 DamagePart ----------
-  const damageTotal = WeaponFixingDamage + FixingDamage;
-  const damagePartRaw = damageTotal * (1 + DamageRatio / 100);
+  const damageTotal =
+    (WeaponFixingDamage + FixingDamage) * (1 + DamageRatio / 100);
+  statProfile.damageTotal = damageTotal;
+
   const damagePartValue =
-    damagePartRaw * skillCoefficient - (targetDefense - DefensePierce) / 10;
+    damageTotal * skillCoefficient - (targetDefense - DefensePierce) / 10;
   const damagePartDetails = [
     `攻击乘区 = 攻击力 * 技能倍率 - (防御力 - 贯穿) / 10`,
-    `${damagePartValue.toFixed(2)} = ${damagePartRaw.toFixed(2)} * ${skillCoefficient} - (${targetDefense} - ${DefensePierce}) / 10`,
+    `${damagePartValue.toFixed(2)} = ${damageTotal.toFixed(2)} * ${skillCoefficient} - (${targetDefense} - ${DefensePierce}) / 10`,
   ];
 
   // ---------- 背击命中乘区 AccuracyPart ----------
@@ -349,7 +354,7 @@ export function calCharacterScore(
   const actualAccuracyRatio = Math.max(actualAccuracy, 0);
   const backAttackCeof1 =
     (100 + AmplifyBackAttack - targetDecreaseBackAttack) / 100;
-  const backAttackCeof2 = (damagePartRaw + BackAttackDamage) / damagePartRaw; // 注意此处用原始攻击力（不含技能系数）
+  const backAttackCeof2 = (damageTotal + BackAttackDamage) / damageTotal; // 注意此处用原始攻击力（不含技能系数）
   const accuracyPartValue =
     backAttackRatio * backAttackCeof1 * backAttackCeof2 +
     (1 - backAttackRatio) *
@@ -361,6 +366,7 @@ export function calCharacterScore(
     `背击增幅2: (攻击力 + 背击攻击力) / 攻击力 = ${(backAttackCeof2 * 100).toFixed(2)}%`,
     `命中率: (命中 - 闪避 + 1500) / 2900 = ${(actualAccuracyRatio * 100).toFixed(2)}%`,
   ];
+  statProfile.AmplifyBackAttack = AmplifyBackAttack;
 
   // ---------- 暴击爆伤乘区 CriticalPart ----------
   const criticalTotal = (WeaponCritical + Critical) * (1 + CriticalRatio / 100);
@@ -369,7 +375,7 @@ export function calCharacterScore(
       (1 + Math.exp(-0.006 * (criticalTotal - targetCriticalResist - 1024.52))),
     0.8,
   );
-  const criticalCeof1 = (damagePartRaw + CriticalAddDamage) / damagePartRaw;
+  const criticalCeof1 = (damageTotal + CriticalAddDamage) / damageTotal;
   const criticalCeof2 =
     (150 + AmplifyCriticalDamage - targetDecreaseCriticalDamage) / 100;
   const criticalPartValue =
@@ -380,6 +386,9 @@ export function calCharacterScore(
     `暴击增幅1: (攻击力 + 暴击攻击力) / 攻击力 = ${criticalCeof1.toFixed(3)}`,
     `暴击增幅2: (1.5 + 暴击伤害增幅 - 暴击伤害抵抗) = ${criticalCeof2.toFixed(3)}`,
   ];
+
+  statProfile.criticalTotal = criticalTotal;
+  statProfile.AmplifyCriticalDamage = AmplifyCriticalDamage;
 
   // ---------- 伤害增幅乘区 AmplifyPart ----------
   const amplifyDamage =
@@ -392,6 +401,7 @@ export function calCharacterScore(
     `目标伤害抗性: ${targetDecreaseDamage}%`,
     `计算值: ${amplifyPartRaw.toFixed(3)}，最终: ${amplifyPartValue.toFixed(3)}`,
   ];
+  statProfile.AmplifyAllDamage = AmplifyAllDamage;
 
   // ---------- 完美乘区 PerfectPart ----------
   const minDamageTotal = minWeaponFixingDamage + minFixingDamage;
@@ -407,6 +417,7 @@ export function calCharacterScore(
     `最大攻击: ${maxDamageTotal.toFixed(2)}`,
     `最小攻击: ${minDamageTotal.toFixed(2)}`,
   ];
+  statProfile.Perfect = Perfect;
 
   // ---------- 强击乘区 HardHitPart ----------
   const hardHitRatioRaw = (HardHit - targetHardHitResist) / 100;
@@ -416,6 +427,7 @@ export function calCharacterScore(
     `强击乘区: 强击率 * 2 + (1-强击率) * 1`,
     `强击率: (强击 - 强击抵抗) / 100 = ${(hardHitRatio * 100).toFixed(2)}%`,
   ];
+  statProfile.HardHit = HardHit;
 
   // ---------- 多段打击乘区 AdditionalHitPart ----------
   const additionalHitRatioRaw =
@@ -427,6 +439,7 @@ export function calCharacterScore(
     `多段打击概率 p = (多段打击 - 多段打击抵抗) / 100 = ${(additionalHitRatio * 100).toFixed(2)}%`,
     `计算结果: ${additionalHitPartValue.toFixed(3)}`,
   ];
+  statProfile.AdditionalHitRate = AdditionalHitRate;
 
   // ---------- 最终分数 ----------
   const finalScore =
@@ -466,6 +479,7 @@ export function calCharacterScore(
 
   return {
     parts,
+    statProfile,
     finalScore,
   };
 }
@@ -475,17 +489,25 @@ export function processCharacterData(
 ): CharacterProps {
   const statList = characterData.info.stat.statList;
   const statEntriesMap = getStatEntriesMap(characterData, statList);
-  const { parts, finalScore } = calCharacterScore(statEntriesMap);
+  const { parts, statProfile, finalScore } = calCharacterScore(statEntriesMap);
   characterData.processed.statEntriesMap = statEntriesMap;
   characterData.processed.parts = parts;
   characterData.processed.finalScore = finalScore;
+  characterData.processed.statsProfile = statProfile;
+
+  characterData.processed.statsProfile.attack = getStatSum(
+    "WeaponFixingDamage",
+    statEntriesMap,
+  ).total;
 
   const itemLevel =
     characterData.info.stat.statList.find((s: any) => s.type === "ItemLevel")
       ?.value || 0;
+
   characterData.scores = {
     PvEScore: finalScore,
     ItemLevel: itemLevel,
+    damageTotal: statProfile.damageTotal,
   };
   return characterData;
 }

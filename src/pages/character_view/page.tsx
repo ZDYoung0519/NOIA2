@@ -20,8 +20,11 @@ import { renderEquipSlotWithTooltip } from "@/components/aion2/SlotEquipment";
 import { renderArcanaSlot } from "@/components/aion2/SlotArcana";
 import { GradeType, gradeConfig } from "@/components/aion2/common";
 
-import { CharacterProps } from "./types";
-import { Aion2CharacterHistory } from "@/lib/localStorageHistory";
+import { BuildDataProps, CharacterProps } from "@/types/aion2";
+import {
+  Aion2BUILDHistory,
+  Aion2CharacterHistory,
+} from "@/lib/localStorageHistory";
 import { getCharacterData } from "./utils/getCharacterData";
 import { getStatSum, processCharacterData } from "./utils/processCharacterData";
 import { useTranslation } from "react-i18next";
@@ -29,6 +32,33 @@ import { useTranslation } from "react-i18next";
 import { uploadCharacterData } from "@/lib/uploadCharacterData";
 
 import { toast } from "sonner"; // 使用 sonner 的 toast
+
+import { supabase } from "@/lib/supabase";
+
+// 快速获取用户ID
+export const getCurrentUserId = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id || null;
+};
+
+// 快速获取用户名
+export const getCurrentUserName = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  // 尝试从多个可能的位置获取用户名
+  return (
+    user.user_metadata?.name ||
+    user.user_metadata?.full_name ||
+    user.user_metadata?.user_name ||
+    user.email?.split("@")[0]
+  );
+};
 
 function renderCharacterBanner({ character }: { character: CharacterProps }) {
   const profile = character.profile;
@@ -41,20 +71,32 @@ function renderCharacterBanner({ character }: { character: CharacterProps }) {
 
   const PvEScore = character.scores?.PvEScore?.toFixed(0) || "--";
   const FengwoScore = character.scores?.FengwoScore?.toFixed(0) || "--";
+  const itemLevel = character.scores?.ItemLevel?.toFixed(0) || "--";
 
-  const handleOpenInBD = () => {
-    // if (!character) return;
-    // const buildData: CharacterBuildProps = {
-    //   id: "temp",
-    //   buildName: characterName,
-    //   buildClass: characterClass,
-    //   author: { uid: "" },
-    //   updatedTime: new Date().toISOString(),
-    //   isUploaded: false,
-    //   buildContent: character,
-    // };
-    // Aion2BUILDHistory.add(buildData);
-    // setShowAddedDialog(true);
+  const handleOpenInBD = async () => {
+    if (!character) return;
+    const userId = await getCurrentUserId();
+    const userName = await getCurrentUserName();
+
+    const buildData: BuildDataProps = {
+      id: crypto.randomUUID(),
+      updatedAt: new Date().toISOString(),
+      profile: {
+        buildName: `${characterName}[${serverName}]的BD`,
+        className: characterClass,
+        labels: [characterClass],
+        author: userName,
+        authorId: userId,
+      },
+      info: character.info,
+      processed: {
+        statEntriesMap: {},
+        parts: [],
+        finalScore: 0,
+      },
+      scores: character.scores,
+    };
+    Aion2BUILDHistory.add(buildData);
   };
 
   const refetch = () => {
@@ -89,12 +131,17 @@ function renderCharacterBanner({ character }: { character: CharacterProps }) {
         <div className="flex flex-col gap-3 text-right">
           <div className="flex flex-row gap-5">
             <div>
-              <div className="text-xs text-muted-foreground">道具等级</div>
+              <div className="text-xs text-muted-foreground">总攻击</div>
               <div className="text-2xl font-semibold">
-                {character.info.stat.statList.find(
-                  (s: any) => s.type === "ItemLevel",
-                )?.value || 0}
+                {character.processed.statsProfile?.damageTotal?.toFixed(0) ||
+                  "--"}
               </div>
+              <div className="text-xs text-muted-foreground">排行 --/--</div>
+            </div>
+
+            <div>
+              <div className="text-xs text-muted-foreground">道具等级</div>
+              <div className="text-2xl font-semibold">{itemLevel}</div>
               <div className="text-xs text-muted-foreground">排行 --/--</div>
             </div>
 
@@ -580,27 +627,29 @@ function EquipmentDetailPage({
         <Card className="rounded-lg bg-background/60 backdrop-blur-lg">
           <div className="grid justify-center grid-cols-6 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-10 p-5">
             {ActiveSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill })}</div>
+              <div key={skill.name}>
+                {renderSkillSlot({ skill: skill, scaleFactor: 1 })}
+              </div>
             ))}
           </div>
           <div className="grid justify-center grid-cols-6 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-10 p-5">
             {PassiveSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill })}</div>
+              <div key={skill.name}>
+                {renderSkillSlot({ skill: skill, scaleFactor: 1 })}
+              </div>
             ))}
           </div>
           <div className="grid justify-center grid-cols-6 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8 gap-10 p-5">
             {DpSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill })}</div>
+              <div key={skill.name}>
+                {renderSkillSlot({ skill: skill, scaleFactor: 1 })}
+              </div>
             ))}
           </div>
         </Card>
       </div>
 
       <div className="w-full md:w-1/4 space-y-2">
-        {/* 排名 */}
-        {/* {renderScorePanel({ character: characterData })} */}
-
-        {/* 属性 */}
         {renderStatInfo({ characterData: characterData })}
 
         {renderMoreStatInfo({

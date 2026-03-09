@@ -56,8 +56,10 @@ export const TargetCarousel = ({
           const mobCode = mobCodeMap[target];
 
           const mobName = mobCode
-            ? mobCodeNameMap[mobCode] || t(`${mobCode}`) || `未知(${mobCode})`
-            : `未知(${target})`;
+            ? mobCodeNameMap[mobCode] ||
+              t(`${mobCode}`) ||
+              `未知目标(type ${mobCode})`
+            : `未知类型(id ${target})`;
           return (
             <SelectItem
               key={target}

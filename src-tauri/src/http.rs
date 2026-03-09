@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 // 定义 HTTP 响应结构体
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HttpResponse {
@@ -13,15 +12,18 @@ pub struct HttpResponse {
 #[derive(Debug, Deserialize)]
 pub struct HttpRequestParams {
     url: String,
-    method: Option<String>,              // 如 "GET", "POST"，默认 GET
+    method: Option<String>, // 如 "GET", "POST"，默认 GET
     headers: Option<Vec<(String, String)>>,
-    body: Option<String>,                // 请求体字符串
+    body: Option<String>, // 请求体字符串
 }
 
 #[tauri::command]
 pub async fn http_request(params: HttpRequestParams) -> Result<HttpResponse, String> {
     let client = reqwest::Client::new();
-    let method = params.method.unwrap_or_else(|| "GET".to_string()).to_uppercase();
+    let method = params
+        .method
+        .unwrap_or_else(|| "GET".to_string())
+        .to_uppercase();
 
     // 构建请求
     let mut builder = match method.as_str() {
@@ -58,5 +60,9 @@ pub async fn http_request(params: HttpRequestParams) -> Result<HttpResponse, Str
         .collect();
     let body = response.text().await.map_err(|e| e.to_string())?;
 
-    Ok(HttpResponse { status, headers, body })
+    Ok(HttpResponse {
+        status,
+        headers,
+        body,
+    })
 }

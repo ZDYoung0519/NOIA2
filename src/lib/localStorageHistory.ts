@@ -1,5 +1,6 @@
+import { CharacterProps } from "@/types/aion2";
+import { BuildDataProps } from "@/types/aion2";
 import { CharacterSearchResult } from "@/pages/character/types";
-import { CharacterProps } from "@/pages/character_view/types";
 import { CombatSummaryStats } from "@/pages/dps/types";
 
 export class GenericLocalHistory<T extends Record<string, any>> {
@@ -84,8 +85,8 @@ export const Aion2CombatHistory = new GenericLocalHistory<CombatSummaryStats>(
   200,
 );
 
-// export const Aion2BUILDHistory = new GenericLocalHistory<CharacterBuildProps>(
-//   "AION2BUILD",
-//   "id",
-//   5,
-// );
+export const Aion2BUILDHistory = new GenericLocalHistory<BuildDataProps>(
+  "AION2BUILD",
+  "id",
+  5,
+);

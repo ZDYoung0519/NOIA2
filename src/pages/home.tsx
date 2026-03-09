@@ -11,6 +11,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import SplashCursor from "@/components/SplashCursor";
 
 const GlitchText = ({
   text,
@@ -70,6 +71,7 @@ export default function Home() {
 
   return (
     <div ref={containerRef} className="">
+      <SplashCursor />
       {/* Dynamic Background */}
       <div className="">
         {/* Grid Overlay */}
@@ -118,7 +120,6 @@ export default function Home() {
               AION<span className="text-white">2</span>
             </h1>
           </div>
-
           {/* Reflection/Glow */}
           <div className="absolute -inset-10 bg-purple-600/20 blur-3xl rounded-full -z-10 opacity-50 group-hover:opacity-75 transition-opacity" />
         </div>
@@ -130,7 +131,7 @@ export default function Home() {
           <span className="text-red-400 font-semibold">龙界</span> 的数据枢纽。
           <br />
           <span className="text-xs text-slate-500 mt-2 block">
-            (点击上方 Logo 翻转，见证逆序之美)
+            (NOIA2 Client v0.2.7 内测版本)
           </span>
         </p>
 
@@ -245,7 +246,7 @@ export default function Home() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
                 <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
                 <div className="ml-auto text-xs text-slate-600 font-mono">
-                  NOIA2 Client v0.9.1
+                  NOIA2 Client v0.2.6
                 </div>
               </div>
 
