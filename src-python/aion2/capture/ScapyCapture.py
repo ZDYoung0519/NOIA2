@@ -16,13 +16,20 @@ class ScapyCapture:
         self.channel = channel
         self._stop_event = threading.Event()
         self.tgt_device = None
+        self.tgt_port = None
         self._capture_thread = None
 
     def prn(self, pkt):
-        self.channel.try_send(pkt)
+        ip = pkt[IP]
+        srcport = ip[TCP].sport
+        dstport = ip[TCP].dport
+        a, b = min(srcport, dstport), max(srcport, dstport)
+        key = f"{a}-{b}"
+        if key == self.tgt_port:
+            self.channel.try_send(pkt)
 
     def _capture_loop(self):
-        device_name = self.tgt_device['name']
+        device_name = self.tgt_device
         logger.info(f"Starting capture on {device_name}")
         sniff(
             iface=device_name,
@@ -35,7 +42,8 @@ class ScapyCapture:
 
     def _detector_loop(self):
         while not self._stop_event.is_set():
-            device = auto_detect_device()  # 获取当前最佳设备
+            device, port = auto_detect_device()  # 获取当前最佳设备
+            
             if device and device != self.tgt_device:
                 # 停止旧抓包
                 if self._capture_thread and self._capture_thread.is_alive():
@@ -44,6 +52,7 @@ class ScapyCapture:
                     self._stop_event.clear()
                 # 设置新设备并启动抓包
                 self.tgt_device = device
+                self.tgt_port = port
                 self._capture_thread = threading.Thread(target=self._capture_loop)
                 self._capture_thread.daemon = True
                 self._capture_thread.start()

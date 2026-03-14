@@ -85,7 +85,7 @@ export const getCharacterData = async (
 
   report("正在获取守护力数据技能[4/5]");
   const boardList = await getDaevanionData(data, lang, characterId, serverId);
-
+  debugger;
   const CharacterData: CharacterProps = {
     characterId,
     serverId,

@@ -26,7 +26,8 @@ class MemoryMonitor():
         vms = memory_info.vms / (1024 * 1024)  # 虚拟内存，单位转换为 MB
         memory_percent = self.process.memory_percent()
 
-        cap_device = self.capture.tgt_device['name'] if self.capture.tgt_device else "None"
+        cap_device = self.capture.tgt_device if self.capture.tgt_device else "None"
+        # cap_port = s
 
         # try:
         #     import GPUtil

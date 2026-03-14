@@ -11,7 +11,6 @@ import {
   Terminal,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import SplashCursor from "@/components/SplashCursor";
 
 const GlitchText = ({
   text,
@@ -71,7 +70,7 @@ export default function Home() {
 
   return (
     <div ref={containerRef} className="">
-      <SplashCursor />
+      {/* <SplashCursor /> */}
       {/* Dynamic Background */}
       <div className="">
         {/* Grid Overlay */}

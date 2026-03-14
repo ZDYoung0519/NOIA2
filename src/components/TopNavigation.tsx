@@ -103,17 +103,6 @@ export default function TopNavigation() {
                 asChild
                 className="bg-transparent cursor-pointer"
               >
-                <Link className={navigationMenuTriggerStyle()} to="/builds">
-                  BD构筑
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className="bg-transparent cursor-pointer"
-              >
                 <Link className={navigationMenuTriggerStyle()} to="/ranks">
                   排行榜
                 </Link>
@@ -125,6 +114,17 @@ export default function TopNavigation() {
                 asChild
                 className="bg-transparent cursor-pointer"
               >
+                <Link className={navigationMenuTriggerStyle()} to="/builds">
+                  BD构筑（开发中）
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            {/* <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className="bg-transparent cursor-pointer"
+              >
                 <Link
                   className={navigationMenuTriggerStyle()}
                   to="/ranks_scrapy"
@@ -132,8 +132,18 @@ export default function TopNavigation() {
                   排行榜（爬虫）
                 </Link>
               </NavigationMenuLink>
-            </NavigationMenuItem>
+            </NavigationMenuItem> */}
 
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className="bg-transparent cursor-pointer"
+              >
+                <Link className={navigationMenuTriggerStyle()} to="/macro">
+                  鼠标宏（开发中）
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild

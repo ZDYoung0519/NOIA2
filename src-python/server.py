@@ -211,10 +211,13 @@ class Aion2DpsServer:
         }
         
         # 将异步广播提交到事件循环（线程安全）
-        asyncio.run_coroutine_threadsafe(
-            self._async_broadcast(message),
-            self._loop
-        )
+        try:
+            asyncio.run_coroutine_threadsafe(
+                self._async_broadcast(message),
+                self._loop
+            )
+        except Exception as e:
+            logger.error(f"{e}")
         # logger.info(f"DPS is broadcast: {str(data)}")
 
 
@@ -234,10 +237,13 @@ class Aion2DpsServer:
         }
 
         # 将异步广播提交到事件循环（线程安全）
-        asyncio.run_coroutine_threadsafe(
-            self._async_broadcast(message),
-            self._loop
-        )
+        try:
+            asyncio.run_coroutine_threadsafe(
+                self._async_broadcast(message),
+                self._loop
+            )
+        except Exception as e:
+            logger.error(f"{e}")
     
     async def _async_broadcast(self, message: dict):
         """实际的异步广播逻辑"""

@@ -67,10 +67,12 @@ class CaptureDispatcher:
             a, b = min(cap["srcPort"], cap["dstPort"]), max(cap["srcPort"], cap["dstPort"])
             key = f"{a}-{b}"
 
-            if self.contains_magic(cap['data']):
+            if self.contains_magic(cap['data']) and self.combat_port is None:
                 self.combat_port = key
                 self.assembler.process_chunk(cap["data"])
-
+            elif self.contains_magic(cap['data']) and self.combat_port is not None and key == self.combat_port:
+                self.combat_port = key
+                self.assembler.process_chunk(cap["data"])
 
             # if key not in self.assemblers and self.contains_magic(cap['data']):
             #     self.assemblers[key] = {}

@@ -419,8 +419,7 @@ export default function DPSViewPage() {
               <ul className="space-y-4">
                 {[
                   "【DPS一直红灯】请确保使用管理员启动了程序",
-                  "【绿灯但无法检测】请在DPS设置中打开，“显示内存和网络”，查看Dev是否为None，如果是，大概率是因为没有安装NpCap，或者加速器不支持",
-                  "【其他问题】请先更新程序本体，然后在本页面更新DPS插件",
+                  "【绿灯但无法检测】请在DPS设置中打开，“显示内存和网络”并查看Dev是否为None，如果是，大概率是因为没有安装NpCap，或者加速器不支持",
                 ].map((item, i) => (
                   <li
                     key={i}
@@ -502,12 +501,12 @@ export default function DPSViewPage() {
               打开DPS统计
             </button>
 
-            <button
+            {/* <button
               className="px-8 py-4 bg-white text-slate-950 rounded-xl font-bold text-lg hover:bg-slate-200 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2"
               onClick={handleOpenDPS}
             >
               更新DPS插件
-            </button>
+            </button> */}
 
             <button
               onClick={() => {

@@ -228,7 +228,10 @@ function MacroManager({
             <Zap className="w-5 h-5 text-white" />
           </div>
           <h1 className="text-lg font-semibold tracking-tight">
-            G HUB <span className="text-[#00b8a9]">Macro Manager</span>
+            NOIA2{" "}
+            <span className="text-[#00b8a9]">
+              Macro Manager （ 使用鼠标自带驱动绿色宏，正在开发中暂时无法使用）
+            </span>
           </h1>
         </div>
         <button
