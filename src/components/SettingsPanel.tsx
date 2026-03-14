@@ -35,9 +35,11 @@ export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
     try {
       if (checked) {
         await enable();
+        // await invoke("enable");
         console.log(`registered for autostart? ${await isEnabled()}`);
       } else {
         await disable();
+        // await invoke("disable");
         console.log(`registered for autostart? ${await isEnabled()}`);
       }
       setAutoStartEnabled(checked);

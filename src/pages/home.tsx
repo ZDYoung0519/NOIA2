@@ -130,7 +130,7 @@ export default function Home() {
           <span className="text-red-400 font-semibold">龙界</span> 的数据枢纽。
           <br />
           <span className="text-xs text-slate-500 mt-2 block">
-            (NOIA2 Client v0.2.7 内测版本)
+            (NOIA2 Client v0.2.8 内测版本)
           </span>
         </p>
 

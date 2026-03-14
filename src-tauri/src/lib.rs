@@ -8,8 +8,6 @@ use tauri::Emitter; // 导入 Emitter trait
 
 mod http;
 mod tray;
-// use std::io::{BufRead, BufReader};
-// use std::thread;
 
 pub struct ServerProcess(Arc<Mutex<Option<Child>>>);
 
@@ -220,7 +218,7 @@ pub fn run() {
             http::http_request,
             show_window,
             toggle_window,
-            set_complete
+            set_complete,
         ])
         .setup(|app| {
             #[cfg(all(desktop))]

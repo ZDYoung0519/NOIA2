@@ -26,11 +26,6 @@ import { useEffect } from "react";
 
 import { invoke } from "@tauri-apps/api/core";
 
-// 正确的sleep函数实现
-function sleep(seconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-}
-
 function App() {
   const { checkUpdate, UpdateDialog } = useUpdater();
 
