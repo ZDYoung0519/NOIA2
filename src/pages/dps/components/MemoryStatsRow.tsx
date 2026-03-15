@@ -4,9 +4,9 @@ import React from "react";
 export interface MemoryStats {
   cpu_percent: number; // CPU 使用率 (%)
   rss: number; // 物理内存使用量 (bytes)
-  channel_num: number;
   channel_size: number;
   cap_device: string; // 设备类型 (e.g., "cpu", "cuda")
+  cap_port: string;
 }
 
 // 辅助函数：将字节转换为带单位的字符串 (KB/MB/GB)
@@ -29,9 +29,9 @@ const getColorForPercentage = (percent: number): string => {
 export const MemoryStatsRow: React.FC<MemoryStats> = ({
   cpu_percent,
   rss,
-  channel_num,
   channel_size,
   cap_device,
+  cap_port,
 }) => {
   return (
     <div>
@@ -64,9 +64,8 @@ export const MemoryStatsRow: React.FC<MemoryStats> = ({
         }}
       >
         <span className="">Dev: {cap_device.toString()}</span>
-        <span>
-          Cha: {channel_num}/{channel_size}
-        </span>
+        <span className="">Port: {cap_port.toString()}</span>
+        <span>Cha: {channel_size}</span>
       </div>
     </div>
   );

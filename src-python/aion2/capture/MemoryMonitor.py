@@ -27,7 +27,8 @@ class MemoryMonitor():
         memory_percent = self.process.memory_percent()
 
         cap_device = self.capture.tgt_device if self.capture.tgt_device else "None"
-        # cap_port = s
+        
+        cap_port = self.capture.tgt_port if self.capture.tgt_port else "None"
 
         # try:
         #     import GPUtil
@@ -59,8 +60,8 @@ class MemoryMonitor():
             "vms": vms,
             "memory_percent": memory_percent,
             "cap_device": cap_device,
+            "cap_port": cap_port,
             "channel_size": channel_size,
-            "channel_num": 1
             # "gpu_util": gpu_util['load'],
             # "memoryUtil": gpu_util['memoryUtil']
         }

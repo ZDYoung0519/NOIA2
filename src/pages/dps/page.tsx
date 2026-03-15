@@ -501,9 +501,9 @@ function DPSMeterPage() {
             <MemoryStatsRow
               cpu_percent={memoryData.cpu_percent}
               rss={memoryData.rss}
-              channel_num={memoryData.channel_num}
               channel_size={memoryData.channel_size}
               cap_device={memoryData.cap_device}
+              cap_port={memoryData.cap_port}
             />
           )}
         </div>

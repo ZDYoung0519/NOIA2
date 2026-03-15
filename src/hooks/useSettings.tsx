@@ -3,14 +3,14 @@ import { useState, useEffect } from "react";
 export interface GlobalAppSettings {
   openOnStartup: boolean; // 电脑开机时启动
   autoCheckUpdate: boolean; // 自动检查更新
-  openDpsOnStartup: boolean; // 启动时自动打开DPS界面
+
   gamePath?: string; // 游戏路径，供未来使用
 }
 
 const defaultSettings: GlobalAppSettings = {
   autoCheckUpdate: true,
   openOnStartup: false,
-  openDpsOnStartup: false,
+
   gamePath: "",
 };
 

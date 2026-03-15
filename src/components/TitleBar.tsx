@@ -136,9 +136,9 @@ export default function TitleBar() {
             <Button
               size="sm"
               onClick={async () => {
+                await invoke("clear_backend");
                 appWindow.close();
                 setOpen(false);
-                await invoke("exit_app");
               }}
             >
               退出应用

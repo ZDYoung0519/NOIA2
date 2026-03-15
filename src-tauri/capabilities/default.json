@@ -5,6 +5,7 @@
   "windows": ["main", "dps"],
   "permissions": [
     "core:default",
+
     "opener:default",
     "core:window:allow-start-dragging",
     "core:window:allow-hide",
@@ -19,6 +20,7 @@
     "global-shortcut:allow-unregister",
     "autostart:allow-enable",
     "autostart:allow-disable",
-    "autostart:allow-is-enabled"
+    "autostart:allow-is-enabled",
+    "window-state:default"
   ]
 }

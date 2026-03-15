@@ -227,7 +227,7 @@ const SideNavigationBar = () => {
               }}
             >
               <Settings className="mr-3 h-4 w-4" />
-              整体设置
+              应用设置
             </Button>
             {/* <Button
               variant="ghost"

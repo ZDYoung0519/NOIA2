@@ -3,15 +3,14 @@ use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
 
-use std::time::Duration;
+// use std::time::Duration;
 use tauri::Emitter; // 导入 Emitter trait
 
 mod http;
 mod tray;
-
+mod autostart;
 pub struct ServerProcess(Arc<Mutex<Option<Child>>>);
 
-// 获取 server.exe 路径（兼容开发和生产环境）
 fn get_server_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     // 1. 生产环境：从 resources 目录查找
     let resource_path = app
@@ -97,12 +96,12 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+
 #[tauri::command]
-fn exit_app(app: tauri::AppHandle) {
-    let _ = app.emit("app-exit", "application is exiting");
-    std::thread::sleep(Duration::from_millis(100));
-    std::process::exit(0);
+fn clear_backend(app: tauri::AppHandle) {
+    let _ = app.emit("clear_backend", "application is exiting");
 }
+
 
 #[tauri::command]
 fn show_window(app_handle: tauri::AppHandle, label: String) -> Result<String, String> {
@@ -212,13 +211,16 @@ pub fn run() {
         }))
         .invoke_handler(tauri::generate_handler![
             greet,
-            exit_app,
+            clear_backend,
             start_packet_server,
             end_packet_server,
             http::http_request,
             show_window,
             toggle_window,
             set_complete,
+            autostart::enable_autostart,
+            autostart::disable_autostart,
+            autostart::is_autostart_enabled,
         ])
         .setup(|app| {
             #[cfg(all(desktop))]
@@ -230,6 +232,7 @@ pub fn run() {
                 let window = app.get_webview_window("main").unwrap();
                 window.set_decorations(false).unwrap();
                 
+                // setup
                 spawn(setup(app.handle().clone()));
             }
             Ok(())

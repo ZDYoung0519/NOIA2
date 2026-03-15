@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { GlobalAppSettings } from "@/hooks/useSettings";
 
-import { enable, isEnabled, disable } from "@tauri-apps/plugin-autostart";
+// import { enable, isEnabled, disable } from "@tauri-apps/plugin-autostart";
+import { invoke } from "@tauri-apps/api/core";
 
 interface SettingPanelProps {
   settings: GlobalAppSettings;
@@ -17,7 +18,10 @@ export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
 
   // 初始化开机启动状态
   useEffect(() => {
-    isEnabled()
+    // isEnabled()
+    //   .then(setAutoStartEnabled)
+    //   .catch(() => setAutoStartEnabled(false));
+    invoke<boolean>("is_autostart_enabled")
       .then(setAutoStartEnabled)
       .catch(() => setAutoStartEnabled(false));
   }, []);
@@ -34,13 +38,16 @@ export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
   const handleAutoStartChange = async (checked: boolean) => {
     try {
       if (checked) {
-        await enable();
-        // await invoke("enable");
-        console.log(`registered for autostart? ${await isEnabled()}`);
+        debugger;
+        await invoke("enable_autostart");
+        console.log(
+          `registered for autostart? ${await invoke("enable_autostart")}`,
+        );
       } else {
-        await disable();
-        // await invoke("disable");
-        console.log(`registered for autostart? ${await isEnabled()}`);
+        await invoke("disable_autostart");
+        console.log(
+          `registered for autostart? ${await invoke("disable_autostart")}`,
+        );
       }
       setAutoStartEnabled(checked);
       updateSetting("openOnStartup", checked);
@@ -68,17 +75,6 @@ export const SettingPanel = ({ settings, saveSettings }: SettingPanelProps) => {
         <Switch
           checked={autoStartEnabled ?? false}
           onCheckedChange={handleAutoStartChange}
-          className="data-[state=checked]:bg-indigo-500"
-        />
-      </div>
-
-      <div className="flex items-center justify-between py-1">
-        <span className="text-xs text-white/60">启动时自动打开DPS</span>
-        <Switch
-          checked={settings.openDpsOnStartup}
-          onCheckedChange={(checked) =>
-            updateSetting("openDpsOnStartup", checked)
-          }
           className="data-[state=checked]:bg-indigo-500"
         />
       </div>
