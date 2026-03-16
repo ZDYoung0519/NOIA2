@@ -45,6 +45,18 @@ export function ThemeProvider({
     root.classList.add(theme);
   }, [theme]);
 
+  // 监听 localStorage 变化，实现跨窗口主题同步
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === storageKey && e.newValue) {
+        setTheme(e.newValue as Theme);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [storageKey]);
+
   const value = {
     theme,
     setTheme: (theme: Theme) => {

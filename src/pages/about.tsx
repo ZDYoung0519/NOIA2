@@ -1,10 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { X } from "lucide-react";
+import { Github } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TitleBar } from "@/components/title-bar";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { destroyWindow } from "@/lib/window";
 
 export function AboutPage() {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -14,48 +17,52 @@ export function AboutPage() {
 
     appWindow.isMaximized().then(setIsMaximized);
 
-    const unlisten = appWindow.onResized(async () => {
+    const unlistenResize = appWindow.onResized(async () => {
       const maximized = await appWindow.isMaximized();
       setIsMaximized(maximized);
     });
 
+    // 监听窗口关闭请求，延迟 5 秒后销毁
+    const unlistenClose = appWindow.onCloseRequested(async (event) => {
+      // 阻止默认关闭行为
+      event.preventDefault();
+      console.log("关于窗口关闭请求，5秒后销毁");
+      // 延迟 5 秒销毁
+      await destroyWindow(appWindow.label, 5000);
+    });
+
     return () => {
-      unlisten.then((fn) => fn());
+      unlistenResize.then((fn) => fn());
+      unlistenClose.then((fn) => fn());
     };
   }, []);
 
   const handleClose = async () => {
     const appWindow = getCurrentWebviewWindow();
-    await appWindow.close();
+    // 延迟 5 秒销毁窗口
+    await destroyWindow(appWindow.label, 5000);
+  };
+
+  const handleOpenGithub = async () => {
+    await openUrl("https://github.com/kitlib/tauri-app-template");
   };
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="tauri-ui-theme">
       <div
         className={cn(
-          "h-screen w-screen flex flex-col bg-background",
+          "h-screen w-screen flex flex-col bg-background overflow-hidden",
           isMaximized ? "" : "rounded-md border border-border"
         )}
       >
-        {/* 标题栏 */}
-        <div className="h-8 flex items-center justify-between select-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-          <div
-            data-tauri-drag-region
-            className="flex-grow flex items-center pl-2"
-          >
-            <span className="text-sm font-medium">关于</span>
-          </div>
-          <button
-            onClick={handleClose}
-            className="title-bar-control hover:bg-destructive hover:text-destructive-foreground"
-            aria-label="关闭"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        <TitleBar
+          title="关于"
+          showMinimize={false}
+          showMaximize={false}
+        />
 
         {/* 内容区域 */}
-        <main className="flex-1 flex items-center justify-center p-8 overflow-auto">
+        <main className="flex-1 flex items-center justify-center p-8 overflow-hidden">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Tauri App Template</CardTitle>
@@ -87,9 +94,15 @@ export function AboutPage() {
                 </p>
               </div>
 
-              <Button onClick={handleClose} className="w-full" variant="outline">
-                关闭
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleOpenGithub} className="flex-1" variant="outline">
+                  <Github className="h-4 w-4 mr-2" />
+                  GitHub
+                </Button>
+                <Button onClick={handleClose} className="flex-1" variant="outline">
+                  关闭
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </main>
