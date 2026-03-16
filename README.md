@@ -2,12 +2,17 @@
 
 基于 Tauri v2 + React 19 + TypeScript + shadcn/ui 的桌面应用模板。
 
+## 预览
+
+![应用截图](./screenshots/app.png)
+
 ## 特点
 
 - ✨ **现代化技术栈** - Tauri v2 + React 19 + TypeScript + Vite
 - 🎨 **精美 UI 组件** - 集成 shadcn/ui 组件库和 Tailwind CSS v4
 - 🌓 **暗色模式支持** - 内置亮色/暗色主题切换
-- 🪟 **自定义标题栏** - 无边框透明窗口，支持拖拽、最小化、最大化、关闭
+- 🖼️ **自定义标题栏** - 无边框透明窗口，支持拖拽、最小化、最大化、关闭
+- 🔔 **系统托盘集成** - 支持托盘图标、菜单和窗口隐藏/显示
 - 📦 **开箱即用** - 预配置 Prettier、TypeScript 严格模式
 - 🚀 **快速开发** - Vite HMR + Tauri 热重载
 
