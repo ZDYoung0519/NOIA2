@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
-import { TitleBar } from "@/components/title-bar";
+import { MainTitleBar } from "@/components/main-title-bar";
 import { cn } from "@/lib/utils";
 import "./App.css";
 
@@ -40,12 +40,12 @@ function App() {
       <div
         className={cn(
           "h-screen w-screen flex flex-col overflow-hidden bg-background",
-          isMaximized ? "" : "rounded-md border border-border"
+          isMaximized ? "" : "rounded-lg border border-border"
         )}
       >
-        <TitleBar />
+        <MainTitleBar />
 
-        <main className="container mx-auto flex flex-1 flex-col items-center justify-center gap-8 p-8 overflow-auto">
+        <main className="container mx-auto flex flex-1 flex-col items-center justify-center gap-8 p-8 overflow-hidden">
         <div className="flex flex-col items-center gap-4">
           <h1 className="text-4xl font-bold tracking-tight">Welcome to Tauri + React</h1>
           <p className="text-muted-foreground">

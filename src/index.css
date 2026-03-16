@@ -77,6 +77,10 @@
   }
   body {
     @apply bg-transparent text-foreground;
+    overflow: hidden;
+  }
+  #root {
+    overflow: hidden;
   }
 }
 
