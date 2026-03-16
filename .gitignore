@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Claude AI
-.claude/skills/
+.claude/
