@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Minus, Maximize2, Minimize2, X, Moon, Sun } from "lucide-react";
+import { Minus, Maximize2, Minimize2, X, Moon, Sun, Info } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { createWindow } from "@/lib/window";
 
 export function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -43,6 +44,21 @@ export function TitleBar() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const handleOpenAbout = async () => {
+    await createWindow("about", {
+      title: "关于",
+      url: "/about",
+      width: 500,
+      height: 400,
+      resizable: false,
+      maximizable: false,
+      minimizable: false,
+      center: true,
+      decorations: false,
+      transparent: true,
+    });
+  };
+
   return (
     <div className="h-8 flex items-center justify-between select-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
       {/* 左侧：应用标题 + 拖拽区域 */}
@@ -56,6 +72,14 @@ export function TitleBar() {
 
       {/* 右侧：控制按钮 */}
       <div className="flex items-center">
+        <button
+          onClick={handleOpenAbout}
+          className="title-bar-btn mr-2"
+          aria-label="关于"
+        >
+          <Info className="h-4 w-4" />
+        </button>
+
         <button
           onClick={handleToggleTheme}
           className="title-bar-btn mr-2"
