@@ -124,9 +124,9 @@ The workflow generates:
 To enable automatic updates, you need to:
 
 1. Generate signing keys: `pnpm tauri signer generate -w ~/.tauri/myapp.key`
-2. Add the public key to `src-tauri/tauri.conf.json` under `plugins.updater.pubkey`
-3. Update the GitHub repository path in `plugins.updater.endpoints`
-4. Add GitHub secrets: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+2. Add GitHub secrets: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+
+**Note:** The public key and update endpoints in `tauri.conf.json` are automatically configured by GitHub Actions during the build process. No manual configuration is required.
 
 See [Auto Update Configuration](./docs/AUTO_UPDATE.md) for detailed instructions.
 

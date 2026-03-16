@@ -124,9 +124,9 @@ git push origin v0.1.0
 要启用自动更新功能，需要：
 
 1. 生成签名密钥：`pnpm tauri signer generate -w ~/.tauri/myapp.key`
-2. 将公钥添加到 `src-tauri/tauri.conf.json` 的 `plugins.updater.pubkey` 字段
-3. 更新 `plugins.updater.endpoints` 中的 GitHub 仓库路径
-4. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+2. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+
+**注意：** `tauri.conf.json` 中的公钥和更新端点会在构建过程中由 GitHub Actions 自动配置，无需手动设置。
 
 详细配置说明请查看 [自动更新配置文档](./docs/AUTO_UPDATE.md)。
 
