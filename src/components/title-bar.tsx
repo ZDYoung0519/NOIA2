@@ -1,14 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Minus, Maximize2, Minimize2, X, Moon, Sun, Info } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
-import { createWindow } from "@/lib/window";
+import { Minus, Maximize2, Minimize2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function TitleBar() {
+interface TitleBarProps {
+  title?: string;
+  showMinimize?: boolean;
+  showMaximize?: boolean;
+  showClose?: boolean;
+  leftActions?: ReactNode;
+  rightActions?: ReactNode;
+  onDoubleClick?: () => void;
+}
+
+export function TitleBar({
+  title,
+  showMinimize = true,
+  showMaximize = true,
+  showClose = true,
+  leftActions,
+  rightActions,
+  onDoubleClick,
+}: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
+    if (!showMaximize) return;
+
     const appWindow = getCurrentWebviewWindow();
 
     // 初始化最大化状态
@@ -23,7 +41,7 @@ export function TitleBar() {
     return () => {
       unlisten.then((fn) => fn());
     };
-  }, []);
+  }, [showMaximize]);
 
   const handleMinimize = async () => {
     const appWindow = getCurrentWebviewWindow();
@@ -40,87 +58,72 @@ export function TitleBar() {
     await appWindow.close();
   };
 
-  const handleToggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const handleOpenAbout = async () => {
-    await createWindow("about", {
-      title: "关于",
-      url: "/about",
-      width: 500,
-      height: 400,
-      resizable: false,
-      maximizable: false,
-      minimizable: false,
-      center: true,
-      decorations: false,
-      transparent: true,
-    });
+  const handleDragRegionDoubleClick = () => {
+    if (onDoubleClick) {
+      onDoubleClick();
+    } else if (showMaximize) {
+      handleToggleMaximize();
+    }
   };
 
   return (
-    <div className="h-8 flex items-center justify-between select-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-      {/* 左侧：应用标题 + 拖拽区域 */}
+    <div
+      className={cn(
+        "h-8 flex items-center justify-between select-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40",
+        showMaximize && isMaximized ? "" : "rounded-t-lg"
+      )}
+    >
+      {/* 左侧：标题 + 拖拽区域 */}
       <div
         data-tauri-drag-region
-        onDoubleClick={handleToggleMaximize}
-        className="flex-grow flex items-center pl-2"
+        onDoubleClick={handleDragRegionDoubleClick}
+        className="flex-grow flex items-center pl-2 gap-2"
       >
-        <span className="text-sm font-medium">tauri-app-template</span>
+        {title && <span className="text-sm font-medium">{title}</span>}
+        {leftActions}
       </div>
 
       {/* 右侧：控制按钮 */}
       <div className="flex items-center">
-        <button
-          onClick={handleOpenAbout}
-          className="title-bar-btn mr-2"
-          aria-label="关于"
-        >
-          <Info className="h-4 w-4" />
-        </button>
+        {rightActions}
 
-        <button
-          onClick={handleToggleTheme}
-          className="title-bar-btn mr-2"
-          aria-label="切换主题"
-        >
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </button>
+        {(rightActions && (showMinimize || showMaximize || showClose)) && (
+          <div className="h-4 w-px bg-border/40 mx-1" />
+        )}
 
-        <div className="h-4 w-px bg-border/40 mr-1" />
+        {showMinimize && (
+          <button
+            onClick={handleMinimize}
+            className="title-bar-control"
+            aria-label="最小化"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+        )}
 
-        <button
-          onClick={handleMinimize}
-          className="title-bar-control"
-          aria-label="最小化"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
+        {showMaximize && (
+          <button
+            onClick={handleToggleMaximize}
+            className="title-bar-control"
+            aria-label={isMaximized ? "还原" : "最大化"}
+          >
+            {isMaximized ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </button>
+        )}
 
-        <button
-          onClick={handleToggleMaximize}
-          className="title-bar-control"
-          aria-label={isMaximized ? "还原" : "最大化"}
-        >
-          {isMaximized ? (
-            <Minimize2 className="h-4 w-4" />
-          ) : (
-            <Maximize2 className="h-4 w-4" />
-          )}
-        </button>
-
-        <button
-          onClick={handleClose}
-          className="title-bar-control hover:bg-destructive hover:text-destructive-foreground"
-          aria-label="关闭"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {showClose && (
+          <button
+            onClick={handleClose}
+            className="title-bar-control hover:bg-destructive hover:text-destructive-foreground"
+            aria-label="关闭"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );
