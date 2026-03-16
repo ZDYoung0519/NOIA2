@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { checkForUpdates, downloadAndInstall, UpdateProgress } from "@/lib/updater";
 import type { Update } from "@tauri-apps/plugin-updater";
 

@@ -201,8 +201,8 @@ export async function createWindow(
       if ("center" in centerPos) {
         finalOptions.center = true;
       } else {
-        finalOptions.x = centerPos.x;
-        finalOptions.y = centerPos.y;
+        finalOptions.x = centerPos.x!;
+        finalOptions.y = centerPos.y!;
         finalOptions.center = false;
       }
     }

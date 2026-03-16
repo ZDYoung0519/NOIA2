@@ -49,12 +49,6 @@ export function AboutPage() {
     };
   }, [i18n]);
 
-  const handleClose = async () => {
-    const appWindow = getCurrentWebviewWindow();
-    // Destroy window after 5 seconds delay
-    await destroyWindow(appWindow.label, 5000);
-  };
-
   const handleOpenGithub = async () => {
     await openUrl("https://github.com/kitlib/tauri-app-template");
   };

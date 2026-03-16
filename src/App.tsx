@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
 import { MainTitleBar } from "@/components/main-title-bar";
 import { UpdaterDialog } from "@/components/updater-dialog";
 import { cn } from "@/lib/utils";
