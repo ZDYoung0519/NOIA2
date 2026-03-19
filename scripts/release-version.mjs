@@ -12,6 +12,7 @@ const rootDir = path.resolve(__dirname, "..");
 const packageJsonPath = path.join(rootDir, "package.json");
 const tauriConfigPath = path.join(rootDir, "src-tauri", "tauri.conf.json");
 const cargoTomlPath = path.join(rootDir, "src-tauri", "Cargo.toml");
+const cargoLockPath = path.join(rootDir, "src-tauri", "Cargo.lock");
 const localeDir = path.join(rootDir, "src", "i18n", "locales");
 
 const rl = readline.createInterface({ input, output });
@@ -158,13 +159,37 @@ function getCargoVersion(cargoToml) {
   return match[2];
 }
 
-function ensureVersionsAreConsistent(packageVersion, tauriVersion, cargoVersion) {
-  if (packageVersion !== tauriVersion || packageVersion !== cargoVersion) {
+function getCargoPackageName(cargoToml) {
+  const match = cargoToml.match(/^name\s*=\s*"([^"]+)"\s*$/m);
+  if (!match) {
+    throw new Error(t("releaseVersion.errors.cargoPackageNameNotFound"));
+  }
+
+  return match[1];
+}
+
+function getCargoLockVersion(cargoLock, packageName) {
+  const pattern = new RegExp(`(\\[\\[package\\]\\]\\s+name = "${packageName}"\\s+version = ")([^"]+)(")`);
+  const match = cargoLock.match(pattern);
+  if (!match) {
+    throw new Error(t("releaseVersion.errors.cargoLockVersionNotFound"));
+  }
+
+  return match[2];
+}
+
+function ensureVersionsAreConsistent(packageVersion, tauriVersion, cargoVersion, cargoLockVersion) {
+  if (
+    packageVersion !== tauriVersion ||
+    packageVersion !== cargoVersion ||
+    packageVersion !== cargoLockVersion
+  ) {
     throw new Error(
       t("releaseVersion.errors.versionMismatch", {
         packageVersion,
         tauriVersion,
         cargoVersion,
+        cargoLockVersion,
       }),
     );
   }
@@ -190,10 +215,13 @@ async function loadCurrentVersions() {
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
   const tauriConfig = JSON.parse(await readFile(tauriConfigPath, "utf8"));
   const cargoToml = await readFile(cargoTomlPath, "utf8");
+  const cargoLock = await readFile(cargoLockPath, "utf8");
 
   const packageVersion = packageJson.version;
   const tauriVersion = tauriConfig.version;
   const cargoVersion = getCargoVersion(cargoToml);
+  const cargoPackageName = getCargoPackageName(cargoToml);
+  const cargoLockVersion = getCargoLockVersion(cargoLock, cargoPackageName);
 
   if (typeof packageVersion !== "string" || packageVersion.length === 0) {
     throw new Error(t("releaseVersion.errors.packageVersionInvalid"));
@@ -206,9 +234,10 @@ async function loadCurrentVersions() {
   parseVersion(packageVersion);
   parseVersion(tauriVersion);
   parseVersion(cargoVersion);
-  ensureVersionsAreConsistent(packageVersion, tauriVersion, cargoVersion);
+  parseVersion(cargoLockVersion);
+  ensureVersionsAreConsistent(packageVersion, tauriVersion, cargoVersion, cargoLockVersion);
 
-  return { packageVersion, tauriVersion, cargoVersion };
+  return { packageVersion, tauriVersion, cargoVersion, cargoLockVersion, cargoPackageName };
 }
 
 async function updateVersions(newVersion) {
@@ -232,6 +261,17 @@ async function updateVersions(newVersion) {
   }
 
   await writeFile(cargoTomlPath, nextCargoToml);
+
+  const cargoLock = await readFile(cargoLockPath, "utf8");
+  const cargoPackageName = getCargoPackageName(cargoToml);
+  const cargoLockPattern = new RegExp(`(\\[\\[package\\]\\]\\s+name = "${cargoPackageName}"\\s+version = ")([^"]+)(")`);
+  const nextCargoLock = cargoLock.replace(cargoLockPattern, `$1${newVersion}$3`);
+
+  if (nextCargoLock === cargoLock) {
+    throw new Error(t("releaseVersion.errors.cargoLockVersionNotFound"));
+  }
+
+  await writeFile(cargoLockPath, nextCargoLock);
 }
 
 function ensureCleanWorkingTree() {
@@ -288,7 +328,20 @@ async function main() {
 
     await updateVersions(nextVersion);
 
-    runInteractive("git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml");
+    runInteractive("git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock");
+
+    const stagedFiles = run("git diff --cached --name-only").split(/\r?\n/).filter(Boolean);
+    const expectedFiles = [
+      "package.json",
+      "src-tauri/tauri.conf.json",
+      "src-tauri/Cargo.toml",
+      "src-tauri/Cargo.lock",
+    ];
+
+    if (expectedFiles.some((file) => !stagedFiles.includes(file))) {
+      throw new Error(t("releaseVersion.errors.releaseStagingIncomplete", { stagedFiles: stagedFiles.join(", ") }));
+    }
+
     runInteractive(`git commit -m "chore: release ${nextVersion}"`);
     runInteractive(`git tag ${tagName}`);
 
@@ -304,6 +357,10 @@ async function main() {
       console.log(t("releaseVersion.messages.pushBranchLater", { branch }));
       console.log(t("releaseVersion.messages.pushTagLater", { tag: tagName }));
     }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exitCode = 1;
   } finally {
     rl.close();
   }

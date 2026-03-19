@@ -109,11 +109,14 @@
     "errors": {
       "unsupportedVersion": "不支持的版本格式：{{version}}",
       "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本字段",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到包名字段",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本字段",
+      "releaseStagingIncomplete": "发布暂存文件不完整，当前已暂存：{{stagedFiles}}",
       "workingTreeNotClean": "当前工作区不干净，请先提交或暂存现有改动。",
       "tagExists": "Tag {{tag}} 已存在。",
       "remoteTagExists": "远程 origin 上已存在 Tag {{tag}}。",
       "branchNotMain": "只能在 main 分支创建发布，当前分支：{{branch}}",
-      "versionMismatch": "检测到版本不一致：package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}",
+      "versionMismatch": "检测到版本不一致：package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
       "packageVersionInvalid": "package.json 中的版本号缺失或无效",
       "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本号缺失或无效",
       "invalidLang": "无效的 --lang 参数，请使用 zh 或 en。"
