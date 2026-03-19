@@ -39,6 +39,7 @@
   "updater": {
     "checkForUpdates": "检查更新",
     "checking": "检查中...",
+    "checkFailed": "检查更新失败。",
     "upToDate": "您正在使用最新版本！",
     "updateAvailable": "发现新版本",
     "downloading": "正在下载更新",
@@ -69,6 +70,53 @@
       "showMainDesc": "使用快捷键快速显示主窗口",
       "setSuccess": "已将快捷键设为 {{shortcut}}！",
       "cleared": "已取消快捷键！"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "补丁版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "将 beta 提升为正式版",
+      "nextBeta": "下一个 beta",
+      "nextPatchBeta": "下一个补丁 beta",
+      "custom": "自定义版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n请输入选择 (1-{{max}}): ",
+      "enterCustomVersion": "请输入自定义版本号: ",
+      "confirmRelease": "是否继续更新版本并创建 tag？",
+      "pushNow": "是否立即推送提交和 tag 到远程仓库？"
+    },
+    "messages": {
+      "currentVersion": "当前版本：{{version}}",
+      "selectNextVersion": "请选择下一个版本：",
+      "invalidChoice": "选择无效，默认使用第一个候选版本。",
+      "summaryTitle": "发布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 当前版本：{{version}}",
+      "summaryNextVersion": "- 新版本：{{version}}",
+      "summaryTag": "- Tag：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功创建提交和 tag。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳过推送，你之后可以执行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支持的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本字段",
+      "workingTreeNotClean": "当前工作区不干净，请先提交或暂存现有改动。",
+      "tagExists": "Tag {{tag}} 已存在。",
+      "remoteTagExists": "远程 origin 上已存在 Tag {{tag}}。",
+      "branchNotMain": "只能在 main 分支创建发布，当前分支：{{branch}}",
+      "versionMismatch": "检测到版本不一致：package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}",
+      "packageVersionInvalid": "package.json 中的版本号缺失或无效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本号缺失或无效",
+      "invalidLang": "无效的 --lang 参数，请使用 zh 或 en。"
     }
   }
 }

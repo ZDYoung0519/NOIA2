@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { getVersion } from "@tauri-apps/api/app";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Github, RefreshCw } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -14,8 +15,13 @@ import "../i18n";
 
 export default function AboutPage() {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [appVersion, setAppVersion] = useState("");
   const { t, i18n } = useTranslation();
   const { checkUpdate, checking, showNoUpdate } = useManualUpdateCheck();
+
+  useEffect(() => {
+    void getVersion().then(setAppVersion);
+  }, []);
 
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
@@ -73,7 +79,7 @@ export default function AboutPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("about.version")}</span>
-                <span className="font-medium">1.0.0</span>
+                <span className="font-medium">{appVersion}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tauri</span>

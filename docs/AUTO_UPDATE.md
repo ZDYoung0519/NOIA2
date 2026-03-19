@@ -1,11 +1,23 @@
 # Auto Update Configuration
 
-This guide explains how to configure automatic updates for your Tauri application.
+This guide explains the release and auto-update flow used by this project.
+
+## Overview
+
+This project uses GitHub Releases as the updater backend. During the release workflow, GitHub Actions replaces the updater placeholders in `src-tauri/tauri.conf.json` so the application points to:
+
+```text
+https://github.com/<owner>/<repo>/releases/latest/download/latest.json
+```
+
+Because the updater resolves through `releases/latest`, the latest release must be a published non-draft GitHub Release.
 
 ## Prerequisites
 
-1. Your app must be published to GitHub Releases
-2. You need to generate a signing key pair for secure updates
+1. Generate a signing key pair for secure updates
+2. Add the signing secrets to GitHub Actions
+3. Release from the `main` branch
+4. Publish releases with tags in the `vX.Y.Z` format
 
 ## Step 1: Generate Signing Keys
 
@@ -16,83 +28,87 @@ pnpm tauri signer generate -w ~/.tauri/myapp.key
 ```
 
 This will output:
-- **Private key**: Saved to `~/.tauri/myapp.key` (keep this secret!)
+- **Private key**: Saved to `~/.tauri/myapp.key`
 - **Public key**: A string starting with `dW50cnVzdGVkIGNvbW1lbnQ6...`
+
+Keep the private key secret.
 
 ## Step 2: Configure GitHub Secrets
 
-Add the following secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+Add the following secrets to your GitHub repository under Settings → Secrets and variables → Actions:
 
 1. `TAURI_SIGNING_PRIVATE_KEY` - Content of `~/.tauri/myapp.key`
-2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - Password you set (if any)
+2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - Password you set, if any
+3. `TAURI_SIGNING_PUBLIC_KEY` - Public key generated in Step 1
 
-## Step 3: Update tauri.conf.json
+## Step 3: Keep Version Files in Sync
 
-Replace the placeholder in `src-tauri/tauri.conf.json`:
+The release script expects these files to share the same version:
 
-```json
-{
-  "plugins": {
-    "updater": {
-      "pubkey": "YOUR_PUBLIC_KEY_HERE",
-      "endpoints": [
-        "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/latest.json"
-      ],
-      "windows": {
-        "installMode": "passive"
-      }
-    }
-  }
-}
+- `package.json`
+- `src-tauri/tauri.conf.json`
+- `src-tauri/Cargo.toml`
+
+Use the release script as the single release entrypoint instead of editing only one file manually.
+
+## Step 4: Create a Release
+
+Run:
+
+```bash
+pnpm release:version
 ```
 
-Replace:
-- `YOUR_PUBLIC_KEY_HERE` with the public key from Step 1
-- `YOUR_USERNAME/YOUR_REPO` with your GitHub repository path
+The script performs release preflight checks before it makes changes:
+- Ensures the working tree is clean
+- Requires the current branch to be `main`
+- Verifies the three version files are consistent
+- Checks that the target tag does not already exist locally or on `origin`
 
-## Step 4: Test the Update Flow
+Then it:
+- Updates all version files together
+- Creates a release commit
+- Creates a `vX.Y.Z` tag
+- Optionally pushes the branch and tag
 
-1. **Build and release version 0.1.0:**
-   ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
+The GitHub Actions workflow is triggered by `v*` tags and publishes a non-draft release so `releases/latest` can resolve correctly.
 
-2. **Update version to 0.1.1** in `src-tauri/tauri.conf.json`
+## Step 5: Verify the Published Assets
 
-3. **Build and release version 0.1.1:**
-   ```bash
-   git tag v0.1.1
-   git push origin v0.1.1
-   ```
+After GitHub Actions finishes, verify that the latest published release contains updater assets such as:
+- `latest.json`
+- Windows updater bundle artifacts
+- Signature files
 
-4. **Test:** Run the 0.1.0 installer - it should detect and offer to install 0.1.1
+If `latest.json` is missing from the latest published release, updater clients cannot discover updates.
 
 ## How It Works
 
-1. On app startup, `UpdaterDialog` component checks for updates
-2. If a new version is found, a dialog appears with release notes
-3. User can install immediately or dismiss
-4. After download, the app automatically restarts with the new version
-
-## Update Check Behavior
-
-- Checks on app startup
-- Compares current version with GitHub releases
-- Only shows dialog if a newer version exists
-- Downloads are signed and verified for security
+1. The app checks the updater endpoint on startup or during a manual check
+2. If a newer version is available, the app shows the update dialog
+3. If no update is available, the manual flow reports that the app is up to date
+4. If the check fails, the UI reports an error instead of treating it as up to date
+5. During download, progress is calculated from cumulative downloaded bytes
+6. After installation, the app relaunches automatically
 
 ## Troubleshooting
 
 **Update check fails:**
-- Verify the `endpoints` URL is correct
-- Check that `latest.json` exists in your release assets
-- Ensure the public key matches your private key
-
-**Signature verification fails:**
-- Make sure you're using the correct key pair
-- Verify GitHub Actions has the right private key secret
+- Verify the repository has a published non-draft release
+- Check that `latest.json` exists in the latest release assets
+- Confirm the signing keys are configured correctly
 
 **No update detected:**
-- Confirm the version in `tauri.conf.json` is lower than the released version
-- Check that the release is published (not draft)
+- Confirm the installed app version is lower than the latest release version
+- Confirm the release tag uses the `vX.Y.Z` format
+- Confirm the latest release is published, not draft
+
+**Signature verification fails:**
+- Make sure `TAURI_SIGNING_PRIVATE_KEY` matches `TAURI_SIGNING_PUBLIC_KEY`
+- Rebuild and republish the release after correcting secrets
+
+## Related Files
+
+- `.github/workflows/release.yml`
+- `scripts/release-version.mjs`
+- `src-tauri/tauri.conf.json`

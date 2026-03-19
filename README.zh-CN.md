@@ -1,3 +1,5 @@
+<div align="center">
+
 # Tauri App Template
 
 [English](./README.md) | 简体中文
@@ -8,6 +10,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 
 基于 Tauri v2 + React 19 + TypeScript + shadcn/ui 的桌面应用模板。
+
+</div>
 
 ## 预览
 
@@ -61,6 +65,25 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
+### 版本管理
+
+`pnpm release:version` 是版本发布的唯一入口。
+
+```bash
+pnpm release:version
+pnpm release:version --lang zh
+pnpm release:version --lang en
+```
+
+它会交互式完成发布前检查和版本更新流程：
+- 确保工作区干净
+- 强制要求当前分支为 `main`
+- 校验 `package.json`、`src-tauri/tauri.conf.json` 和 `src-tauri/Cargo.toml` 的版本一致
+- 检查目标 tag 是否已在本地或远端 `origin` 存在
+- 同步更新这三个版本文件
+- 创建发布提交和 `vX.Y.Z` tag
+- 可选地推送分支和 tag
+
 ## 添加 shadcn/ui 组件
 
 ```bash
@@ -112,9 +135,10 @@ pnpm format:check  # 检查代码格式
 
 ### 自动化发布
 
-工作流通过推送符合 `v*` 格式的标签触发（如 `v0.1.0`）。
+工作流会在推送符合 `v*` 格式的标签时触发，例如 `v0.1.0`。
+推荐通过 `pnpm release:version` 发版，它会自动创建匹配的 `vX.Y.Z` tag。
 
-**创建并推送标签：**
+**手动创建并推送标签示例：**
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
@@ -132,8 +156,9 @@ git push origin v0.1.0
 
 1. 生成签名密钥：`pnpm tauri signer generate -w ~/.tauri/myapp.key`
 2. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+3. 确保发布的是非 draft 的 GitHub Release，这样 `releases/latest/download/latest.json` 才能正确解析到最新版本
 
-**注意：** `tauri.conf.json` 中的公钥和更新端点会在构建过程中由 GitHub Actions 自动配置，无需手动设置。
+**注意：** `src-tauri/tauri.conf.json` 中的公钥和更新端点占位符会在发布构建期间由 GitHub Actions 自动替换。自动更新依赖已发布的 GitHub Release 对外提供最新版本的 `latest.json` 资源。
 
 详细配置说明请查看 [自动更新配置文档](./docs/AUTO_UPDATE.zh-CN.md)。
 

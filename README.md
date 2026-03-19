@@ -1,3 +1,5 @@
+<div align="center">
+
 # Tauri App Template
 
 English | [简体中文](./README.zh-CN.md)
@@ -8,6 +10,8 @@ English | [简体中文](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 
 A modern desktop application template built with Tauri v2 + React 19 + TypeScript + shadcn/ui.
+
+</div>
 
 ## Preview
 
@@ -61,6 +65,25 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
+### Version Management
+
+`pnpm release:version` is the release entrypoint.
+
+```bash
+pnpm release:version
+pnpm release:version --lang zh
+pnpm release:version --lang en
+```
+
+It interactively handles the release preflight and version bump flow:
+- Ensures the working tree is clean
+- Requires the current branch to be `main`
+- Verifies `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` are in sync
+- Checks that the target tag does not already exist locally or on `origin`
+- Updates all three version files together
+- Creates the release commit and `vX.Y.Z` tag
+- Optionally pushes the branch and tag
+
 ## Adding shadcn/ui Components
 
 ```bash
@@ -112,9 +135,10 @@ This project uses GitHub Actions for automated builds and releases.
 
 ### Automated Release
 
-The workflow is triggered by pushing tags matching `v*` (e.g., `v0.1.0`).
+The workflow is triggered by pushing tags matching `v*` (for example `v0.1.0`).
+The recommended release path is to run `pnpm release:version`, which creates the matching `vX.Y.Z` tag for you.
 
-**Create and push a tag:**
+**Manual tag push example:**
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
@@ -132,8 +156,9 @@ To enable automatic updates, you need to:
 
 1. Generate signing keys: `pnpm tauri signer generate -w ~/.tauri/myapp.key`
 2. Add GitHub secrets: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+3. Publish a non-draft GitHub Release so `releases/latest/download/latest.json` can resolve correctly
 
-**Note:** The public key and update endpoints in `tauri.conf.json` are automatically configured by GitHub Actions during the build process. No manual configuration is required.
+**Note:** The public key and update endpoint placeholders in `src-tauri/tauri.conf.json` are replaced by GitHub Actions during the release build. Auto update depends on the published GitHub Release exposing `latest.json` from the latest release assets.
 
 See [Auto Update Configuration](./docs/AUTO_UPDATE.md) for detailed instructions.
 

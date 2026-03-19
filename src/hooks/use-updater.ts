@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { checkForUpdates, downloadAndInstall, UpdateProgress } from "@/lib/updater";
+import { checkForUpdates, downloadAndInstall, UpdateProgress, UpdateCheckResult } from "@/lib/updater";
 import type { Update } from "@tauri-apps/plugin-updater";
 
 export function useUpdater() {
@@ -8,12 +8,12 @@ export function useUpdater() {
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState<UpdateProgress | null>(null);
 
-  const checkUpdate = async () => {
+  const checkUpdate = async (): Promise<UpdateCheckResult> => {
     setChecking(true);
     try {
-      const availableUpdate = await checkForUpdates();
-      setUpdate(availableUpdate);
-      return availableUpdate;
+      const result = await checkForUpdates();
+      setUpdate(result.status === "available" ? result.update : null);
+      return result;
     } finally {
       setChecking(false);
     }

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface UpdaterDialogProps {
   manualCheck?: boolean;
@@ -24,10 +25,9 @@ export function UpdaterDialog({ manualCheck = false, onCheckComplete }: UpdaterD
 
   useEffect(() => {
     if (!manualCheck) {
-      // Auto check for updates on mount
-      checkUpdate();
+      void checkUpdate();
     }
-  }, [manualCheck]);
+  }, [manualCheck, checkUpdate]);
 
   useEffect(() => {
     if (update) {
@@ -39,7 +39,7 @@ export function UpdaterDialog({ manualCheck = false, onCheckComplete }: UpdaterD
   }, [update, checking, manualCheck, onCheckComplete]);
 
   const handleInstall = () => {
-    installUpdate();
+    void installUpdate();
   };
 
   const handleCancel = () => {
@@ -47,19 +47,18 @@ export function UpdaterDialog({ manualCheck = false, onCheckComplete }: UpdaterD
   };
 
   const getProgressPercentage = () => {
-    if (!progress || progress.event !== "Progress") return 0;
-    const { chunkLength, contentLength } = progress.data || {};
+    if (!progress || progress.event === "Started") return 0;
+    const { downloaded, contentLength } = progress.data || {};
     if (!contentLength) return 0;
-    return Math.round((chunkLength! / contentLength) * 100);
+    if (progress.event === "Finished") return 100;
+    return Math.round(((downloaded ?? 0) / contentLength) * 100);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {downloading ? t("updater.downloading") : t("updater.updateAvailable")}
-          </DialogTitle>
+          <DialogTitle>{downloading ? t("updater.downloading") : t("updater.updateAvailable")}</DialogTitle>
           <DialogDescription>
             {downloading ? (
               <div className="space-y-2">
@@ -95,12 +94,19 @@ export function UpdaterDialog({ manualCheck = false, onCheckComplete }: UpdaterD
 export function useManualUpdateCheck() {
   const { checkUpdate, checking, update } = useUpdater();
   const [showNoUpdate, setShowNoUpdate] = useState(false);
+  const { t } = useTranslation();
 
   const handleCheckUpdate = async () => {
     setShowNoUpdate(false);
     const result = await checkUpdate();
-    if (!result) {
+
+    if (result.status === "up-to-date") {
       setShowNoUpdate(true);
+      return;
+    }
+
+    if (result.status === "error") {
+      toast.error(t("updater.checkFailed"));
     }
   };
 

@@ -1,11 +1,23 @@
 # 自动更新配置
 
-本指南说明如何为 Tauri 应用配置自动更新功能。
+本文说明本项目使用的发布与自动更新流程。
+
+## 概览
+
+本项目使用 GitHub Releases 作为更新后端。在发布工作流中，GitHub Actions 会替换 `src-tauri/tauri.conf.json` 里的更新占位符，使应用指向：
+
+```text
+https://github.com/<owner>/<repo>/releases/latest/download/latest.json
+```
+
+由于更新检查依赖 `releases/latest`，所以最新版本必须是一个已发布的、非 draft 的 GitHub Release。
 
 ## 前置条件
 
-1. 应用必须发布到 GitHub Releases
-2. 需要生成签名密钥对以确保更新安全
+1. 生成用于安全更新的签名密钥对
+2. 在 GitHub Actions 中配置签名相关 Secrets
+3. 从 `main` 分支发版
+4. 使用 `vX.Y.Z` 格式的标签发布版本
 
 ## 步骤 1：生成签名密钥
 
@@ -15,242 +27,88 @@
 pnpm tauri signer generate -w ~/.tauri/myapp.key
 ```
 
-这将输出：
-- **私钥**：保存到 `~/.tauri/myapp.key`（保密！）
-- **公钥**：以 `dW50cnVzdGVkIGNvbW1lbnQ6...` 开头的字符串
+该命令会输出：
+- **私钥**：保存到 `~/.tauri/myapp.key`
+- **公钥**：一个以 `dW50cnVzdGVkIGNvbW1lbnQ6...` 开头的字符串
+
+请妥善保管私钥。
 
 ## 步骤 2：配置 GitHub Secrets
 
-在 GitHub 仓库中添加以下 Secrets（Settings → Secrets and variables → Actions）：
+在 GitHub 仓库的 Settings → Secrets and variables → Actions 中添加以下 Secrets：
 
 1. `TAURI_SIGNING_PRIVATE_KEY` - `~/.tauri/myapp.key` 的内容
-2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - 设置的密码（如果有）
+2. `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - 你设置的密码（如果有）
+3. `TAURI_SIGNING_PUBLIC_KEY` - 第 1 步生成的公钥
 
-## 步骤 3：更新 tauri.conf.json
+## 步骤 3：保持版本文件一致
 
-替换 `src-tauri/tauri.conf.json` 中的占位符：
+发布脚本要求以下文件中的版本号保持一致：
 
-```json
-{
-  "plugins": {
-    "updater": {
-      "pubkey": "YOUR_PUBLIC_KEY_HERE",
-      "endpoints": [
-        "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/latest.json"
-      ],
-      "windows": {
-        "installMode": "passive"
-      }
-    }
-  }
-}
-```
+- `package.json`
+- `src-tauri/tauri.conf.json`
+- `src-tauri/Cargo.toml`
 
-替换：
-- `YOUR_PUBLIC_KEY_HERE` 为步骤 1 中的公钥
-- `YOUR_USERNAME/YOUR_REPO` 为你的 GitHub 用户名和仓库名
+不要只手动修改其中一个文件，统一使用发布脚本作为版本发布入口。
 
-## 步骤 4：发布新版本
+## 步骤 4：创建发布
 
-1. 更新 `src-tauri/tauri.conf.json` 中的版本号
-2. 创建并推送标签：
+运行：
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+pnpm release:version
 ```
 
-3. GitHub Actions 将自动构建并发布到 Releases
+脚本在真正修改文件前会执行发布前检查：
+- 确保工作区干净
+- 强制要求当前分支为 `main`
+- 校验三个版本文件完全一致
+- 检查目标 tag 是否已在本地或远端 `origin` 存在
+
+之后它会：
+- 同步更新所有版本文件
+- 创建发布提交
+- 创建 `vX.Y.Z` tag
+- 可选地推送分支和 tag
+
+GitHub Actions 会在收到 `v*` 标签后触发，并发布一个非 draft 的 Release，以确保 `releases/latest` 可以正确解析。
+
+## 步骤 5：验证发布产物
+
+GitHub Actions 完成后，确认最新已发布 Release 中包含以下更新相关资源：
+- `latest.json`
+- Windows updater bundle 产物
+- 签名文件
+
+如果最新已发布 Release 中缺少 `latest.json`，客户端将无法发现更新。
 
 ## 工作原理
 
-### 更新检查流程
-
-1. 应用启动时检查 `endpoints` 中的 `latest.json`
-2. 比较远程版本与本地版本
-3. 如果有新版本，下载更新文件
-4. 使用公钥验证签名
-5. 安装更新并重启应用
-
-### 文件结构
-
-GitHub Release 包含：
-- `latest.json` - 更新元数据（版本、下载链接、签名）
-- `*.nsis.zip` - Windows 安装包
-- `*.nsis.zip.sig` - 安装包签名
-
-### 安装模式
-
-```json
-{
-  "windows": {
-    "installMode": "passive"  // 静默安装，无需用户交互
-  }
-}
-```
-
-可选值：
-- `passive` - 静默安装（推荐）
-- `basicUi` - 显示基本 UI
-- `quiet` - 完全静默
-
-## 前端集成
-
-### 检查更新
-
-```typescript
-import { check } from "@tauri-apps/plugin-updater";
-import { relaunch } from "@tauri-apps/plugin-process";
-
-async function checkForUpdates() {
-  const update = await check();
-
-  if (update?.available) {
-    console.log(`发现新版本: ${update.version}`);
-    console.log(`更新说明: ${update.body}`);
-
-    // 下载并安装
-    await update.downloadAndInstall();
-
-    // 重启应用
-    await relaunch();
-  }
-}
-```
-
-### 带进度的更新
-
-```typescript
-import { check } from "@tauri-apps/plugin-updater";
-
-async function updateWithProgress() {
-  const update = await check();
-
-  if (update?.available) {
-    await update.downloadAndInstall((event) => {
-      switch (event.event) {
-        case "Started":
-          console.log(`开始下载，总大小: ${event.data.contentLength} 字节`);
-          break;
-        case "Progress":
-          console.log(`已下载: ${event.data.chunkLength} 字节`);
-          break;
-        case "Finished":
-          console.log("下载完成");
-          break;
-      }
-    });
-
-    await relaunch();
-  }
-}
-```
-
-## 测试更新
-
-### 本地测试
-
-1. 构建应用：`pnpm tauri build`
-2. 安装构建的应用
-3. 修改版本号并重新构建
-4. 手动创建 `latest.json` 并托管
-5. 运行已安装的应用测试更新
-
-### 生产测试
-
-1. 发布 v0.1.0 版本
-2. 安装 v0.1.0
-3. 发布 v0.1.1 版本
-4. 运行 v0.1.0 应用，验证自动更新
+1. 应用会在启动时或手动检查时访问 updater endpoint
+2. 如果发现更高版本，应用会显示更新对话框
+3. 如果没有更新，手动检查会明确显示当前已是最新版本
+4. 如果检查失败，界面会显示错误，而不是误报为已是最新版本
+5. 下载过程中，进度基于累计下载字节数计算
+6. 安装完成后，应用会自动重启
 
 ## 故障排查
 
-### 更新检查失败
+**更新检查失败：**
+- 检查仓库是否存在已发布的、非 draft 的 Release
+- 检查最新 Release 资源中是否包含 `latest.json`
+- 确认签名密钥配置正确
 
-**问题**：无法连接到更新服务器
+**检测不到更新：**
+- 确认已安装应用的版本低于最新 Release 的版本
+- 确认发布标签使用 `vX.Y.Z` 格式
+- 确认最新 Release 是已发布状态，而不是 draft
 
-**解决方案**：
-1. 检查 `endpoints` URL 是否正确
-2. 确认 GitHub Release 已发布
-3. 验证 `latest.json` 文件存在
+**签名验证失败：**
+- 确认 `TAURI_SIGNING_PRIVATE_KEY` 与 `TAURI_SIGNING_PUBLIC_KEY` 匹配
+- 修正 Secrets 后重新构建并重新发布
 
-### 签名验证失败
+## 相关文件
 
-**问题**：`Invalid signature`
-
-**解决方案**：
-1. 确认 `pubkey` 与私钥匹配
-2. 检查 GitHub Secrets 配置正确
-3. 重新生成密钥对
-
-### 安装失败
-
-**问题**：下载完成但安装失败
-
-**解决方案**：
-1. 检查安装包完整性
-2. 尝试不同的 `installMode`
-3. 查看 Windows 事件日志
-
-## 安全注意事项
-
-1. **私钥保护**：
-   - 永远不要提交私钥到代码仓库
-   - 仅在 GitHub Secrets 中存储
-   - 定期轮换密钥
-
-2. **HTTPS 要求**：
-   - 更新端点必须使用 HTTPS
-   - 防止中间人攻击
-
-3. **签名验证**：
-   - 始终启用签名验证
-   - 不要跳过验证步骤
-
-## 高级配置
-
-### 自定义更新对话框
-
-```typescript
-import { check } from "@tauri-apps/plugin-updater";
-import { ask } from "@tauri-apps/plugin-dialog";
-
-async function customUpdateDialog() {
-  const update = await check();
-
-  if (update?.available) {
-    const yes = await ask(
-      `发现新版本 ${update.version}，是否立即更新？\n\n${update.body}`,
-      {
-        title: "更新可用",
-        kind: "info",
-      }
-    );
-
-    if (yes) {
-      await update.downloadAndInstall();
-      await relaunch();
-    }
-  }
-}
-```
-
-### 定时检查更新
-
-```typescript
-import { check } from "@tauri-apps/plugin-updater";
-
-// 每小时检查一次
-setInterval(async () => {
-  const update = await check();
-  if (update?.available) {
-    // 通知用户
-  }
-}, 60 * 60 * 1000);
-```
-
-## 参考资源
-
-- [Tauri Updater 插件文档](https://v2.tauri.app/plugin/updater/)
-- [GitHub Actions 工作流](./.github/workflows/release.yml)
-- [Tauri 签名指南](https://v2.tauri.app/distribute/sign/)
+- `.github/workflows/release.yml`
+- `scripts/release-version.mjs`
+- `src-tauri/tauri.conf.json`
