@@ -156,7 +156,6 @@ To enable automatic updates, you need to:
 
 1. Generate signing keys: `pnpm tauri signer generate -w ~/.tauri/myapp.key`
 2. Add GitHub secrets: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-3. Publish a non-draft GitHub Release so `releases/latest/download/latest.json` can resolve correctly
 
 **Note:** The public key and update endpoint placeholders in `src-tauri/tauri.conf.json` are replaced by GitHub Actions during the release build. Auto update depends on the published GitHub Release exposing `latest.json` from the latest release assets.
 

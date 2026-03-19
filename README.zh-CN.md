@@ -156,7 +156,6 @@ git push origin v0.1.0
 
 1. 生成签名密钥：`pnpm tauri signer generate -w ~/.tauri/myapp.key`
 2. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-3. 确保发布的是非 draft 的 GitHub Release，这样 `releases/latest/download/latest.json` 才能正确解析到最新版本
 
 **注意：** `src-tauri/tauri.conf.json` 中的公钥和更新端点占位符会在发布构建期间由 GitHub Actions 自动替换。自动更新依赖已发布的 GitHub Release 对外提供最新版本的 `latest.json` 资源。
 

@@ -10,8 +10,6 @@ This project uses GitHub Releases as the updater backend. During the release wor
 https://github.com/<owner>/<repo>/releases/latest/download/latest.json
 ```
 
-Because the updater resolves through `releases/latest`, the latest release must be a published non-draft GitHub Release.
-
 ## Prerequisites
 
 1. Generate a signing key pair for secure updates
@@ -71,7 +69,7 @@ Then it:
 - Creates a `vX.Y.Z` tag
 - Optionally pushes the branch and tag
 
-The GitHub Actions workflow is triggered by `v*` tags and publishes a non-draft release so `releases/latest` can resolve correctly.
+The GitHub Actions workflow is triggered by `v*` tags.
 
 ## Step 5: Verify the Published Assets
 
@@ -94,14 +92,12 @@ If `latest.json` is missing from the latest published release, updater clients c
 ## Troubleshooting
 
 **Update check fails:**
-- Verify the repository has a published non-draft release
 - Check that `latest.json` exists in the latest release assets
 - Confirm the signing keys are configured correctly
 
 **No update detected:**
 - Confirm the installed app version is lower than the latest release version
 - Confirm the release tag uses the `vX.Y.Z` format
-- Confirm the latest release is published, not draft
 
 **Signature verification fails:**
 - Make sure `TAURI_SIGNING_PRIVATE_KEY` matches `TAURI_SIGNING_PUBLIC_KEY`
