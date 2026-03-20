@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Github, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TitleBar } from "@/components/title-bar";
 import { WindowFrame } from "@/components/window-frame";
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { destroyWindow } from "@/lib/window";
+import { cancelDestroyWindow, destroyWindow } from "@/lib/window";
 import { useManualUpdateCheck } from "@/components/updater-dialog";
 import packageJson from "../../package.json";
 
@@ -29,17 +29,21 @@ export default function AboutPage() {
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
 
-    // Listen for window close request, destroy after 5 seconds delay
     const unlistenClose = appWindow.onCloseRequested(async (event) => {
-      // Prevent default close behavior
       event.preventDefault();
       console.log("About window close requested, will destroy in 5 seconds");
-      // Destroy after 5 seconds delay
       await destroyWindow(appWindow.label, 5000);
+    });
+
+    const unlistenFocusChanged = appWindow.onFocusChanged(({ payload: focused }) => {
+      if (focused) {
+        cancelDestroyWindow(appWindow.label);
+      }
     });
 
     return () => {
       unlistenClose.then((fn) => fn());
+      unlistenFocusChanged.then((fn) => fn());
     };
   }, []);
 

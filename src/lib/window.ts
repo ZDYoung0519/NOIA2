@@ -4,6 +4,17 @@ import { emit, once } from "@tauri-apps/api/event";
 
 const createWindowLoading: Record<string, boolean> = {};
 const destroyTimers: Record<string, number> = {};
+const destroyVersions: Record<string, number> = {};
+
+export function cancelDestroyWindow(label: string) {
+  destroyVersions[label] = (destroyVersions[label] ?? 0) + 1;
+
+  if (destroyTimers[label]) {
+    clearTimeout(destroyTimers[label]);
+    delete destroyTimers[label];
+    console.log("Cleared window destroy timer:", label);
+  }
+}
 
 /**
  * Calculate centered position of child window relative to parent window
@@ -76,12 +87,7 @@ export async function showWindow(label: string) {
     return;
   }
 
-  // Clear destroy timer
-  if (destroyTimers[label]) {
-    clearTimeout(destroyTimers[label]);
-    delete destroyTimers[label];
-    console.log("Cleared window destroy timer:", label);
-  }
+  cancelDestroyWindow(label);
 
   if (!(await window.isVisible())) {
     await window.show();
@@ -107,25 +113,49 @@ export async function hideWindow(label: string, destroyDelay = 5000) {
 }
 
 export async function destroyWindow(label: string, delay = 0) {
-  const window = await WebviewWindow.getByLabel(label);
-  if (!window) {
-    return;
-  }
-
   if (!delay) {
+    const window = await WebviewWindow.getByLabel(label);
+    if (!window) {
+      return;
+    }
+
     // Destroy immediately
     await emit("destroy-window:" + label);
     await window.destroy();
   } else {
     // Destroy with delay
+    const destroyVersion = (destroyVersions[label] ?? 0) + 1;
+    destroyVersions[label] = destroyVersion;
+
+    const window = await WebviewWindow.getByLabel(label);
+    if (!window) {
+      return;
+    }
+
     if (destroyTimers[label]) {
       clearTimeout(destroyTimers[label]);
     }
+
     await window.hide();
     destroyTimers[label] = setTimeout(async () => {
-      await emit("destroy-window:" + label);
-      await window.destroy();
+      if (destroyVersions[label] !== destroyVersion) {
+        return;
+      }
+
       delete destroyTimers[label];
+
+      const currentWindow = await WebviewWindow.getByLabel(label);
+      if (!currentWindow) {
+        return;
+      }
+
+      if (destroyVersions[label] !== destroyVersion) {
+        return;
+      }
+
+      await emit("destroy-window:" + label);
+      await currentWindow.destroy();
+      delete destroyVersions[label];
     }, delay) as unknown as number;
     console.log(`Window will be destroyed in ${delay}ms:`, label);
   }
@@ -162,16 +192,12 @@ export async function createWindow(
     onError?: () => void;
   }
 ) {
+  cancelDestroyWindow(label);
+
   if (createWindowLoading[label]) {
     return;
   }
   createWindowLoading[label] = true;
-
-  // Clear destroy timer
-  if (destroyTimers[label]) {
-    clearTimeout(destroyTimers[label]);
-    delete destroyTimers[label];
-  }
 
   try {
     const window = await WebviewWindow.getByLabel(label);
