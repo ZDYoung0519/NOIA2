@@ -4,18 +4,18 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./index.css";
 import "./i18n";
 
-const App = lazy(() => import("./App"));
+const HomePage = lazy(() => import("./pages/home"));
 const AboutPage = lazy(() => import("./pages/about"));
 const SettingsPage = lazy(() => import("./pages/settings"));
 
-const pathname = window.location.pathname;
+const pageMap = {
+  "/": HomePage,
+  "/about": AboutPage,
+  "/settings": SettingsPage,
+};
 
-let PageComponent = App;
-if (pathname === "/about") {
-  PageComponent = AboutPage;
-} else if (pathname === "/settings") {
-  PageComponent = SettingsPage;
-}
+const pathname = window.location.pathname;
+const PageComponent = pageMap[pathname as keyof typeof pageMap] ?? HomePage;
 
 function AppWrapper() {
   useEffect(() => {

@@ -97,7 +97,8 @@ UI rendering, interaction, and styling.
 ### Entry Points
 
 - **Entry**: `src/main.tsx`
-- **Main Component**: `src/App.tsx`
+- **Page Selector**: `src/main.tsx` lazily selects a page component based on `window.location.pathname`
+- **Pages**: `src/pages/home.tsx`, `src/pages/about.tsx`, `src/pages/settings.tsx`
 - **Build Tool**: Vite (`vite.config.ts`)
 
 ### Key Dependencies

@@ -9,7 +9,8 @@ UI rendering, interaction, and styling. Built with React 19 + TypeScript + Tailw
 ## Entry Points
 
 - **Entry**: `main.tsx`
-- **Main Component**: `App.tsx`
+- **Page Selector**: `main.tsx` maps pathname values to lazily loaded page components
+- **Pages**: `pages/home.tsx`, `pages/about.tsx`, `pages/settings.tsx`
 - **Build Tool**: Vite 7
 - **Dev Port**: 1420
 
@@ -104,17 +105,15 @@ pnpm dlx shadcn@latest add dialog
 
 ### Add Routing
 
-1. Install: `pnpm add react-router-dom`
-2. Create `src/pages/` directory
-3. Configure routes in `App.tsx`
+1. Create a page component under `src/pages/`
+2. Add a lazy import for the page in `src/main.tsx`
+3. Register the pathname-to-page mapping in `pageMap` inside `src/main.tsx`
 
 ## File Structure
 
 ```
 src/
-├── main.tsx          # Entry point
-├── App.tsx           # Main app component
-├── App.css           # App styles
+├── main.tsx          # Entry point and pathname-based page selector
 ├── index.css         # Global styles + Tailwind theme
 ├── vite-env.d.ts     # Vite type declarations
 ├── assets/           # Static assets
@@ -131,5 +130,7 @@ src/
 ├── lib/             # Utility functions
 │   └── utils.ts
 └── pages/           # Page components
-    └── about.tsx
+    ├── home.tsx
+    ├── about.tsx
+    └── settings.tsx
 ```

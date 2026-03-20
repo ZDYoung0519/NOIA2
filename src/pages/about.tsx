@@ -50,7 +50,7 @@ export default function AboutPage() {
     });
 
     // Listen for language change events from other windows
-    const unlistenLanguage = listen<{ language: string }>("language-changed", (event) => {
+    const unlistenLanguageChanged = listen<{ language: string }>("language-changed", (event) => {
       console.log("Language changed event received:", event.payload.language);
       i18n.changeLanguage(event.payload.language);
     });
@@ -58,7 +58,7 @@ export default function AboutPage() {
     return () => {
       unlistenResize.then((fn) => fn());
       unlistenClose.then((fn) => fn());
-      unlistenLanguage.then((fn) => fn());
+      unlistenLanguageChanged.then((fn) => fn());
     };
   }, [i18n]);
 
@@ -71,7 +71,7 @@ export default function AboutPage() {
       <div
         className={cn(
           "bg-background flex h-screen w-screen flex-col overflow-hidden",
-          isMaximized ? "" : "border-border rounded-md border"
+          isMaximized ? "" : "border-border rounded-lg border"
         )}
       >
         <TitleBar title={t("about.title")} showMinimize={false} showMaximize={false} />

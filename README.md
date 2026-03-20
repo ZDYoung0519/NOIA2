@@ -117,8 +117,11 @@ pnpm format:check  # Check code formatting
 │   │   ├── index.ts       # i18n configuration
 │   │   └── locales/       # Translation files
 │   ├── lib/               # Utility functions
-│   ├── App.tsx            # Main app component
-│   └── main.tsx           # Entry point
+│   ├── pages/             # Page components
+│   │   ├── home.tsx       # Main window page
+│   │   ├── about.tsx      # About window page
+│   │   └── settings.tsx   # Settings window page
+│   └── main.tsx           # Frontend entry and pathname-based page selector
 ├── src-tauri/             # Tauri/Rust backend
 │   ├── src/               # Rust source code
 │   └── tauri.conf.json    # Tauri configuration

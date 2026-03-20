@@ -117,8 +117,11 @@ pnpm format:check  # 检查代码格式
 │   │   ├── index.ts       # i18n 配置
 │   │   └── locales/       # 翻译文件
 │   ├── lib/               # 工具函数
-│   ├── App.tsx            # 主应用组件
-│   └── main.tsx           # 入口文件
+│   ├── pages/             # 页面组件
+│   │   ├── home.tsx       # 主窗口页面
+│   │   ├── about.tsx      # 关于窗口页面
+│   │   └── settings.tsx   # 设置窗口页面
+│   └── main.tsx           # 前端入口和基于 pathname 的页面选择器
 ├── src-tauri/             # Tauri/Rust 后端
 │   ├── src/               # Rust 源码
 │   └── tauri.conf.json    # Tauri 配置

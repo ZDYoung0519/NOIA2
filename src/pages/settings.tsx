@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listen, emit } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import { TitleBar } from "@/components/title-bar";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/components/theme-provider";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ShortcutInput } from "@/components/shortcut-input";
 import { Moon, Sun, Monitor, Palette, Keyboard } from "lucide-react";
@@ -18,6 +17,15 @@ import { Toaster } from "@/components/ui/sonner";
 const SHORTCUT_KEY = "global-shortcut-show-main";
 
 type SettingSection = "appearance" | "shortcut";
+
+export default function SettingsPage() {
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="tauri-ui-theme">
+      <Toaster />
+      <SettingsContent />
+    </ThemeProvider>
+  );
+}
 
 function SettingsContent() {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -35,7 +43,7 @@ function SettingsContent() {
 
     appWindow.isMaximized().then(setIsMaximized);
 
-    const unlisten = appWindow.onResized(async () => {
+    const unlistenResize = appWindow.onResized(async () => {
       const maximized = await appWindow.isMaximized();
       setIsMaximized(maximized);
     });
@@ -48,13 +56,13 @@ function SettingsContent() {
     }
 
     // Listen for language change events
-    const unlistenLanguage = listen<{ language: string }>("language-changed", (event) => {
+    const unlistenLanguageChanged = listen<{ language: string }>("language-changed", (event) => {
       i18n.changeLanguage(event.payload.language);
     });
 
     return () => {
-      unlisten.then((fn) => fn());
-      unlistenLanguage.then((fn) => fn());
+      unlistenResize.then((fn) => fn());
+      unlistenLanguageChanged.then((fn) => fn());
     };
   }, [handleShowMainWindow, i18n]);
 
@@ -212,14 +220,5 @@ function SettingsContent() {
         </main>
       </div>
     </div>
-  );
-}
-
-export default function Settings() {
-  return (
-    <ThemeProvider defaultTheme="system" storageKey="tauri-ui-theme">
-      <Toaster />
-      <SettingsContent />
-    </ThemeProvider>
   );
 }

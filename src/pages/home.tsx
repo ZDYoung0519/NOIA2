@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import reactLogo from "./assets/react.svg";
+import reactLogo from "../assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,10 @@ import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { registerShortcut } from "@/lib/shortcut";
 import { toggleWindow } from "@/lib/window";
-import "./App.css";
 
 const SHORTCUT_KEY = "global-shortcut-show-main";
 
-function App() {
+function HomePage() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   const [isMaximized, setIsMaximized] = useState(false);
@@ -28,19 +27,19 @@ function App() {
 
     appWindow.isMaximized().then(setIsMaximized);
 
-    const unlisten = appWindow.onResized(async () => {
+    const unlistenResize = appWindow.onResized(async () => {
       const maximized = await appWindow.isMaximized();
       setIsMaximized(maximized);
     });
 
     // Listen for language change events from other windows
-    const unlistenLanguage = listen<{ language: string }>("language-changed", (event) => {
+    const unlistenLanguageChanged = listen<{ language: string }>("language-changed", (event) => {
       console.log("Language changed event received:", event.payload.language);
       i18n.changeLanguage(event.payload.language);
     });
 
     // Listen for shortcut change events from settings window
-    const unlistenShortcut = listen<{ shortcut: string }>("shortcut-changed", async (event) => {
+    const unlistenShortcutChanged = listen<{ shortcut: string }>("shortcut-changed", async (event) => {
       console.log("Shortcut changed event received:", event.payload.shortcut);
       const newShortcut = event.payload.shortcut;
       if (newShortcut) {
@@ -76,9 +75,9 @@ function App() {
     initShortcut();
 
     return () => {
-      unlisten.then((fn) => fn());
-      unlistenLanguage.then((fn) => fn());
-      unlistenShortcut.then((fn) => fn());
+      unlistenResize.then((fn) => fn());
+      unlistenLanguageChanged.then((fn) => fn());
+      unlistenShortcutChanged.then((fn) => fn());
     };
   }, [i18n, t]);
 
@@ -173,4 +172,4 @@ function App() {
   );
 }
 
-export default App;
+export default HomePage;

@@ -75,12 +75,18 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply text-foreground bg-transparent;
+
+  html,
+  body,
+  #root {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
   }
-  #root {
-    overflow: hidden;
+
+  body {
+    @apply text-foreground bg-transparent;
   }
 }
 
