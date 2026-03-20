@@ -11,7 +11,14 @@ import { destroyWindow } from "@/lib/window";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { useManualUpdateCheck } from "@/components/updater-dialog";
+import packageJson from "../../package.json";
 import "../i18n";
+
+const techVersions = {
+  tauri: packageJson.dependencies["@tauri-apps/api"].replace(/^\^/, "v"),
+  react: packageJson.dependencies.react.replace(/^\^/, "v"),
+  typescript: packageJson.devDependencies.typescript.replace(/^~/, "v"),
+};
 
 export default function AboutPage() {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -83,15 +90,15 @@ export default function AboutPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tauri</span>
-                <span className="font-medium">v2</span>
+                <span className="font-medium">{techVersions.tauri}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">React</span>
-                <span className="font-medium">19</span>
+                <span className="font-medium">{techVersions.react}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">TypeScript</span>
-                <span className="font-medium">5.8</span>
+                <span className="font-medium">{techVersions.typescript}</span>
               </div>
             </div>
 
