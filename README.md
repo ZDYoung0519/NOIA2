@@ -27,8 +27,8 @@ A modern desktop application template built with Tauri v2 + React 19 + TypeScrip
 - 🗂️ **Multi-Window Management** - Support for child windows, window lifecycle management, and delayed destruction
 - 🔔 **System Tray Integration** - Tray icon, menu, and window show/hide support
 - ⌨️ **Global Shortcuts** - Register global shortcuts that work even when app is not focused
-- 🚀 **Automated Release & Updates** - GitHub Actions build, GitHub Release publishing, and auto-update delivery based on `vX.Y.Z` tags
-- 📦 **Ready to Use** - Pre-configured with Prettier and TypeScript strict mode
+- 🔄 **Automated Release & Updates** - GitHub Actions build, GitHub Release publishing, and auto-update delivery based on `vX.Y.Z` tags
+- 📦 **Ready to Use** - Pre-configured with Prettier, ESLint, and TypeScript strict mode
 - 🚀 **Fast Development** - Vite HMR + Tauri hot reload
 
 ## Tech Stack
