@@ -46,7 +46,7 @@
     "createUpdaterArtifacts": true,
     "windows": {
       "nsis": {
-        "installerIcon": "icons/icon.ico",
+        "installerIcon": "icons/128x128.png",
         "languages": [
           "SimpChinese",
           "English"
