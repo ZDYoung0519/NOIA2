@@ -27,12 +27,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(plugins::system_tray::init())
-        .invoke_handler(tauri::generate_handler![greet, update_tray_menu])
-        .plugin(tauri_plugin_updater::Builder::new().build());
+        .invoke_handler(tauri::generate_handler![greet, update_tray_menu]);
+        // .plugin(tauri_plugin_updater::Builder::new().build());
     
     // // Only enable updater in release mode
-    // #[cfg(not(debug_assertions))]
-    // let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
 
     builder
         .run(tauri::generate_context!())

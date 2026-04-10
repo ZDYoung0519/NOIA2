@@ -56,7 +56,7 @@ jobs:
         run: |
           REPO="${{ github.repository }}"
           # 定义直连和代理的地址
-          ENDPOINT="https://github.com/${REPO}/releases/latest/download/latest.json"
+          ENDPOINT_RAW="https://github.com/${REPO}/releases/latest/download/latest.json"
           ENDPOINT_PROXY="https://gh-proxy.com/${ENDPOINT_RAW}"
           ENDPOINTS_JSON="[\"${ENDPOINT_RAW}\", \"${ENDPOINT_PROXY}\"]"
           
