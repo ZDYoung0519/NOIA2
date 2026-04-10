@@ -226,7 +226,7 @@ System-level calls, native features, cross-platform desktop app wrapper.
 - `capabilities/default.json` - Permissions config
 
 **Key Settings**:
-- Product: `tauri-app-template`
+- Product: `noia`
 - Identifier: `com.template.tauri-app`
 - Window: 800x600
 - Dev Port: 1420
