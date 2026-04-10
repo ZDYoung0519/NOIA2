@@ -72,6 +72,7 @@ jobs:
       
       - name: Get release notes
         id: notes
+        shell: bash
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           NOTES=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
