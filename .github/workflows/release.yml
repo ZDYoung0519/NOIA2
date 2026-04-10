@@ -64,7 +64,8 @@ jobs:
 
           # Replace placeholders in tauri.conf.json
           # sed -i.bak "s|__TAURI_UPDATER_ENDPOINT__|${ENDPOINT}|g" src-tauri/tauri.conf.json
-          sed -i.bak "s|__TAURI_UPDATER_ENDPOINTS__|${ENDPOINTS_JSON}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_1__|${ENDPOINT_RAW}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_2__|${ENDPOINT_PROXY}|g" src-tauri/tauri.conf.json
           sed -i.bak "s|__TAURI_UPDATER_PUBKEY__|${PUBKEY}|g" src-tauri/tauri.conf.json
 
           echo "Updater configured with endpoint: ${ENDPOINT}"
