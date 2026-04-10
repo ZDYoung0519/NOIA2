@@ -55,11 +55,16 @@ jobs:
         shell: bash
         run: |
           REPO="${{ github.repository }}"
+          # 定义直连和代理的地址
           ENDPOINT="https://github.com/${REPO}/releases/latest/download/latest.json"
+          ENDPOINT_PROXY="https://gh-proxy.com/${ENDPOINT_RAW}"
+          ENDPOINTS_JSON="[\"${ENDPOINT_RAW}\", \"${ENDPOINT_PROXY}\"]"
+          
           PUBKEY="${{ secrets.TAURI_SIGNING_PUBLIC_KEY }}"
 
           # Replace placeholders in tauri.conf.json
-          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT__|${ENDPOINT}|g" src-tauri/tauri.conf.json
+          # sed -i.bak "s|__TAURI_UPDATER_ENDPOINT__|${ENDPOINT}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINTS__|${ENDPOINTS_JSON}|g" src-tauri/tauri.conf.json
           sed -i.bak "s|__TAURI_UPDATER_PUBKEY__|${PUBKEY}|g" src-tauri/tauri.conf.json
 
           echo "Updater configured with endpoint: ${ENDPOINT}"
