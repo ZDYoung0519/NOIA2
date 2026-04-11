@@ -27,3 +27,4 @@ dist-ssr
 .claude/
 .tauri
 generate_key.sh
+src-python/

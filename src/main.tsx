@@ -5,11 +5,13 @@ import "./index.css";
 import "./i18n";
 
 const HomePage = lazy(() => import("./pages/home"));
+const DpsPage = lazy(() => import("./pages/dps"));
 const AboutPage = lazy(() => import("./pages/about"));
 const SettingsPage = lazy(() => import("./pages/settings"));
 
 const pageMap = {
   "/": HomePage,
+  "/dps": DpsPage,
   "/about": AboutPage,
   "/settings": SettingsPage,
 };

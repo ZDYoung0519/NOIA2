@@ -1,0 +1,226 @@
+use std::collections::{HashMap, VecDeque};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex, RwLock,
+};
+use std::thread::{self, JoinHandle};
+use std::time::{Duration, Instant};
+
+use crate::dps_meter::capture::assembler::StreamAssembler;
+use crate::dps_meter::capture::capturer::CapturedPacket;
+use crate::dps_meter::capture::channel::Channel;
+use crate::dps_meter::capture::processor::ProcessingMode;
+use crate::dps_meter::storage::data_storage::DataStorage;
+
+const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
+const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
+const MAGIC: [u8; 3] = [0x06, 0x00, 0x36];
+
+#[derive(Default)]
+struct RecentPortWindow {
+    entries: VecDeque<(Instant, String)>,
+    gap_time: Duration,
+}
+
+impl RecentPortWindow {
+    fn new(gap_time: Duration) -> Self {
+        Self {
+            entries: VecDeque::new(),
+            gap_time,
+        }
+    }
+
+    fn add_and_get_locked(&mut self, key: String) -> Option<String> {
+        let now = Instant::now();
+        self.entries.push_back((now, key));
+        while let Some((timestamp, _)) = self.entries.front() {
+            if now.duration_since(*timestamp) > self.gap_time {
+                self.entries.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        self.entries.iter().map(|(_, port)| port).min().cloned()
+    }
+}
+
+struct DispatcherState {
+    data_storage: Arc<DataStorage>,
+    unified: StreamAssembler,
+    assemblers: HashMap<String, StreamAssembler>,
+    recent_ports: RecentPortWindow,
+    logged_packets: usize,
+    logged_magic_packets: usize,
+}
+
+impl DispatcherState {
+    fn new(data_storage: Arc<DataStorage>) -> Self {
+        Self {
+            data_storage: Arc::clone(&data_storage),
+            unified: StreamAssembler::new(
+                data_storage,
+                "unified".to_string(),
+                ProcessingMode::MetadataOnly,
+            ),
+            assemblers: HashMap::new(),
+            recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
+            logged_packets: 0,
+            logged_magic_packets: 0,
+        }
+    }
+
+    fn clear(&mut self) {
+        self.unified.clear();
+        for assembler in self.assemblers.values() {
+            assembler.clear();
+        }
+        self.assemblers.clear();
+        self.recent_ports.entries.clear();
+        self.logged_packets = 0;
+        self.logged_magic_packets = 0;
+    }
+}
+
+pub struct CaptureDispatcher {
+    channel: Channel<CapturedPacket>,
+    running: Arc<AtomicBool>,
+    thread: Mutex<Option<JoinHandle<()>>>,
+    combat_port: Arc<RwLock<Option<String>>>,
+    state: Arc<Mutex<DispatcherState>>,
+}
+
+impl CaptureDispatcher {
+    pub fn new(channel: Channel<CapturedPacket>, data_storage: Arc<DataStorage>) -> Self {
+        let state = Arc::new(Mutex::new(DispatcherState::new(Arc::clone(&data_storage))));
+
+        Self {
+            channel,
+            running: Arc::new(AtomicBool::new(false)),
+            thread: Mutex::new(None),
+            combat_port: Arc::new(RwLock::new(None)),
+            state,
+        }
+    }
+
+    pub fn start(&self) {
+        if self.running.swap(true, Ordering::SeqCst) {
+            return;
+        }
+
+        let channel = self.channel.clone();
+        let running = Arc::clone(&self.running);
+        let combat_port = Arc::clone(&self.combat_port);
+        let state = Arc::clone(&self.state);
+
+        let handle = thread::spawn(move || {
+            while running.load(Ordering::SeqCst) {
+                let packet = match channel.receive(Some(Duration::from_secs(1))) {
+                    Some(packet) => packet,
+                    None => continue,
+                };
+
+                let mut state = state.lock().unwrap();
+
+                if state.logged_packets < 20 {
+                    println!(
+                        "[dispatcher] packet src={} dst={} payload_len={} captured_at={:.3}",
+                        packet.src_port,
+                        packet.dst_port,
+                        packet.data.len(),
+                        packet.captured_at
+                    );
+                    state.logged_packets += 1;
+                }
+
+                if looks_like_tls_payload(&packet.data) {
+                    continue;
+                }
+
+                let key = normalized_port_key(packet.src_port, packet.dst_port);
+                let contains_magic = packet
+                    .data
+                    .windows(MAGIC.len())
+                    .any(|window| window == MAGIC);
+
+                if contains_magic && state.logged_magic_packets < 20 {
+                    println!(
+                        "[dispatcher] magic packet key={} payload_len={} head={}",
+                        key,
+                        packet.data.len(),
+                        format_packet_prefix(&packet.data, 24)
+                    );
+                    state.logged_magic_packets += 1;
+                }
+
+                if contains_magic {
+                    if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
+                        *combat_port.write().unwrap() = Some(locked.clone());
+                        let data_storage = Arc::clone(&state.data_storage);
+                        state
+                            .assemblers
+                            .entry(locked.clone())
+                            .or_insert_with(|| {
+                                StreamAssembler::new(data_storage, locked, ProcessingMode::Full)
+                            });
+                    }
+                }
+
+                let _ = state.unified.process_chunk(&packet.data);
+                if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
+                    let data_storage = Arc::clone(&state.data_storage);
+                    let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
+                        StreamAssembler::new(data_storage, key.clone(), ProcessingMode::Full)
+                    });
+                    let _ = assembler.process_chunk(&packet.data);
+                }
+            }
+        });
+
+        *self.thread.lock().unwrap() = Some(handle);
+    }
+
+    pub fn stop(&self) {
+        self.running.store(false, Ordering::SeqCst);
+        if let Some(handle) = self.thread.lock().unwrap().take() {
+            let _ = handle.join();
+        }
+        *self.combat_port.write().unwrap() = None;
+    }
+
+    pub fn clear(&self) {
+        *self.combat_port.write().unwrap() = None;
+        let mut state = self.state.lock().unwrap();
+        state.clear();
+    }
+}
+
+impl Drop for CaptureDispatcher {
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
+
+fn looks_like_tls_payload(data: &[u8]) -> bool {
+    data.len() >= 3
+        && TLS_CONTENT_TYPES.contains(&data[0])
+        && data[1] == 0x03
+        && TLS_VERSIONS.contains(&data[2])
+}
+
+fn normalized_port_key(src_port: u16, dst_port: u16) -> String {
+    let (a, b) = if src_port <= dst_port {
+        (src_port, dst_port)
+    } else {
+        (dst_port, src_port)
+    };
+    format!("{a}-{b}")
+}
+
+fn format_packet_prefix(data: &[u8], max_bytes: usize) -> String {
+    data.iter()
+        .take(max_bytes)
+        .map(|byte| format!("{byte:02X}"))
+        .collect::<Vec<_>>()
+        .join(" ")
+}

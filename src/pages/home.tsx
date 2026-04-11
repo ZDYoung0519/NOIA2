@@ -13,6 +13,7 @@ import { listen } from "@tauri-apps/api/event";
 import { registerShortcut } from "@/lib/shortcut";
 import { toggleWindow } from "@/lib/window";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { createWindow } from "@/lib/window";
 
 const SHORTCUT_KEY = "global-shortcut-show-main";
 
@@ -69,6 +70,23 @@ export default function HomePage() {
   async function greet() {
     setGreetMsg(await invoke("greet", { name }));
   }
+
+  const handleOpenDps = async () => {
+    await createWindow("dps", {
+      title: t("about.title"),
+      url: "/dps",
+      width: 500,
+      height: 400,
+      resizable: true,
+      maximizable: false,
+      minimizable: false,
+      decorations: false,
+      transparent: true,
+      shadow: false,
+      alwaysOnTop: true,
+      parent: "main",
+    });
+  };
 
   return (
     <WindowFrame
@@ -129,10 +147,13 @@ export default function HomePage() {
               className="flex-1"
             />
             <Button type="submit">{t("greet.button")}</Button>
+
           </form>
           {greetMsg && <p className="bg-muted mt-4 rounded-md p-3 text-sm">{greetMsg}</p>}
         </CardContent>
       </Card>
+
+      <Button onClick={handleOpenDps}>打开DPS水表</Button>
 
       <div className="text-muted-foreground flex flex-wrap justify-center gap-4 text-sm">
         <span>React 19</span>
