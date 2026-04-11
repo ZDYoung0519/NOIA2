@@ -1,224 +1,120 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WindowFrame } from "@/components/window-frame";
-import { TitleBar } from "@/components/title-bar";
-import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
 import {
   Activity,
+  Clock3,
+  History,
   Play,
+  RotateCcw,
+  Settings2,
   Square,
-  Sword,
+  Swords,
   Target,
-  Timer,
-  TrendingUp,
-  User,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+import { MemoizedDpsPanel } from "@/components/dps/DpsPannel";
+import { TitleBar } from "@/components/title-bar";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import { WindowFrame } from "@/components/window-frame";
 import { useAppSettings } from "@/hooks/use-app-settings";
+import { createWindow } from "@/lib/window";
+import { cn } from "@/lib/utils";
+import { CombatSnapshot } from "@/types/aion2dps";
 
-type SkillStats = {
-  counts: number;
-  totalDamage: number;
-  minDamage: number;
-  maxDamage: number;
-  specialCounts: Record<string, number>;
+type TitleIconButtonProps = {
+  active?: boolean;
+  onClick: () => void | Promise<void>;
+  title: string;
+  children: React.ReactNode;
+  tone?: "default" | "danger" | "accent";
 };
 
-type SkillRecord = {
-  time: number;
-  skillCode: number;
-  oriSkillCode: number;
-  skillSpec: number[];
-  damage: number;
-  multiHitDamage: number;
-  specialCounts: Record<string, number>;
-  dot: boolean;
-};
-
-type ActorInfo = {
-  id: number;
-  actorName?: string | null;
-  actorServerId?: string | null;
-  actorClass?: string | null;
-  actorSkillSpec: Record<string, number[]>;
-};
-
-type TargetInfo = {
-  id: number;
-  targetMobCode?: number | null;
-  targetName?: string | null;
-  isBoss: boolean;
-  targetStartTime: Record<string, number>;
-  targetLastTime: Record<string, number>;
-};
-
-type CombatInfos = {
-  actorInfos: Record<string, ActorInfo>;
-  targetInfos: Record<string, TargetInfo>;
-  mainActorId?: number | null;
-  mainActorName?: string | null;
-  lastTargetByMainActor?: number | null;
-  lastTarget?: number | null;
-  timeNow: number;
-};
-
-type CombatSnapshot = {
-  totalDamage: number;
-  byTargetPlayerSkillStats: Record<string, Record<string, Record<string, SkillStats>>>;
-  byTargetPlayerStats: Record<string, Record<string, SkillStats>>;
-  byTargetPlayerSkillRecords: Record<string, Record<string, SkillRecord[]>>;
-  byTargetPlayerDpsCurve: Record<string, Record<string, Array<[number, number]>>>;
-  combatInfos: CombatInfos;
-};
-
-type SummaryMetrics = {
-  currentDps: number;
-  totalDamage: number;
-  combatTime: number;
-  mainActorName: string;
-  targetName: string;
-  lastTargetId: number | null;
-};
-
-type DpsListEntry = {
-  actorId: number;
-  actorName: string;
-  actorClass: string;
-  totalDamage: number;
-  counts: number;
-  dps: number;
-  critCount: number;
-};
-
-function buildSummary(snapshot: CombatSnapshot | null): SummaryMetrics {
-  if (!snapshot) {
-    return {
-      currentDps: 0,
-      totalDamage: 0,
-      combatTime: 0,
-      mainActorName: "-",
-      targetName: "-",
-      lastTargetId: null,
-    };
-  }
-
-  const targetInfos = Object.values(snapshot.combatInfos.targetInfos ?? {});
-  const startedAt = targetInfos.flatMap((target) => Object.values(target.targetStartTime ?? {}));
-  const endedAt = targetInfos.flatMap((target) => Object.values(target.targetLastTime ?? {}));
-
-  const startTime = startedAt.length ? Math.min(...startedAt) : snapshot.combatInfos.timeNow;
-  const endTime = endedAt.length ? Math.max(...endedAt) : snapshot.combatInfos.timeNow;
-  const combatTime = Math.max(endTime - startTime, 0.1);
-  const currentDps = snapshot.totalDamage / combatTime;
-
-  const lastTargetId =
-    snapshot.combatInfos.lastTargetByMainActor ?? snapshot.combatInfos.lastTarget ?? null;
-  const targetName =
-    (lastTargetId !== null
-      ? snapshot.combatInfos.targetInfos[String(lastTargetId)]?.targetName
-      : undefined) ?? "训练木桩";
-
-  return {
-    currentDps,
-    totalDamage: snapshot.totalDamage,
-    combatTime,
-    mainActorName: snapshot.combatInfos.mainActorName ?? "Noia",
-    targetName,
-    lastTargetId,
-  };
-}
-
-function buildDpsList(
-  snapshot: CombatSnapshot | null,
-  lastTargetId: number | null
-): DpsListEntry[] {
-  if (!snapshot || lastTargetId === null) {
-    return [];
-  }
-
-  const targetStats = snapshot.byTargetPlayerStats[String(lastTargetId)] ?? {};
-  const targetInfo = snapshot.combatInfos.targetInfos[String(lastTargetId)];
-
-  return Object.entries(targetStats)
-    .map(([actorId, stats]) => {
-      const safeStats = stats ?? {
-        counts: 0,
-        totalDamage: 0,
-        minDamage: 0,
-        maxDamage: 0,
-        specialCounts: {},
-      };
-      const actorInfo = snapshot.combatInfos.actorInfos[actorId];
-      const startTime = Number(
-        targetInfo?.targetStartTime?.[actorId] ?? snapshot.combatInfos.timeNow
-      );
-      const lastTime = Number(
-        targetInfo?.targetLastTime?.[actorId] ?? snapshot.combatInfos.timeNow
-      );
-      const combatTime = Math.max(lastTime - startTime, 0.1);
-      const totalDamage = Number(safeStats.totalDamage ?? 0);
-      const counts = Number(safeStats.counts ?? 0);
-      const critCount = Number(safeStats.specialCounts?.CRITICAL ?? 0);
-
-      return {
-        actorId: Number(actorId),
-        actorName: actorInfo?.actorName ?? `Actor ${actorId}`,
-        actorClass: actorInfo?.actorClass ?? "-",
-        totalDamage,
-        counts,
-        dps: totalDamage / combatTime,
-        critCount,
-      };
-    })
-    .sort((a, b) => b.totalDamage - a.totalDamage);
+function TitleIconButton({
+  active = false,
+  onClick,
+  title,
+  children,
+  tone = "default",
+}: TitleIconButtonProps) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={() => void onClick()}
+      className={cn(
+        "flex h-7 w-7 items-center justify-center rounded-md border text-slate-300 transition",
+        "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
+        active && tone === "accent" && "border-cyan-400/40 bg-cyan-500/15 text-cyan-200",
+        tone === "danger" && "hover:border-rose-400/40 hover:bg-rose-500/15 hover:text-rose-100"
+      )}
+    >
+      {children}
+    </button>
+  );
 }
 
 export default function DpsPage() {
-  useAppSettings();
-  const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
+  const { settings } = useAppSettings();
   const [isRunning, setIsRunning] = useState(false);
-  const [maxDps, setMaxDps] = useState(1000);
-  const unlistenRef = useRef<null | (() => void)>(null);
+  const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
+  const [currentTarget, setCurrentTarget] = useState<number | null>(null);
 
-  const summary = useMemo(() => buildSummary(snapshot), [snapshot]);
-  const dpsList = useMemo(
-    () => buildDpsList(snapshot, summary.lastTargetId),
-    [snapshot, summary.lastTargetId]
-  );
-
-  useEffect(() => {
-    setMaxDps((current) => Math.max(current, summary.currentDps * 1.2 || 1000));
-  }, [summary.currentDps]);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const resizeTimerRef = useRef<number | null>(null);
+  const lastWindowHeightRef = useRef<number | null>(null);
+  const unlistenSnapshotRef = useRef<null | (() => void)>(null);
+  const unlistenStatusRef = useRef<null | (() => void)>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const setupListener = async () => {
+    const setup = async () => {
       try {
-        unlistenRef.current = await listen<CombatSnapshot>("dps-snapshot", (event) => {
+        const status = await invoke<boolean>("get_dps_meter_status");
+        if (mounted) {
+          setIsRunning(status);
+        }
+
+        unlistenSnapshotRef.current = await listen<CombatSnapshot>("dps-snapshot", (event) => {
           if (!mounted) {
             return;
           }
           setSnapshot(event.payload);
-          setIsRunning(true);
+        });
+
+        unlistenStatusRef.current = await listen<boolean>("dps-meter-status", (event) => {
+          if (!mounted) {
+            return;
+          }
+
+          const running = Boolean(event.payload);
+          setIsRunning(running);
+          if (!running) {
+            setSnapshot(null);
+            setCurrentTarget(null);
+          }
         });
       } catch (error) {
-        console.error("listen dps-snapshot failed:", error);
+        console.error("setup dps page listeners failed:", error);
       }
     };
 
-    void setupListener();
+    void setup();
 
     return () => {
       mounted = false;
-      if (unlistenRef.current) {
-        void unlistenRef.current();
-        unlistenRef.current = null;
+      if (unlistenSnapshotRef.current) {
+        void unlistenSnapshotRef.current();
+        unlistenSnapshotRef.current = null;
+      }
+      if (unlistenStatusRef.current) {
+        void unlistenStatusRef.current();
+        unlistenStatusRef.current = null;
       }
     };
   }, []);
@@ -238,234 +134,304 @@ export default function DpsPage() {
     };
   }, []);
 
+  const resizeWindow = useCallback(async () => {
+    if (!contentRef.current) {
+      return;
+    }
+
+    const appWindow = getCurrentWebviewWindow();
+    const TITLE_BAR_HEIGHT = 32;
+    const WINDOW_BORDER_HEIGHT = 2;
+    const MIN_HEIGHT = 230;
+    const MAX_HEIGHT = 1000;
+
+    try {
+      const element = contentRef.current;
+      if (!element) {
+        return;
+      }
+
+      const contentHeight = element.scrollHeight;
+      const targetHeight = Math.max(
+        MIN_HEIGHT,
+        Math.min(MAX_HEIGHT, Math.ceil(contentHeight + TITLE_BAR_HEIGHT + WINDOW_BORDER_HEIGHT))
+      );
+      const scaleFactor = await appWindow.scaleFactor();
+      const outerSize = await appWindow.outerSize();
+      const currentWidth = outerSize.width / scaleFactor;
+      const currentHeight = outerSize.height / scaleFactor;
+
+      if (Math.abs(currentHeight - targetHeight) < 5) {
+        lastWindowHeightRef.current = targetHeight;
+        return;
+      }
+
+      if (
+        lastWindowHeightRef.current !== null &&
+        Math.abs(lastWindowHeightRef.current - targetHeight) < 5
+      ) {
+        return;
+      }
+
+      lastWindowHeightRef.current = targetHeight;
+      await appWindow.setSize(new LogicalSize(currentWidth, targetHeight));
+    } catch (error) {
+      console.error("auto resize dps window failed:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const contentElement = contentRef.current;
+    if (!contentElement) {
+      return;
+    }
+
+    const RESIZE_DEBOUNCE_MS = 120;
+    const scheduleResize = () => {
+      if (resizeTimerRef.current !== null) {
+        window.clearTimeout(resizeTimerRef.current);
+      }
+
+      resizeTimerRef.current = window.setTimeout(() => {
+        resizeTimerRef.current = null;
+        window.requestAnimationFrame(() => {
+          void resizeWindow();
+        });
+      }, RESIZE_DEBOUNCE_MS);
+    };
+
+    const observer = new ResizeObserver(() => {
+      scheduleResize();
+    });
+
+    observer.observe(contentElement);
+    scheduleResize();
+
+    return () => {
+      observer.disconnect();
+      if (resizeTimerRef.current !== null) {
+        window.clearTimeout(resizeTimerRef.current);
+        resizeTimerRef.current = null;
+      }
+    };
+  }, [resizeWindow, snapshot, currentTarget, isRunning, settings]);
+
+  const resolvedTargetId = useMemo(() => {
+    return currentTarget ?? snapshot?.combatInfos?.lastTargetByMainActor ?? snapshot?.combatInfos?.lastTarget ?? null;
+  }, [snapshot, currentTarget]);
+
+  const displayTargetInfo = useMemo(() => {
+    if (!snapshot || resolvedTargetId === null) {
+      return null;
+    }
+    return snapshot.combatInfos?.targetInfos?.[String(resolvedTargetId)] ?? null;
+  }, [snapshot, resolvedTargetId]);
+
+  const dpsPanelData = useMemo(() => {
+    if (!snapshot || resolvedTargetId === null) {
+      return null;
+    }
+    return {
+      targetId: resolvedTargetId,
+      thisTargetPlayerStats: snapshot.byTargetPlayerStats?.[String(resolvedTargetId)] ?? null,
+      targetInfo: displayTargetInfo,
+      combatInfos: snapshot.combatInfos ?? null,
+    };
+  }, [snapshot, resolvedTargetId, displayTargetInfo]);
+
+  const targetName = displayTargetInfo?.targetName || "No Target";
+  const totalDamage = snapshot?.totalDamage ?? 0;
+  const actorCount = dpsPanelData?.thisTargetPlayerStats
+    ? Object.keys(dpsPanelData.thisTargetPlayerStats).length
+    : 0;
+  const targetLabel = displayTargetInfo?.isBoss
+    ? "Boss Target"
+    : displayTargetInfo?.targetMobCode
+      ? `Mob ${displayTargetInfo.targetMobCode}`
+      : "Waiting";
+
   const handleStartDpsMeter = async () => {
     try {
       await invoke("start_dps_meter");
-      setIsRunning(true);
-      toast.success("DPS Meter 已启动");
+      toast.success("DPS Meter started");
     } catch (error) {
       console.error("start dps meter failed:", error);
-      toast.error("启动 DPS Meter 失败");
-      setIsRunning(false);
+      toast.error("Failed to start DPS Meter");
     }
   };
 
   const handleStopDpsMeter = async () => {
     try {
       await invoke("stop_dps_meter");
+      toast.info("DPS Meter stopped");
     } catch (error) {
       console.error("stop dps meter failed:", error);
-    } finally {
-      setIsRunning(false);
-      setSnapshot(null);
-      setMaxDps(1000);
-      toast.info("已重置显示数据");
+      toast.error("Failed to stop DPS Meter");
     }
   };
 
+  const handleReset = async () => {
+    try {
+      await invoke("reset_dps_meter");
+      setSnapshot(null);
+      setCurrentTarget(null);
+      lastWindowHeightRef.current = null;
+      window.requestAnimationFrame(() => {
+        void resizeWindow();
+      });
+      toast.success("DPS panel reset");
+    } catch (error) {
+      console.error("reset dps meter failed:", error);
+      toast.error("Failed to reset DPS panel");
+    }
+  };
+
+  const handleOpenSettings = async () => {
+    await createWindow("settings", {
+      title: "Settings",
+      url: "/settings",
+      width: 760,
+      height: 560,
+      minWidth: 680,
+      minHeight: 480,
+      resizable: true,
+      transparent: true,
+      decorations: false,
+      parent: "dps",
+    });
+  };
+
+  const handleOpenHistory = () => {
+    toast.info("History view is coming next");
+  };
+
+  const rightActions = (
+    <div className="flex items-center gap-1 pr-1">
+      {isRunning ? (
+        <TitleIconButton active onClick={handleStopDpsMeter} title="Stop meter" tone="danger">
+          <Square className="h-3.5 w-3.5" />
+        </TitleIconButton>
+      ) : (
+        <TitleIconButton active onClick={handleStartDpsMeter} title="Start meter" tone="accent">
+          <Play className="h-3.5 w-3.5" />
+        </TitleIconButton>
+      )}
+      <TitleIconButton onClick={handleReset} title="Reset meter">
+        <RotateCcw className="h-3.5 w-3.5" />
+      </TitleIconButton>
+      <TitleIconButton onClick={handleOpenSettings} title="Open settings">
+        <Settings2 className="h-3.5 w-3.5" />
+      </TitleIconButton>
+      <TitleIconButton onClick={handleOpenHistory} title="Open history">
+        <History className="h-3.5 w-3.5" />
+      </TitleIconButton>
+    </div>
+  );
+
+  const leftActions = (
+    <div className="flex min-w-0 items-center gap-2">
+      <div
+        className={cn(
+          "h-2.5 w-2.5 rounded-full shadow-[0_0_14px_currentColor]",
+          isRunning ? "bg-emerald-400 text-emerald-400" : "bg-amber-400 text-amber-400"
+        )}
+      />
+      <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+        <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <span className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
+          {targetName}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <WindowFrame
-      titleBar={<TitleBar title="DPS 面板" showMaximize={false} />}
-      contentClassName="flex flex-1 overflow-hidden bg-muted/10"
+      titleBar={
+        <TitleBar
+          title=""
+          showMaximize={false}
+          leftActions={leftActions}
+          rightActions={rightActions}
+        />
+      }
+      className="bg-slate-950/88 text-slate-100 backdrop-blur-2xl"
+      contentClassName="flex flex-1 items-start bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%),linear-gradient(180deg,rgba(15,23,42,0.95),rgba(2,6,23,0.9))]"
     >
       <Toaster />
 
-      <div className="flex h-full w-full flex-col items-center gap-6 p-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">战斗统计</h1>
-          <p className="text-muted-foreground">接收 Rust DPS 快照并显示核心数据</p>
-        </div>
-
-        <div className="grid w-full max-w-5xl gap-6 md:grid-cols-3">
-          <Card
-            className={cn(
-              "border-2 transition-all duration-300",
-              summary.currentDps > 0
-                ? "border-primary shadow-lg shadow-primary/10"
-                : "border-border"
-            )}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                当前 DPS
-              </CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold tabular-nums">
-                {summary.currentDps.toFixed(0)}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">按总伤害和战斗时长计算</p>
-              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
-                  style={{
-                    width: `${Math.min((summary.currentDps / maxDps) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                总伤害
-              </CardTitle>
-              <Sword className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold tabular-nums text-red-500">
-                {summary.totalDamage.toLocaleString()}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">快照中的累计伤害</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                战斗时长
-              </CardTitle>
-              <Timer className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold tabular-nums text-blue-500">
-                {summary.combatTime.toFixed(1)}s
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">由开始和最后命中时间推导</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid w-full max-w-5xl gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                主角色
-              </CardTitle>
-              <User className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{summary.mainActorName}</div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                来自 combatInfos.mainActorName
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                当前目标
-              </CardTitle>
-              <Target className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold">{summary.targetName}</div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                来自主角色最后一次命中的目标
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle>当前目标 DPS 列表</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  显示 `lastTargetId` 对应目标下的所有玩家统计
-                </p>
-              </div>
-              <Sword className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent className="p-0">
-              {dpsList.length === 0 ? (
-                <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                  暂无当前目标伤害数据
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {dpsList.map((entry, index) => (
-                    <div
-                      key={entry.actorId}
-                      className="grid grid-cols-[56px_1.5fr_0.9fr_1fr_0.8fr_0.7fr] items-center gap-3 px-4 py-3 text-sm"
-                    >
-                      <div className="text-lg font-bold tabular-nums text-muted-foreground">
-                        #{index + 1}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="truncate font-medium">{entry.actorName}</div>
-                        <div className="text-xs text-muted-foreground">{entry.actorClass}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold tabular-nums">
-                          {entry.dps.toFixed(0)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">DPS</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold tabular-nums">
-                          {entry.totalDamage.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-muted-foreground">伤害</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold tabular-nums">{entry.counts}</div>
-                        <div className="text-xs text-muted-foreground">命中</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold tabular-nums">{entry.critCount}</div>
-                        <div className="text-xs text-muted-foreground">暴击</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="flex h-full min-h-64 items-center justify-center border-dashed bg-muted/20">
-            <div className="space-y-2 text-center">
-              <TrendingUp className="mx-auto h-8 w-8 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">DPS 曲线区域可在下一步接入</p>
+      <div ref={contentRef} className="flex w-full self-start flex-col gap-2 p-2">
+        <section className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              <Swords className="h-3.5 w-3.5" />
+              Total Damage
             </div>
-          </Card>
-        </div>
+            <div className="mt-1 text-lg font-semibold tabular-nums text-slate-100">
+              {totalDamage.toLocaleString()}
+            </div>
+          </div>
 
-        <div className="flex gap-4">
-          <Button
-            size="lg"
-            onClick={handleStartDpsMeter}
-            disabled={isRunning}
-            className="w-36 gap-2"
-          >
-            {isRunning ? (
-              <>
-                <span className="animate-pulse">●</span>
-                进行中
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4" />
-                启动 Meter
-              </>
+          <div className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              <Activity className="h-3.5 w-3.5" />
+              Participants
+            </div>
+            <div className="mt-1 text-lg font-semibold tabular-nums text-slate-100">{actorCount}</div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/6 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+              <Clock3 className="h-3.5 w-3.5" />
+              Target State
+            </div>
+            <div className="mt-1 truncate text-sm font-semibold text-slate-100">{targetLabel}</div>
+          </div>
+        </section>
+
+        <section className="flex flex-col rounded-2xl border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Live DPS Panel
+              </div>
+              <div className="mt-0.5 text-sm font-medium text-slate-100">{targetName}</div>
+            </div>
+
+            {currentTarget !== null && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 rounded-full border border-white/10 px-3 text-xs text-slate-300 hover:bg-white/10 hover:text-white"
+                onClick={() => setCurrentTarget(null)}
+              >
+                Follow Auto Target
+              </Button>
             )}
-          </Button>
+          </div>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleStopDpsMeter}
-            disabled={!isRunning && !snapshot}
-            className="w-36 gap-2"
-          >
-            <Square className="h-4 w-4" />
-            重置
-          </Button>
-        </div>
+          <div className="px-2 py-2">
+            {dpsPanelData ? (
+              <MemoizedDpsPanel
+                targetInfo={dpsPanelData.targetInfo || undefined}
+                thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
+                combatInfos={dpsPanelData.combatInfos || undefined}
+                mainPlayerColor="linear-gradient(90deg, rgba(34,197,94,0.5), rgba(16,185,129,0.12))"
+                otherPlayerColor="linear-gradient(90deg, rgba(56,189,248,0.36), rgba(59,130,246,0.08))"
+                onPlayerClicked={() => {}}
+              />
+            ) : (
+              <div className="flex h-full min-h-40 items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.03] text-center">
+                <div className="space-y-1 px-4">
+                  <div className="text-sm font-medium text-slate-100">Waiting for combat data</div>
+                  <div className="text-xs text-slate-400">
+                    Start the meter and lock onto a target to populate this panel.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </WindowFrame>
   );

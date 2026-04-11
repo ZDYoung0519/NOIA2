@@ -14,6 +14,11 @@ export type AppSettings = {
   dpsMeter: DpsMeterConfig;
 };
 
+type AppSettingsUpdate = {
+  shortcut?: string;
+  dpsMeter?: Partial<DpsMeterConfig>;
+};
+
 const DEFAULT_APP_SETTINGS: AppSettings = {
   shortcut: "",
   dpsMeter: DEFAULT_DPS_METER_CONFIG,
@@ -63,7 +68,7 @@ export function useAppSettings() {
     () =>
       async (
         updater:
-          | Partial<AppSettings>
+          | AppSettingsUpdate
           | ((current: AppSettings) => AppSettings)
       ) => {
         setSettings((current) => {

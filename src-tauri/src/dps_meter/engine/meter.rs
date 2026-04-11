@@ -25,6 +25,7 @@ pub struct DpsMeter {
     packet_channel: Channel<CapturedPacket>,
     capturer: PcapCapturer,
     dispatcher: CaptureDispatcher,
+    running: Arc<AtomicBool>,
     snapshot_running: Arc<AtomicBool>,
     snapshot_thread: Mutex<Option<JoinHandle<()>>>,
 }
@@ -52,6 +53,7 @@ impl DpsMeter {
             packet_channel,
             capturer,
             dispatcher,
+            running: Arc::new(AtomicBool::new(false)),
             snapshot_running: Arc::new(AtomicBool::new(false)),
             snapshot_thread: Mutex::new(None),
         }
@@ -76,20 +78,42 @@ impl DpsMeter {
     }
 
     pub fn start_dps_meter(&self) -> Result<(), String> {
+        if self.running.swap(true, Ordering::SeqCst) {
+            self.emit_running_status();
+            return Ok(());
+        }
         self.clear_runtime_state();
         self.dispatcher.start();
         self.capturer.start();
         self.start_snapshot_loop();
+        self.emit_running_status();
         self.logger.info("dps meter started");
         Ok(())
     }
 
     pub fn stop_dps_meter(&self) {
+        if !self.running.swap(false, Ordering::SeqCst) {
+            self.emit_running_status();
+            return;
+        }
         self.stop_snapshot_loop();
         self.capturer.stop();
         self.dispatcher.stop();
         self.clear_runtime_state();
+        self.emit_running_status();
         self.logger.info("dps meter stopped");
+    }
+
+    pub fn reset_dps_meter(&self) {
+        self.clear_runtime_state();
+        self.logger.info(format!(
+            "dps meter runtime state reset (running={})",
+            self.is_running()
+        ));
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::SeqCst)
     }
 
     pub fn get_dps_snapshot(&self, target_damage_threshold: u64) -> Option<CombatSnapshot> {
@@ -134,6 +158,10 @@ impl DpsMeter {
         self.calculator.reset_snapshot_state();
         self.packet_channel.clear();
         self.dispatcher.clear();
+    }
+
+    fn emit_running_status(&self) {
+        let _ = self.app.emit("dps-meter-status", self.is_running());
     }
 }
 

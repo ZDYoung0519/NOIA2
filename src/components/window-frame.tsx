@@ -29,7 +29,7 @@ export function WindowFrame({ titleBar, children, className, contentClassName }:
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="tauri-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="tauri-ui-theme">
       <div
         className={cn(
           "bg-background flex h-screen w-screen flex-col overflow-hidden",

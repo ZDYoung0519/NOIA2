@@ -53,6 +53,8 @@ pub fn run() {
             dps_meter::api::commands::get_dps_meter_config,
             dps_meter::api::commands::start_dps_meter,
             dps_meter::api::commands::get_dps_snapshot,
+            dps_meter::api::commands::get_dps_meter_status,
+            dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter
         ]);
 

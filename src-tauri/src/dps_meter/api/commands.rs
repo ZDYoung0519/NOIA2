@@ -28,6 +28,17 @@ pub fn get_dps_snapshot(meter: State<'_, DpsMeter>) -> Result<Option<CombatSnaps
 }
 
 #[tauri::command]
+pub fn get_dps_meter_status(meter: State<'_, DpsMeter>) -> Result<bool, String> {
+    Ok(meter.is_running())
+}
+
+#[tauri::command]
+pub fn reset_dps_meter(meter: State<'_, DpsMeter>) -> Result<(), String> {
+    meter.reset_dps_meter();
+    Ok(())
+}
+
+#[tauri::command]
 pub fn stop_dps_meter(meter: State<'_, DpsMeter>) -> Result<(), String> {
     meter.stop_dps_meter();
     Ok(())

@@ -23,6 +23,7 @@
     "core:window:allow-outer-position",
     "core:window:allow-outer-size",
     "core:window:allow-scale-factor",
+    "core:window:allow-set-size",
     "core:window:allow-set-position",
     "core:window:allow-center",
     "core:event:allow-emit",

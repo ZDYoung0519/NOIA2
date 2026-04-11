@@ -72,5 +72,5 @@ fn resolve_log_path(app: &AppHandle) -> PathBuf {
     if let Ok(dir) = app.path().app_data_dir() {
         return dir.join("logs").join("dps-meter.log");
     }
-    std::env::temp_dir().join("noia").join("dps-meter.log")
+    std::env::temp_dir().join("noia2").join("dps-meter.log")
 }

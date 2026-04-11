@@ -302,8 +302,9 @@ impl PcapCapturer {
 
                 if let Some(target) = detected_target {
                     let previous_device = target_device.read().unwrap().clone();
-                    let should_restart =
-                        previous_device.as_deref() != Some(target.device_name.as_str());
+                    let should_restart = previous_device.as_deref()
+                        != Some(target.device_name.as_str())
+                        || capture_threads.lock().unwrap().is_empty();
 
                     *target_device.write().unwrap() = Some(target.device_name.clone());
                     *target_port.write().unwrap() = target.target_port.clone();
@@ -340,6 +341,8 @@ impl PcapCapturer {
             let _ = handle.join();
         }
         stop_capture_threads(&self.capture_threads);
+        *self.target_device.write().unwrap() = None;
+        *self.target_port.write().unwrap() = None;
     }
 
     pub fn target_device(&self) -> Option<String> {
