@@ -15,5 +15,5 @@ export function useAppTranslation() {
     };
   }, [i18n]);
 
-  return { t };
+  return { t, i18n };
 }

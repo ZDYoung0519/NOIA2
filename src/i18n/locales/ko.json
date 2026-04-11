@@ -1,0 +1,147 @@
+{
+  "app": {
+    "title": "NOIA2",
+    "welcome": "NOIA2에 오신 것을 환영합니다",
+    "description": "Tauri, React, Rust로 만든 플로팅 유틸리티 도구입니다.",
+    "openDps": "DPS 미터 열기"
+  },
+  "greet": {
+    "title": "Rust에서 인사",
+    "description": "프런트엔드와 Tauri 백엔드 간 통신을 테스트합니다",
+    "placeholder": "이름을 입력하세요...",
+    "button": "인사"
+  },
+  "about": {
+    "title": "정보",
+    "button": "정보",
+    "appName": "NOIA2",
+    "version": "버전",
+    "description": "NOIA2를 위한 플로팅 데스크톱 도우미입니다.",
+    "close": "닫기",
+    "github": "GitHub"
+  },
+  "theme": {
+    "toggle": "테마 전환"
+  },
+  "language": {
+    "toggle": "언어 전환",
+    "current": "현재 언어: {{language}}",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "ko": "한국어"
+  },
+  "tray": {
+    "show": "창 표시",
+    "quit": "종료"
+  },
+  "updater": {
+    "checkForUpdates": "업데이트 확인",
+    "checking": "확인 중...",
+    "checkFailed": "업데이트 확인에 실패했습니다.",
+    "upToDate": "이미 최신 버전입니다!",
+    "updateAvailable": "업데이트 사용 가능",
+    "downloading": "업데이트 다운로드 중",
+    "installingVersion": "버전 {{version}} 설치 중...",
+    "versionAvailable": "버전 {{version}}을 사용할 수 있습니다.",
+    "releaseNotes": "릴리스 노트:",
+    "later": "나중에",
+    "installNow": "지금 설치"
+  },
+  "settings": {
+    "title": "설정",
+    "button": "설정",
+    "close": "닫기",
+    "appearance": {
+      "title": "외형",
+      "description": "앱의 외형과 언어를 사용자 지정합니다",
+      "theme": "테마",
+      "light": "라이트",
+      "dark": "다크",
+      "system": "시스템",
+      "language": "언어",
+      "mainWindowTitle": "메인 창 외형",
+      "mainWindowDescription": "메인 창과 DPS 창의 외형 설정은 분리되어 각각 조정할 수 있습니다.",
+      "backgroundColor": "배경 색상",
+      "backgroundColorDescription": "메인 창 표면에 사용할 셸 색상을 제어합니다.",
+      "backgroundOpacity": "배경 불투명도",
+      "backgroundOpacityDescription": "메인 창을 더 단단하게 또는 더 유리처럼 보이게 조절할 수 있습니다.",
+      "dpsWindowTitle": "DPS 창 외형",
+      "dpsWindowDescription": "이 설정은 플로팅 DPS 창에 직접 적용되며 아래 미리보기는 모의 전투 데이터를 사용합니다.",
+      "autoResizeHeight": "높이 자동 조절",
+      "autoResizeHeightDescription": "현재 콘텐츠에 맞춰 DPS 창 높이를 자동으로 조절합니다.",
+      "showHeaderStats": "상단 통계 표시",
+      "showHeaderStatsDescription": "패널 위에 피해량, 참가자 수, 대상 상태 카드를 표시할지 결정합니다.",
+      "scaleFactor": "배율",
+      "scaleFactorDescription": "플로팅 DPS 도구의 밀도를 조절합니다.",
+      "shellColor": "셸 색상",
+      "shellOpacity": "셸 불투명도",
+      "panelColor": "패널 색상",
+      "panelOpacity": "패널 불투명도",
+      "mainPlayerBar": "메인 플레이어 바 색상",
+      "otherPlayerBar": "다른 플레이어 바 색상",
+      "previewTitle": "DPS 창 미리보기",
+      "previewDescription": "여기서는 모의 전투 데이터를 사용해 색상, 배율, 패널 불투명도, 상단 통계 표시를 미리 볼 수 있습니다."
+    },
+    "shortcut": {
+      "title": "단축키",
+      "description": "전역 단축키를 설정합니다",
+      "placeholder": "키 조합을 누르세요",
+      "showMain": "메인 창 표시",
+      "showMainDesc": "단축키로 메인 창을 빠르게 표시합니다",
+      "setSuccess": "단축키가 {{shortcut}}(으)로 설정되었습니다!",
+      "cleared": "단축키가 제거되었습니다!"
+    },
+    "dps": {
+      "title": "DPS 미터",
+      "description": "백엔드 DPS 스냅샷 주기, 디버그 로그, 전투 필터 규칙을 설정합니다.",
+      "snapshotInterval": "DPS 스냅샷 간격",
+      "snapshotIntervalDescription": "백엔드가 프런트엔드로 DPS 스냅샷을 보내는 간격입니다. 단위는 밀리초입니다.",
+      "bossOnly": "보스만 집계",
+      "bossOnlyDescription": "보스로 인식된 대상에게 준 피해만 집계합니다.",
+      "myMuzhuangOnly": "내 허수아비 피해만 집계",
+      "myMuzhuangOnlyDescription": "대상이 허수아비일 때 자신의 캐릭터가 준 피해만 집계합니다.",
+      "outputDebugLog": "디버그 로그 출력",
+      "outputDebugLogDescription": "추가 DPS 캡처 및 디스패처 디버그 로그를 백엔드 로그 파일에 기록합니다."
+    }
+  },
+  "dps": {
+    "title": "DPS 미터",
+    "target": {
+      "none": "대상 없음",
+      "boss": "보스 대상",
+      "waiting": "대기 중"
+    },
+    "stats": {
+      "totalDamage": "총 피해",
+      "participants": "참가자",
+      "targetState": "대상 상태"
+    },
+    "panel": {
+      "title": "실시간 DPS 패널",
+      "followAutoTarget": "자동 대상 따라가기",
+      "waitingTitle": "전투 데이터를 기다리는 중",
+      "waitingHint": "미터를 시작하고 대상을 고정하면 여기에 실시간 패널이 표시됩니다."
+    },
+    "actions": {
+      "start": "미터 시작",
+      "stop": "미터 중지",
+      "reset": "미터 초기화",
+      "settings": "설정 열기",
+      "history": "기록 열기"
+    },
+    "toast": {
+      "started": "DPS 미터가 시작되었습니다",
+      "stopped": "DPS 미터가 중지되었습니다",
+      "reset": "DPS 패널이 초기화되었습니다",
+      "startFailed": "DPS 미터 시작에 실패했습니다",
+      "stopFailed": "DPS 미터 중지에 실패했습니다",
+      "resetFailed": "DPS 패널 초기화에 실패했습니다",
+      "historyComing": "기록 보기 기능은 곧 추가됩니다"
+    },
+    "list": {
+      "unknownPlayer": "알 수 없음",
+      "unknownServer": "알 수 없음"
+    }
+  }
+}

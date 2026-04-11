@@ -82,7 +82,7 @@ export default function AboutPage() {
 
         <Button onClick={handleOpenGithub} className="w-full" variant="outline">
           <Github className="mr-2 h-4 w-4" />
-          GitHub
+          {t("about.github")}
         </Button>
 
         <Button onClick={checkUpdate} className="w-full" variant="outline" disabled={checking}>

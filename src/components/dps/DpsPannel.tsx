@@ -1,9 +1,15 @@
 import { memo } from "react";
-import { SkillStats, TargetInfo, CombatInfos} from "@/types/aion2dps";
-
-
+import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 import { getServerShortName } from "@/lib/aion2/servers";
+import { useAppTranslation } from "@/hooks/use-app-translation";
 
+function getTotalDamage(stats: SkillStats | undefined) {
+  if (!stats) {
+    return 0;
+  }
+
+  return stats.total_damage ?? stats.totalDamage ?? 0;
+}
 
 const DpsPanel = function DpsPanel({
   targetInfo,
@@ -20,7 +26,9 @@ const DpsPanel = function DpsPanel({
   otherPlayerColor: string;
   onPlayerClicked: (playerId: number) => void;
 }) {
-  if (!targetInfo || !thisTargetPlayerStats || !combatInfos) return;
+  const { t } = useAppTranslation();
+
+  if (!targetInfo || !thisTargetPlayerStats || !combatInfos) return null;
 
   const actorInfos = combatInfos.actorInfos;
   const mainActorId = combatInfos.mainActorId;
@@ -28,83 +36,67 @@ const DpsPanel = function DpsPanel({
   const thisTargetPlayerStatsArray = Object.entries(thisTargetPlayerStats)
     .map(([playerId, stats]) => ({
       playerId: parseInt(playerId, 10),
-      ...(stats as any),
+      totalDamageValue: getTotalDamage(stats as SkillStats),
     }))
-    .sort((a, b) => b.total_damage - a.total_damage);
+    .sort((a, b) => b.totalDamageValue - a.totalDamageValue);
+
   if (thisTargetPlayerStatsArray.length === 0) return null;
 
-  const maxDamage = thisTargetPlayerStatsArray[0]?.total_damage || 0;
+  const maxDamage = thisTargetPlayerStatsArray[0]?.totalDamageValue || 0;
   const totalDamage = thisTargetPlayerStatsArray.reduce(
-    (sum, e) => sum + e.total_damage,
-    0,
+    (sum, entry) => sum + entry.totalDamageValue,
+    0
   );
-
-  const thisTargetLastTime = Math.max(
-    ...Object.values(
-      targetInfo?.targetLastTime || {},
-    ),
-  );
+  const targetLastTimes = Object.values(targetInfo.targetLastTime || {});
+  const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
 
   return (
     <div className="space-y-0">
       {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
         const playerName =
-          actorInfos?.[player.playerId].actorName ||
-          `Unknown(${player.playerId})`;
-        const actorClass = actorInfos?.[player.playerId].actorClass;
-        const playerServerId = actorInfos?.[player.playerId].actorServerId;
+          actorInfos?.[player.playerId]?.actorName || `${t("dps.list.unknownPlayer")}(${player.playerId})`;
+        const actorClass = actorInfos?.[player.playerId]?.actorClass;
+        const playerServerId = actorInfos?.[player.playerId]?.actorServerId;
         const playerServerName = playerServerId
           ? getServerShortName(Number(playerServerId))
-          : `未知`;
-
-        // if (!actorClass && settings.showPlayerOnly) return null;
+          : t("dps.list.unknownServer");
 
         const actorClassIcon = actorClass
           ? `images/class/${actorClass.toLowerCase()}.webp`
           : "/images/aion2.png";
 
         const isMainPlayer = mainActorId === player.playerId;
-
-        const barPercent =
-          maxDamage > 0 ? (player.total_damage / maxDamage) * 100 : 0;
-
-        // 角色对目标的战斗时间
-        const playerStartTime =
-          targetInfo.targetLastTime?.[player.playerId];
-        const playerFightTime = thisTargetLastTime - playerStartTime;
-
-        const dpsValue = player.total_damage / playerFightTime;
-        // const dpsPercent = maxDamage > 0 ? (dpsValue / maxDamage) * 100 : 0;
+        const barPercent = maxDamage > 0 ? (player.totalDamageValue / maxDamage) * 100 : 0;
+        const playerStartTime = targetInfo.targetStartTime?.[player.playerId];
+        const fightDurationSeconds = Math.max(
+          1,
+          thisTargetLastTime - (playerStartTime ?? thisTargetLastTime)
+        );
+        const dpsValue = player.totalDamageValue / fightDurationSeconds;
         const damagePercent =
-          totalDamage > 0 ? (player.total_damage / totalDamage) * 100 : 0;
+          totalDamage > 0 ? (player.totalDamageValue / totalDamage) * 100 : 0;
 
         return (
           <div
             key={player.playerId || index}
-            className={`group relative flex items-center h-7 rounded cursor-pointer overflow-hidden hover:bg-white/5`}
+            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
           >
-            {/* 伤害进度条背景 */}
             <div
-              className="absolute left-0 top-0 bottom-0 rounded transition-all duration-500 ease-out"
+              className="absolute bottom-0 left-0 top-0 rounded transition-all duration-500 ease-out"
               style={{
                 width: `${barPercent}%`,
-                background: isMainPlayer
-                  ? mainPlayerColor
-                  : otherPlayerColor,
+                background: isMainPlayer ? mainPlayerColor : otherPlayerColor,
               }}
             />
 
-            {/* 内容容器 */}
-            <div className="relative w-full flex items-center justify-between py-1.5 px-1 z-10">
-              {/* 左侧区域 */}
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {/* 职业图标 */}
-                <div className="relative w-7 h-7 flex-shrink-0">
+            <div className="relative z-10 flex w-full items-center justify-between px-1 py-1.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <div className="relative h-7 w-7 flex-shrink-0">
                   <img
                     src={actorClassIcon}
                     alt={actorClass || "class"}
-                    className="w-full h-full object-cover rounded-md shadow-sm"
+                    className="h-full w-full rounded-md object-cover shadow-sm"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
@@ -112,46 +104,37 @@ const DpsPanel = function DpsPanel({
                   />
                 </div>
 
-                {/* 玩家名称 */}
-                <span className="truncate font-medium text-sm">
-                  {playerName}
-                </span>
+                <span className="truncate text-sm font-medium">{playerName}</span>
 
-                {/* 服务器 */}
-                <span className="text-xs text-gray-500 flex-shrink-0 font-mono">
+                <span className="flex-shrink-0 font-mono text-xs text-gray-500">
                   [{playerServerName}]
                 </span>
               </div>
 
-              {/* 右侧数据区域 */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* 总伤害 */}
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="text-right">
-                  <span className="text-sm font-mono tabular-nums text-gray-200">
-                    {(player.total_damage / 10000).toFixed(1)}
+                  <span className="font-mono text-sm tabular-nums text-gray-200">
+                    {(player.totalDamageValue / 10000).toFixed(1)}
                   </span>
-                  <span className="text-xs text-gray-500 ml-0.5">w</span>
+                  <span className="ml-0.5 text-xs text-gray-500">w</span>
                 </div>
 
-                {/* 秒伤 */}
                 <div className="text-right">
                   <span
-                    className={`
-                    text-sm font-mono tabular-nums font-medium
-                    ${dpsValue > 0 ? "text-emerald-400" : "text-gray-400"}
-                  `}
+                    className={`text-sm font-medium font-mono tabular-nums ${
+                      dpsValue > 0 ? "text-emerald-400" : "text-gray-400"
+                    }`}
                   >
                     {Math.floor(dpsValue).toLocaleString()}
                   </span>
-                  <span className="text-xs text-gray-500 ml-0.5">/s</span>
+                  <span className="ml-0.5 text-xs text-gray-500">/s</span>
                 </div>
 
-                {/* 占比 */}
                 <div className="text-right">
-                  <span className="text-sm font-mono tabular-nums text-gray-300">
+                  <span className="font-mono text-sm tabular-nums text-gray-300">
                     {damagePercent.toFixed(0)}
                   </span>
-                  <span className="text-xs text-gray-500 ml-0.5">%</span>
+                  <span className="ml-0.5 text-xs text-gray-500">%</span>
                 </div>
               </div>
             </div>
@@ -163,4 +146,3 @@ const DpsPanel = function DpsPanel({
 };
 
 export const MemoizedDpsPanel = memo(DpsPanel);
-

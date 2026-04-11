@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, CSSProperties } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Minus, Maximize2, Minimize2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ interface TitleBarProps {
   leftActions?: ReactNode;
   rightActions?: ReactNode;
   onDoubleClick?: () => void;
+  className?: string;
+  style?: CSSProperties;
 }
 
 export function TitleBar({
@@ -21,6 +23,8 @@ export function TitleBar({
   leftActions,
   rightActions,
   onDoubleClick,
+  className,
+  style,
 }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false);
 
@@ -92,9 +96,11 @@ export function TitleBar({
 
   return (
     <div
+      style={style}
       className={cn(
         "bg-background/95 supports-backdrop-filter:bg-background/60 border-border/40 flex h-8 items-center justify-between border-b backdrop-blur select-none",
-        showMaximize && isMaximized ? "" : "rounded-t-lg"
+        showMaximize && isMaximized ? "" : "rounded-t-lg",
+        className
       )}
     >
       {/* Left: Title + Drag region */}

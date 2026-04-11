@@ -1,9 +1,13 @@
 export type SkillStats = {
   counts: number;
-  totalDamage: number;
-  minDamage: number;
-  maxDamage: number;
-  specialCounts: Record<string, number>;
+  total_damage?: number;
+  totalDamage?: number;
+  min_damage?: number;
+  minDamage?: number;
+  max_damage?: number;
+  maxDamage?: number;
+  special_counts?: Record<string, number>;
+  specialCounts?: Record<string, number>;
 };
 
 export type SkillRecord = {

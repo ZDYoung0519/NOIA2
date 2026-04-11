@@ -1,8 +1,9 @@
 {
   "app": {
-    "title": "Tauri App Template",
-    "welcome": "Welcome to Tauri + React",
-    "description": "Modern desktop application template with Tauri v2, React 19, and shadcn/ui"
+    "title": "NOIA2",
+    "welcome": "Welcome to NOIA2",
+    "description": "A floating utility companion built with Tauri, React, and Rust.",
+    "openDps": "Open DPS Meter"
   },
   "greet": {
     "title": "Greet from Rust",
@@ -13,24 +14,22 @@
   "about": {
     "title": "About",
     "button": "About",
-    "appName": "Tauri App Template",
+    "appName": "NOIA2",
     "version": "Version",
-    "description": "A modern desktop application template built with Tauri v2, React 19, and shadcn/ui.",
-    "features": "Features",
-    "feature1": "Tauri v2 - Lightweight desktop app framework",
-    "feature2": "React 19 - Latest React version",
-    "feature3": "TypeScript - Type safety",
-    "feature4": "Tailwind CSS v4 - Modern CSS framework",
-    "feature5": "shadcn/ui - Beautiful UI components",
-    "close": "Close"
+    "description": "A floating desktop helper for NOIA2.",
+    "close": "Close",
+    "github": "GitHub"
   },
   "theme": {
     "toggle": "Toggle theme"
   },
   "language": {
     "toggle": "Switch language",
+    "current": "Current language: {{language}}",
     "en": "English",
-    "zh": "中文"
+    "zh-CN": "Simplified Chinese",
+    "zh-TW": "Traditional Chinese",
+    "ko": "Korean"
   },
   "tray": {
     "show": "Show Window",
@@ -60,7 +59,29 @@
       "light": "Light",
       "dark": "Dark",
       "system": "System",
-      "language": "Language"
+      "language": "Language",
+      "mainWindowTitle": "Main Window Appearance",
+      "mainWindowDescription": "Main window and DPS window are stored separately so we can tune them independently.",
+      "backgroundColor": "Background Color",
+      "backgroundColorDescription": "Controls the shell color used for the main window surface.",
+      "backgroundOpacity": "Background Opacity",
+      "backgroundOpacityDescription": "Keeps room to make the main window more solid or more glass-like later.",
+      "dpsWindowTitle": "DPS Window Appearance",
+      "dpsWindowDescription": "These settings directly affect the floating DPS window and the preview below uses mock data.",
+      "autoResizeHeight": "Auto Resize Height",
+      "autoResizeHeightDescription": "Automatically adjusts the DPS window height to its current content.",
+      "showHeaderStats": "Show Header Stats",
+      "showHeaderStatsDescription": "Controls whether the compact damage, participants, and target cards are shown above the panel.",
+      "scaleFactor": "Scale Factor",
+      "scaleFactorDescription": "Changes the compactness of the floating DPS tool.",
+      "shellColor": "Shell Color",
+      "shellOpacity": "Shell Opacity",
+      "panelColor": "Panel Color",
+      "panelOpacity": "Panel Opacity",
+      "mainPlayerBar": "Main Player Bar",
+      "otherPlayerBar": "Other Player Bar",
+      "previewTitle": "DPS Window Preview",
+      "previewDescription": "Mock combat data is used here so you can preview color, scale, panel opacity, and header visibility."
     },
     "shortcut": {
       "title": "Shortcuts",
@@ -70,56 +91,57 @@
       "showMainDesc": "Use shortcut to quickly show the main window",
       "setSuccess": "Shortcut set to {{shortcut}}!",
       "cleared": "Shortcut cleared!"
+    },
+    "dps": {
+      "title": "DPS Meter",
+      "description": "Configure backend DPS snapshot frequency, debug logging, and combat filtering rules.",
+      "snapshotInterval": "DPS Snapshot Interval",
+      "snapshotIntervalDescription": "How often the backend sends DPS snapshots to the frontend, in milliseconds.",
+      "bossOnly": "Boss Only",
+      "bossOnlyDescription": "Only count damage against targets that are recognized as bosses.",
+      "myMuzhuangOnly": "My Training Dummy Only",
+      "myMuzhuangOnlyDescription": "When the target is a training dummy, only count damage dealt by your own character.",
+      "outputDebugLog": "Output Debug Log",
+      "outputDebugLogDescription": "Write additional DPS capture and dispatcher debug logs to the backend log file."
     }
   },
-  "releaseVersion": {
-    "options": {
-      "patch": "Patch",
-      "minor": "Minor",
-      "major": "Major",
-      "promoteBeta": "Promote beta to release",
-      "nextBeta": "Next beta",
-      "nextPatchBeta": "Next patch beta",
-      "custom": "Custom version"
+  "dps": {
+    "title": "DPS Meter",
+    "target": {
+      "none": "No Target",
+      "boss": "Boss Target",
+      "waiting": "Waiting"
     },
-    "prompts": {
-      "yesNoDefaultYes": " (Y/n): ",
-      "yesNoDefaultNo": " (y/N): ",
-      "enterChoice": "\nEnter choice (1-{{max}}): ",
-      "enterCustomVersion": "Enter custom version: ",
-      "confirmRelease": "Continue with version update and tag creation?",
-      "pushNow": "Push commit and tag to remote now?"
+    "stats": {
+      "totalDamage": "Total Damage",
+      "participants": "Participants",
+      "targetState": "Target State"
     },
-    "messages": {
-      "currentVersion": "Current version: {{version}}",
-      "selectNextVersion": "Select the next version:",
-      "invalidChoice": "Invalid choice, defaulting to patch release.",
-      "summaryTitle": "Release summary:",
-      "summaryBranch": "- Branch: {{branch}}",
-      "summaryCurrentVersion": "- Current version: {{version}}",
-      "summaryNextVersion": "- Next version: {{version}}",
-      "summaryTag": "- Tag: {{tag}}",
-      "cancelled": "Cancelled.",
-      "createdCommitAndTag": "Created commit and tag successfully.",
-      "pushCompleted": "Push completed.",
-      "pushSkipped": "Skipped push. You can push later with:",
-      "pushBranchLater": "git push origin {{branch}}",
-      "pushTagLater": "git push origin {{tag}}"
+    "panel": {
+      "title": "Live DPS Panel",
+      "followAutoTarget": "Follow Auto Target",
+      "waitingTitle": "Waiting for combat data",
+      "waitingHint": "Start the meter and lock onto a target to populate this panel."
     },
-    "errors": {
-      "unsupportedVersion": "Unsupported version format: {{version}}",
-      "cargoVersionNotFound": "Failed to locate version in Cargo.toml",
-      "cargoPackageNameNotFound": "Failed to locate package name in Cargo.toml",
-      "cargoLockVersionNotFound": "Failed to locate version in Cargo.lock",
-      "releaseStagingIncomplete": "Release staging is incomplete. Staged files: {{stagedFiles}}",
-      "workingTreeNotClean": "Working tree is not clean. Please commit or stash your changes first.",
-      "tagExists": "Tag {{tag}} already exists.",
-      "remoteTagExists": "Remote tag {{tag}} already exists on origin.",
-      "branchNotMain": "Releases must be created from the main branch. Current branch: {{branch}}",
-      "versionMismatch": "Version mismatch detected. package.json={{packageVersion}}, tauri.conf.json={{tauriVersion}}, Cargo.toml={{cargoVersion}}, Cargo.lock={{cargoLockVersion}}",
-      "packageVersionInvalid": "package.json version is missing or invalid",
-      "tauriVersionInvalid": "src-tauri/tauri.conf.json version is missing or invalid",
-      "invalidLang": "Invalid --lang value. Use zh or en."
+    "actions": {
+      "start": "Start meter",
+      "stop": "Stop meter",
+      "reset": "Reset meter",
+      "settings": "Open settings",
+      "history": "Open history"
+    },
+    "toast": {
+      "started": "DPS Meter started",
+      "stopped": "DPS Meter stopped",
+      "reset": "DPS panel reset",
+      "startFailed": "Failed to start DPS Meter",
+      "stopFailed": "Failed to stop DPS Meter",
+      "resetFailed": "Failed to reset DPS panel",
+      "historyComing": "History view is coming next"
+    },
+    "list": {
+      "unknownPlayer": "Unknown",
+      "unknownServer": "Unknown"
     }
   }
 }
