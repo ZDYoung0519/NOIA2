@@ -1,58 +1,52 @@
 import { useCallback, useEffect, useState } from "react";
 import { emit } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { TitleBar } from "@/components/title-bar";
 import { WindowFrame } from "@/components/window-frame";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ShortcutInput } from "@/components/shortcut-input";
-import { Moon, Sun, Monitor, Palette, Keyboard } from "lucide-react";
+import { Moon, Sun, Monitor, Palette, Keyboard, Activity } from "lucide-react";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
 import { toggleWindow } from "@/lib/window";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
-const SHORTCUT_KEY = "global-shortcut-show-main";
-
-type SettingSection = "appearance" | "shortcut";
+type SettingSection = "appearance" | "shortcut" | "dps";
 
 export default function SettingsPage() {
-  const [shortcut, setShortcut] = useState<string>("");
   const [activeSection, setActiveSection] = useState<SettingSection>("appearance");
   const { t } = useAppTranslation();
   const { theme, setTheme } = useTheme();
+  const { settings, saveSettings } = useAppSettings();
 
   const handleShowMainWindow = useCallback(async () => {
     await toggleWindow("main");
   }, []);
 
   useEffect(() => {
-    // Load saved shortcut
-    const savedShortcut = localStorage.getItem(SHORTCUT_KEY);
-    if (savedShortcut) {
-      setShortcut(savedShortcut);
-      registerShortcut(savedShortcut, handleShowMainWindow);
+    if (settings.shortcut) {
+      void registerShortcut(settings.shortcut, handleShowMainWindow);
     }
-  }, [handleShowMainWindow]);
+  }, [handleShowMainWindow, settings.shortcut]);
 
   const handleShortcutChange = async (newShortcut: string) => {
-    const oldShortcut = shortcut;
-    setShortcut(newShortcut);
+    const oldShortcut = settings.shortcut;
 
     if (newShortcut) {
-      localStorage.setItem(SHORTCUT_KEY, newShortcut);
+      await saveSettings({ shortcut: newShortcut });
       await registerShortcut(newShortcut, handleShowMainWindow, oldShortcut);
-      // Notify main window to update shortcut
       await emit("shortcut-changed", { shortcut: newShortcut });
       toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
     } else {
-      localStorage.removeItem(SHORTCUT_KEY);
+      await saveSettings({ shortcut: "" });
       if (oldShortcut) {
         await unregisterShortcut(oldShortcut);
       }
-      // Notify main window to clear shortcut
       await emit("shortcut-changed", { shortcut: "" });
       toast.info(t("settings.shortcut.cleared"));
     }
@@ -68,6 +62,11 @@ export default function SettingsPage() {
       id: "shortcut" as SettingSection,
       label: t("settings.shortcut.title"),
       icon: Keyboard,
+    },
+    {
+      id: "dps" as SettingSection,
+      label: "DPS Meter",
+      icon: Activity,
     },
   ];
 
@@ -172,7 +171,115 @@ export default function SettingsPage() {
                       {t("settings.shortcut.showMainDesc")}
                     </p>
                   </div>
-                  <ShortcutInput value={shortcut} onChange={handleShortcutChange} />
+                  <ShortcutInput value={settings.shortcut} onChange={handleShortcutChange} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === "dps" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="mb-1 text-lg font-semibold">DPS Meter</h2>
+                <p className="text-muted-foreground text-sm">
+                  配置后端 DPS 快照发送频率、日志输出和战斗过滤规则。
+                </p>
+              </div>
+
+              <div className="space-y-0">
+                <div className="flex items-center justify-between gap-4 py-2.5">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">DPS Snapshot Interval</label>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      后端向前端发送 DPS 快照的时间间隔，单位毫秒。
+                    </p>
+                  </div>
+                  <div className="flex w-40 items-center gap-2">
+                    <Input
+                      type="number"
+                      min={50}
+                      step={50}
+                      value={settings.dpsMeter.dpsSnapshotIntervalMs}
+                      onChange={(event) => {
+                        const nextValue = Number(event.currentTarget.value || 500);
+                        void saveSettings({
+                          dpsMeter: {
+                            dpsSnapshotIntervalMs: nextValue,
+                          },
+                        });
+                      }}
+                    />
+                    <span className="text-muted-foreground text-xs">ms</span>
+                  </div>
+                </div>
+
+                <div className="border-t" />
+
+                <div className="flex items-center justify-between gap-4 py-2.5">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">BOSS_ONLY</label>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      开启后只统计目标为 Boss 的战斗数据。
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={settings.dpsMeter.bossOnly}
+                    onChange={(event) => {
+                      void saveSettings({
+                        dpsMeter: {
+                          bossOnly: event.currentTarget.checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className="border-t" />
+
+                <div className="flex items-center justify-between gap-4 py-2.5">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">MY_MUZHUANG_ONLY</label>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      开启后，木桩目标只统计主角色自己造成的伤害。
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={settings.dpsMeter.myMuzhuangOnly}
+                    onChange={(event) => {
+                      void saveSettings({
+                        dpsMeter: {
+                          myMuzhuangOnly: event.currentTarget.checked,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className="border-t" />
+
+                <div className="flex items-center justify-between gap-4 py-2.5">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">OUTPUT_DEBUG_LOG</label>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      开启后将额外输出 DPS 抓包和分发调试日志到后端日志文件。
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={settings.dpsMeter.outputDebugLog}
+                    onChange={(event) => {
+                      void saveSettings({
+                        dpsMeter: {
+                          outputDebugLog: event.currentTarget.checked,
+                        },
+                      });
+                    }}
+                  />
                 </div>
               </div>
             </div>

@@ -85,9 +85,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             let window_clone = window.clone();
             window.on_window_event(move |event| {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                    // Hide window instead of exiting when close is requested
-                    let _ = window_clone.hide();
-                    api.prevent_close();
+                    if window_clone.label() == "main" {
+                        let _ = window_clone.hide();
+                        api.prevent_close();
+                    }
                 }
             });
         })

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WindowFrame } from "@/components/window-frame";
@@ -18,6 +19,7 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 type SkillStats = {
   counts: number;
@@ -177,6 +179,7 @@ function buildDpsList(
 }
 
 export default function DpsPage() {
+  useAppSettings();
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [maxDps, setMaxDps] = useState(1000);
@@ -217,6 +220,21 @@ export default function DpsPage() {
         void unlistenRef.current();
         unlistenRef.current = null;
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
+    const unlisten = appWindow.onCloseRequested(async () => {
+      try {
+        await invoke("stop_dps_meter");
+      } catch (error) {
+        console.error("stop dps meter on close failed:", error);
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
     };
   }, []);
 

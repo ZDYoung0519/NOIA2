@@ -14,21 +14,21 @@ import { registerShortcut } from "@/lib/shortcut";
 import { toggleWindow } from "@/lib/window";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createWindow } from "@/lib/window";
-
-const SHORTCUT_KEY = "global-shortcut-show-main";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 export default function HomePage() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   const { t } = useAppTranslation();
+  const { settings, saveSettings } = useAppSettings();
 
   useEffect(() => {
-    // Listen for shortcut change events from settings window
     const unlistenShortcutChanged = listen<{ shortcut: string }>(
       "shortcut-changed",
       async (event) => {
         console.log("Shortcut changed event received:", event.payload.shortcut);
         const newShortcut = event.payload.shortcut;
+        await saveSettings({ shortcut: newShortcut });
         if (newShortcut) {
           await registerShortcut(newShortcut, async () => {
             await toggleWindow("main");
@@ -37,7 +37,6 @@ export default function HomePage() {
       }
     );
 
-    // Initialize tray menu with current language
     const initTrayMenu = async () => {
       try {
         await invoke("update_tray_menu", {
@@ -50,12 +49,10 @@ export default function HomePage() {
     };
     initTrayMenu();
 
-    // Register global shortcut on app startup
     const initShortcut = async () => {
-      const savedShortcut = localStorage.getItem(SHORTCUT_KEY);
-      if (savedShortcut) {
-        console.log("Registering saved shortcut:", savedShortcut);
-        await registerShortcut(savedShortcut, async () => {
+      if (settings.shortcut) {
+        console.log("Registering saved shortcut:", settings.shortcut);
+        await registerShortcut(settings.shortcut, async () => {
           await toggleWindow("main");
         });
       }
@@ -65,7 +62,7 @@ export default function HomePage() {
     return () => {
       unlistenShortcutChanged.then((fn) => fn());
     };
-  }, [t]);
+  }, [saveSettings, settings.shortcut, t]);
 
   async function greet() {
     setGreetMsg(await invoke("greet", { name }));
@@ -73,7 +70,7 @@ export default function HomePage() {
 
   const handleOpenDps = async () => {
     await createWindow("dps", {
-      title: t("about.title"),
+      title: t("dps.title"),
       url: "/dps",
       width: 500,
       height: 400,
@@ -84,7 +81,6 @@ export default function HomePage() {
       transparent: true,
       shadow: false,
       alwaysOnTop: true,
-      parent: "main",
     });
   };
 

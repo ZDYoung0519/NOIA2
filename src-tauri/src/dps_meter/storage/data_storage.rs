@@ -1,8 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::RwLock;
 
+use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
+use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::models::combat::{SkillRecord, SkillStats};
 use crate::dps_meter::models::packet::ParsedDamagePacket;
+use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
 
 #[derive(Debug, Default)]
 struct DataStorageInner {
@@ -13,35 +16,35 @@ struct DataStorageInner {
     actor_id_class_map: HashMap<u32, String>,
     actor_id_skill_spec_map: HashMap<u32, HashMap<u32, Vec<u32>>>,
     mob_id_code_map: HashMap<u32, u32>,
-    mob_code_name_map: HashMap<u32, String>,
     summon_owner_map: HashMap<u32, u32>,
     start_time: Option<f64>,
     start_time_by_target: HashMap<u32, HashMap<u32, f64>>,
     last_time_by_target: HashMap<u32, HashMap<u32, f64>>,
     dot_skill_list: Vec<u32>,
-    healing_skill_codes: Vec<u32>,
-    boss_code_list: Vec<u32>,
     main_actor_id: Option<u32>,
     main_actor_name: Option<String>,
     last_target: Option<u32>,
     last_target_by_main_actor: Option<u32>,
 }
 
-#[derive(Debug, Default)]
 pub struct DataStorage {
     inner: RwLock<DataStorageInner>,
+    config: SharedDpsMeterConfig,
+    logger: std::sync::Arc<DpsLogger>,
+    healing_skill_codes: HashSet<u32>,
+    boss_code_list: HashSet<u32>,
+    mob_code_name_map: HashMap<u32, String>,
 }
 
 impl DataStorage {
-    pub fn new() -> Self {
-        let mut inner = DataStorageInner::default();
-        inner.healing_skill_codes = vec![17000001];
-        inner.boss_code_list = vec![900001];
-        inner
-            .mob_code_name_map
-            .insert(900001, "训练木桩".to_string());
+    pub fn new(config: SharedDpsMeterConfig, logger: std::sync::Arc<DpsLogger>) -> Self {
         Self {
-            inner: RwLock::new(inner),
+            inner: RwLock::new(DataStorageInner::default()),
+            config,
+            logger,
+            healing_skill_codes: load_healing_skill_codes(),
+            boss_code_list: load_boss_ids(),
+            mob_code_name_map: load_npc_names(),
         }
     }
 
@@ -51,18 +54,12 @@ impl DataStorage {
         let main_actor_name = inner.main_actor_name.clone();
         let actor_id_name_map = inner.actor_id_name_map.clone();
         let actor_id_server_map = inner.actor_id_server_map.clone();
-        let mob_code_name_map = inner.mob_code_name_map.clone();
-        let boss_code_list = inner.boss_code_list.clone();
-        let healing_skill_codes = inner.healing_skill_codes.clone();
 
         *inner = DataStorageInner::default();
         inner.main_actor_id = main_actor_id;
         inner.main_actor_name = main_actor_name;
         inner.actor_id_name_map = actor_id_name_map;
         inner.actor_id_server_map = actor_id_server_map;
-        inner.mob_code_name_map = mob_code_name_map;
-        inner.boss_code_list = boss_code_list;
-        inner.healing_skill_codes = healing_skill_codes;
     }
 
     pub fn append_damage(&self, packet: ParsedDamagePacket) {
@@ -70,19 +67,32 @@ impl DataStorage {
     }
 
     pub fn append_damage_at(&self, packet: ParsedDamagePacket, timestamp: f64) {
+        let config = self.config.read().unwrap().clone();
         let mut inner = self.inner.write().unwrap();
 
-        if inner
-            .healing_skill_codes
-            .iter()
-            .any(|skill_code| *skill_code == packet.skill_code)
-        {
+        if self.healing_skill_codes.contains(&packet.skill_code) {
             return;
         }
 
         let mut actor_id = packet.actor_id;
         if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
             actor_id = *owner_id;
+        }
+
+        let target_mob_code = inner.mob_id_code_map.get(&packet.target_id).copied();
+        let is_target_boss = target_mob_code
+            .map(|mob_code| self.boss_code_list.contains(&mob_code))
+            .unwrap_or(false);
+
+        if config.boss_only && !is_target_boss {
+            return;
+        }
+
+        if config.my_muzhuang_only
+            && target_mob_code == Some(TRAINING_DUMMY_MOB_CODE)
+            && inner.main_actor_id != Some(actor_id)
+        {
+            return;
         }
 
         if packet.is_dot && !inner.dot_skill_list.contains(&packet.skill_code) {
@@ -181,9 +191,7 @@ impl DataStorage {
 
     pub fn append_actor(&self, actor_id: u32, actor_name: &str, sid: Option<&str>) {
         let mut inner = self.inner.write().unwrap();
-        inner
-            .actor_id_name_map
-            .insert(actor_id, actor_name.to_string());
+        inner.actor_id_name_map.insert(actor_id, actor_name.to_string());
         if let Some(sid) = sid {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
         }
@@ -194,7 +202,6 @@ impl DataStorage {
         inner.mob_id_code_map.insert(target_id, mob_code);
     }
 
-    #[allow(dead_code)]
     pub fn append_summon(&self, owner_id: u32, summon_id: u32) {
         let mut inner = self.inner.write().unwrap();
         inner.summon_owner_map.insert(summon_id, owner_id);
@@ -204,6 +211,8 @@ impl DataStorage {
         let mut inner = self.inner.write().unwrap();
         inner.main_actor_id = Some(actor_id);
         inner.main_actor_name = Some(actor_name.to_string());
+        self.logger
+            .info(format!("main actor updated: {actor_name} ({actor_id})"));
     }
 
     pub fn get_dps_stats_snapshot(&self) -> HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>> {
@@ -239,11 +248,11 @@ impl DataStorage {
     }
 
     pub fn mob_code_name_snapshot(&self) -> HashMap<u32, String> {
-        self.inner.read().unwrap().mob_code_name_map.clone()
+        self.mob_code_name_map.clone()
     }
 
     pub fn boss_code_list_snapshot(&self) -> Vec<u32> {
-        self.inner.read().unwrap().boss_code_list.clone()
+        self.boss_code_list.iter().copied().collect()
     }
 
     pub fn start_time_by_target_snapshot(&self) -> HashMap<u32, HashMap<u32, f64>> {

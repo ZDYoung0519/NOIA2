@@ -245,6 +245,8 @@ export async function createWindow(
       }
     }
 
+    delete finalOptions.parent;
+
     const webview = new WebviewWindow(label, finalOptions);
     await webview.once("tauri://created", async () => {
       console.log("Window created successfully:", label);

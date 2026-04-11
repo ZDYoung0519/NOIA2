@@ -10,6 +10,7 @@ use crate::dps_meter::capture::assembler::StreamAssembler;
 use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::processor::ProcessingMode;
+use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
@@ -84,6 +85,7 @@ impl DispatcherState {
 
 pub struct CaptureDispatcher {
     channel: Channel<CapturedPacket>,
+    logger: Arc<DpsLogger>,
     running: Arc<AtomicBool>,
     thread: Mutex<Option<JoinHandle<()>>>,
     combat_port: Arc<RwLock<Option<String>>>,
@@ -91,11 +93,16 @@ pub struct CaptureDispatcher {
 }
 
 impl CaptureDispatcher {
-    pub fn new(channel: Channel<CapturedPacket>, data_storage: Arc<DataStorage>) -> Self {
-        let state = Arc::new(Mutex::new(DispatcherState::new(Arc::clone(&data_storage))));
+    pub fn new(
+        channel: Channel<CapturedPacket>,
+        data_storage: Arc<DataStorage>,
+        logger: Arc<DpsLogger>,
+    ) -> Self {
+        let state = Arc::new(Mutex::new(DispatcherState::new(data_storage)));
 
         Self {
             channel,
+            logger,
             running: Arc::new(AtomicBool::new(false)),
             thread: Mutex::new(None),
             combat_port: Arc::new(RwLock::new(None)),
@@ -109,6 +116,7 @@ impl CaptureDispatcher {
         }
 
         let channel = self.channel.clone();
+        let logger = Arc::clone(&self.logger);
         let running = Arc::clone(&self.running);
         let combat_port = Arc::clone(&self.combat_port);
         let state = Arc::clone(&self.state);
@@ -123,17 +131,18 @@ impl CaptureDispatcher {
                 let mut state = state.lock().unwrap();
 
                 if state.logged_packets < 20 {
-                    println!(
-                        "[dispatcher] packet src={} dst={} payload_len={} captured_at={:.3}",
-                        packet.src_port,
-                        packet.dst_port,
-                        packet.data.len(),
-                        packet.captured_at
-                    );
+                    logger.debug(format!(
+                        "dispatcher packet src={} dst={} payload_len={} captured_at={:.3}",
+                        packet.src_port, packet.dst_port, packet.data.len(), packet.captured_at
+                    ));
                     state.logged_packets += 1;
                 }
 
                 if looks_like_tls_payload(&packet.data) {
+                    logger.debug(format!(
+                        "dispatcher skip tls-like payload src={} dst={} len={}",
+                        packet.src_port, packet.dst_port, packet.data.len()
+                    ));
                     continue;
                 }
 
@@ -144,12 +153,12 @@ impl CaptureDispatcher {
                     .any(|window| window == MAGIC);
 
                 if contains_magic && state.logged_magic_packets < 20 {
-                    println!(
-                        "[dispatcher] magic packet key={} payload_len={} head={}",
+                    logger.debug(format!(
+                        "dispatcher magic packet key={} payload_len={} head={}",
                         key,
                         packet.data.len(),
                         format_packet_prefix(&packet.data, 24)
-                    );
+                    ));
                     state.logged_magic_packets += 1;
                 }
 
@@ -157,12 +166,9 @@ impl CaptureDispatcher {
                     if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
                         *combat_port.write().unwrap() = Some(locked.clone());
                         let data_storage = Arc::clone(&state.data_storage);
-                        state
-                            .assemblers
-                            .entry(locked.clone())
-                            .or_insert_with(|| {
-                                StreamAssembler::new(data_storage, locked, ProcessingMode::Full)
-                            });
+                        state.assemblers.entry(locked.clone()).or_insert_with(|| {
+                            StreamAssembler::new(data_storage, locked, ProcessingMode::Full)
+                        });
                     }
                 }
 
@@ -190,8 +196,7 @@ impl CaptureDispatcher {
 
     pub fn clear(&self) {
         *self.combat_port.write().unwrap() = None;
-        let mut state = self.state.lock().unwrap();
-        state.clear();
+        self.state.lock().unwrap().clear();
     }
 }
 

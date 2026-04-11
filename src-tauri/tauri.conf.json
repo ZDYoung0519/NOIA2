@@ -33,7 +33,7 @@
         "transparent": true,
         "center": true,
         "shadow": false,
-        "visible": false
+        "visible": true
       }
     ],
     "security": {
