@@ -2,7 +2,7 @@
   "app": {
     "title": "NOIA2",
     "welcome": "歡迎使用 NOIA2",
-    "description": "一個基於 Tauri、React 與 Rust 打造的懸浮工具應用。",
+    "description": "一個基於 Tauri、React 與 Rust 建構的懸浮工具應用。",
     "openDps": "開啟 DPS 統計"
   },
   "greet": {
@@ -27,7 +27,7 @@
     "toggle": "切換語言",
     "current": "目前語言：{{language}}",
     "en": "English",
-    "zh-CN": "簡體中文",
+    "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
     "ko": "한국어"
   },
@@ -61,17 +61,17 @@
       "system": "跟隨系統",
       "language": "語言",
       "mainWindowTitle": "主視窗外觀",
-      "mainWindowDescription": "主視窗與 DPS 視窗的外觀設定分開保存，方便個別調整。",
+      "mainWindowDescription": "主視窗與 DPS 視窗的外觀設定分開儲存，方便分別調整。",
       "backgroundColor": "背景顏色",
       "backgroundColorDescription": "控制主視窗表層使用的背景顏色。",
       "backgroundOpacity": "背景透明度",
-      "backgroundOpacityDescription": "讓主視窗可以在更實心或更玻璃化之間調整。",
+      "backgroundOpacityDescription": "用於讓主視窗在更實心或更玻璃化之間調整。",
       "dpsWindowTitle": "DPS 視窗外觀",
       "dpsWindowDescription": "這些設定會直接影響懸浮 DPS 視窗，下方預覽使用的是模擬戰鬥資料。",
       "autoResizeHeight": "自動調整高度",
       "autoResizeHeightDescription": "根據目前內容自動調整 DPS 視窗高度。",
       "showHeaderStats": "顯示頂部統計卡片",
-      "showHeaderStatsDescription": "控制是否在面板上方顯示傷害、人數與目標狀態卡片。",
+      "showHeaderStatsDescription": "控制是否在面板上方顯示傷害、人數和目標狀態卡片。",
       "scaleFactor": "縮放比例",
       "scaleFactorDescription": "調整懸浮 DPS 工具的緊湊程度。",
       "shellColor": "外殼顏色",
@@ -81,7 +81,7 @@
       "mainPlayerBar": "主玩家條顏色",
       "otherPlayerBar": "其他玩家條顏色",
       "previewTitle": "DPS 視窗預覽",
-      "previewDescription": "這裡使用模擬戰鬥資料來預覽顏色、縮放、面板透明度與頂部統計顯示效果。"
+      "previewDescription": "這裡使用模擬戰鬥資料來預覽顏色、縮放、面板透明度和頂部統計顯示效果。"
     },
     "shortcut": {
       "title": "快捷鍵",
@@ -89,20 +89,20 @@
       "placeholder": "按下組合鍵",
       "showMain": "顯示主視窗",
       "showMainDesc": "使用快捷鍵快速顯示主視窗",
-      "setSuccess": "已將快捷鍵設為 {{shortcut}}！",
+      "setSuccess": "已將快捷鍵設定為 {{shortcut}}！",
       "cleared": "已清除快捷鍵！"
     },
     "dps": {
       "title": "DPS 統計",
-      "description": "設定後端 DPS 快照頻率、偵錯日誌與戰鬥過濾規則。",
+      "description": "設定後端 DPS 快照頻率、除錯日誌和戰鬥過濾規則。",
       "snapshotInterval": "DPS 快照間隔",
       "snapshotIntervalDescription": "後端向前端發送 DPS 快照的時間間隔，單位為毫秒。",
       "bossOnly": "僅統計 Boss",
       "bossOnlyDescription": "只統計目標被識別為 Boss 時造成的傷害。",
       "myMuzhuangOnly": "僅統計我的木樁傷害",
       "myMuzhuangOnlyDescription": "當目標是木樁時，只統計自己角色造成的傷害。",
-      "outputDebugLog": "輸出偵錯日誌",
-      "outputDebugLogDescription": "將額外的 DPS 抓包與分發偵錯日誌寫入後端日誌檔案。"
+      "outputDebugLog": "輸出除錯日誌",
+      "outputDebugLogDescription": "將額外的 DPS 擷取與分發除錯日誌寫入後端日誌檔案。"
     }
   },
   "dps": {
@@ -142,6 +142,56 @@
     "list": {
       "unknownPlayer": "未知玩家",
       "unknownServer": "未知"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "修補版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "將 Beta 提升為正式版",
+      "nextBeta": "下一個 Beta",
+      "nextPatchBeta": "下一個修補 Beta",
+      "custom": "自訂版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n請輸入選項 (1-{{max}}): ",
+      "enterCustomVersion": "請輸入自訂版本號：",
+      "confirmRelease": "確認繼續更新版本並建立標籤嗎？",
+      "pushNow": "現在就將提交與標籤推送到遠端嗎？"
+    },
+    "messages": {
+      "currentVersion": "目前版本：{{version}}",
+      "selectNextVersion": "請選擇下一個版本：",
+      "invalidChoice": "無效選項，預設使用修補版本。",
+      "summaryTitle": "發布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 目前版本：{{version}}",
+      "summaryNextVersion": "- 下一個版本：{{version}}",
+      "summaryTag": "- 標籤：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功建立提交與標籤。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳過推送。你之後可以執行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支援的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本號",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到套件名稱",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本號",
+      "releaseStagingIncomplete": "發布暫存不完整。已暫存檔案：{{stagedFiles}}",
+      "workingTreeNotClean": "工作區不乾淨，請先提交或暫存你的修改。",
+      "tagExists": "標籤 {{tag}} 已存在。",
+      "remoteTagExists": "遠端 origin 上已存在標籤 {{tag}}。",
+      "branchNotMain": "必須在 main 分支上建立發布。當前分支：{{branch}}",
+      "versionMismatch": "偵測到版本不一致。package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json 中的版本缺失或無效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本缺失或無效",
+      "invalidLang": "無效的 --lang 參數。請使用 en、zh-CN、zh-TW、ko 或 zh。"
     }
   }
 }

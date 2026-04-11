@@ -143,5 +143,55 @@
       "unknownPlayer": "Unknown",
       "unknownServer": "Unknown"
     }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "Patch",
+      "minor": "Minor",
+      "major": "Major",
+      "promoteBeta": "Promote beta to release",
+      "nextBeta": "Next beta",
+      "nextPatchBeta": "Next patch beta",
+      "custom": "Custom version"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\nEnter choice (1-{{max}}): ",
+      "enterCustomVersion": "Enter custom version: ",
+      "confirmRelease": "Continue with version update and tag creation?",
+      "pushNow": "Push commit and tag to remote now?"
+    },
+    "messages": {
+      "currentVersion": "Current version: {{version}}",
+      "selectNextVersion": "Select the next version:",
+      "invalidChoice": "Invalid choice, defaulting to patch release.",
+      "summaryTitle": "Release summary:",
+      "summaryBranch": "- Branch: {{branch}}",
+      "summaryCurrentVersion": "- Current version: {{version}}",
+      "summaryNextVersion": "- Next version: {{version}}",
+      "summaryTag": "- Tag: {{tag}}",
+      "cancelled": "Cancelled.",
+      "createdCommitAndTag": "Created commit and tag successfully.",
+      "pushCompleted": "Push completed.",
+      "pushSkipped": "Skipped push. You can push later with:",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "Unsupported version format: {{version}}",
+      "cargoVersionNotFound": "Failed to locate version in Cargo.toml",
+      "cargoPackageNameNotFound": "Failed to locate package name in Cargo.toml",
+      "cargoLockVersionNotFound": "Failed to locate version in Cargo.lock",
+      "releaseStagingIncomplete": "Release staging is incomplete. Staged files: {{stagedFiles}}",
+      "workingTreeNotClean": "Working tree is not clean. Please commit or stash your changes first.",
+      "tagExists": "Tag {{tag}} already exists.",
+      "remoteTagExists": "Remote tag {{tag}} already exists on origin.",
+      "branchNotMain": "Releases must be created from the main branch. Current branch: {{branch}}",
+      "versionMismatch": "Version mismatch detected. package.json={{packageVersion}}, tauri.conf.json={{tauriVersion}}, Cargo.toml={{cargoVersion}}, Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json version is missing or invalid",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json version is missing or invalid",
+      "invalidLang": "Invalid --lang value. Use en, zh-CN, zh-TW, ko, or zh."
+    }
   }
 }

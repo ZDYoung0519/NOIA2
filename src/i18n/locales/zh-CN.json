@@ -2,7 +2,7 @@
   "app": {
     "title": "NOIA2",
     "welcome": "欢迎使用 NOIA2",
-    "description": "一个基于 Tauri、React 与 Rust 构建的悬浮工具应用。",
+    "description": "一个基于 Tauri、React 和 Rust 构建的悬浮工具应用。",
     "openDps": "打开 DPS 统计"
   },
   "greet": {
@@ -142,6 +142,56 @@
     "list": {
       "unknownPlayer": "未知玩家",
       "unknownServer": "未知"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "补丁版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "将 Beta 提升为正式版",
+      "nextBeta": "下一个 Beta",
+      "nextPatchBeta": "下一个补丁 Beta",
+      "custom": "自定义版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n请输入选项 (1-{{max}}): ",
+      "enterCustomVersion": "请输入自定义版本号：",
+      "confirmRelease": "确认继续更新版本并创建标签吗？",
+      "pushNow": "现在就将提交和标签推送到远端吗？"
+    },
+    "messages": {
+      "currentVersion": "当前版本：{{version}}",
+      "selectNextVersion": "请选择下一个版本：",
+      "invalidChoice": "无效选项，默认使用补丁版本。",
+      "summaryTitle": "发布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 当前版本：{{version}}",
+      "summaryNextVersion": "- 下一个版本：{{version}}",
+      "summaryTag": "- 标签：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功创建提交和标签。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳过推送。你之后可以执行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支持的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本号",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到包名",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本号",
+      "releaseStagingIncomplete": "发布暂存不完整。已暂存文件：{{stagedFiles}}",
+      "workingTreeNotClean": "工作区不干净，请先提交或暂存你的修改。",
+      "tagExists": "标签 {{tag}} 已存在。",
+      "remoteTagExists": "远端 origin 上已存在标签 {{tag}}。",
+      "branchNotMain": "必须在 main 分支上创建发布。当前分支：{{branch}}",
+      "versionMismatch": "检测到版本不一致。package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json 中的版本缺失或无效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本缺失或无效",
+      "invalidLang": "无效的 --lang 参数。请使用 en、zh-CN、zh-TW、ko 或 zh。"
     }
   }
 }

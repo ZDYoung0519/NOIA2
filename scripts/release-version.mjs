@@ -25,11 +25,15 @@ function getCliLanguage() {
   }
 
   const value = process.argv[langIndex + 1];
-  if (value === "zh" || value === "en") {
-    return value;
+  if (value === "en" || value === "zh" || value === "zh-CN" || value === "zh-TW" || value === "ko") {
+    return value === "zh" ? "zh-CN" : value;
   }
 
-  throw new Error(messages ? t("releaseVersion.errors.invalidLang") : "Invalid --lang value. Use zh or en.");
+  throw new Error(
+    messages
+      ? t("releaseVersion.errors.invalidLang")
+      : "Invalid --lang value. Use en, zh-CN, zh-TW, ko, or zh."
+  );
 }
 
 function run(command) {
@@ -295,7 +299,16 @@ function getCurrentBranch() {
 async function loadMessages() {
   const cliLanguage = getCliLanguage();
   const envLang = process.env.LANG ?? process.env.LC_ALL ?? process.env.LC_MESSAGES ?? "";
-  const language = cliLanguage ?? (envLang.toLowerCase().startsWith("zh") ? "zh" : "en");
+  const normalizedEnvLang = envLang.toLowerCase();
+  const language =
+    cliLanguage ??
+    (normalizedEnvLang.startsWith("zh_tw") || normalizedEnvLang.startsWith("zh-tw")
+      ? "zh-TW"
+      : normalizedEnvLang.startsWith("zh")
+        ? "zh-CN"
+        : normalizedEnvLang.startsWith("ko")
+          ? "ko"
+          : "en");
   const localePath = path.join(localeDir, `${language}.json`);
   const locale = JSON.parse(await readFile(localePath, "utf8"));
   messages = locale;
