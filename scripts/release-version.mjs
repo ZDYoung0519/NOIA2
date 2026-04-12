@@ -13,7 +13,7 @@ const packageJsonPath = path.join(rootDir, "package.json");
 const tauriConfigPath = path.join(rootDir, "src-tauri", "tauri.conf.json");
 const cargoTomlPath = path.join(rootDir, "src-tauri", "Cargo.toml");
 const cargoLockPath = path.join(rootDir, "src-tauri", "Cargo.lock");
-const localeDir = path.join(rootDir, "src", "i18n", "locales");
+const localeDir = path.join(rootDir, "src", "i18n", "locales", 'ui');
 
 const rl = readline.createInterface({ input, output });
 let messages;
