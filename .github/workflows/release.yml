@@ -93,8 +93,12 @@ jobs:
 
       - name: Generate proxy updater manifest
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node scripts/generate-proxy-updater-manifest.mjs '${{ steps.tauri-action.outputs.artifactPaths }}' "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
+          mkdir -p updater-manifest
+          gh release download "${GITHUB_REF_NAME}" --pattern "latest.json" --dir updater-manifest
+          node scripts/generate-proxy-updater-manifest.mjs "updater-manifest/latest.json" "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
 
       - name: Upload proxy updater manifest
         shell: bash
