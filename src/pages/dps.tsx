@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
@@ -11,6 +11,7 @@ import {
   Package,
   Play,
   RotateCcw,
+  ScrollText,
   Square,
   Wifi,
   WifiOff,
@@ -226,6 +227,169 @@ export function WindowFrame({ titleBar, children, className, contentClassName }:
   );
 }
 
+type HistoryTargetListProps = {
+  historyRecords: HistoryTargetRecord[];
+  selectedHistoryId: string | null;
+  onSelect: (id: string) => void;
+};
+
+const MemoizedHistoryTargetList = memo(function HistoryTargetList({
+  historyRecords,
+  selectedHistoryId,
+  onSelect,
+}: HistoryTargetListProps) {
+  return (
+    <aside className="w-44 border-r border-white/10 bg-white/[0.03]">
+      <div className="border-b border-white/10 px-3 py-2">
+        <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
+          History
+        </div>
+      </div>
+
+      {historyRecords.length > 0 ? (
+        <div className="max-h-[220px] overflow-y-auto bg-transparent p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="space-y-1.5">
+            {historyRecords.map((record) => {
+              const recordTargetInfo = record.combatInfos.targetInfos?.[String(record.targetId)];
+              const recordDamage = getTargetTotalDamage(record.thisTargetAllPlayerStats);
+              const recordTime = getTargetLastTime(record);
+              const isBoss = record.combatInfos.targetInfos?.[String(record.targetId)]?.isBoss;
+
+              return (
+                <button
+                  key={record.id}
+                  type="button"
+                  onClick={() => onSelect(record.id)}
+                  className={cn(
+                    "w-full rounded-lg border px-2.5 py-2 text-left transition",
+                    selectedHistoryId === record.id
+                      ? "border-cyan-400/40 bg-cyan-500/12 text-cyan-50"
+                      : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]"
+                  )}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <div className="truncate text-xs font-semibold">
+                      {recordTargetInfo?.targetName || `Target ${record.targetId}`}
+                    </div>
+                    {isBoss && (
+                      <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.14em] text-amber-200 uppercase">
+                        Boss
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
+                    <span className="truncate text-slate-400">{recordDamage.toLocaleString()}</span>
+                    <span>{formatLocalRecordTime(recordTime)}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="flex min-h-24 items-center justify-center px-3 text-center text-xs text-slate-500">
+          No history
+        </div>
+      )}
+    </aside>
+  );
+});
+
+type FooterData = {
+  fightingTime: string;
+  cpu: string;
+  ram: string;
+  ping: string;
+  packetTotalKb: string;
+  packetTooltip: string;
+  mainActorName: string;
+  pingActive: boolean;
+  pingTone: string;
+};
+
+type BottomStatusBarProps = {
+  footerData: FooterData;
+  view: "dps" | "history";
+  isRunning: boolean;
+  targetFightingTime: number;
+  historyRecordsLength: number;
+  footerBackground: string;
+};
+
+const MemoizedBottomStatusBar = memo(function BottomStatusBar({
+  footerData,
+  view,
+  isRunning,
+  targetFightingTime,
+  historyRecordsLength,
+  footerBackground,
+}: BottomStatusBarProps) {
+  return (
+    <div
+      className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300"
+      style={{ backgroundColor: footerBackground }}
+    >
+      <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+        <div className="flex items-center gap-1">
+          <div
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              view === "history"
+                ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
+                : !isRunning
+                  ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                  : targetFightingTime > 0
+                    ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                    : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+            )}
+          />
+          <span className="text-xs text-slate-400 select-none">{footerData.fightingTime}</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Cpu className="h-3 w-3 text-slate-500" />
+          <span className="text-xs text-slate-200 select-none">{footerData.cpu}</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Database className="h-3 w-3 text-slate-500" />
+          <span className="text-xs text-slate-200 select-none">{footerData.ram}</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {view === "history" ? (
+            <ChevronLeft className="h-3 w-3 text-slate-500" />
+          ) : (
+            <Package className="h-3 w-3 text-slate-500" />
+          )}
+          <span
+            className="cursor-help text-xs text-slate-200 select-none"
+            title={view === "history" ? "History records" : footerData.packetTooltip}
+          >
+            {view === "history" ? `${historyRecordsLength} records` : footerData.packetTotalKb}
+          </span>
+        </div>
+
+        {footerData.pingActive ? (
+          <div className={cn("flex items-center gap-1", footerData.pingTone)}>
+            <Wifi className="h-3 w-3" />
+            <span className="text-xs font-medium select-none">{footerData.ping}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-white/60">
+            <WifiOff className="h-3 w-3" />
+            <span className="text-xs select-none">--</span>
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-24 truncate text-xs text-slate-300 select-none">
+        {footerData.mainActorName}
+      </div>
+    </div>
+  );
+});
+
 export default function DpsPage() {
   const { settings } = useAppSettings();
   const { t } = useAppTranslation();
@@ -249,6 +413,7 @@ export default function DpsPage() {
   const unlistenStatusRef = useRef<null | (() => void)>(null);
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
+  const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -415,8 +580,12 @@ export default function DpsPage() {
   }, [dpsAppearance.autoResizeHeight, dpsAppearance.scaleFactor]);
 
   useEffect(() => {
+    latestResizeWindowRef.current = resizeWindow;
+  }, [resizeWindow]);
+
+  useEffect(() => {
     const contentElement = contentRef.current;
-    if (!contentElement || !dpsAppearance.autoResizeHeight) {
+    if (!contentElement) {
       return;
     }
 
@@ -429,7 +598,7 @@ export default function DpsPage() {
       resizeTimerRef.current = window.setTimeout(() => {
         resizeTimerRef.current = null;
         window.requestAnimationFrame(() => {
-          void resizeWindow();
+          void latestResizeWindowRef.current?.();
         });
       }, RESIZE_DEBOUNCE_MS);
     };
@@ -448,13 +617,36 @@ export default function DpsPage() {
         resizeTimerRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    if (!dpsAppearance.autoResizeHeight) {
+      return;
+    }
+
+    if (resizeTimerRef.current !== null) {
+      window.clearTimeout(resizeTimerRef.current);
+    }
+
+    resizeTimerRef.current = window.setTimeout(() => {
+      resizeTimerRef.current = null;
+      window.requestAnimationFrame(() => {
+        void latestResizeWindowRef.current?.();
+      });
+    }, 50);
   }, [
-    resizeWindow,
+    dpsAppearance.autoResizeHeight,
+    dpsAppearance.scaleFactor,
     snapshot,
     currentTarget,
     isRunning,
-    dpsAppearance.autoResizeHeight,
-    dpsAppearance.scaleFactor,
+    view,
+    selectedHistoryId,
+    historyRecords.length,
+    memorySnapshot?.cpuPercent,
+    memorySnapshot?.rssMb,
+    memorySnapshot?.pingMs,
+    memorySnapshot?.mainActorName,
   ]);
 
   const resolvedTargetId = useMemo(() => {
@@ -706,6 +898,41 @@ export default function DpsPage() {
     });
   }, []);
 
+  const ensureLogWindow = useCallback(async () => {
+    await createWindow("dps_log", {
+      title: "DPS Log",
+      url: "/dps_log",
+      width: 560,
+      height: 320,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+    });
+
+    await waitForWindowReady("dps_log");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps",
+        childLabel: "dps_log",
+        url: "/dps_log",
+        title: "DPS Log",
+        width: 560,
+        height: 320,
+        gap: 8,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+      },
+    });
+  }, []);
+
   const handleStartDpsMeter = useCallback(async () => {
     try {
       await invoke("start_dps_meter");
@@ -836,6 +1063,10 @@ export default function DpsPage() {
     setView("history");
   }, [view]);
 
+  const handleOpenLog = useCallback(async () => {
+    await ensureLogWindow();
+  }, [ensureLogWindow]);
+
   const rightActions = (
     <div className="flex items-center gap-1 pr-1">
       {isRunning ? (
@@ -862,6 +1093,9 @@ export default function DpsPage() {
       </TitleIconButton>
       <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
         <Settings2 className="h-3.5 w-3.5" />
+      </TitleIconButton>
+      <TitleIconButton onClick={handleOpenLog} title="Open log">
+        <ScrollText className="h-3.5 w-3.5" />
       </TitleIconButton>
       <TitleIconButton
         active={view === "history"}
@@ -934,65 +1168,11 @@ export default function DpsPage() {
           <div className="p-0">
             {view === "history" && (
               <div className="flex min-h-10 gap-0">
-                <aside className="w-44 border-r border-white/10 bg-white/[0.03]">
-                  <div className="border-b border-white/10 px-3 py-2">
-                    <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-                      History
-                    </div>
-                  </div>
-
-                  {historyRecords.length > 0 ? (
-                    <div className="max-h-[220px] overflow-y-auto bg-transparent p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
-                      <div className="space-y-1.5">
-                        {historyRecords.map((record) => {
-                          const recordTargetInfo =
-                            record.combatInfos.targetInfos?.[String(record.targetId)];
-                          const recordDamage = getTargetTotalDamage(
-                            record.thisTargetAllPlayerStats
-                          );
-                          const recordTime = getTargetLastTime(record);
-                          const isBoss =
-                            record.combatInfos.targetInfos?.[String(record.targetId)]?.isBoss;
-
-                          return (
-                            <button
-                              key={record.id}
-                              type="button"
-                              onClick={() => setSelectedHistoryId(record.id)}
-                              className={cn(
-                                "w-full rounded-lg border px-2.5 py-2 text-left transition",
-                                selectedHistoryId === record.id
-                                  ? "border-cyan-400/40 bg-cyan-500/12 text-cyan-50"
-                                  : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]"
-                              )}
-                            >
-                              <div className="flex items-center gap-1.5">
-                                <div className="truncate text-xs font-semibold">
-                                  {recordTargetInfo?.targetName || `Target ${record.targetId}`}
-                                </div>
-                                {isBoss && (
-                                  <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.14em] text-amber-200 uppercase">
-                                    Boss
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
-                                <span className="truncate text-slate-400">
-                                  {recordDamage.toLocaleString()}
-                                </span>
-                                <span>{formatLocalRecordTime(recordTime)}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex min-h-24 items-center justify-center px-3 text-center text-xs text-slate-500">
-                      No history
-                    </div>
-                  )}
-                </aside>
+                <MemoizedHistoryTargetList
+                  historyRecords={historyRecords}
+                  selectedHistoryId={selectedHistoryId}
+                  onSelect={setSelectedHistoryId}
+                />
 
                 <div className="min-w-0 flex-1">
                   {dpsPanelData ? (
@@ -1028,72 +1208,14 @@ export default function DpsPage() {
               </div>
             )}
 
-            <div
-              className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300"
-              style={{ backgroundColor: footerBackground }}
-            >
-              <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-                <div className="flex items-center gap-1">
-                  <div
-                    className={cn(
-                      "h-1.5 w-1.5 rounded-full",
-                      view === "history"
-                        ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
-                        : !isRunning
-                          ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                          : targetFightingTime > 0
-                            ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                            : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-                    )}
-                  />
-                  <span className="text-xs text-slate-400 select-none">
-                    {footerData.fightingTime}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Cpu className="h-3 w-3 text-slate-500" />
-                  <span className="text-xs text-slate-200 select-none">{footerData.cpu}</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Database className="h-3 w-3 text-slate-500" />
-                  <span className="text-xs text-slate-200 select-none">{footerData.ram}</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {view === "history" ? (
-                    <ChevronLeft className="h-3 w-3 text-slate-500" />
-                  ) : (
-                    <Package className="h-3 w-3 text-slate-500" />
-                  )}
-                  <span
-                    className="cursor-help text-xs text-slate-200 select-none"
-                    title={view === "history" ? "History records" : footerData.packetTooltip}
-                  >
-                    {view === "history"
-                      ? `${historyRecords.length} records`
-                      : footerData.packetTotalKb}
-                  </span>
-                </div>
-
-                {footerData.pingActive ? (
-                  <div className={cn("flex items-center gap-1", footerData.pingTone)}>
-                    <Wifi className="h-3 w-3" />
-                    <span className="text-xs font-medium select-none">{footerData.ping}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-white/60">
-                    <WifiOff className="h-3 w-3" />
-                    <span className="text-xs select-none">--</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="max-w-24 truncate text-xs text-slate-300 select-none">
-                {footerData.mainActorName}
-              </div>
-            </div>
+            <MemoizedBottomStatusBar
+              footerData={footerData}
+              view={view}
+              isRunning={isRunning}
+              targetFightingTime={targetFightingTime}
+              historyRecordsLength={historyRecords.length}
+              footerBackground={footerBackground}
+            />
           </div>
         </section>
       </div>

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::dps_meter::capture::accumulator::PacketAccumulator;
 use crate::dps_meter::capture::processor::{ProcessingMode, StreamProcessor};
+use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
 pub struct StreamAssembler {
@@ -10,10 +11,15 @@ pub struct StreamAssembler {
 }
 
 impl StreamAssembler {
-    pub fn new(data_storage: Arc<DataStorage>, port: String, mode: ProcessingMode) -> Self {
+    pub fn new(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<DpsLogger>,
+        port: String,
+        mode: ProcessingMode,
+    ) -> Self {
         Self {
             accumulator: PacketAccumulator::new(),
-            processor: StreamProcessor::new(data_storage, port, mode),
+            processor: StreamProcessor::new(data_storage, logger, port, mode),
         }
     }
 

@@ -57,11 +57,12 @@ struct DispatcherState {
 }
 
 impl DispatcherState {
-    fn new(data_storage: Arc<DataStorage>) -> Self {
+    fn new(data_storage: Arc<DataStorage>, logger: Arc<DpsLogger>) -> Self {
         Self {
             data_storage: Arc::clone(&data_storage),
             unified: StreamAssembler::new(
                 data_storage,
+                logger,
                 "unified".to_string(),
                 ProcessingMode::MetadataOnly,
             ),
@@ -102,7 +103,10 @@ impl CaptureDispatcher {
         logger: Arc<DpsLogger>,
         ping_tracker: Arc<PingTracker>,
     ) -> Self {
-        let state = Arc::new(Mutex::new(DispatcherState::new(data_storage)));
+        let state = Arc::new(Mutex::new(DispatcherState::new(
+            data_storage,
+            Arc::clone(&logger),
+        )));
 
         Self {
             channel,
@@ -178,8 +182,9 @@ impl CaptureDispatcher {
                     if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
                         *combat_port.write().unwrap() = Some(locked.clone());
                         let data_storage = Arc::clone(&state.data_storage);
+                        let logger = Arc::clone(&logger);
                         state.assemblers.entry(locked.clone()).or_insert_with(|| {
-                            StreamAssembler::new(data_storage, locked, ProcessingMode::Full)
+                            StreamAssembler::new(data_storage, logger, locked, ProcessingMode::Full)
                         });
                     }
                 }
@@ -187,8 +192,14 @@ impl CaptureDispatcher {
                 let _ = state.unified.process_chunk(&packet.data);
                 if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
+                    let assembler_logger = Arc::clone(&logger);
                     let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
-                        StreamAssembler::new(data_storage, key.clone(), ProcessingMode::Full)
+                        StreamAssembler::new(
+                            data_storage,
+                            assembler_logger,
+                            key.clone(),
+                            ProcessingMode::Full,
+                        )
                     });
                     let _ = assembler.process_chunk(&packet.data);
                 }

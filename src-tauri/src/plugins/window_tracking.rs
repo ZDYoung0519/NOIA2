@@ -48,6 +48,30 @@ fn position_child_next_to_parent<R: Runtime>(
         .map_err(|e| e.to_string())
 }
 
+fn schedule_position_sync<R: Runtime>(
+    app: &AppHandle<R>,
+    parent_label: &str,
+    child_label: &str,
+    gap: f64,
+) {
+    let app = app.clone();
+    let parent_label = parent_label.to_string();
+    let child_label = child_label.to_string();
+
+    std::thread::spawn(move || {
+        for delay_ms in [30u64, 80, 160] {
+            std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            let Some(parent) = app.get_webview_window(&parent_label) else {
+                return;
+            };
+            let Some(child) = app.get_webview_window(&child_label) else {
+                return;
+            };
+            let _ = position_child_next_to_parent(&parent, &child, gap);
+        }
+    });
+}
+
 fn register_tracking_if_needed<R: Runtime>(
     app: &AppHandle<R>,
     parent_label: &str,
@@ -122,11 +146,12 @@ pub fn ensure_tracked_window<R: Runtime>(
         .ok_or_else(|| format!("parent window '{}' not found", options.parent_label))?;
 
     if let Some(existing_window) = app.get_webview_window(&options.child_label) {
-        position_child_next_to_parent(&parent_window, &existing_window, gap)?;
-        register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
         let _ = existing_window.show();
         let _ = existing_window.unminimize();
         let _ = existing_window.set_focus();
+        position_child_next_to_parent(&parent_window, &existing_window, gap)?;
+        register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
+        schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);
         return Ok(());
     }
 
@@ -147,11 +172,12 @@ pub fn ensure_tracked_window<R: Runtime>(
     .build()
     .map_err(|e| e.to_string())?;
 
-    position_child_next_to_parent(&parent_window, &child_window, gap)?;
-    register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
     child_window.show().map_err(|e| e.to_string())?;
     child_window.unminimize().map_err(|e| e.to_string())?;
     child_window.set_focus().map_err(|e| e.to_string())?;
+    position_child_next_to_parent(&parent_window, &child_window, gap)?;
+    register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
+    schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);
 
     Ok(())
 }

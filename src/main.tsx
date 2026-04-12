@@ -7,6 +7,7 @@ import "./i18n";
 const HomePage = lazy(() => import("./pages/home"));
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
+const DpsLogPage = lazy(() => import("./pages/dps_log"));
 const AboutPage = lazy(() => import("./pages/about"));
 const SettingsPage = lazy(() => import("./pages/settings"));
 
@@ -14,6 +15,7 @@ const pageMap = {
   "/": HomePage,
   "/dps": DpsPage,
   "/dps_detail": DpsDetailPage,
+  "/dps_log": DpsLogPage,
   "/about": AboutPage,
   "/settings": SettingsPage,
 };

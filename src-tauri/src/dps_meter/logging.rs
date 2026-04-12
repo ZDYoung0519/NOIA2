@@ -4,10 +4,21 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use tauri::{AppHandle, Manager};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager};
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DpsLogEvent {
+    pub level: String,
+    pub message: String,
+    pub line: String,
+    pub timestamp: f64,
+}
 
 #[derive(Debug)]
 pub struct DpsLogger {
+    app: AppHandle,
     file_path: PathBuf,
     output_debug_log: Mutex<bool>,
     write_lock: Mutex<()>,
@@ -21,6 +32,7 @@ impl DpsLogger {
         }
 
         Self {
+            app: app.clone(),
             file_path,
             output_debug_log: Mutex::new(output_debug_log),
             write_lock: Mutex::new(()),
@@ -61,7 +73,17 @@ impl DpsLogger {
             .map(|duration| duration.as_secs_f64())
             .unwrap_or_default();
 
-        let _ = writeln!(file, "[{timestamp:.3}] [{level}] {message}");
+        let line = format!("[{timestamp:.3}] [{level}] {message}");
+        let _ = writeln!(file, "{line}");
+        let _ = self.app.emit(
+            "dps-logger",
+            DpsLogEvent {
+                level: level.to_string(),
+                message: message.to_string(),
+                line,
+                timestamp,
+            },
+        );
     }
 }
 

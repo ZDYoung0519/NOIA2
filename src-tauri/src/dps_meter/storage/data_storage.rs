@@ -216,6 +216,18 @@ impl DataStorage {
         inner.summon_owner_map.insert(summon_id, owner_id);
     }
 
+    pub fn has_summon_owner(&self, summon_id: u32) -> bool {
+        self.inner
+            .read()
+            .unwrap()
+            .summon_owner_map
+            .contains_key(&summon_id)
+    }
+
+    pub fn has_mob(&self, actor_id: u32) -> bool {
+        self.inner.read().unwrap().mob_id_code_map.contains_key(&actor_id)
+    }
+
     pub fn set_main_actor(&self, actor_id: u32, actor_name: &str) {
         let mut inner = self.inner.write().unwrap();
         inner.main_actor_id = Some(actor_id);

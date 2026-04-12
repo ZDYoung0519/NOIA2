@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use lz4_flex::block::decompress;
 
+use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
 
@@ -38,15 +39,22 @@ impl<'a> DamagePacketReader<'a> {
 
 pub struct StreamProcessor {
     data_storage: Arc<DataStorage>,
-    _port: String,
+    logger: Arc<DpsLogger>,
+    port: String,
     mode: ProcessingMode,
 }
 
 impl StreamProcessor {
-    pub fn new(data_storage: Arc<DataStorage>, port: String, mode: ProcessingMode) -> Self {
+    pub fn new(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<DpsLogger>,
+        port: String,
+        mode: ProcessingMode,
+    ) -> Self {
         Self {
             data_storage,
-            _port: port,
+            logger,
+            port,
             mode,
         }
     }
@@ -106,6 +114,10 @@ impl StreamProcessor {
             }
         }
 
+        if buffer.len() >= 4 {
+            self.scan_for_embedded_048d(buffer);
+        }
+
         offset
     }
 
@@ -162,6 +174,10 @@ impl StreamProcessor {
             }
 
             offset += inner_total_bytes;
+        }
+
+        if decompressed.len() >= 4 {
+            self.scan_for_embedded_048d(&decompressed);
         }
     }
 
@@ -480,6 +496,16 @@ impl StreamProcessor {
             };
 
             self.data_storage.append_damage(parsed);
+            self.logger.debug(format!(
+                "[{}] damage target={} actor={} skill={} damage={} multi_hit_count={} multi_hit_damage={}",
+                self.port,
+                target_id,
+                actor_id,
+                resolved_skill_code,
+                final_damage,
+                multi_hit_count,
+                multi_hit_damage
+            ));
             parsed_any = true;
         }
 
@@ -549,7 +575,19 @@ impl StreamProcessor {
             multi_hit_count: 0,
             specials: Vec::new(),
         };
+        let log_target_id = parsed.target_id;
+        let log_actor_id = parsed.actor_id;
+        let log_skill_code = parsed.skill_code;
+        let log_damage = parsed.damage;
         self.data_storage.append_damage(parsed);
+        self.logger.debug(format!(
+            "[{}] dot target={} actor={} skill={} damage={}",
+            self.port,
+            log_target_id,
+            log_actor_id,
+            log_skill_code,
+            log_damage
+        ));
         true
     }
 
@@ -582,6 +620,12 @@ impl StreamProcessor {
 
         self.data_storage
             .append_summon(owner_info.value as u32, summon_info.value as u32);
+        self.logger.debug(format!(
+            "[{}] summon ownership owner={} summon={}",
+            self.port,
+            owner_info.value,
+            summon_info.value
+        ));
         true
     }
 
@@ -633,10 +677,193 @@ impl StreamProcessor {
 
         if let Some(mob_code) = mob_type_id {
             self.data_storage.append_mob(real_actor_id, mob_code);
+            self.logger.debug(format!(
+                "[{}] summon spawn target={} mob_code={}",
+                self.port, real_actor_id, mob_code
+            ));
             found_something = true;
         }
 
+        if self.data_storage.has_summon_owner(real_actor_id) {
+            return found_something;
+        }
+
+        if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.debug(format!(
+                "[{}] summon fallback le32 owner={} summon={}",
+                self.port, owner_id, real_actor_id
+            ));
+            return true;
+        }
+
+        if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.debug(format!(
+                "[{}] summon fallback marker owner={} summon={}",
+                self.port, owner_id, real_actor_id
+            ));
+            return true;
+        }
+
         found_something
+    }
+
+    fn scan_for_embedded_048d(&mut self, data: &[u8]) -> bool {
+        let mut found_any = false;
+        let mut search_offset = 0usize;
+
+        while search_offset + 1 < data.len() {
+            let Some(relative_idx) = find_bytes(data, search_offset, &[0x04, 0x8D]) else {
+                break;
+            };
+
+            let idx = relative_idx;
+            search_offset = idx + 2;
+            if search_offset >= data.len() {
+                break;
+            }
+
+            let summon_info = read_varint(data, search_offset);
+            if !summon_info.is_valid() || !(100..=9_999_999).contains(&summon_info.value) {
+                continue;
+            }
+            let summon_id = summon_info.value as u32;
+
+            let zero_start = search_offset + summon_info.length;
+            if zero_start + 4 > data.len()
+                || data[zero_start..zero_start + 4] != [0x00, 0x00, 0x00, 0x00]
+            {
+                continue;
+            }
+
+            let scan_end = data.len().saturating_sub(1).min(search_offset + summon_info.length + 128);
+            let mut anchor_idx = None;
+            for i in search_offset + summon_info.length..scan_end {
+                if matches!(data[i], 0xE0 | 0xE2) && data.get(i + 1) == Some(&0x07) {
+                    anchor_idx = Some(i);
+                    break;
+                }
+            }
+
+            let Some(anchor_idx) = anchor_idx else {
+                continue;
+            };
+
+            let mut owner_id = None;
+            for v_len in 1..=3usize {
+                let Some(v_start) = anchor_idx.checked_sub(v_len) else {
+                    continue;
+                };
+                if v_start < search_offset + summon_info.length {
+                    continue;
+                }
+                if !can_read_varint(data, v_start) {
+                    continue;
+                }
+
+                let v = read_varint(data, v_start);
+                if v.is_valid() && v.length == v_len && (100..=99_999).contains(&v.value) {
+                    owner_id = Some(v.value as u32);
+                    break;
+                }
+            }
+
+            let Some(owner_id) = owner_id else {
+                continue;
+            };
+            if owner_id == summon_id {
+                continue;
+            }
+
+            let name_len_idx = anchor_idx + 2;
+            if name_len_idx >= data.len() {
+                continue;
+            }
+
+            let name_len = data[name_len_idx] as usize;
+            if !(2..=32).contains(&name_len) || name_len_idx + 1 + name_len > data.len() {
+                continue;
+            }
+
+            let name_start = name_len_idx + 1;
+            let name_end = name_start + name_len;
+            let Ok(possible_name) = std::str::from_utf8(&data[name_start..name_end]) else {
+                continue;
+            };
+            if !possible_name.chars().next().is_some_and(|ch| ch.is_alphanumeric()) {
+                continue;
+            }
+
+            let Some(sanitized_name) = sanitize_nickname(possible_name) else {
+                continue;
+            };
+            if sanitized_name.len() < 2 {
+                continue;
+            }
+
+            self.data_storage.append_summon(owner_id, summon_id);
+            self.data_storage.append_actor(owner_id, &sanitized_name, None);
+            self.logger.debug(format!(
+                "[{}] embedded 04 8D owner={} summon={} owner_name={}",
+                self.port, owner_id, summon_id, sanitized_name
+            ));
+            found_any = true;
+
+            search_offset = skip_guild_name(data, name_end);
+        }
+
+        found_any
+    }
+
+    fn extract_owner_from_packet(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
+        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
+        let marker_idx = find_bytes(packet, 0, &marker)?;
+        let owner_offset = marker_idx + marker.len();
+        if owner_offset >= packet.len() {
+            return None;
+        }
+
+        let owner_info = read_varint(packet, owner_offset);
+        if !owner_info.is_valid() || !(100..=999_999).contains(&owner_info.value) {
+            return None;
+        }
+
+        let owner_id = owner_info.value as u32;
+        if owner_id == exclude_actor_id
+            || self.data_storage.has_summon_owner(owner_id)
+            || self.data_storage.has_mob(owner_id)
+        {
+            return None;
+        }
+
+        Some(owner_id)
+    }
+
+    fn scan_for_known_player_le32(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
+        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
+        let marker_idx = find_bytes(packet, 0, &marker)?;
+        let start_offset = marker_idx + marker.len();
+        let end_offset = packet.len().saturating_sub(3).min(start_offset + 48);
+        let known_actor_ids = self.data_storage.actor_id_name_snapshot();
+
+        for i in start_offset..end_offset {
+            let le32 = (packet[i] as u32)
+                | ((packet[i + 1] as u32) << 8)
+                | ((packet[i + 2] as u32) << 16)
+                | ((packet[i + 3] as u32) << 24);
+
+            if le32 != exclude_actor_id
+                && (100..=999_999).contains(&le32)
+                && known_actor_ids.contains_key(&le32)
+                && !self.data_storage.has_summon_owner(le32)
+                && !self.data_storage.has_mob(le32)
+            {
+                return Some(le32);
+            }
+        }
+
+        None
     }
 
     fn parse_4036(&mut self, payload: &[u8]) {
@@ -661,6 +888,10 @@ impl StreamProcessor {
                 | ((payload[boss_pos + 1] as u32) << 8)
                 | ((payload[boss_pos + 2] as u32) << 16);
             self.data_storage.append_mob(aid_info.value as u32, boss_id);
+            self.logger.debug(format!(
+                "[{}] mob actor={} mob_code={}",
+                self.port, aid_info.value, boss_id
+            ));
             idx = boss_pos + 3;
         }
     }
@@ -712,6 +943,10 @@ impl StreamProcessor {
                 .append_actor(aid_info.value as u32, name, Some(&sid.to_string()));
             self.data_storage
                 .set_main_actor(aid_info.value as u32, name);
+            self.logger.debug(format!(
+                "[{}] main actor actor={} name={} sid={}",
+                self.port, aid_info.value, name, sid
+            ));
             break;
         }
     }
@@ -757,10 +992,18 @@ impl StreamProcessor {
                     let sid_string = sid.to_string();
                     self.data_storage
                         .append_actor(aid_info.value as u32, name, Some(&sid_string));
+                    self.logger.debug(format!(
+                        "[{}] actor actor={} name={} sid={}",
+                        self.port, aid_info.value, name, sid
+                    ));
                 }
-                None => self
-                    .data_storage
-                    .append_actor(aid_info.value as u32, name, None),
+                None => {
+                    self.data_storage.append_actor(aid_info.value as u32, name, None);
+                    self.logger.debug(format!(
+                        "[{}] actor actor={} name={} sid=none",
+                        self.port, aid_info.value, name
+                    ));
+                }
             }
             idx = pos + 1;
         }
@@ -922,4 +1165,88 @@ fn find_server_id(payload: &[u8], name_end: usize) -> Option<u32> {
 
 fn is_available_server_id(sid: u32) -> bool {
     (1001..=1018).contains(&sid) || (2001..=2018).contains(&sid)
+}
+
+fn can_read_varint(data: &[u8], offset: usize) -> bool {
+    if offset >= data.len() {
+        return false;
+    }
+
+    let mut shift = 0u32;
+    let mut pos = offset;
+    while pos < data.len() {
+        let byte_val = data[pos];
+        if (byte_val & 0x80) == 0 {
+            return true;
+        }
+        shift += 7;
+        if shift >= 32 {
+            return false;
+        }
+        pos += 1;
+    }
+    false
+}
+
+fn sanitize_nickname(nickname: &str) -> Option<String> {
+    let sanitized = nickname.split('\0').next().unwrap_or_default().trim();
+    if sanitized.is_empty() {
+        return None;
+    }
+
+    let mut result = String::new();
+    let mut only_numbers = true;
+    let mut has_han = false;
+
+    for ch in sanitized.chars() {
+        let code = ch as u32;
+        if code < 32 || code == 127 || (0x80..=0x9F).contains(&code) || ch == '\u{FFFD}' {
+            continue;
+        }
+
+        let is_han = matches!(code, 0x4E00..=0x9FFF | 0x3400..=0x4DBF | 0xF900..=0xFAFF);
+        if ch.is_alphanumeric() || is_han {
+            result.push(ch);
+            if ch.is_alphabetic() || is_han {
+                only_numbers = false;
+            }
+            if is_han {
+                has_han = true;
+            }
+        }
+    }
+
+    if result.is_empty() || only_numbers {
+        return None;
+    }
+    if result.chars().count() < 3 && !has_han {
+        return None;
+    }
+    if result.chars().count() == 1 && result.chars().all(|ch| ch.is_alphabetic()) {
+        return None;
+    }
+
+    Some(result)
+}
+
+fn skip_guild_name(data: &[u8], start_index: usize) -> usize {
+    if start_index >= data.len() {
+        return start_index;
+    }
+
+    if data[start_index] == 0x00 {
+        return start_index + 1;
+    }
+
+    let length = data[start_index] as usize;
+    if !(1..=32).contains(&length) {
+        return start_index;
+    }
+
+    let next = start_index + 1;
+    if next + length > data.len() {
+        return start_index;
+    }
+
+    next + length
 }

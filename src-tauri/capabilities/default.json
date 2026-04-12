@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main", "about", "settings", "dps", "dps_detail"],
+  "windows": ["main", "about", "settings", "dps", "dps_detail", "dps_log"],
   "permissions": [
     "core:default",
     "core:window:allow-close",
