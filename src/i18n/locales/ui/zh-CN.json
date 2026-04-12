@@ -1,0 +1,236 @@
+{
+  "app": {
+    "title": "NOIA2",
+    "welcome": "欢迎使用 NOIA2",
+    "description": "一个基于 Tauri、React 和 Rust 构建的悬浮工具应用。",
+    "openDps": "打开 DPS 统计"
+  },
+  "greet": {
+    "title": "来自 Rust 的问候",
+    "description": "测试前端与 Tauri 后端之间的通信",
+    "placeholder": "输入你的名字...",
+    "button": "问候"
+  },
+  "about": {
+    "title": "关于",
+    "button": "关于",
+    "appName": "NOIA2",
+    "version": "版本",
+    "description": "一个为 NOIA2 打造的悬浮桌面辅助工具。",
+    "close": "关闭",
+    "github": "GitHub"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "language": {
+    "toggle": "切换语言",
+    "current": "当前语言：{{language}}",
+    "en": "English",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "ko": "한국어"
+  },
+  "tray": {
+    "show": "显示窗口",
+    "quit": "退出"
+  },
+  "updater": {
+    "checkForUpdates": "检查更新",
+    "checking": "检查中...",
+    "checkFailed": "检查更新失败。",
+    "upToDate": "当前已经是最新版本！",
+    "updateAvailable": "发现新版本",
+    "downloading": "正在下载更新",
+    "installingVersion": "正在安装版本 {{version}}...",
+    "versionAvailable": "发现可用版本 {{version}}。",
+    "releaseNotes": "更新说明：",
+    "later": "稍后",
+    "installNow": "立即安装"
+  },
+  "settings": {
+    "title": "设置",
+    "button": "设置",
+    "close": "关闭",
+    "appearance": {
+      "title": "外观",
+      "description": "自定义应用的外观与语言",
+      "theme": "主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "language": "语言",
+      "mainWindowTitle": "主窗口外观",
+      "mainWindowDescription": "主窗口与 DPS 窗口的外观配置分开保存，便于分别调整。",
+      "backgroundColor": "背景颜色",
+      "backgroundColorDescription": "控制主窗口表层使用的背景颜色。",
+      "backgroundOpacity": "背景透明度",
+      "backgroundOpacityDescription": "用于让主窗口在更实心或更玻璃化之间调整。",
+      "dpsWindowTitle": "DPS 窗口外观",
+      "dpsWindowDescription": "这些设置会直接影响悬浮 DPS 窗口，下方预览使用的是模拟战斗数据。",
+      "autoResizeHeight": "自动调整高度",
+      "autoResizeHeightDescription": "根据当前内容自动调整 DPS 窗口高度。",
+      "showHeaderStats": "显示顶部统计卡片",
+      "showHeaderStatsDescription": "控制是否在面板上方显示伤害、人数和目标状态卡片。",
+      "scaleFactor": "缩放比例",
+      "scaleFactorDescription": "调整悬浮 DPS 工具的紧凑程度。",
+      "shellColor": "外壳颜色",
+      "shellOpacity": "外壳透明度",
+      "panelColor": "面板颜色",
+      "panelOpacity": "面板透明度",
+      "mainPlayerBar": "主玩家条颜色",
+      "otherPlayerBar": "其他玩家条颜色",
+      "previewTitle": "DPS 窗口预览",
+      "previewDescription": "这里使用模拟战斗数据来预览颜色、缩放、面板透明度和顶部统计显示效果。"
+    },
+    "shortcut": {
+      "title": "快捷键",
+      "description": "配置全局快捷键",
+      "placeholder": "按下组合键",
+      "showMain": "显示主窗口",
+      "showMainDesc": "使用快捷键快速显示主窗口",
+      "showDps": "显示 DPS 窗口",
+      "showDpsDesc": "使用快捷键快速打开或聚焦 DPS 窗口",
+      "resetDps": "重置 DPS",
+      "resetDpsDesc": "使用快捷键重置 DPS 运行态数据而不停止统计",
+      "setSuccess": "已将快捷键设置为 {{shortcut}}！",
+      "cleared": "已清除快捷键！"
+    },
+    "dps": {
+      "title": "DPS 统计",
+      "description": "配置后端 DPS 快照频率、调试日志和战斗过滤规则。",
+      "snapshotInterval": "DPS 快照间隔",
+      "snapshotIntervalDescription": "后端向前端发送 DPS 快照的时间间隔，单位为毫秒。",
+      "memorySnapshotInterval": "内存快照间隔",
+      "memorySnapshotIntervalDescription": "后端向前端发送 CPU、内存、延迟和缓冲区诊断信息的时间间隔，单位为毫秒。",
+      "bossOnly": "仅统计 Boss",
+      "bossOnlyDescription": "只统计目标被识别为 Boss 时造成的伤害。",
+      "myMuzhuangOnly": "仅统计我的木桩伤害",
+      "myMuzhuangOnlyDescription": "当目标是木桩时，只统计自己角色造成的伤害。",
+      "outputDebugLog": "输出调试日志",
+      "outputDebugLogDescription": "将额外的 DPS 抓包与分发调试日志写入后端日志文件。"
+    }
+  },
+  "dps": {
+    "title": "DPS 统计",
+    "target": {
+      "none": "无目标",
+      "boss": "Boss 目标",
+      "waiting": "等待中"
+    },
+    "stats": {
+      "totalDamage": "总伤害",
+      "participants": "参与人数",
+      "targetState": "目标状态"
+    },
+    "panel": {
+      "title": "实时 DPS 面板",
+      "followAutoTarget": "跟随自动目标",
+      "waitingTitle": "等待战斗数据",
+      "waitingHint": "启动统计并锁定目标后，这里会显示实时面板。"
+    },
+    "actions": {
+      "start": "启动统计",
+      "stop": "停止统计",
+      "reset": "重置统计",
+      "settings": "打开设置",
+      "history": "打开历史"
+    },
+    "toast": {
+      "started": "DPS 统计已启动",
+      "stopped": "DPS 统计已停止",
+      "reset": "DPS 面板已重置",
+      "startFailed": "启动 DPS 统计失败",
+      "stopFailed": "停止 DPS 统计失败",
+      "resetFailed": "重置 DPS 面板失败",
+      "historyComing": "历史面板功能即将到来"
+    },
+    "list": {
+      "unknownPlayer": "未知玩家",
+      "unknownServer": "未知"
+    },
+    "detail": {
+      "modeLive": "实时",
+      "modeHistory": "历史",
+      "target": "目标",
+      "records": "记录",
+      "player": "玩家",
+      "damage": "伤害",
+      "dps": "秒伤",
+      "fight": "战斗",
+      "hits": "次数",
+      "critical": "暴击",
+      "back": "被击",
+      "double": "强击",
+      "perfect": "完美",
+      "parry": "格挡",
+      "multi": "多端",
+      "skills": "技能",
+      "selectPlayer": "请从 DPS 列表中选择一名玩家",
+      "noSkillData": "暂无技能数据",
+      "skill": "技能",
+      "count": "次数",
+      "criticalShort": "暴击率",
+      "backShort": "被击率",
+      "doubleShort": "强击率",
+      "perfectShort": "完美率",
+      "parryShort": "格挡率",
+      "multiShort": "多段打击",
+      "multiDamage": "多段伤害",
+      "avg": "平均",
+      "min": "最小",
+      "max": "最大",
+      "total": "总计"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "补丁版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "将 Beta 提升为正式版",
+      "nextBeta": "下一个 Beta",
+      "nextPatchBeta": "下一个补丁 Beta",
+      "custom": "自定义版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n请输入选项 (1-{{max}}): ",
+      "enterCustomVersion": "请输入自定义版本号：",
+      "confirmRelease": "确认继续更新版本并创建标签吗？",
+      "pushNow": "现在就将提交和标签推送到远端吗？"
+    },
+    "messages": {
+      "currentVersion": "当前版本：{{version}}",
+      "selectNextVersion": "请选择下一个版本：",
+      "invalidChoice": "无效选项，默认使用补丁版本。",
+      "summaryTitle": "发布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 当前版本：{{version}}",
+      "summaryNextVersion": "- 下一个版本：{{version}}",
+      "summaryTag": "- 标签：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功创建提交和标签。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳过推送。你之后可以执行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支持的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本号",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到包名",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本号",
+      "releaseStagingIncomplete": "发布暂存不完整。已暂存文件：{{stagedFiles}}",
+      "workingTreeNotClean": "工作区不干净，请先提交或暂存你的修改。",
+      "tagExists": "标签 {{tag}} 已存在。",
+      "remoteTagExists": "远端 origin 上已存在标签 {{tag}}。",
+      "branchNotMain": "必须在 main 分支上创建发布。当前分支：{{branch}}",
+      "versionMismatch": "检测到版本不一致。package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json 中的版本缺失或无效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本缺失或无效",
+      "invalidLang": "无效的 --lang 参数。请使用 en、zh-CN、zh-TW、ko 或 zh。"
+    }
+  }
+}

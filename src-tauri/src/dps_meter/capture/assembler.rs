@@ -37,4 +37,8 @@ impl StreamAssembler {
     pub fn clear(&self) {
         self.accumulator.clear();
     }
+
+    pub fn buffer_size(&self) -> usize {
+        self.accumulator.size()
+    }
 }

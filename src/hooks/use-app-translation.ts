@@ -15,5 +15,11 @@ export function useAppTranslation() {
     };
   }, [i18n]);
 
-  return { t, i18n };
+  const tSkill = (skillId: string | number) =>
+    i18n.t(String(skillId), {
+      ns: "skills",
+      defaultValue: `#${skillId}`,
+    });
+
+  return { t, tSkill, i18n };
 }

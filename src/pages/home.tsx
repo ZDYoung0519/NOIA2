@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import reactLogo from "../assets/react.svg";
-import viteLogo from "../assets/vite.svg";
-import tauriLogo from "../assets/tauri.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,17 +19,26 @@ export default function HomePage() {
   const [name, setName] = useState("");
   const { t } = useAppTranslation();
   const { settings, saveSettings } = useAppSettings();
+  const mainShortcut = settings.shortcuts.showMain;
+  const dpsShortcut = settings.shortcuts.showDps;
 
   useEffect(() => {
-    const unlistenShortcutChanged = listen<{ shortcut: string }>("shortcut-changed", async (event) => {
-      const newShortcut = event.payload.shortcut;
-      await saveSettings({ shortcut: newShortcut });
-      if (newShortcut) {
-        await registerShortcut(newShortcut, async () => {
-          await toggleWindow("main");
+    const unlistenShortcutChanged = listen<{ shortcut: string }>(
+      "shortcut-changed",
+      async (event) => {
+        const newShortcut = event.payload.shortcut;
+        await saveSettings({
+          shortcuts: {
+            showMain: newShortcut,
+          },
         });
+        if (newShortcut) {
+          await registerShortcut(newShortcut, async () => {
+            await toggleWindow("main");
+          });
+        }
       }
-    });
+    );
 
     const initTrayMenu = async () => {
       try {
@@ -46,9 +53,33 @@ export default function HomePage() {
     void initTrayMenu();
 
     const initShortcut = async () => {
-      if (settings.shortcut) {
-        await registerShortcut(settings.shortcut, async () => {
+      if (mainShortcut) {
+        await registerShortcut(mainShortcut, async () => {
           await toggleWindow("main");
+        });
+      }
+
+      if (dpsShortcut) {
+        await registerShortcut(dpsShortcut, async () => {
+          const existingWindow = await WebviewWindow.getByLabel("dps");
+          if (existingWindow) {
+            await toggleWindow("dps");
+            return;
+          }
+
+          await createWindow("dps", {
+            title: t("dps.title"),
+            url: "/dps",
+            width: 100,
+            height: 400,
+            resizable: true,
+            maximizable: false,
+            minimizable: false,
+            decorations: false,
+            transparent: true,
+            shadow: false,
+            alwaysOnTop: true,
+          });
         });
       }
     };
@@ -57,7 +88,7 @@ export default function HomePage() {
     return () => {
       unlistenShortcutChanged.then((fn) => fn());
     };
-  }, [saveSettings, settings.shortcut, t]);
+  }, [dpsShortcut, mainShortcut, saveSettings, t]);
 
   async function greet() {
     setGreetMsg(await invoke("greet", { name }));
@@ -67,7 +98,7 @@ export default function HomePage() {
     await createWindow("dps", {
       title: t("dps.title"),
       url: "/dps",
-      width: 500,
+      width: 100,
       height: 400,
       resizable: true,
       maximizable: false,
@@ -92,14 +123,13 @@ export default function HomePage() {
       </div>
 
       <div className="flex items-center gap-8">
-        <a href="https://vite.dev" target="_blank" rel="noopener noreferrer" className="transition-transform hover:scale-110">
-          <img src={viteLogo} className="h-24 w-24" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank" rel="noopener noreferrer" className="transition-transform hover:scale-110">
-          <img src={tauriLogo} className="h-24 w-24" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="transition-transform hover:scale-110">
-          <img src={reactLogo} className="h-24 w-24" alt="React logo" />
+        <a
+          href="https://github.com/ZDYoung0519/NOIA2"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-transform hover:scale-110"
+        >
+          <img src="icon.png" className="h-50 w-50" alt="Vite logo" />
         </a>
       </div>
 

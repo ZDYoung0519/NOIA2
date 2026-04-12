@@ -224,10 +224,11 @@ impl NpcapLib {
 unsafe impl Send for NpcapLib {}
 unsafe impl Sync for NpcapLib {}
 
+#[derive(Clone)]
 pub struct PcapCapturer {
     channel: Channel<CapturedPacket>,
     running: Arc<AtomicBool>,
-    detector_thread: Mutex<Option<JoinHandle<()>>>,
+    detector_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
     target_device: Arc<RwLock<Option<String>>>,
     target_port: Arc<RwLock<Option<String>>>,
@@ -240,7 +241,7 @@ impl PcapCapturer {
         Self {
             channel,
             running: Arc::new(AtomicBool::new(false)),
-            detector_thread: Mutex::new(None),
+            detector_thread: Arc::new(Mutex::new(None)),
             capture_threads: Arc::new(Mutex::new(Vec::new())),
             target_device: Arc::new(RwLock::new(None)),
             target_port: Arc::new(RwLock::new(None)),

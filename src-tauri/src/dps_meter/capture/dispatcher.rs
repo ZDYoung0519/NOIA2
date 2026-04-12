@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 use crate::dps_meter::capture::assembler::StreamAssembler;
 use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
+use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::capture::processor::ProcessingMode;
 use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
@@ -83,11 +84,13 @@ impl DispatcherState {
     }
 }
 
+#[derive(Clone)]
 pub struct CaptureDispatcher {
     channel: Channel<CapturedPacket>,
     logger: Arc<DpsLogger>,
+    ping_tracker: Arc<PingTracker>,
     running: Arc<AtomicBool>,
-    thread: Mutex<Option<JoinHandle<()>>>,
+    thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     combat_port: Arc<RwLock<Option<String>>>,
     state: Arc<Mutex<DispatcherState>>,
 }
@@ -97,14 +100,16 @@ impl CaptureDispatcher {
         channel: Channel<CapturedPacket>,
         data_storage: Arc<DataStorage>,
         logger: Arc<DpsLogger>,
+        ping_tracker: Arc<PingTracker>,
     ) -> Self {
         let state = Arc::new(Mutex::new(DispatcherState::new(data_storage)));
 
         Self {
             channel,
             logger,
+            ping_tracker,
             running: Arc::new(AtomicBool::new(false)),
-            thread: Mutex::new(None),
+            thread: Arc::new(Mutex::new(None)),
             combat_port: Arc::new(RwLock::new(None)),
             state,
         }
@@ -117,6 +122,7 @@ impl CaptureDispatcher {
 
         let channel = self.channel.clone();
         let logger = Arc::clone(&self.logger);
+        let ping_tracker = Arc::clone(&self.ping_tracker);
         let running = Arc::clone(&self.running);
         let combat_port = Arc::clone(&self.combat_port);
         let state = Arc::clone(&self.state);
@@ -129,11 +135,15 @@ impl CaptureDispatcher {
                 };
 
                 let mut state = state.lock().unwrap();
+                ping_tracker.on_packet(&packet.data, packet.captured_at);
 
                 if state.logged_packets < 20 {
                     logger.debug(format!(
                         "dispatcher packet src={} dst={} payload_len={} captured_at={:.3}",
-                        packet.src_port, packet.dst_port, packet.data.len(), packet.captured_at
+                        packet.src_port,
+                        packet.dst_port,
+                        packet.data.len(),
+                        packet.captured_at
                     ));
                     state.logged_packets += 1;
                 }
@@ -141,7 +151,9 @@ impl CaptureDispatcher {
                 if looks_like_tls_payload(&packet.data) {
                     logger.debug(format!(
                         "dispatcher skip tls-like payload src={} dst={} len={}",
-                        packet.src_port, packet.dst_port, packet.data.len()
+                        packet.src_port,
+                        packet.dst_port,
+                        packet.data.len()
                     ));
                     continue;
                 }
@@ -197,6 +209,30 @@ impl CaptureDispatcher {
     pub fn clear(&self) {
         *self.combat_port.write().unwrap() = None;
         self.state.lock().unwrap().clear();
+    }
+
+    pub fn current_combat_port(&self) -> Option<String> {
+        self.combat_port.read().unwrap().clone()
+    }
+
+    pub fn assembler_buffer_sizes(&self) -> HashMap<String, usize> {
+        let state = self.state.lock().unwrap();
+        let current_port = self.current_combat_port();
+        let mut sizes = HashMap::new();
+
+        let unified_size = state.unified.buffer_size();
+        if unified_size > 0 {
+            sizes.insert("unified".to_string(), unified_size);
+        }
+
+        for (key, assembler) in &state.assemblers {
+            let size = assembler.buffer_size();
+            if size > 0 || current_port.as_deref() == Some(key.as_str()) {
+                sizes.insert(key.clone(), size);
+            }
+        }
+
+        sizes
     }
 }
 

@@ -30,7 +30,11 @@ export type DpsWindowAppearance = {
 };
 
 export type AppSettings = {
-  shortcut: string;
+  shortcuts: {
+    showMain: string;
+    showDps: string;
+    resetDps: string;
+  };
   dpsMeter: DpsMeterConfig;
   appearance: {
     mainWindow: MainWindowAppearance;
@@ -39,7 +43,7 @@ export type AppSettings = {
 };
 
 export type AppSettingsUpdate = {
-  shortcut?: string;
+  shortcuts?: Partial<AppSettings["shortcuts"]>;
   dpsMeter?: Partial<DpsMeterConfig>;
   appearance?: {
     mainWindow?: Partial<MainWindowAppearance>;
@@ -48,7 +52,11 @@ export type AppSettingsUpdate = {
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  shortcut: "",
+  shortcuts: {
+    showMain: "",
+    showDps: "Alt+W",
+    resetDps: "Alt+Q",
+  },
   dpsMeter: DEFAULT_DPS_METER_CONFIG,
   appearance: {
     mainWindow: {
@@ -112,6 +120,7 @@ function clampScaleFactor(value: unknown, fallback: number) {
 
 type PartialAppSettings = {
   shortcut?: string;
+  shortcuts?: Partial<AppSettings["shortcuts"]>;
   dpsMeter?: Partial<DpsMeterConfig>;
   appearance?: {
     mainWindow?: Partial<MainWindowAppearance>;
@@ -121,7 +130,13 @@ type PartialAppSettings = {
 
 function normalizeSettings(input?: PartialAppSettings): AppSettings {
   return {
-    shortcut: input?.shortcut ?? DEFAULT_APP_SETTINGS.shortcut,
+    shortcuts: {
+      ...DEFAULT_APP_SETTINGS.shortcuts,
+      showMain:
+        input?.shortcuts?.showMain ?? input?.shortcut ?? DEFAULT_APP_SETTINGS.shortcuts.showMain,
+      showDps: input?.shortcuts?.showDps ?? DEFAULT_APP_SETTINGS.shortcuts.showDps,
+      resetDps: input?.shortcuts?.resetDps ?? DEFAULT_APP_SETTINGS.shortcuts.resetDps,
+    },
     dpsMeter: {
       ...DEFAULT_DPS_METER_CONFIG,
       ...(input?.dpsMeter ?? {}),
@@ -209,7 +224,9 @@ function loadAppSettingsFromStorage(): AppSettings {
       : DEFAULT_DPS_METER_CONFIG;
 
     return normalizeSettings({
-      shortcut: legacyShortcut,
+      shortcuts: {
+        showMain: legacyShortcut,
+      },
       dpsMeter: legacyDpsMeter,
       appearance: {
         dpsWindow: loadLegacyDpsAppearance(),
@@ -259,12 +276,19 @@ export function useAppSettings() {
   }, [settings.dpsMeter]);
 
   const mergeSettings = useCallback(
-    (current: AppSettings, updater: AppSettingsUpdate | ((current: AppSettings) => AppSettings)) => {
+    (
+      current: AppSettings,
+      updater: AppSettingsUpdate | ((current: AppSettings) => AppSettings)
+    ) => {
       return typeof updater === "function"
         ? normalizeSettings(updater(current))
         : normalizeSettings({
             ...current,
             ...updater,
+            shortcuts: {
+              ...current.shortcuts,
+              ...(updater.shortcuts ?? {}),
+            },
             dpsMeter: {
               ...current.dpsMeter,
               ...(updater.dpsMeter ?? {}),
@@ -285,13 +309,12 @@ export function useAppSettings() {
   );
 
   const saveSettings = useMemo(
-    () =>
-      async (updater: AppSettingsUpdate | ((current: AppSettings) => AppSettings)) => {
-        const next = mergeSettings(settings, updater);
-        setSettings(next);
-        localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(next));
-        await emit(APP_SETTINGS_UPDATED_EVENT, next);
-      },
+    () => async (updater: AppSettingsUpdate | ((current: AppSettings) => AppSettings)) => {
+      const next = mergeSettings(settings, updater);
+      setSettings(next);
+      localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(next));
+      await emit(APP_SETTINGS_UPDATED_EVENT, next);
+    },
     [mergeSettings, settings]
   );
 

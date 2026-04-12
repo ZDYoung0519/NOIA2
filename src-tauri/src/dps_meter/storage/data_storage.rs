@@ -54,12 +54,22 @@ impl DataStorage {
         let main_actor_name = inner.main_actor_name.clone();
         let actor_id_name_map = inner.actor_id_name_map.clone();
         let actor_id_server_map = inner.actor_id_server_map.clone();
+        let actor_id_class_map = inner.actor_id_class_map.clone();
+        let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
+        let mob_id_code_map = inner.mob_id_code_map.clone();
+        let summon_owner_map = inner.summon_owner_map.clone();
+        let dot_skill_list = inner.dot_skill_list.clone();        
 
         *inner = DataStorageInner::default();
         inner.main_actor_id = main_actor_id;
         inner.main_actor_name = main_actor_name;
         inner.actor_id_name_map = actor_id_name_map;
         inner.actor_id_server_map = actor_id_server_map;
+        inner.actor_id_class_map = actor_id_class_map;
+        inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
+        inner.mob_id_code_map = mob_id_code_map;
+        inner.summon_owner_map = summon_owner_map;
+        inner.dot_skill_list = dot_skill_list;
     }
 
     pub fn append_damage(&self, packet: ParsedDamagePacket) {
@@ -131,9 +141,6 @@ impl DataStorage {
         for special in &packet.specials {
             *special_counts.entry(special.clone()).or_insert(0) += 1;
         }
-        if packet.is_crit {
-            *special_counts.entry("CRITICAL".to_string()).or_insert(0) += 1;
-        }
         if packet.multi_hit_count > 0 {
             special_counts.insert("MULTIHIT".to_string(), 1);
             special_counts.insert(format!("MULTIHIT{}", packet.multi_hit_count), 1);
@@ -191,7 +198,9 @@ impl DataStorage {
 
     pub fn append_actor(&self, actor_id: u32, actor_name: &str, sid: Option<&str>) {
         let mut inner = self.inner.write().unwrap();
-        inner.actor_id_name_map.insert(actor_id, actor_name.to_string());
+        inner
+            .actor_id_name_map
+            .insert(actor_id, actor_name.to_string());
         if let Some(sid) = sid {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
         }

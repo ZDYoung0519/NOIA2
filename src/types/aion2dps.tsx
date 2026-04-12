@@ -38,7 +38,6 @@ export type TargetInfo = {
   targetLastTime: Record<string, number>;
 };
 
-
 export type CombatInfos = {
   actorInfos: Record<string, ActorInfo>;
   targetInfos: Record<string, TargetInfo>;
@@ -49,13 +48,48 @@ export type CombatInfos = {
   timeNow: number;
 };
 
-
 export type CombatSnapshot = {
   totalDamage: number;
-byTargetPlayerStats: Record<string, Record<string, SkillStats>>;
+  byTargetPlayerStats: Record<string, Record<string, SkillStats>>;
   byTargetPlayerSkillStats: Record<string, Record<string, Record<string, SkillStats>>>;
   byTargetPlayerSkillRecords: Record<string, Record<string, SkillRecord[]>>;
   byTargetPlayerDpsCurve: Record<string, Record<string, Array<[number, number]>>>;
   combatInfos: CombatInfos;
 };
 
+export type MemorySnapshot = {
+  cpuPercent: number;
+  rssMb: number;
+  vmsMb: number;
+  memoryPercent: number;
+  capDevice?: string | null;
+  capPort?: string | null;
+  packetSizes: Record<string, number>;
+  pingMs?: number | null;
+  pingHistory: Array<[number, number]>;
+  mainActorName?: string | null;
+};
+
+export type DpsDetailPayload = {
+  mode: "live" | "history";
+  actorId: number;
+  targetId: number;
+  combatInfos: CombatInfos;
+  playerStats: SkillStats | null;
+  playerSkillStats: Record<string, SkillStats>;
+  playerSkillRecords: SkillRecord[];
+  playerDpsCurve: Array<[number, number]>;
+};
+
+export interface oneTargetAllPlayerStats {
+  thisTargetAllPlayerStats: Record<string, SkillStats>;
+  thisTargetAllPlayerSkillStats: Record<string, Record<string, SkillStats>>;
+  thisTargetAllPlayerSkillRecords: Record<string, SkillRecord[]>;
+  combatInfos: CombatInfos;
+}
+
+// 用来存放到历史中，扩展了id字段
+export interface HistoryTargetRecord extends oneTargetAllPlayerStats {
+  id: string;
+  targetId: number;
+}

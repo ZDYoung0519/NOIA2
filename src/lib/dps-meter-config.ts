@@ -4,6 +4,7 @@ export const DPS_METER_CONFIG_KEY = "dps-meter-config";
 
 export type DpsMeterConfig = {
   dpsSnapshotIntervalMs: number;
+  memorySnapshotIntervalMs: number;
   bossOnly: boolean;
   myMuzhuangOnly: boolean;
   outputDebugLog: boolean;
@@ -11,6 +12,7 @@ export type DpsMeterConfig = {
 
 export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   dpsSnapshotIntervalMs: 500,
+  memorySnapshotIntervalMs: 1500,
   bossOnly: false,
   myMuzhuangOnly: false,
   outputDebugLog: false,

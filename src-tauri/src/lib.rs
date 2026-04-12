@@ -36,6 +36,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(plugins::system_tray::init())
+        .plugin(plugins::window_tracking::init())
         .setup(|app| {
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
             app.manage(meter);
@@ -55,7 +56,10 @@ pub fn run() {
             dps_meter::api::commands::get_dps_snapshot,
             dps_meter::api::commands::get_dps_meter_status,
             dps_meter::api::commands::reset_dps_meter,
-            dps_meter::api::commands::stop_dps_meter
+            dps_meter::api::commands::stop_dps_meter,
+            plugins::window_tracking::ensure_tracked_window,
+            plugins::window_tracking::resize_window,
+            plugins::window_tracking::get_window_size
         ]);
 
     #[cfg(not(debug_assertions))]

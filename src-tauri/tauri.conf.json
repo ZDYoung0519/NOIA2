@@ -27,12 +27,12 @@
       {
         "label": "main",
         "title": "noia2 永恒诺亚",
-        "width": 800,
-        "height": 600,
+        "width": 1440,
+        "height": 960,
         "decorations": false,
         "transparent": true,
         "center": true,
-        "shadow": false,
+        "shadow": true,
         "visible": true
       }
     ],
