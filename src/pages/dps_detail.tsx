@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 
@@ -81,6 +81,74 @@ const formatCompactDamage = (value: number) => {
   }
   return value.toLocaleString();
 };
+
+const getSkillIconPath = (skillId: string) => {
+  const normalized = String(skillId).replace(/\D/g, "");
+  const iconKey = normalized.slice(0, 4);
+  if (iconKey.length !== 4) {
+    return null;
+  }
+  return `images/skill/${iconKey}.png`;
+};
+
+const normalizeSkillSpecSlots = (slots?: number[] | null) => {
+  const slotSet = new Set<number>();
+  for (const slot of slots ?? []) {
+    if (Number.isInteger(slot) && slot >= 1 && slot <= 5) {
+      slotSet.add(slot);
+    }
+  }
+  return [1, 2, 3, 4, 5].map((slot) => slotSet.has(slot));
+};
+
+const SkillNameCell = memo(function SkillNameCell({
+  skillId,
+  skillName,
+}: {
+  skillId: string;
+  skillName: string;
+}) {
+  const iconPath = getSkillIconPath(skillId);
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      {iconPath ? (
+        <img
+          src={iconPath}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+          className="h-5 w-5 flex-shrink-0 rounded object-cover"
+          onError={(event) => {
+            (event.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : (
+        <div className="h-5 w-5 flex-shrink-0 rounded bg-white/5" />
+      )}
+      <span className="truncate font-medium text-slate-100">{skillName}</span>
+    </div>
+  );
+});
+
+const SkillSpecDots = memo(function SkillSpecDots({ slots }: { slots?: number[] | null }) {
+  const activeSlots = normalizeSkillSpecSlots(slots);
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {activeSlots.map((isActive, index) => (
+        <span
+          key={index}
+          className={cn(
+            "h-1.5 w-1.5 rounded-full border border-white/10",
+            isActive ? "bg-cyan-300 shadow-[0_0_4px_rgba(103,232,249,0.45)]" : "bg-white/10"
+          )}
+        />
+      ))}
+    </div>
+  );
+});
 
 export default function DpsDetailPage() {
   const { settings } = useAppSettings();
@@ -234,6 +302,7 @@ export default function DpsDetailPage() {
     () => skillRows.reduce((sum, row) => sum + row.totalDamage, 0),
     [skillRows]
   );
+  const actorSkillSpecMap = actorInfo?.actorSkillSpec ?? {};
 
   const shellBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
   const titleBarBackground = hexToRgba(
@@ -406,9 +475,10 @@ export default function DpsDetailPage() {
 
           {skillRows.length > 0 ? (
             <div className="overflow-x-auto overflow-y-visible [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-track]:bg-transparent">
-              <div className="min-w-[1120px]">
-                <div className="grid grid-cols-[minmax(150px,1.5fr)_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/10 px-3 py-2 text-xs tracking-[0.16em] text-slate-400 uppercase">
+              <div className="min-w-[1200px]">
+                <div className="grid grid-cols-[minmax(180px,1.6fr)_0.8fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/10 px-3 py-2 text-xs tracking-[0.16em] text-slate-400 uppercase">
                   <span>{t("dps.detail.skill")}</span>
+                  <span className="text-right">Spec</span>
                   <span className="text-right">{t("dps.detail.count")}</span>
                   <span className="text-right">{t("dps.detail.criticalShort")}</span>
                   <span className="text-right">{t("dps.detail.backShort")}</span>
@@ -450,13 +520,12 @@ export default function DpsDetailPage() {
                     <div
                       key={row.skillId}
                       className={cn(
-                        "grid grid-cols-[minmax(150px,1.5fr)_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-xs",
+                        "grid grid-cols-[minmax(180px,1.6fr)_0.8fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-xs",
                         "hover:bg-white/[0.04]"
                       )}
                     >
-                      <span className="truncate font-medium text-slate-100">
-                        {tSkill(row.skillId)}
-                      </span>
+                      <SkillNameCell skillId={row.skillId} skillName={tSkill(row.skillId)} />
+                      <SkillSpecDots slots={actorSkillSpecMap[row.skillId]} />
                       <span className="text-right text-slate-300">{row.counts}</span>
                       <span className="text-right text-rose-300">{critRate.toFixed(1)}%</span>
                       <span className="text-right text-indigo-300">{backRate.toFixed(1)}%</span>
