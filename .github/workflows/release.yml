@@ -1,9 +1,9 @@
-name: 'publish'
+name: "publish"
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   publish-tauri:
@@ -13,14 +13,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - platform: 'macos-latest' # for Arm based macs (M1 and above).
-#            args: '--target aarch64-apple-darwin'
-#          - platform: 'macos-latest' # for Intel based macs.
-#            args: '--target x86_64-apple-darwin'
-#          - platform: 'ubuntu-22.04'
-#            args: ''
-          - platform: 'windows-latest'
-            args: '--bundles nsis,updater'
+          # - platform: "macos-latest"
+          #   args: "--target aarch64-apple-darwin"
+          # - platform: "macos-latest"
+          #   args: "--target x86_64-apple-darwin"
+          # - platform: "ubuntu-22.04"
+          #   args: ""
+          - platform: "windows-latest"
+            args: "--bundles nsis,updater"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -46,7 +46,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -55,21 +55,19 @@ jobs:
         shell: bash
         run: |
           REPO="${{ github.repository }}"
-          # 定义直连和代理的地址
-          ENDPOINT_RAW="https://github.com/${REPO}/releases/latest/download/latest.json"
-          ENDPOINT_PROXY="https://gh-proxy.com/${ENDPOINT_RAW}"
-          ENDPOINTS_JSON="[\"${ENDPOINT_RAW}\", \"${ENDPOINT_PROXY}\"]"
-          
+          RAW_MANIFEST_URL="https://github.com/${REPO}/releases/latest/download/latest.json"
+          PROXY_MANIFEST_RAW_URL="https://github.com/${REPO}/releases/latest/download/latest-proxy.json"
+          PROXY_MANIFEST_URL="https://gh-proxy.com/${PROXY_MANIFEST_RAW_URL}"
           PUBKEY="${{ secrets.TAURI_SIGNING_PUBLIC_KEY }}"
 
-          # Replace placeholders in tauri.conf.json
-          # sed -i.bak "s|__TAURI_UPDATER_ENDPOINT__|${ENDPOINT}|g" src-tauri/tauri.conf.json
-          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_1__|${ENDPOINT_RAW}|g" src-tauri/tauri.conf.json
-          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_2__|${ENDPOINT_PROXY}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_1__|${PROXY_MANIFEST_URL}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_2__|${RAW_MANIFEST_URL}|g" src-tauri/tauri.conf.json
           sed -i.bak "s|__TAURI_UPDATER_PUBKEY__|${PUBKEY}|g" src-tauri/tauri.conf.json
 
-          echo "Updater configured with endpoint: ${ENDPOINT}"
-      
+          echo "Updater configured with endpoints:"
+          echo "  1. ${PROXY_MANIFEST_URL}"
+          echo "  2. ${RAW_MANIFEST_URL}"
+
       - name: Get release notes
         id: notes
         shell: bash
@@ -87,8 +85,24 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
-          releaseName: 'App v__VERSION__'
+          releaseName: "App v__VERSION__"
           releaseBody: ${{ steps.notes.outputs.notes }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Generate proxy updater manifest
+        shell: bash
+        run: |
+          node scripts/generate-proxy-updater-manifest.mjs "src-tauri/target" "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
+
+      - name: Upload proxy updater manifest
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              gh release upload "${GITHUB_REF_NAME}" "$manifest" --clobber
+            fi
+          done < proxy-manifest-paths.txt
