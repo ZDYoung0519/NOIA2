@@ -94,7 +94,7 @@ jobs:
       - name: Generate proxy updater manifest
         shell: bash
         run: |
-          node scripts/generate-proxy-updater-manifest.mjs "src-tauri/target" "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
+          node scripts/generate-proxy-updater-manifest.mjs '${{ steps.tauri-action.outputs.artifactPaths }}' "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
 
       - name: Upload proxy updater manifest
         shell: bash

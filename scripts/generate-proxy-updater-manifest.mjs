@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const targetRoot = process.argv[2] ?? "src-tauri/target";
+const inputArg = process.argv[2] ?? "src-tauri/target";
 const proxyPrefix = process.argv[3] ?? "https://gh-proxy.com/";
 
 async function walk(dir) {
@@ -17,6 +17,57 @@ async function walk(dir) {
   );
 
   return files.flat();
+}
+
+async function resolveLatestFiles(input) {
+  const normalizedInput = String(input).trim();
+
+  try {
+    const parsed = JSON.parse(normalizedInput);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((file) => String(file))
+        .filter(
+          (file) =>
+            path.basename(file) === "latest.json" &&
+            !file.endsWith("latest-proxy.json")
+        );
+    }
+  } catch {
+    // Not a JSON array, fall through to path-based resolution.
+  }
+
+  if (normalizedInput.includes("\n")) {
+    return normalizedInput
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter(
+        (file) =>
+          path.basename(file) === "latest.json" &&
+          !file.endsWith("latest-proxy.json")
+      );
+  }
+
+  const stat = await fs.stat(normalizedInput);
+  if (stat.isDirectory()) {
+    const allFiles = await walk(normalizedInput);
+    return allFiles.filter(
+      (file) =>
+        path.basename(file) === "latest.json" &&
+        !file.endsWith("latest-proxy.json")
+    );
+  }
+
+  if (
+    stat.isFile() &&
+    path.basename(normalizedInput) === "latest.json" &&
+    !normalizedInput.endsWith("latest-proxy.json")
+  ) {
+    return [normalizedInput];
+  }
+
+  return [];
 }
 
 function toProxyUrl(url) {
@@ -48,15 +99,10 @@ function rewriteManifest(manifest) {
 }
 
 async function main() {
-  const allFiles = await walk(targetRoot);
-  const latestFiles = allFiles.filter(
-    (file) =>
-      path.basename(file) === "latest.json" &&
-      !file.endsWith("latest-proxy.json")
-  );
+  const latestFiles = await resolveLatestFiles(inputArg);
 
   if (latestFiles.length === 0) {
-    throw new Error(`No latest.json found under ${targetRoot}`);
+    throw new Error(`No latest.json found from input: ${inputArg}`);
   }
 
   const outputFiles = [];
