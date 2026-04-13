@@ -220,7 +220,7 @@ impl CaptureDispatcher {
                     }
                 }
 
-                let _ = state.unified.process_chunk(&packet.data);
+                // let _ = state.unified.process_chunk(&packet.data);
                 if contains_magic {
                     let _ = state.unified1.process_chunk(&packet.data);
                 }

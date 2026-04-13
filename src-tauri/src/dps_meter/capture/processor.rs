@@ -128,7 +128,7 @@ impl StreamProcessor {
 
         let decompressed_size =
             u32::from_le_bytes([payload[2], payload[3], payload[4], payload[5]]) as usize;
-        if decompressed_size == 0 || decompressed_size > 1_000_000 {
+        if decompressed_size == 0 || decompressed_size > 5_000_000 {
             return;
         }
 
@@ -1044,68 +1044,31 @@ impl StreamProcessor {
             return None;
         }
 
-        let mut offset = pos + 2 + aid_info.length;
-        let unknown_info_1 = read_varint(payload, offset);
-        if !unknown_info_1.is_valid() {
-            return None;
-        }
-        offset += unknown_info_1.length;
-
-        let unknown_info_2 = read_varint(payload, offset);
-        if !unknown_info_2.is_valid() {
-            return None;
-        }
-        offset += unknown_info_2.length;
-
-        if payload.len().saturating_sub(offset) <= 2 {
+        let scan_start = pos + 2 + aid_info.length;
+        let scan_end = payload.len().saturating_sub(3).min(scan_start + 30);
+        let name_off = find_byte_in_range(payload, 0x07, scan_start, scan_end)?;
+        if name_off + 1 >= payload.len() {
             return None;
         }
 
-        // Kotlin searchOtherNickname skips one extra byte before probing multiple
-        // candidate nickname-length alignments.
-        offset += 1;
-        let base = offset;
-
-        let mut actor_name = None;
-        let mut actor_name_end = None;
-        for shift in 0..5usize {
-            let candidate_offset = base + shift;
-            if candidate_offset >= payload.len() {
-                break;
-            }
-
-            let name_length_info = read_varint(payload, candidate_offset);
-            if !name_length_info.is_valid() {
-                continue;
-            }
-
-            let name_start = candidate_offset + name_length_info.length;
-            let Ok(name_len) = usize::try_from(name_length_info.value) else {
-                continue;
-            };
-            if !(1..=71).contains(&name_len) || name_start + name_len > payload.len() {
-                continue;
-            }
-
-            let Ok(candidate_name) = std::str::from_utf8(&payload[name_start..name_start + name_len])
-            else {
-                continue;
-            };
-            let Some(sanitized_name) = sanitize_nickname(candidate_name) else {
-                continue;
-            };
-
-            actor_name = Some(sanitized_name);
-            actor_name_end = Some(name_start + name_len);
-            break;
+        let name_len = payload[name_off + 1] as usize;
+        if !(1..=50).contains(&name_len) {
+            return None;
         }
 
-        let actor_name = actor_name?;
-        let actor_name_end = actor_name_end?;
+        let name_start = name_off + 2;
+        let name_end = name_start + name_len;
+        if name_end > payload.len() {
+            return None;
+        }
 
-        let server_search_start = actor_name_end.saturating_add(1);
-        let sid = find_server_id_near(payload, server_search_start)
-            .or_else(|| find_server_id(payload, actor_name_end));
+        let Ok(candidate_name) = std::str::from_utf8(&payload[name_start..name_end]) else {
+            return None;
+        };
+        let actor_name = sanitize_nickname(candidate_name)?;
+
+        let actor_name_end = name_end;
+        let sid = find_server_id(payload, actor_name_end);
 
         Some((aid_info.value as u32, actor_name, sid))
     }
@@ -1243,8 +1206,17 @@ fn find_server_id(payload: &[u8], name_end: usize) -> Option<u32> {
         }
     }
 
-    let search_end = payload.len().saturating_sub(1).min(name_end + 200);
-    let mut pos = name_end;
+    find_sid_0011(payload, name_end)
+}
+
+fn is_available_server_id(sid: u32) -> bool {
+    (1001..=1018).contains(&sid) || (2001..=2018).contains(&sid)
+}
+
+fn find_sid_0011(payload: &[u8], search_start: usize) -> Option<u32> {
+    let search_end = payload.len().saturating_sub(1).min(search_start + 200);
+    let mut pos = search_start;
+
     while pos < search_end {
         let Some(idx) = find_bytes(payload, pos, &[0x11, 0x11]) else {
             break;
@@ -1262,29 +1234,6 @@ fn find_server_id(payload: &[u8], name_end: usize) -> Option<u32> {
     }
 
     None
-}
-
-fn find_server_id_near(payload: &[u8], start: usize) -> Option<u32> {
-    let end = payload.len().saturating_sub(1).min(start + 12);
-    if start >= end {
-        return None;
-    }
-
-    for offset in start..end {
-        if offset + 2 > payload.len() {
-            break;
-        }
-        let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
-        if is_available_server_id(sid) {
-            return Some(sid);
-        }
-    }
-
-    None
-}
-
-fn is_available_server_id(sid: u32) -> bool {
-    (1001..=1018).contains(&sid) || (2001..=2018).contains(&sid)
 }
 
 fn can_read_varint(data: &[u8], offset: usize) -> bool {

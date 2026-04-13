@@ -111,7 +111,7 @@ const SkillNameCell = memo(function SkillNameCell({
   const iconPath = getSkillIconPath(skillId);
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 max-w-50">
       {iconPath ? (
         <img
           src={iconPath}
@@ -169,18 +169,18 @@ export default function DpsDetailPage() {
         setPayload(event.payload);
       });
 
-      // const unlistenClear = await listen("dps-detail-clear", () => {
-      //   if (!mounted) {
-      //     return;
-      //   }
-      //   setPayload(null);
-      // });
+      const unlistenClear = await listen("dps-detail-clear", () => {
+        if (!mounted) {
+          return;
+        }
+        setPayload(null);
+      });
 
       await emit("dps-detail-request");
 
       return () => {
         unlistenUpdate();
-        // unlistenClear();
+        unlistenClear();
       };
     };
 
@@ -337,15 +337,15 @@ export default function DpsDetailPage() {
               }}
             />
             <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-              <span className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
+              <span className="truncate text-sm font-semibold tracking-[0.18em] text-slate-100 uppercase">
                 {actorName}
               </span>
-              <span className="text-xs text-slate-400">[{actorServerName}]</span>
+              <span className="text-sm text-slate-400">[{actorServerName}]</span>
             </div>
           </div>
         }
         rightActions={
-          <div className="mr-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold tracking-[0.18em] text-slate-300 uppercase">
+          <div className="mr-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm font-semibold tracking-[0.18em] text-slate-300 uppercase">
             {payload?.mode === "history" ? t("dps.detail.modeHistory") : t("dps.detail.modeLive")}
           </div>
         }
@@ -358,14 +358,14 @@ export default function DpsDetailPage() {
         style={{ zoom: dpsAppearance.scaleFactor }}
       >
         <section
-          className="rounded-lg border border-white/10 p-3"
+          className="rounded-lg  p-0"
           style={{ backgroundColor: panelBackground }}
         >
           {payload && actorInfo && targetInfo && summary ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs tracking-[0.16em] text-slate-400 uppercase">
+                  <div className="text-sm tracking-[0.16em] text-slate-400 uppercase">
                     {t("dps.detail.target")}
                   </div>
                   <div className="mt-1 truncate text-sm font-semibold text-slate-100">
@@ -373,7 +373,7 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs tracking-[0.16em] text-slate-400 uppercase">
+                  <div className="text-sm tracking-[0.16em] text-slate-400 uppercase">
                     {t("dps.detail.player")}
                   </div>
                   <div className="mt-1 truncate text-sm font-semibold text-slate-100">
@@ -384,7 +384,7 @@ export default function DpsDetailPage() {
 
               <div className="grid grid-cols-4 gap-2">
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.damage")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-100">
@@ -392,13 +392,13 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.dps")}</div>
+                  <div className="text-sm text-slate-400 uppercase">{t("dps.detail.dps")}</div>
                   <div className="mt-1 text-sm font-semibold text-emerald-300">
                     {Math.floor(summary.dps).toLocaleString()}
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.fight")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-100">
@@ -406,26 +406,26 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.hits")}</div>
+                  <div className="text-sm text-slate-400 uppercase">{t("dps.detail.hits")}</div>
                   <div className="mt-1 text-sm font-semibold text-slate-100">
                     {summary.totalHits}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-6 gap-2">
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.critical")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-rose-300">{summary.critRate}</div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.back")}</div>
+                  <div className="text-sm text-slate-400 uppercase">{t("dps.detail.back")}</div>
                   <div className="mt-1 text-sm font-semibold text-cyan-300">{summary.backRate}</div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.double")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-yellow-300">
@@ -433,7 +433,7 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.perfect")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-emerald-300">
@@ -441,7 +441,7 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.parry")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-300">
@@ -449,7 +449,7 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
+                  <div className="text-sm text-slate-400 uppercase">
                     {t("dps.detail.multi")}
                   </div>
                   <div className="mt-1 text-sm font-semibold text-rose-200">
@@ -469,14 +469,12 @@ export default function DpsDetailPage() {
           className="overflow-hidden rounded-lg border border-white/10"
           style={{ backgroundColor: panelBackground }}
         >
-          <div className="border-b border-white/10 px-3 py-2 text-xs font-semibold tracking-[0.18em] text-slate-300 uppercase">
-            {t("dps.detail.skills")}
-          </div>
+
 
           {skillRows.length > 0 ? (
             <div className="overflow-x-auto overflow-y-visible [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-track]:bg-transparent">
-              <div className="min-w-[1200px]">
-                <div className="grid grid-cols-[minmax(180px,1.6fr)_0.8fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/10 px-3 py-2 text-xs tracking-[0.16em] text-slate-400 uppercase">
+              <div className="min-w-[1000px]">
+                <div className="grid grid-cols-[minmax(180px,0.2fr)_0.2fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/10 px-3 py-2 text-sm tracking-[0.16em] text-slate-400 uppercase">
                   <span>{t("dps.detail.skill")}</span>
                   <span className="text-right">Spec</span>
                   <span className="text-right">{t("dps.detail.count")}</span>
@@ -520,7 +518,7 @@ export default function DpsDetailPage() {
                     <div
                       key={row.skillId}
                       className={cn(
-                        "grid grid-cols-[minmax(180px,1.6fr)_0.8fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-xs",
+                        "h-8 grid grid-cols-[minmax(180px,0.2fr)_0.2fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-sm",
                         "hover:bg-white/[0.04]"
                       )}
                     >
