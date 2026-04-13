@@ -1,177 +1,163 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WindowFrame } from "@/components/window-frame";
-import { MainTitleBar } from "@/components/main-title-bar";
-import { UpdaterDialog } from "@/components/updater-dialog";
-import { registerShortcut } from "@/lib/shortcut";
-import { toggleWindow, createWindow } from "@/lib/window";
-import { useAppTranslation } from "@/hooks/use-app-translation";
+import { TitleBar } from "@/components/title-bar";
 import { useAppSettings } from "@/hooks/use-app-settings";
 
-export default function HomePage() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-  const { t } = useAppTranslation();
-  const { settings, saveSettings } = useAppSettings();
-  const mainShortcut = settings.shortcuts.showMain;
-  const dpsShortcut = settings.shortcuts.showDps;
+type DpsLogEvent = {
+  level: string;
+  message: string;
+  line: string;
+  timestamp: number;
+};
+
+const hexToRgba = (hex: string, alphaPercent: number) => {
+  const safeHex = hex.replace("#", "");
+  const normalizedHex =
+    safeHex.length === 3
+      ? safeHex
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : safeHex;
+
+  const r = parseInt(normalizedHex.slice(0, 2), 16);
+  const g = parseInt(normalizedHex.slice(2, 4), 16);
+  const b = parseInt(normalizedHex.slice(4, 6), 16);
+  const alpha = Math.min(100, Math.max(0, alphaPercent)) / 100;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const darkenHex = (hex: string, amount: number) => {
+  const safeHex = hex.replace("#", "");
+  const normalizedHex =
+    safeHex.length === 3
+      ? safeHex
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : safeHex;
+
+  const clamp = (value: number) => Math.max(0, Math.min(255, value));
+  const r = clamp(parseInt(normalizedHex.slice(0, 2), 16) - amount);
+  const g = clamp(parseInt(normalizedHex.slice(2, 4), 16) - amount);
+  const b = clamp(parseInt(normalizedHex.slice(4, 6), 16) - amount);
+
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
+    .toString(16)
+    .padStart(2, "0")}`;
+};
+
+export default function DpsLogPage() {
+  const { settings } = useAppSettings();
+  const dpsAppearance = settings.appearance.dpsWindow;
+  const [lines, setLines] = useState<DpsLogEvent[]>([]);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const unlistenShortcutChanged = listen<{ shortcut: string }>(
-      "shortcut-changed",
-      async (event) => {
-        const newShortcut = event.payload.shortcut;
-        await saveSettings({
-          shortcuts: {
-            showMain: newShortcut,
-          },
-        });
-        if (newShortcut) {
-          await registerShortcut(newShortcut, async () => {
-            await toggleWindow("main");
-          });
+    let mounted = true;
+    let unlisten: null | (() => void) = null;
+
+    const setup = async () => {
+      unlisten = await listen<DpsLogEvent>("dps-logger", (event) => {
+        if (!mounted) {
+          return;
         }
-      }
-    );
 
-    const initTrayMenu = async () => {
-      try {
-        await invoke("update_tray_menu", {
-          showText: t("tray.show"),
-          quitText: t("tray.quit"),
+        setLines((current) => {
+          const next = [...current, event.payload];
+          return next.slice(-300);
         });
-      } catch (error) {
-        console.error("Failed to initialize tray menu:", error);
-      }
+      });
     };
-    void initTrayMenu();
 
-    const initShortcut = async () => {
-      if (mainShortcut) {
-        await registerShortcut(mainShortcut, async () => {
-          await toggleWindow("main");
-        });
-      }
-
-      if (dpsShortcut) {
-        await registerShortcut(dpsShortcut, async () => {
-          const existingWindow = await WebviewWindow.getByLabel("dps");
-          if (existingWindow) {
-            await toggleWindow("dps");
-            return;
-          }
-
-          await createWindow("dps", {
-            title: t("dps.title"),
-            url: "/dps",
-            width: 100,
-            height: 400,
-            resizable: true,
-            maximizable: false,
-            minimizable: false,
-            decorations: false,
-            transparent: true,
-            shadow: false,
-            alwaysOnTop: true,
-          });
-        });
-      }
-    };
-    void initShortcut();
+    void setup();
 
     return () => {
-      unlistenShortcutChanged.then((fn) => fn());
+      mounted = false;
+      unlisten?.();
     };
-  }, [dpsShortcut, mainShortcut, saveSettings, t]);
+  }, []);
 
-  async function greet() {
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    viewport.scrollTop = viewport.scrollHeight;
+  }, [lines]);
 
-  const handleOpenDps = async () => {
-    await createWindow("dps", {
-      title: t("dps.title"),
-      url: "/dps",
-      width: 100,
-      height: 400,
-      resizable: true,
-      maximizable: false,
-      minimizable: false,
-      decorations: false,
-      transparent: true,
-      shadow: false,
-      alwaysOnTop: true,
-    });
-  };
+  const shellBackground = useMemo(
+    () => hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity),
+    [dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity]
+  );
+  const titleBarBackground = useMemo(
+    () =>
+      hexToRgba(
+        darkenHex(dpsAppearance.backgroundColor, 22),
+        Math.min(100, dpsAppearance.backgroundOpacity + 18)
+      ),
+    [dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity]
+  );
+  const panelBackground = useMemo(
+    () => hexToRgba(dpsAppearance.panelColor, dpsAppearance.panelOpacity),
+    [dpsAppearance.panelColor, dpsAppearance.panelOpacity]
+  );
 
   return (
-    <WindowFrame
-      titleBar={<MainTitleBar />}
-      contentClassName="container mx-auto flex flex-1 flex-col items-center justify-center gap-8 overflow-hidden p-8"
+    <div
+      className="flex h-screen w-screen flex-col overflow-hidden rounded-lg border border-white/10 text-slate-100"
+      style={{ backgroundColor: shellBackground }}
     >
-      <UpdaterDialog />
+      <TitleBar
+        title=""
+        showMaximize={false}
+        leftActions={
+          <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
+            <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+              <span className="text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
+                DPS Log
+              </span>
+            </div>
+          </div>
+        }
+        className="border-white/10"
+        style={{ backgroundColor: titleBarBackground }}
+      />
 
-      <div className="flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold tracking-tight">{t("app.welcome")}</h1>
-        <p className="text-muted-foreground">{t("app.description")}</p>
+      <div
+        ref={viewportRef}
+        className="flex-1 overflow-y-auto p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-track]:bg-transparent"
+        style={{ backgroundColor: panelBackground, zoom: dpsAppearance.scaleFactor }}
+      >
+        <div className="space-y-1 font-mono text-xs">
+          {lines.length > 0 ? (
+            lines.map((entry, index) => (
+              <div
+                key={`${entry.timestamp}-${index}`}
+                className="rounded border border-white/8 bg-black/10 px-2 py-1 text-slate-200"
+              >
+                <span
+                  className={
+                    entry.level === "ERROR"
+                      ? "text-rose-300"
+                      : entry.level === "DEBUG"
+                        ? "text-cyan-300"
+                        : "text-emerald-300"
+                  }
+                >
+                  {entry.line}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="flex min-h-24 items-center justify-center rounded border border-dashed border-white/10 bg-white/[0.03] text-xs text-slate-400">
+              Waiting for log output
+            </div>
+          )}
+        </div>
       </div>
-
-      <div className="flex items-center gap-8">
-        <a
-          href="https://github.com/ZDYoung0519/NOIA2"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="transition-transform hover:scale-110"
-        >
-          <img src="icon.png" className="h-50 w-50" alt="Vite logo" />
-        </a>
-      </div>
-
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t("greet.title")}</CardTitle>
-          <CardDescription>{t("greet.description")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void greet();
-            }}
-          >
-            <Input
-              id="greet-input"
-              value={name}
-              onChange={(e) => setName(e.currentTarget.value)}
-              placeholder={t("greet.placeholder")}
-              className="flex-1"
-            />
-            <Button type="submit">{t("greet.button")}</Button>
-          </form>
-          {greetMsg && <p className="bg-muted mt-4 rounded-md p-3 text-sm">{greetMsg}</p>}
-        </CardContent>
-      </Card>
-
-      <Button onClick={handleOpenDps}>{t("app.openDps")}</Button>
-
-      <div className="text-muted-foreground flex flex-wrap justify-center gap-4 text-sm">
-        <span>React 19</span>
-        <span>•</span>
-        <span>TypeScript</span>
-        <span>•</span>
-        <span>Tailwind CSS v4</span>
-        <span>•</span>
-        <span>shadcn/ui</span>
-        <span>•</span>
-        <span>Tauri v2</span>
-      </div>
-    </WindowFrame>
+    </div>
   );
 }

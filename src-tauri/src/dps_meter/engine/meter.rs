@@ -42,7 +42,7 @@ impl DpsMeter {
     pub fn new(app: AppHandle) -> Self {
         let config = Arc::new(RwLock::new(DpsMeterConfig::default()));
         let logger = Arc::new(DpsLogger::new(&app, false));
-        let data_storage = Arc::new(DataStorage::new(Arc::clone(&config), Arc::clone(&logger)));
+        let data_storage = Arc::new(DataStorage::new(app.clone(), Arc::clone(&config)));
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
         let packet_channel = Channel::new(2000);

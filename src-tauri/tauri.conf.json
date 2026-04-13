@@ -25,6 +25,22 @@
   "app": {
     "windows": [
       {
+        "label": "splash",
+        "title": "noia2-app",
+        "url": "/splash",
+        "width": 500,
+        "height": 350,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "closable": false,
+        "center": true,
+        "alwaysOnTop": true,
+        "visible": true
+      },
+      {
         "label": "main",
         "title": "noia2 永恒诺亚",
         "width": 1440,
@@ -33,7 +49,7 @@
         "transparent": true,
         "center": true,
         "shadow": true,
-        "visible": true
+        "visible": false
       }
     ],
     "security": {

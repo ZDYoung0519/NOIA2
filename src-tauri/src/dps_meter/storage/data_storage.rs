@@ -1,8 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::RwLock;
 
+use serde::Serialize;
+use tauri::{AppHandle, Emitter};
+
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
-use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::models::combat::{SkillRecord, SkillStats};
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
@@ -28,20 +30,27 @@ struct DataStorageInner {
 }
 
 pub struct DataStorage {
+    app: AppHandle,
     inner: RwLock<DataStorageInner>,
     config: SharedDpsMeterConfig,
-    logger: std::sync::Arc<DpsLogger>,
     healing_skill_codes: HashSet<u32>,
     boss_code_list: HashSet<u32>,
     mob_code_name_map: HashMap<u32, String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MainActorDetectedPayload {
+    pub actor_id: u32,
+    pub actor_name: String,
+}
+
 impl DataStorage {
-    pub fn new(config: SharedDpsMeterConfig, logger: std::sync::Arc<DpsLogger>) -> Self {
+    pub fn new(app: AppHandle, config: SharedDpsMeterConfig) -> Self {
         Self {
+            app,
             inner: RwLock::new(DataStorageInner::default()),
             config,
-            logger,
             healing_skill_codes: load_healing_skill_codes(),
             boss_code_list: load_boss_ids(),
             mob_code_name_map: load_npc_names(),
@@ -232,8 +241,15 @@ impl DataStorage {
         let mut inner = self.inner.write().unwrap();
         inner.main_actor_id = Some(actor_id);
         inner.main_actor_name = Some(actor_name.to_string());
-        self.logger
-            .info(format!("main actor updated: {actor_name} ({actor_id})"));
+
+        let _ = self.app.emit(
+            "dps-main-actor-detected",
+            MainActorDetectedPayload {
+                actor_id,
+                actor_name: actor_name.to_string(),
+            },
+        );
+
     }
 
     pub fn get_dps_stats_snapshot(&self) -> HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>> {

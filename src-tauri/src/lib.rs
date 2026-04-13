@@ -1,6 +1,8 @@
 mod dps_meter;
 mod plugins;
 
+use std::thread;
+use std::time::Duration;
 use tauri::Manager;
 use tauri_plugin_window_state::StateFlags;
 
@@ -37,16 +39,6 @@ pub fn run() {
         )
         .plugin(plugins::system_tray::init())
         .plugin(plugins::window_tracking::init())
-        .setup(|app| {
-            let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
-            app.manage(meter);
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.unminimize();
-                let _ = window.set_focus();
-            }
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![
             greet,
             update_tray_menu,
@@ -60,11 +52,25 @@ pub fn run() {
             plugins::window_tracking::ensure_tracked_window,
             plugins::window_tracking::resize_window,
             plugins::window_tracking::get_window_size
-        ]);
+        ])
+        .setup(|app| {
+            // Temporary delay to preview the startup loading screen.
+            thread::sleep(Duration::from_secs(5));
+            let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
+            app.manage(meter);
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+            if let Some(window) = app.get_webview_window("splash") {
+                let _ = window.close();
+            }
+            Ok(())
+        });
 
     #[cfg(not(debug_assertions))]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
-
     builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

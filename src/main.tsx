@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./index.css";
 import "./i18n";
 import { MainShell } from "./components/main-shell";
-
+import Splash from "./Splash";
 import HomePage from "./pages/home";
 import DpsViewPage from "./pages/dps_view";
 import CharacterScorePage from "./pages/character_score";
@@ -29,13 +29,13 @@ const standalonePageMap = {
   "/dps_log": DpsLogPage,
   "/about": AboutPage,
   "/settings": SettingsPage,
+  "/splash": Splash,
 };
 
 function AppWrapper() {
   const [pathname, setPathname] = React.useState(window.location.pathname);
 
   useEffect(() => {
-    // Show window after React is ready
     getCurrentWindow().show();
 
     const handlePopState = () => {
@@ -48,16 +48,18 @@ function AppWrapper() {
     };
   }, []);
 
-  const ShellPageComponent =
-    shellPageMap[pathname as keyof typeof shellPageMap] ?? null;
   const StandalonePageComponent =
     standalonePageMap[pathname as keyof typeof standalonePageMap] ?? null;
 
   if (StandalonePageComponent) {
-    return <StandalonePageComponent />;
+    return (
+      <Suspense fallback={null}>
+        <StandalonePageComponent />
+      </Suspense>
+    );
   }
 
-  const InnerPage = ShellPageComponent ?? HomePage;
+  const InnerPage = shellPageMap[pathname as keyof typeof shellPageMap] ?? HomePage;
   return (
     <MainShell>
       <InnerPage />
@@ -67,8 +69,6 @@ function AppWrapper() {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <Suspense fallback={null}>
-      <AppWrapper />
-    </Suspense>
+    <AppWrapper />
   </React.StrictMode>
 );

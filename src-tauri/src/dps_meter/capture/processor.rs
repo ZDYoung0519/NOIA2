@@ -203,8 +203,8 @@ impl StreamProcessor {
         }
 
         self.parse_4036(packet);
-        self.parse_3336(packet);
-        self.parse_4436_optimized(packet);
+        self.parse_3336(packet); // main actor
+        self.parse_4436_optimized(packet); // otehr
         false
     }
 
@@ -620,7 +620,7 @@ impl StreamProcessor {
 
         self.data_storage
             .append_summon(owner_info.value as u32, summon_info.value as u32);
-        self.logger.debug(format!(
+        self.logger.info(format!(
             "[{}] summon ownership owner={} summon={}",
             self.port,
             owner_info.value,
@@ -677,7 +677,7 @@ impl StreamProcessor {
 
         if let Some(mob_code) = mob_type_id {
             self.data_storage.append_mob(real_actor_id, mob_code);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] summon spawn target={} mob_code={}",
                 self.port, real_actor_id, mob_code
             ));
@@ -688,9 +688,18 @@ impl StreamProcessor {
             return found_something;
         }
 
+        if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.info(format!(
+                "[{}] summon kotlin owner={} summon={}",
+                self.port, owner_id, real_actor_id
+            ));
+            return true;
+        }
+
         if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] summon fallback le32 owner={} summon={}",
                 self.port, owner_id, real_actor_id
             ));
@@ -699,7 +708,7 @@ impl StreamProcessor {
 
         if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] summon fallback marker owner={} summon={}",
                 self.port, owner_id, real_actor_id
             ));
@@ -707,6 +716,38 @@ impl StreamProcessor {
         }
 
         found_something
+    }
+
+    fn extract_summon_owner_kotlin_style(
+        &self,
+        packet: &[u8],
+        summon_id: u32,
+    ) -> Option<u32> {
+        let key_idx = find_bytes(packet, 0, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])?;
+        let after_packet_start = key_idx + 8;
+        if after_packet_start >= packet.len() {
+            return None;
+        }
+
+        let opcode_relative_idx = find_bytes(packet, after_packet_start, &[0x07, 0x02, 0x06])?;
+        let owner_offset = opcode_relative_idx + 11;
+        if owner_offset + 2 > packet.len() {
+            return None;
+        }
+
+        let owner_id =
+            u16::from_le_bytes([packet[owner_offset], packet[owner_offset + 1]]) as u32;
+        if !(100..=999_999).contains(&owner_id) {
+            return None;
+        }
+        if owner_id == summon_id
+            || self.data_storage.has_summon_owner(owner_id)
+            || self.data_storage.has_mob(owner_id)
+        {
+            return None;
+        }
+
+        Some(owner_id)
     }
 
     fn scan_for_embedded_048d(&mut self, data: &[u8]) -> bool {
@@ -804,7 +845,7 @@ impl StreamProcessor {
 
             self.data_storage.append_summon(owner_id, summon_id);
             self.data_storage.append_actor(owner_id, &sanitized_name, None);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] embedded 04 8D owner={} summon={} owner_name={}",
                 self.port, owner_id, summon_id, sanitized_name
             ));
@@ -888,10 +929,23 @@ impl StreamProcessor {
                 | ((payload[boss_pos + 1] as u32) << 8)
                 | ((payload[boss_pos + 2] as u32) << 16);
             self.data_storage.append_mob(aid_info.value as u32, boss_id);
-            self.logger.debug(format!(
-                "[{}] mob actor={} mob_code={}",
-                self.port, aid_info.value, boss_id
-            ));
+            if self.data_storage.boss_code_list_snapshot().contains(&boss_id) {
+                let boss_name = self
+                    .data_storage
+                    .mob_code_name_snapshot()
+                    .get(&boss_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown Boss".to_string());
+                self.logger.info(format!(
+                    "[{}] boss actor={} mob_code={} name={}",
+                    self.port, aid_info.value, boss_id, boss_name
+                ));
+            } else {
+                self.logger.info(format!(
+                    "[{}] mob actor={} mob_code={}",
+                    self.port, aid_info.value, boss_id
+                ));
+            }
             idx = boss_pos + 3;
         }
     }
@@ -943,7 +997,7 @@ impl StreamProcessor {
                 .append_actor(aid_info.value as u32, name, Some(&sid.to_string()));
             self.data_storage
                 .set_main_actor(aid_info.value as u32, name);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] main actor actor={} name={} sid={}",
                 self.port, aid_info.value, name, sid
             ));
@@ -957,56 +1011,103 @@ impl StreamProcessor {
             let Some(pos) = find_bytes(payload, idx, &[0x44, 0x36]) else {
                 break;
             };
-            let aid_info = read_varint(payload, pos + 2);
-            if !aid_info.is_valid() || aid_info.value <= 0 {
-                idx = pos + 1;
-                continue;
-            }
-
-            let scan_start = pos + 2 + aid_info.length;
-            let scan_end = payload.len().min(scan_start + 30);
-            let Some(name_off) = find_byte_in_range(payload, 0x07, scan_start, scan_end) else {
-                idx = pos + 1;
-                continue;
-            };
-            if name_off + 1 >= payload.len() {
-                idx = pos + 1;
-                continue;
-            }
-
-            let name_len = payload[name_off + 1] as usize;
-            let name_end = name_off + 2 + name_len;
-            if !(1..=50).contains(&name_len) || name_end > payload.len() {
-                idx = pos + 1;
-                continue;
-            }
-
-            let Ok(name) = std::str::from_utf8(&payload[name_off + 2..name_end]) else {
+            let Some((actor_id, name, sid)) = self.extract_4436_actor(payload, pos) else {
                 idx = pos + 1;
                 continue;
             };
 
-            let sid = find_server_id(payload, name_end);
             match sid {
                 Some(sid) => {
                     let sid_string = sid.to_string();
                     self.data_storage
-                        .append_actor(aid_info.value as u32, name, Some(&sid_string));
-                    self.logger.debug(format!(
+                        .append_actor(actor_id, &name, Some(&sid_string));
+                    self.logger.info(format!(
                         "[{}] actor actor={} name={} sid={}",
-                        self.port, aid_info.value, name, sid
+                        self.port, actor_id, name, sid
                     ));
                 }
                 None => {
-                    self.data_storage.append_actor(aid_info.value as u32, name, None);
-                    self.logger.debug(format!(
+                    self.data_storage.append_actor(actor_id, &name, None);
+                    self.logger.info(format!(
                         "[{}] actor actor={} name={} sid=none",
-                        self.port, aid_info.value, name
+                        self.port, actor_id, name
                     ));
                 }
             }
             idx = pos + 1;
         }
+    }
+
+    fn extract_4436_actor(&self, payload: &[u8], pos: usize) -> Option<(u32, String, Option<u32>)> {
+        let aid_info = read_varint(payload, pos + 2);
+        if !aid_info.is_valid() || aid_info.value <= 0 {
+            return None;
+        }
+
+        let mut offset = pos + 2 + aid_info.length;
+        let unknown_info_1 = read_varint(payload, offset);
+        if !unknown_info_1.is_valid() {
+            return None;
+        }
+        offset += unknown_info_1.length;
+
+        let unknown_info_2 = read_varint(payload, offset);
+        if !unknown_info_2.is_valid() {
+            return None;
+        }
+        offset += unknown_info_2.length;
+
+        if payload.len().saturating_sub(offset) <= 2 {
+            return None;
+        }
+
+        // Kotlin searchOtherNickname skips one extra byte before probing multiple
+        // candidate nickname-length alignments.
+        offset += 1;
+        let base = offset;
+
+        let mut actor_name = None;
+        let mut actor_name_end = None;
+        for shift in 0..5usize {
+            let candidate_offset = base + shift;
+            if candidate_offset >= payload.len() {
+                break;
+            }
+
+            let name_length_info = read_varint(payload, candidate_offset);
+            if !name_length_info.is_valid() {
+                continue;
+            }
+
+            let name_start = candidate_offset + name_length_info.length;
+            let Ok(name_len) = usize::try_from(name_length_info.value) else {
+                continue;
+            };
+            if !(1..=71).contains(&name_len) || name_start + name_len > payload.len() {
+                continue;
+            }
+
+            let Ok(candidate_name) = std::str::from_utf8(&payload[name_start..name_start + name_len])
+            else {
+                continue;
+            };
+            let Some(sanitized_name) = sanitize_nickname(candidate_name) else {
+                continue;
+            };
+
+            actor_name = Some(sanitized_name);
+            actor_name_end = Some(name_start + name_len);
+            break;
+        }
+
+        let actor_name = actor_name?;
+        let actor_name_end = actor_name_end?;
+
+        let server_search_start = actor_name_end.saturating_add(1);
+        let sid = find_server_id_near(payload, server_search_start)
+            .or_else(|| find_server_id(payload, actor_name_end));
+
+        Some((aid_info.value as u32, actor_name, sid))
     }
 }
 
@@ -1158,6 +1259,25 @@ fn find_server_id(payload: &[u8], name_end: usize) -> Option<u32> {
             }
         }
         pos = idx + 2;
+    }
+
+    None
+}
+
+fn find_server_id_near(payload: &[u8], start: usize) -> Option<u32> {
+    let end = payload.len().saturating_sub(1).min(start + 12);
+    if start >= end {
+        return None;
+    }
+
+    for offset in start..end {
+        if offset + 2 > payload.len() {
+            break;
+        }
+        let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
+        if is_available_server_id(sid) {
+            return Some(sid);
+        }
     }
 
     None
