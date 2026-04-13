@@ -54,9 +54,9 @@ const transactions = [
 ];
 
 const quickActions = [
-  { label: "Top up", icon: Plus },
-  { label: "Pay", icon: ArrowUp },
-  { label: "Send", icon: ArrowUp },
+  { label: "Dps水表", icon: Plus },
+  { label: "角色评分", icon: ArrowUp },
+  { label: "", icon: ArrowUp },
   { label: "Report", icon: FileText },
 ];
 
