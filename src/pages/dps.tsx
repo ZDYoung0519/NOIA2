@@ -412,8 +412,11 @@ export default function DpsPage() {
   const unlistenSnapshotRef = useRef<null | (() => void)>(null);
   const unlistenStatusRef = useRef<null | (() => void)>(null);
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
+  const unlistenMainActorDetectedRef = useRef<null | (() => void)>(null);
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
+  const latestResetHandlerRef = useRef<(() => Promise<void>) | null>(null);
+  const mainActorResetTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -480,7 +483,30 @@ export default function DpsPage() {
             setCurrentPlayer(null);
             detailPayloadRef.current = null;
             void emit("dps-detail-clear");
+            if (mainActorResetTimerRef.current !== null) {
+              window.clearTimeout(mainActorResetTimerRef.current);
+              mainActorResetTimerRef.current = null;
+            }
           }
+        });
+
+        unlistenMainActorDetectedRef.current = await listen<{
+          actorId: number;
+          actorName: string;
+          sid?: string | null;
+        }>("dps-main-actor-detected", () => {
+          if (!mounted) {
+            return;
+          }
+
+          if (mainActorResetTimerRef.current !== null) {
+            window.clearTimeout(mainActorResetTimerRef.current);
+          }
+
+          mainActorResetTimerRef.current = window.setTimeout(() => {
+            mainActorResetTimerRef.current = null;
+            void latestResetHandlerRef.current?.();
+          }, 10_000);
         });
 
         const unlistenDetailRequest = await listen("dps-detail-request", async () => {
@@ -492,6 +518,8 @@ export default function DpsPage() {
         const previousUnlistenStatus = unlistenStatusRef.current;
         unlistenStatusRef.current = () => {
           previousUnlistenStatus?.();
+          unlistenMainActorDetectedRef.current?.();
+          unlistenMainActorDetectedRef.current = null;
           unlistenDetailRequest();
         };
       } catch (error) {
@@ -514,6 +542,14 @@ export default function DpsPage() {
       if (unlistenMemoryRef.current) {
         void unlistenMemoryRef.current();
         unlistenMemoryRef.current = null;
+      }
+      if (unlistenMainActorDetectedRef.current) {
+        void unlistenMainActorDetectedRef.current();
+        unlistenMainActorDetectedRef.current = null;
+      }
+      if (mainActorResetTimerRef.current !== null) {
+        window.clearTimeout(mainActorResetTimerRef.current);
+        mainActorResetTimerRef.current = null;
       }
     };
   }, []);
@@ -953,6 +989,11 @@ export default function DpsPage() {
 
   const handleReset = useCallback(async () => {
     try {
+      if (mainActorResetTimerRef.current !== null) {
+        window.clearTimeout(mainActorResetTimerRef.current);
+        mainActorResetTimerRef.current = null;
+      }
+
       const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
       persistHistoryRecords(historyToPersist);
 
@@ -973,6 +1014,10 @@ export default function DpsPage() {
       console.error("reset dps meter failed:", error);
     }
   }, [resizeWindow, snapshot]);
+
+  useEffect(() => {
+    latestResetHandlerRef.current = handleReset;
+  }, [handleReset]);
 
   const handlePlayerClick = useCallback(
     async (playerId: number) => {

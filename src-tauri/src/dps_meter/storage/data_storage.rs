@@ -43,6 +43,7 @@ pub struct DataStorage {
 pub struct MainActorDetectedPayload {
     pub actor_id: u32,
     pub actor_name: String,
+    pub sid: Option<String>,
 }
 
 impl DataStorage {
@@ -241,12 +242,14 @@ impl DataStorage {
         let mut inner = self.inner.write().unwrap();
         inner.main_actor_id = Some(actor_id);
         inner.main_actor_name = Some(actor_name.to_string());
+        let sid = inner.actor_id_server_map.get(&actor_id).cloned();
 
         let _ = self.app.emit(
             "dps-main-actor-detected",
             MainActorDetectedPayload {
                 actor_id,
                 actor_name: actor_name.to_string(),
+                sid,
             },
         );
 
