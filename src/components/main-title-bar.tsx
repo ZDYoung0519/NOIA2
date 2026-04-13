@@ -1,4 +1,4 @@
-import { Moon, Sun, Info, Settings } from "lucide-react";
+import { Moon, Sun, Settings } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { createWindow } from "@/lib/window";
 import { TitleBar } from "@/components/title-bar";
@@ -11,23 +11,6 @@ export function MainTitleBar() {
 
   const handleToggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const handleOpenAbout = async () => {
-    await createWindow("about", {
-      title: t("about.title"),
-      url: "/about",
-      width: 500,
-      height: 400,
-      resizable: false,
-      maximizable: false,
-      minimizable: false,
-      decorations: false,
-      transparent: true,
-      shadow: false,
-      alwaysOnTop: true,
-      parent: "main",
-    });
   };
 
   const handleOpenSettings = async () => {
@@ -58,15 +41,6 @@ export function MainTitleBar() {
             tabIndex={-1}
           >
             <Settings className="h-4 w-4" />
-          </button>
-
-          <button
-            onClick={handleOpenAbout}
-            className="title-bar-btn mr-1"
-            aria-label={t("about.button")}
-            tabIndex={-1}
-          >
-            <Info className="h-4 w-4" />
           </button>
 
           <LanguageToggle />

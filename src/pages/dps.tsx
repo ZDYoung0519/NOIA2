@@ -18,7 +18,7 @@ import {
   Settings2
 } from "lucide-react";
 
-import { MemoizedDpsPanel } from "@/components/dps/DpsPannel";
+import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { TitleBar } from "@/components/title-bar";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
@@ -518,7 +518,7 @@ export default function DpsPage() {
           mainActorResetTimerRef.current = window.setTimeout(() => {
             mainActorResetTimerRef.current = null;
             void latestResetHandlerRef.current?.();
-          }, 10_000);
+          }, 1_000);
         });
 
         const unlistenDetailRequest = await listen("dps-detail-request", async () => {

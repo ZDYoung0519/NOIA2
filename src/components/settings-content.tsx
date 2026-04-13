@@ -1,19 +1,34 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { emit } from "@tauri-apps/api/event";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import {
+  Activity,
+  Github,
+  Info,
+  Keyboard,
+  Monitor,
+  Moon,
+  Palette,
+  RefreshCw,
+  Sun,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ShortcutInput } from "@/components/shortcut-input";
-import { Moon, Sun, Monitor, Palette, Keyboard, Activity } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import { useAppTranslation } from "@/hooks/use-app-translation";
+import { useManualUpdateCheck } from "@/components/updater-dialog";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
 import { toggleWindow } from "@/lib/window";
-import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
-import { useAppTranslation } from "@/hooks/use-app-translation";
-import { useAppSettings } from "@/hooks/use-app-settings";
-import { MemoizedDpsPanel } from "@/components/dps/DpsPannel";
+import { cn } from "@/lib/utils";
+import packageJson from "../../package.json";
 
 const hexToRgba = (hex: string, alphaPercent: number) => {
   const safeHex = hex.replace("#", "");
@@ -30,18 +45,86 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${Math.min(100, Math.max(0, alphaPercent)) / 100})`;
 };
 
-type SettingSection = "appearance" | "shortcut" | "dps";
+type SettingSection = "appearance" | "shortcut" | "dps" | "about";
+
+const techVersions = {
+  tauri: packageJson.dependencies["@tauri-apps/api"].replace(/^\^/, "v"),
+  react: packageJson.dependencies.react.replace(/^\^/, "v"),
+  typescript: packageJson.devDependencies.typescript.replace(/^~/, "v"),
+};
+
+function SettingsSectionHeader({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+    </div>
+  );
+}
+
+function SettingsGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {title}
+      </h3>
+      <div className="divide-border overflow-hidden rounded-2xl border bg-background/50 backdrop-blur-sm divide-y">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SettingsRow({
+  label,
+  description,
+  control,
+}: {
+  label: string;
+  description?: string;
+  control: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[72px] items-center justify-between gap-6 px-5 py-4">
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium">{label}</div>
+        {description ? (
+          <div className="text-muted-foreground mt-1 text-xs leading-5">{description}</div>
+        ) : null}
+      </div>
+      <div className="shrink-0">{control}</div>
+    </div>
+  );
+}
 
 export function SettingsContent() {
   const [activeSection, setActiveSection] = useState<SettingSection>("appearance");
+  const [appVersion, setAppVersion] = useState("");
   const { t } = useAppTranslation();
   const { theme, setTheme } = useTheme();
   const { settings, saveSettings } = useAppSettings();
+  const { checkUpdate, checking, showNoUpdate } = useManualUpdateCheck();
   const dpsAppearance = settings.appearance.dpsWindow;
   const mainAppearance = settings.appearance.mainWindow;
   const showMainShortcut = settings.shortcuts.showMain;
   const showDpsShortcut = settings.shortcuts.showDps;
   const resetDpsShortcut = settings.shortcuts.resetDps;
+
+  useEffect(() => {
+    void getVersion().then(setAppVersion);
+  }, []);
 
   const previewCombatInfos = useMemo(
     () => ({
@@ -177,6 +260,10 @@ export function SettingsContent() {
     });
   };
 
+  const handleOpenGithub = async () => {
+    await openUrl("https://github.com/kitlib/tauri-app-template");
+  };
+
   const menuItems = [
     {
       id: "appearance" as SettingSection,
@@ -193,12 +280,17 @@ export function SettingsContent() {
       label: "DPS Meter",
       icon: Activity,
     },
+    {
+      id: "about" as SettingSection,
+      label: t("about.title"),
+      icon: Info,
+    },
   ];
 
   return (
     <>
       <Toaster />
-      <aside className="border-border flex w-40 flex-col border-r p-4">
+      <aside className="border-border flex h-full w-44 shrink-0 flex-col border-r p-4">
         <nav className="flex-1 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -221,69 +313,60 @@ export function SettingsContent() {
         </nav>
       </aside>
 
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-3xl p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="w-full p-5 lg:p-8">
           {activeSection === "appearance" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="mb-1 text-lg font-semibold">{t("settings.appearance.title")}</h2>
-                <p className="text-muted-foreground text-sm">
-                  {t("settings.appearance.description")}
-                </p>
-              </div>
+            <div className="space-y-8">
+              <SettingsSectionHeader
+                title={t("settings.appearance.title")}
+                description={t("settings.appearance.description")}
+              />
 
-              <div className="space-y-0">
-                <div className="flex items-center justify-between py-2.5">
-                  <label className="text-sm font-medium">{t("settings.appearance.theme")}</label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={theme === "light" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTheme("light")}
-                      className="flex items-center gap-1.5"
-                    >
-                      <Sun className="h-3.5 w-3.5" />
-                      {t("settings.appearance.light")}
-                    </Button>
-                    <Button
-                      variant={theme === "dark" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTheme("dark")}
-                      className="flex items-center gap-1.5"
-                    >
-                      <Moon className="h-3.5 w-3.5" />
-                      {t("settings.appearance.dark")}
-                    </Button>
-                    <Button
-                      variant={theme === "system" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setTheme("system")}
-                      className="flex items-center gap-1.5"
-                    >
-                      <Monitor className="h-3.5 w-3.5" />
-                      {t("settings.appearance.system")}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between py-2.5">
-                  <label className="text-sm font-medium">{t("settings.appearance.language")}</label>
-                  <LanguageToggle />
-                </div>
-              </div>
-
-              <div className="rounded-xl border p-4">
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold">Main Window Appearance</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">Background Color</label>
+              <SettingsGroup title="General">
+                <SettingsRow
+                  label={t("settings.appearance.theme")}
+                  control={
+                    <div className="flex gap-2">
+                      <Button
+                        variant={theme === "light" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("light")}
+                        className="flex items-center gap-1.5"
+                      >
+                        <Sun className="h-3.5 w-3.5" />
+                        {t("settings.appearance.light")}
+                      </Button>
+                      <Button
+                        variant={theme === "dark" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("dark")}
+                        className="flex items-center gap-1.5"
+                      >
+                        <Moon className="h-3.5 w-3.5" />
+                        {t("settings.appearance.dark")}
+                      </Button>
+                      <Button
+                        variant={theme === "system" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTheme("system")}
+                        className="flex items-center gap-1.5"
+                      >
+                        <Monitor className="h-3.5 w-3.5" />
+                        {t("settings.appearance.system")}
+                      </Button>
                     </div>
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.appearance.language")}
+                  control={<LanguageToggle />}
+                />
+              </SettingsGroup>
+
+              <SettingsGroup title="Main Window">
+                <SettingsRow
+                  label="Background Color"
+                  control={
                     <input
                       type="color"
                       value={mainAppearance.backgroundColor}
@@ -297,13 +380,12 @@ export function SettingsContent() {
                         });
                       }}
                     />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">Background Opacity</label>
-                    </div>
-                    <div className="flex w-56 items-center gap-3">
+                  }
+                />
+                <SettingsRow
+                  label="Background Opacity"
+                  control={
+                    <div className="flex w-64 items-center gap-3">
                       <input
                         type="range"
                         min={0}
@@ -321,24 +403,18 @@ export function SettingsContent() {
                         }}
                         className="w-full"
                       />
-                      <span className="text-muted-foreground w-10 text-xs">
+                      <span className="text-muted-foreground w-10 text-right text-xs">
                         {mainAppearance.backgroundOpacity}%
                       </span>
                     </div>
-                  </div>
-                </div>
-              </div>
+                  }
+                />
+              </SettingsGroup>
 
-              <div className="rounded-xl border p-4">
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold">DPS Window Appearance</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">Auto Resize Height</label>
-                    </div>
+              <SettingsGroup title="DPS Window">
+                <SettingsRow
+                  label="Auto Resize Height"
+                  control={
                     <input
                       type="checkbox"
                       className="h-4 w-4"
@@ -353,12 +429,11 @@ export function SettingsContent() {
                         });
                       }}
                     />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">Show Header Stats</label>
-                    </div>
+                  }
+                />
+                <SettingsRow
+                  label="Show Header Stats"
+                  control={
                     <input
                       type="checkbox"
                       className="h-4 w-4"
@@ -373,13 +448,12 @@ export function SettingsContent() {
                         });
                       }}
                     />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">Scale Factor</label>
-                    </div>
-                    <div className="flex w-56 items-center gap-3">
+                  }
+                />
+                <SettingsRow
+                  label="Scale Factor"
+                  control={
+                    <div className="flex w-64 items-center gap-3">
                       <input
                         type="range"
                         min={0.8}
@@ -397,152 +471,153 @@ export function SettingsContent() {
                         }}
                         className="w-full"
                       />
-                      <span className="text-muted-foreground w-12 text-xs">
+                      <span className="text-muted-foreground w-12 text-right text-xs">
                         {Math.round(dpsAppearance.scaleFactor * 100)}%
                       </span>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Shell Color</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={dpsAppearance.backgroundColor}
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  backgroundColor: event.currentTarget.value,
-                                },
+                  }
+                />
+                <SettingsRow
+                  label="Shell Color"
+                  control={
+                    <input
+                      type="color"
+                      value={dpsAppearance.backgroundColor}
+                      onChange={(event) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              backgroundColor: event.currentTarget.value,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label="Shell Opacity"
+                  control={
+                    <div className="flex w-64 items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={dpsAppearance.backgroundOpacity}
+                        onChange={(event) => {
+                          void saveSettings({
+                            appearance: {
+                              dpsWindow: {
+                                backgroundOpacity: Number(event.currentTarget.value),
                               },
-                            });
-                          }}
-                        />
-                      </div>
+                            },
+                          });
+                        }}
+                        className="w-full"
+                      />
+                      <span className="text-muted-foreground w-10 text-right text-xs">
+                        {dpsAppearance.backgroundOpacity}%
+                      </span>
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Shell Opacity</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={1}
-                          value={dpsAppearance.backgroundOpacity}
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  backgroundOpacity: Number(event.currentTarget.value),
-                                },
+                  }
+                />
+                <SettingsRow
+                  label="Panel Color"
+                  control={
+                    <input
+                      type="color"
+                      value={dpsAppearance.panelColor}
+                      onChange={(event) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              panelColor: event.currentTarget.value,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label="Panel Opacity"
+                  control={
+                    <div className="flex w-64 items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={dpsAppearance.panelOpacity}
+                        onChange={(event) => {
+                          void saveSettings({
+                            appearance: {
+                              dpsWindow: {
+                                panelOpacity: Number(event.currentTarget.value),
                               },
-                            });
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-muted-foreground w-10 text-xs">
-                          {dpsAppearance.backgroundOpacity}%
-                        </span>
-                      </div>
+                            },
+                          });
+                        }}
+                        className="w-full"
+                      />
+                      <span className="text-muted-foreground w-10 text-right text-xs">
+                        {dpsAppearance.panelOpacity}%
+                      </span>
                     </div>
+                  }
+                />
+                <SettingsRow
+                  label="Main Player Bar"
+                  control={
+                    <input
+                      type="color"
+                      value={
+                        dpsAppearance.mainPlayerColor.startsWith("#")
+                          ? dpsAppearance.mainPlayerColor
+                          : "#22c55e"
+                      }
+                      onChange={(event) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              mainPlayerColor: event.currentTarget.value,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label="Other Player Bar"
+                  control={
+                    <input
+                      type="color"
+                      value={
+                        dpsAppearance.otherPlayerColor.startsWith("#")
+                          ? dpsAppearance.otherPlayerColor
+                          : "#38bdf8"
+                      }
+                      onChange={(event) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              otherPlayerColor: event.currentTarget.value,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+              </SettingsGroup>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Panel Color</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={dpsAppearance.panelColor}
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  panelColor: event.currentTarget.value,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Panel Opacity</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={1}
-                          value={dpsAppearance.panelOpacity}
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  panelOpacity: Number(event.currentTarget.value),
-                                },
-                              },
-                            });
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-muted-foreground w-10 text-xs">
-                          {dpsAppearance.panelOpacity}%
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Main Player Bar</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={
-                            dpsAppearance.mainPlayerColor.startsWith("#")
-                              ? dpsAppearance.mainPlayerColor
-                              : "#22c55e"
-                          }
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  mainPlayerColor: event.currentTarget.value,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Other Player Bar</label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          value={
-                            dpsAppearance.otherPlayerColor.startsWith("#")
-                              ? dpsAppearance.otherPlayerColor
-                              : "#38bdf8"
-                          }
-                          onChange={(event) => {
-                            void saveSettings({
-                              appearance: {
-                                dpsWindow: {
-                                  otherPlayerColor: event.currentTarget.value,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-xl border p-3">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  DPS Preview
+                </h3>
+                <div className="rounded-xl border p-3">
                   <div className="mb-2">
                     <h4 className="text-sm font-semibold">DPS Window Preview</h4>
                   </div>
@@ -599,167 +674,192 @@ export function SettingsContent() {
           )}
 
           {activeSection === "shortcut" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="mb-1 text-lg font-semibold">{t("settings.shortcut.title")}</h2>
-                <p className="text-muted-foreground text-sm">
-                  {t("settings.shortcut.description")}
-                </p>
-              </div>
+            <div className="space-y-8">
+              <SettingsSectionHeader
+                title={t("settings.shortcut.title")}
+                description={t("settings.shortcut.description")}
+              />
 
-              <div className="space-y-0">
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">{t("settings.shortcut.showMain")}</label>
-                  </div>
-                  <ShortcutInput value={showMainShortcut} onChange={handleShortcutChange} />
-                </div>
-
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">{t("settings.shortcut.showDps")}</label>
-                  </div>
-                  <ShortcutInput value={showDpsShortcut} onChange={handleShowDpsShortcutChange} />
-                </div>
-
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">{t("settings.shortcut.resetDps")}</label>
-                  </div>
-                  <ShortcutInput value={resetDpsShortcut} onChange={handleResetDpsShortcutChange} />
-                </div>
-              </div>
+              <SettingsGroup title="Global Shortcuts">
+                <SettingsRow
+                  label={t("settings.shortcut.showMain")}
+                  control={
+                    <ShortcutInput value={showMainShortcut} onChange={handleShortcutChange} />
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.shortcut.showDps")}
+                  control={
+                    <ShortcutInput
+                      value={showDpsShortcut}
+                      onChange={handleShowDpsShortcutChange}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.shortcut.resetDps")}
+                  control={
+                    <ShortcutInput
+                      value={resetDpsShortcut}
+                      onChange={handleResetDpsShortcutChange}
+                    />
+                  }
+                />
+              </SettingsGroup>
             </div>
           )}
 
           {activeSection === "dps" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="mb-1 text-lg font-semibold">{t("settings.dps.title")}</h2>
-                <p className="text-muted-foreground text-sm">配置后端 DPS 水表行为与诊断输出。</p>
-              </div>
+            <div className="space-y-8">
+              <SettingsSectionHeader title={t("settings.dps.title")} />
 
-              <div className="space-y-0">
-                <div className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      {t("settings.dps.snapshotInterval")}
-                    </label>
-                  </div>
-                  <div className="flex w-40 items-center gap-2">
-                    <Input
-                      type="number"
-                      min={50}
-                      step={50}
-                      value={settings.dpsMeter.dpsSnapshotIntervalMs}
+              <SettingsGroup title="Runtime">
+                <SettingsRow
+                  label={t("settings.dps.snapshotInterval")}
+                  control={
+                    <div className="flex w-44 items-center gap-2">
+                      <Input
+                        type="number"
+                        min={50}
+                        step={50}
+                        value={settings.dpsMeter.dpsSnapshotIntervalMs}
+                        onChange={(event) => {
+                          const nextValue = Number(event.currentTarget.value || 500);
+                          void saveSettings({
+                            dpsMeter: {
+                              dpsSnapshotIntervalMs: nextValue,
+                            },
+                          });
+                        }}
+                      />
+                      <span className="text-muted-foreground text-xs">ms</span>
+                    </div>
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.memorySnapshotInterval")}
+                  control={
+                    <div className="flex w-44 items-center gap-2">
+                      <Input
+                        type="number"
+                        min={100}
+                        step={100}
+                        value={settings.dpsMeter.memorySnapshotIntervalMs}
+                        onChange={(event) => {
+                          const nextValue = Number(event.currentTarget.value || 1500);
+                          void saveSettings({
+                            dpsMeter: {
+                              memorySnapshotIntervalMs: nextValue,
+                            },
+                          });
+                        }}
+                      />
+                      <span className="text-muted-foreground text-xs">ms</span>
+                    </div>
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.bossOnly")}
+                  control={
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={settings.dpsMeter.bossOnly}
                       onChange={(event) => {
-                        const nextValue = Number(event.currentTarget.value || 500);
                         void saveSettings({
                           dpsMeter: {
-                            dpsSnapshotIntervalMs: nextValue,
+                            bossOnly: event.currentTarget.checked,
                           },
                         });
                       }}
                     />
-                    <span className="text-muted-foreground text-xs">ms</span>
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      {t("settings.dps.memorySnapshotInterval")}
-                    </label>
-                  </div>
-                  <div className="flex w-40 items-center gap-2">
-                    <Input
-                      type="number"
-                      min={100}
-                      step={100}
-                      value={settings.dpsMeter.memorySnapshotIntervalMs}
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.myMuzhuangOnly")}
+                  control={
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={settings.dpsMeter.myMuzhuangOnly}
                       onChange={(event) => {
-                        const nextValue = Number(event.currentTarget.value || 1500);
                         void saveSettings({
                           dpsMeter: {
-                            memorySnapshotIntervalMs: nextValue,
+                            myMuzhuangOnly: event.currentTarget.checked,
                           },
                         });
                       }}
                     />
-                    <span className="text-muted-foreground text-xs">ms</span>
-                  </div>
-                </div>
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.outputDebugLog")}
+                  control={
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={settings.dpsMeter.outputDebugLog}
+                      onChange={(event) => {
+                        void saveSettings({
+                          dpsMeter: {
+                            outputDebugLog: event.currentTarget.checked,
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+              </SettingsGroup>
+            </div>
+          )}
 
-                <div className="border-t" />
+          {activeSection === "about" && (
+            <div className="space-y-8">
+              <SettingsSectionHeader
+                title={t("about.title")}
+                description={t("about.appName")}
+              />
 
-                <div className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">{t("settings.dps.bossOnly")}</label>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={settings.dpsMeter.bossOnly}
-                    onChange={(event) => {
-                      void saveSettings({
-                        dpsMeter: {
-                          bossOnly: event.currentTarget.checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
+              <SettingsGroup title="Application">
+                <SettingsRow
+                  label={t("about.version")}
+                  control={<span className="text-sm font-medium">{appVersion}</span>}
+                />
+                <SettingsRow
+                  label="Tauri"
+                  control={<span className="text-sm font-medium">{techVersions.tauri}</span>}
+                />
+                <SettingsRow
+                  label="React"
+                  control={<span className="text-sm font-medium">{techVersions.react}</span>}
+                />
+                <SettingsRow
+                  label="TypeScript"
+                  control={<span className="text-sm font-medium">{techVersions.typescript}</span>}
+                />
+              </SettingsGroup>
 
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      {t("settings.dps.myMuzhuangOnly")}
-                    </label>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={settings.dpsMeter.myMuzhuangOnly}
-                    onChange={(event) => {
-                      void saveSettings({
-                        dpsMeter: {
-                          myMuzhuangOnly: event.currentTarget.checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-
-                <div className="border-t" />
-
-                <div className="flex items-center justify-between gap-4 py-2.5">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      {t("settings.dps.outputDebugLog")}
-                    </label>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={settings.dpsMeter.outputDebugLog}
-                    onChange={(event) => {
-                      void saveSettings({
-                        dpsMeter: {
-                          outputDebugLog: event.currentTarget.checked,
-                        },
-                      });
-                    }}
-                  />
-                </div>
-              </div>
+              <SettingsGroup title="Actions">
+                <SettingsRow
+                  label={t("about.github")}
+                  control={
+                    <Button onClick={handleOpenGithub} variant="outline">
+                      <Github className="mr-2 h-4 w-4" />
+                      {t("about.github")}
+                    </Button>
+                  }
+                />
+                <SettingsRow
+                  label={t("updater.checkForUpdates")}
+                  description={showNoUpdate ? t("updater.upToDate") : undefined}
+                  control={
+                    <Button onClick={checkUpdate} variant="outline" disabled={checking}>
+                      <RefreshCw className={`mr-2 h-4 w-4 ${checking ? "animate-spin" : ""}`} />
+                      {checking ? t("updater.checking") : t("updater.checkForUpdates")}
+                    </Button>
+                  }
+                />
+              </SettingsGroup>
             </div>
           )}
         </div>

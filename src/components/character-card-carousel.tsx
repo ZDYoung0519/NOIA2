@@ -147,12 +147,12 @@ const CarouselCard = React.memo(function CarouselCard({
             onActivate(index);
           }
         }}
-        className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[32px] border border-white/10 p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] outline-none sm:p-6 lg:p-7 ${backgroundClass}`}
+        className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[32px] p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] outline-none sm:p-6 lg:p-7 ${backgroundClass}`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_36%,rgba(0,0,0,0.12)_100%)]" />
 
         <div className="relative flex h-full flex-col">
-          <div className="flex items-start">
+          <div className="flex items-start justify-between">
             <div className="min-w-0 space-y-3">
               <div className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium tracking-[0.18em] text-white/75">
                 RECENT CHARACTER
@@ -237,18 +237,17 @@ const CarouselCard = React.memo(function CarouselCard({
               </div>
             </div>
 
+            <button
+              type="button"
+              className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/90 transition hover:bg-white/15"
+              title="Open character page"
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/90 transition hover:bg-white/15"
-            title="Open character page"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <ExternalLink className="h-4 w-4" />
-          </button>
 
           <div className="mt-auto flex items-center justify-between gap-4 pt-6">
             <div className="flex items-center gap-2 text-sm text-white/65">

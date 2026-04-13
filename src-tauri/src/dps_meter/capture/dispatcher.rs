@@ -50,10 +50,29 @@ impl RecentPortWindow {
 struct DispatcherState {
     data_storage: Arc<DataStorage>,
     unified: StreamAssembler,
-    assemblers: HashMap<String, StreamAssembler>,
+    unified1: StreamAssembler,
+    assemblers: HashMap<String, TrackedAssembler>,
     recent_ports: RecentPortWindow,
     logged_packets: usize,
     logged_magic_packets: usize,
+}
+
+struct TrackedAssembler {
+    assembler: StreamAssembler,
+    last_processed_at: Instant,
+}
+
+impl TrackedAssembler {
+    fn new(assembler: StreamAssembler) -> Self {
+        Self {
+            assembler,
+            last_processed_at: Instant::now(),
+        }
+    }
+
+    fn mark_processed(&mut self) {
+        self.last_processed_at = Instant::now();
+    }
 }
 
 impl DispatcherState {
@@ -61,9 +80,15 @@ impl DispatcherState {
         Self {
             data_storage: Arc::clone(&data_storage),
             unified: StreamAssembler::new(
+                Arc::clone(&data_storage),
+                Arc::clone(&logger),
+                "unified".to_string(),
+                ProcessingMode::MetadataOnly,
+            ),
+            unified1: StreamAssembler::new(
                 data_storage,
                 logger,
-                "unified".to_string(),
+                "unified1".to_string(),
                 ProcessingMode::MetadataOnly,
             ),
             assemblers: HashMap::new(),
@@ -75,8 +100,9 @@ impl DispatcherState {
 
     fn clear(&mut self) {
         self.unified.clear();
+        self.unified1.clear();
         for assembler in self.assemblers.values() {
-            assembler.clear();
+            assembler.assembler.clear();
         }
         self.assemblers.clear();
         self.recent_ports.entries.clear();
@@ -184,24 +210,33 @@ impl CaptureDispatcher {
                         let data_storage = Arc::clone(&state.data_storage);
                         let logger = Arc::clone(&logger);
                         state.assemblers.entry(locked.clone()).or_insert_with(|| {
-                            StreamAssembler::new(data_storage, logger, locked, ProcessingMode::Full)
+                            TrackedAssembler::new(StreamAssembler::new(
+                                data_storage,
+                                logger,
+                                locked,
+                                ProcessingMode::Full,
+                            ))
                         });
                     }
                 }
 
                 let _ = state.unified.process_chunk(&packet.data);
+                if contains_magic {
+                    let _ = state.unified1.process_chunk(&packet.data);
+                }
                 if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
                     let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
-                        StreamAssembler::new(
+                        TrackedAssembler::new(StreamAssembler::new(
                             data_storage,
                             assembler_logger,
                             key.clone(),
                             ProcessingMode::Full,
-                        )
+                        ))
                     });
-                    let _ = assembler.process_chunk(&packet.data);
+                    let _ = assembler.assembler.process_chunk(&packet.data);
+                    assembler.mark_processed();
                 }
             }
         });
@@ -226,6 +261,29 @@ impl CaptureDispatcher {
         self.combat_port.read().unwrap().clone()
     }
 
+    pub fn cleanup_stale_assemblers(&self, max_idle: Duration) -> Vec<String> {
+        let now = Instant::now();
+        let mut state = self.state.lock().unwrap();
+        let mut combat_port = self.combat_port.write().unwrap();
+        let mut removed = Vec::new();
+
+        state.assemblers.retain(|key, tracked| {
+            let is_stale = now.duration_since(tracked.last_processed_at) > max_idle;
+            if !is_stale {
+                return true;
+            }
+
+            tracked.assembler.clear();
+            if combat_port.as_deref() == Some(key.as_str()) {
+                *combat_port = None;
+            }
+            removed.push(key.clone());
+            false
+        });
+
+        removed
+    }
+
     pub fn assembler_buffer_sizes(&self) -> HashMap<String, usize> {
         let state = self.state.lock().unwrap();
         let current_port = self.current_combat_port();
@@ -236,8 +294,13 @@ impl CaptureDispatcher {
             sizes.insert("unified".to_string(), unified_size);
         }
 
+        let unified1_size = state.unified1.buffer_size();
+        if unified1_size > 0 {
+            sizes.insert("unified1".to_string(), unified1_size);
+        }
+
         for (key, assembler) in &state.assemblers {
-            let size = assembler.buffer_size();
+            let size = assembler.assembler.buffer_size();
             if size > 0 || current_port.as_deref() == Some(key.as_str()) {
                 sizes.insert(key.clone(), size);
             }

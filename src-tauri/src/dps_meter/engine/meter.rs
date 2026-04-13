@@ -20,6 +20,8 @@ use crate::dps_meter::models::combat::CombatSnapshot;
 use crate::dps_meter::models::diagnostics::MemorySnapshot;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
+const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
+
 pub struct DpsMeter {
     app: AppHandle,
     config: SharedDpsMeterConfig,
@@ -124,7 +126,7 @@ impl DpsMeter {
     }
 
     pub fn reset_dps_meter(&self) {
-        self.clear_runtime_state();
+        self.clear_runtime_state_nopacket();
         self.logger.info(format!(
             "dps meter runtime state reset (running={})",
             self.is_running()
@@ -212,6 +214,15 @@ impl DpsMeter {
             let mut system = System::new_all();
 
             while memory_snapshot_running.load(Ordering::SeqCst) {
+                let removed_ports =
+                    dispatcher.cleanup_stale_assemblers(Duration::from_secs(STALE_ASSEMBLER_IDLE_SECS));
+                if !removed_ports.is_empty() {
+                    logger.info(format!(
+                        "cleaned stale assembler ports: {}",
+                        removed_ports.join(", ")
+                    ));
+                }
+
                 if let Some(snapshot) = build_memory_snapshot(
                     &mut system,
                     pid,
@@ -246,6 +257,15 @@ impl DpsMeter {
         self.packet_channel.clear();
         self.dispatcher.clear();
         self.ping_tracker.reset();
+        *self.last_emitted_total_damage.lock().unwrap() = None;
+    }
+
+    fn clear_runtime_state_nopacket(&self) {
+        self.data_storage.clear();
+        self.calculator.reset_snapshot_state();
+        // self.packet_channel.clear();
+        // self.dispatcher.clear();
+        // self.ping_tracker.reset();
         *self.last_emitted_total_damage.lock().unwrap() = None;
     }
 
