@@ -108,7 +108,7 @@ function ActionIcon({ type }: { type: "up" | "down" }) {
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-[1120px]">
+    <div className="mx-auto max-w-[1500px] pl-5 pr-5">
       <div className="space-y-8">
         <header className="grid items-center gap-4 xl:grid-cols-[1.15fr_0.72fr_0.55fr]">
           <div className="relative w-full max-w-[290px]">
@@ -172,8 +172,8 @@ export default function HomePage() {
 
           <div className="min-w-0">
             <Card className="rounded-[26px] border border-border/50 bg-muted/40 shadow-none">
-              <CardContent className="p-6">
-                <h3 className="mb-6 text-[18px] font-semibold text-foreground md:text-[20px]">
+              <CardContent className="p-4">
+                <h3 className=" text-[18px] font-semibold text-foreground md:text-[20px]">
                   Quick actions
                 </h3>
 

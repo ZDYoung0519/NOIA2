@@ -49,6 +49,7 @@ pub fn run() {
             dps_meter::api::commands::get_dps_meter_status,
             dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter,
+            plugins::http::http_request,
             plugins::window_tracking::ensure_tracked_window,
             plugins::window_tracking::resize_window,
             plugins::window_tracking::get_window_size

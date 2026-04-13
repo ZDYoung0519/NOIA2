@@ -93,3 +93,10 @@ export interface HistoryTargetRecord extends oneTargetAllPlayerStats {
   id: string;
   targetId: number;
 }
+
+export interface MainActorRecord {
+  id: string;
+  actorName: string;
+  serverId: number;
+  lastSeenAt: number;
+}

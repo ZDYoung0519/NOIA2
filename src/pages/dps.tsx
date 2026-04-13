@@ -24,7 +24,7 @@ import { TitleBar } from "@/components/title-bar";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createWindow } from "@/lib/window";
-import { Aion2DpsHistory } from "@/lib/localStorageHistory";
+import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
 import { cn } from "@/lib/utils";
 import {
@@ -111,13 +111,14 @@ const persistHistoryRecords = (records: HistoryTargetRecord[]) => {
   if (records.length === 0) {
     return;
   }
-
   window.setTimeout(() => {
     records.forEach((record) => {
       Aion2DpsHistory.add(record);
     });
   }, 0);
 };
+
+
 
 const waitForWindowReady = async (label: string, timeoutMs = 1500) => {
   const startTime = Date.now();
@@ -494,9 +495,20 @@ export default function DpsPage() {
           actorId: number;
           actorName: string;
           sid?: string | null;
-        }>("dps-main-actor-detected", () => {
+        }>("dps-main-actor-detected", (event) => {
           if (!mounted) {
             return;
+          }
+          const payload = event.payload;
+          const serverId = payload.sid ? Number(payload.sid) : NaN;
+
+          if (payload.actorName && Number.isFinite(serverId)) {
+            Aion2MainActorHistory.add({
+              id: `${payload.actorName}-${serverId}`,
+              actorName: payload.actorName,
+              serverId,
+              lastSeenAt: Date.now(),
+            });
           }
 
           if (mainActorResetTimerRef.current !== null) {
@@ -1005,7 +1017,8 @@ export default function DpsPage() {
       setCurrentTarget(null);
       setCurrentPlayer(null);
       detailPayloadRef.current = null;
-      void emit("dps-detail-clear");
+      // void emit("dps-detail-clear");
+      
       lastWindowHeightRef.current = null;
       window.requestAnimationFrame(() => {
         void resizeWindow();
@@ -1267,3 +1280,4 @@ export default function DpsPage() {
     </WindowFrame>
   );
 }
+

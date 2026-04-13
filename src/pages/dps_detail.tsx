@@ -169,18 +169,18 @@ export default function DpsDetailPage() {
         setPayload(event.payload);
       });
 
-      const unlistenClear = await listen("dps-detail-clear", () => {
-        if (!mounted) {
-          return;
-        }
-        setPayload(null);
-      });
+      // const unlistenClear = await listen("dps-detail-clear", () => {
+      //   if (!mounted) {
+      //     return;
+      //   }
+      //   setPayload(null);
+      // });
 
       await emit("dps-detail-request");
 
       return () => {
         unlistenUpdate();
-        unlistenClear();
+        // unlistenClear();
       };
     };
 
