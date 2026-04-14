@@ -621,9 +621,15 @@ impl StreamProcessor {
         self.data_storage
             .append_summon(owner_info.value as u32, summon_info.value as u32);
         self.logger.info(format!(
-            "[{}] summon ownership owner={} summon={}",
+            "[{}] summon ownership owner={} owner_name={} summon={}",
             self.port,
             owner_info.value,
+            self
+                .data_storage
+                .actor_id_name_snapshot()
+                .get(&(owner_info.value as u32))
+                .cloned()
+                .unwrap_or_else(|| "Unknown".to_string()),
             summon_info.value
         ));
         true
@@ -697,8 +703,16 @@ impl StreamProcessor {
         if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
             self.logger.info(format!(
-                "[{}] summon kotlin owner={} summon={}",
-                self.port, owner_id, real_actor_id
+                "[{}] summon kotlin owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self
+                    .data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
             ));
             return true;
         }
@@ -706,8 +720,16 @@ impl StreamProcessor {
         if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
             self.logger.info(format!(
-                "[{}] summon fallback le32 owner={} summon={}",
-                self.port, owner_id, real_actor_id
+                "[{}] summon fallback le32 owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self
+                    .data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
             ));
             return true;
         }
@@ -715,8 +737,16 @@ impl StreamProcessor {
         if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
             self.logger.info(format!(
-                "[{}] summon fallback marker owner={} summon={}",
-                self.port, owner_id, real_actor_id
+                "[{}] summon fallback marker owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self
+                    .data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
             ));
             return true;
         }

@@ -49,6 +49,14 @@ const darkenHex = (hex: string, amount: number) => {
     .padStart(2, "0")}`;
 };
 
+const formatLocalLogTime = (timestamp: number) => {
+  if (!Number.isFinite(timestamp)) {
+    return "--:--:--";
+  }
+
+  return new Date(timestamp * 1000).toLocaleTimeString();
+};
+
 export default function DpsLogPage() {
   const { settings } = useAppSettings();
   const dpsAppearance = settings.appearance.dpsWindow;
@@ -147,7 +155,7 @@ export default function DpsLogPage() {
                         : "text-emerald-300"
                   }
                 >
-                  {entry.line}
+                  [{formatLocalLogTime(entry.timestamp)}] {entry.line.replace(/^\[[^\]]+\]\s*/, "")}
                 </span>
               </div>
             ))

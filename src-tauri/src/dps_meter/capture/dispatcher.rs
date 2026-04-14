@@ -221,9 +221,9 @@ impl CaptureDispatcher {
                 }
 
                 // let _ = state.unified.process_chunk(&packet.data);
-                if contains_magic {
-                    let _ = state.unified1.process_chunk(&packet.data);
-                }
+                // if contains_magic {
+                //     let _ = state.unified1.process_chunk(&packet.data);
+                // }
                 if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
