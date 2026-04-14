@@ -18,6 +18,8 @@ const DpsPanel = function DpsPanel({
   mainPlayerColor,
   otherPlayerColor,
   onPlayerClicked,
+  onPlayerHovered,
+  onPlayerHoverEnd,
 }: {
   targetInfo: TargetInfo | undefined;
   thisTargetPlayerStats: Record<number, SkillStats> | undefined;
@@ -25,6 +27,8 @@ const DpsPanel = function DpsPanel({
   mainPlayerColor: string;
   otherPlayerColor: string;
   onPlayerClicked: (playerId: number) => void;
+  onPlayerHovered?: (playerId: number) => void;
+  onPlayerHoverEnd?: (playerId: number) => void;
 }) {
   const { t } = useAppTranslation();
 
@@ -81,6 +85,8 @@ const DpsPanel = function DpsPanel({
             key={player.playerId || index}
             className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
+            onMouseEnter={() => onPlayerHovered?.(player.playerId)}
+            onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
           >
             <div
               className="absolute bottom-0 left-0 top-0 rounded transition-all duration-500 ease-out"

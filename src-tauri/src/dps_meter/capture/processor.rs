@@ -677,10 +677,16 @@ impl StreamProcessor {
 
         if let Some(mob_code) = mob_type_id {
             self.data_storage.append_mob(real_actor_id, mob_code);
-            self.logger.info(format!(
-                "[{}] summon spawn target={} mob_code={}",
-                self.port, real_actor_id, mob_code
-            ));
+            let boss_codes = self.data_storage.boss_code_list_snapshot();
+            let mob_names = self.data_storage.mob_code_name_snapshot();
+            if boss_codes.contains(&mob_code) {
+                if let Some(mob_name) = mob_names.get(&mob_code) {
+                    self.logger.info(format!(
+                        "[{}] summon spawn target={} mob_code={} name={}",
+                        self.port, real_actor_id, mob_code, mob_name
+                    ));
+                }
+            }
             found_something = true;
         }
 

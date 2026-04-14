@@ -28,3 +28,4 @@ dist-ssr
 .tauri
 generate_key.sh
 src-python/
+reconstructed_src/

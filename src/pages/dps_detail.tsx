@@ -1,11 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { TitleBar } from "@/components/title-bar";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getServerShortName } from "@/lib/aion2/servers";
+import { hideWindow } from "@/lib/window";
 import { cn } from "@/lib/utils";
 import { DpsDetailPayload, SkillStats } from "@/types/aion2dps";
 
@@ -188,6 +190,19 @@ export default function DpsDetailPage() {
     return () => {
       mounted = false;
       void cleanupPromise.then((cleanup) => cleanup());
+    };
+  }, []);
+
+  useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
+    const unlistenClose = appWindow.onCloseRequested(async (event) => {
+      event.preventDefault();
+      await emit("dps-detail-window-closed");
+      await hideWindow("dps_detail", 10_000);
+    });
+
+    return () => {
+      void unlistenClose.then((fn) => fn());
     };
   }, []);
 
@@ -522,7 +537,10 @@ export default function DpsDetailPage() {
                         "hover:bg-white/[0.04]"
                       )}
                     >
-                      <SkillNameCell skillId={row.skillId} skillName={tSkill(row.skillId)} />
+                      <SkillNameCell
+                        skillId={row.skillId}
+                        skillName={tSkill(String(row.skillId).slice(0, 8))}
+                      />
                       <SkillSpecDots slots={actorSkillSpecMap[row.skillId]} />
                       <span className="text-right text-slate-300">{row.counts}</span>
                       <span className="text-right text-rose-300">{critRate.toFixed(1)}%</span>

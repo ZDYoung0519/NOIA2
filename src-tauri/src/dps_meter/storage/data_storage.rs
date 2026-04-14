@@ -324,6 +324,7 @@ impl DataStorage {
     }
 }
 
+
 fn infer_actor_class(skill_code: u32) -> Option<String> {
     let skill_code = skill_code.to_string();
     if skill_code.len() < 2 {

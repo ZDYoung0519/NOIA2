@@ -401,7 +401,8 @@ export default function DpsPage() {
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
   const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
   const [currentTarget, setCurrentTarget] = useState<number | null>(null);
-  const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
+  const [pinnedPlayerId, setPinnedPlayerId] = useState<number | null>(null);
+  const [hoverPlayerId, setHoverPlayerId] = useState<number | null>(null);
   const [historyRecords, setHistoryRecords] = useState<HistoryTargetRecord[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
 
@@ -418,6 +419,7 @@ export default function DpsPage() {
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
   const latestResetHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const mainActorResetTimerRef = useRef<number | null>(null);
+  const detailCloseTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -481,7 +483,8 @@ export default function DpsPage() {
             setSnapshot(null);
             setMemorySnapshot(null);
             setCurrentTarget(null);
-            setCurrentPlayer(null);
+            setPinnedPlayerId(null);
+            setHoverPlayerId(null);
             detailPayloadRef.current = null;
             void emit("dps-detail-clear");
             if (mainActorResetTimerRef.current !== null) {
@@ -527,12 +530,21 @@ export default function DpsPage() {
           }
         });
 
+        const unlistenDetailClosed = await listen("dps-detail-window-closed", () => {
+          if (!mounted) {
+            return;
+          }
+          setPinnedPlayerId(null);
+          detailPayloadRef.current = null;
+        });
+
         const previousUnlistenStatus = unlistenStatusRef.current;
         unlistenStatusRef.current = () => {
           previousUnlistenStatus?.();
           unlistenMainActorDetectedRef.current?.();
           unlistenMainActorDetectedRef.current = null;
           unlistenDetailRequest();
+          unlistenDetailClosed();
         };
       } catch (error) {
         console.error("setup dps page listeners failed:", error);
@@ -558,6 +570,10 @@ export default function DpsPage() {
       if (unlistenMainActorDetectedRef.current) {
         void unlistenMainActorDetectedRef.current();
         unlistenMainActorDetectedRef.current = null;
+      }
+      if (detailCloseTimerRef.current !== null) {
+        window.clearTimeout(detailCloseTimerRef.current);
+        detailCloseTimerRef.current = null;
       }
       if (mainActorResetTimerRef.current !== null) {
         window.clearTimeout(mainActorResetTimerRef.current);
@@ -915,7 +931,7 @@ export default function DpsPage() {
     await createWindow("dps_detail", {
       title: "DPS Detail",
       url: "/dps_detail",
-      width: 560,
+      width: 1080,
       height: 420,
       decorations: false,
       transparent: true,
@@ -945,6 +961,39 @@ export default function DpsPage() {
       },
     });
   }, []);
+
+  const cancelDetailCloseTimer = useCallback(() => {
+    if (detailCloseTimerRef.current !== null) {
+      window.clearTimeout(detailCloseTimerRef.current);
+      detailCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const hideDetailWindow = useCallback(async () => {
+    const detailWindow = await WebviewWindow.getByLabel("dps_detail");
+    if (detailWindow) {
+      await detailWindow.hide();
+    }
+  }, []);
+
+  const closeDetailWindowNow = useCallback(async () => {
+    cancelDetailCloseTimer();
+    const detailWindow = await WebviewWindow.getByLabel("dps_detail");
+    if (detailWindow) {
+      await detailWindow.close();
+    }
+  }, [cancelDetailCloseTimer]);
+
+  const scheduleDetailWindowDestroy = useCallback(() => {
+    cancelDetailCloseTimer();
+    detailCloseTimerRef.current = window.setTimeout(() => {
+      detailCloseTimerRef.current = null;
+      if (pinnedPlayerId !== null || hoverPlayerId !== null) {
+        return;
+      }
+      void closeDetailWindowNow();
+    }, 10_000);
+  }, [cancelDetailCloseTimer, closeDetailWindowNow, hoverPlayerId, pinnedPlayerId]);
 
   const ensureLogWindow = useCallback(async () => {
     await createWindow("dps_log", {
@@ -1015,9 +1064,11 @@ export default function DpsPage() {
       setSnapshot(null);
       setMemorySnapshot(null);
       setCurrentTarget(null);
-      setCurrentPlayer(null);
+      setPinnedPlayerId(null);
+      setHoverPlayerId(null);
       detailPayloadRef.current = null;
-      // void emit("dps-detail-clear");
+      void emit("dps-detail-clear");
+      await closeDetailWindowNow();
       
       lastWindowHeightRef.current = null;
       window.requestAnimationFrame(() => {
@@ -1026,7 +1077,7 @@ export default function DpsPage() {
     } catch (error) {
       console.error("reset dps meter failed:", error);
     }
-  }, [resizeWindow, snapshot]);
+  }, [closeDetailWindowNow, resizeWindow, snapshot]);
 
   useEffect(() => {
     latestResetHandlerRef.current = handleReset;
@@ -1039,20 +1090,57 @@ export default function DpsPage() {
         return;
       }
 
-      setCurrentPlayer(playerId);
+      cancelDetailCloseTimer();
+      setPinnedPlayerId(playerId);
+      setHoverPlayerId(null);
       detailPayloadRef.current = nextPayload;
       await ensureDetailWindow();
       await emit("dps-detail-update", nextPayload);
     },
-    [buildDetailPayload, ensureDetailWindow]
+    [buildDetailPayload, cancelDetailCloseTimer, ensureDetailWindow]
   );
 
+  const handlePlayerHover = useCallback(
+    async (playerId: number) => {
+      if (pinnedPlayerId !== null) {
+        return;
+      }
+
+      const nextPayload = buildDetailPayload(playerId);
+      if (!nextPayload) {
+        return;
+      }
+
+      cancelDetailCloseTimer();
+      setHoverPlayerId(playerId);
+      detailPayloadRef.current = nextPayload;
+      await ensureDetailWindow();
+      await emit("dps-detail-update", nextPayload);
+    },
+    [buildDetailPayload, cancelDetailCloseTimer, ensureDetailWindow, pinnedPlayerId]
+  );
+
+  const handlePlayerHoverEnd = useCallback(
+    async (_playerId: number) => {
+      if (pinnedPlayerId !== null) {
+        return;
+      }
+
+      setHoverPlayerId(null);
+      await hideDetailWindow();
+      scheduleDetailWindowDestroy();
+    },
+    [hideDetailWindow, pinnedPlayerId, scheduleDetailWindowDestroy]
+  );
+
+  const activeDetailPlayerId = pinnedPlayerId ?? hoverPlayerId;
+
   useEffect(() => {
-    if (view !== "dps" || currentPlayer === null) {
+    if (view !== "dps" || activeDetailPlayerId === null) {
       return;
     }
 
-    const nextPayload = buildDetailPayload(currentPlayer);
+    const nextPayload = buildDetailPayload(activeDetailPlayerId);
     if (!nextPayload) {
       detailPayloadRef.current = null;
       void emit("dps-detail-clear");
@@ -1061,27 +1149,30 @@ export default function DpsPage() {
 
     detailPayloadRef.current = nextPayload;
     void emit("dps-detail-update", nextPayload);
-  }, [buildDetailPayload, currentPlayer, snapshot, view]);
+  }, [activeDetailPlayerId, buildDetailPayload, snapshot, view]);
 
   useEffect(() => {
-    if (view !== "history" || currentPlayer === null) {
+    if (view !== "history" || activeDetailPlayerId === null) {
       return;
     }
 
-    const nextPayload = buildDetailPayload(currentPlayer);
+    const nextPayload = buildDetailPayload(activeDetailPlayerId);
     detailPayloadRef.current = nextPayload;
     if (nextPayload) {
       void emit("dps-detail-update", nextPayload);
     } else {
       void emit("dps-detail-clear");
     }
-  }, [buildDetailPayload, currentPlayer, selectedHistoryId, view]);
+  }, [activeDetailPlayerId, buildDetailPayload, selectedHistoryId, view]);
 
   useEffect(() => {
-    setCurrentPlayer(null);
+    cancelDetailCloseTimer();
+    setPinnedPlayerId(null);
+    setHoverPlayerId(null);
     detailPayloadRef.current = null;
     void emit("dps-detail-clear");
-  }, [resolvedTargetId, selectedHistoryId, view]);
+    void closeDetailWindowNow();
+  }, [cancelDetailCloseTimer, closeDetailWindowNow, resolvedTargetId, selectedHistoryId, view]);
 
   useEffect(() => {
     if (!resetDpsShortcut) {
@@ -1241,6 +1332,8 @@ export default function DpsPage() {
                       mainPlayerColor={dpsAppearance.mainPlayerColor}
                       otherPlayerColor={dpsAppearance.otherPlayerColor}
                       onPlayerClicked={handlePlayerClick}
+                      onPlayerHovered={handlePlayerHover}
+                      onPlayerHoverEnd={handlePlayerHoverEnd}
                     />
                   ) : (
                     <div className="flex min-h-10 items-center justify-center rounded-xl text-center">
@@ -1262,6 +1355,8 @@ export default function DpsPage() {
                   mainPlayerColor={dpsAppearance.mainPlayerColor}
                   otherPlayerColor={dpsAppearance.otherPlayerColor}
                   onPlayerClicked={handlePlayerClick}
+                  onPlayerHovered={handlePlayerHover}
+                  onPlayerHoverEnd={handlePlayerHoverEnd}
                 />
               </div>
             )}
