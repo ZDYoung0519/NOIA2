@@ -20,7 +20,7 @@ use crate::dps_meter::models::combat::CombatSnapshot;
 use crate::dps_meter::models::diagnostics::MemorySnapshot;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
-const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
+const STALE_ASSEMBLER_IDLE_SECS: u64 = 10;
 
 pub struct DpsMeter {
     app: AppHandle,
@@ -214,14 +214,14 @@ impl DpsMeter {
             let mut system = System::new_all();
 
             while memory_snapshot_running.load(Ordering::SeqCst) {
-                let removed_ports =
-                    dispatcher.cleanup_stale_assemblers(Duration::from_secs(STALE_ASSEMBLER_IDLE_SECS));
-                if !removed_ports.is_empty() {
-                    logger.info(format!(
-                        "cleaned stale assembler ports: {}",
-                        removed_ports.join(", ")
-                    ));
-                }
+                dispatcher.cleanup_stale_assemblers(Duration::from_secs(STALE_ASSEMBLER_IDLE_SECS));
+
+                // if !cleanup_summary.cleared_buffer_ports.is_empty() {
+                //     logger.info(format!(
+                //         "cleared oversized assembler buffers (>10000 packets): {}",
+                //         cleanup_summary.cleared_buffer_ports.join(", ")
+                //     ));
+                // }
 
                 if let Some(snapshot) = build_memory_snapshot(
                     &mut system,

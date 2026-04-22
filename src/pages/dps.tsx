@@ -20,6 +20,8 @@ import {
 
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { TitleBar } from "@/components/title-bar";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -302,7 +304,9 @@ type FooterData = {
   ram: string;
   ping: string;
   packetTotalKb: string;
-  packetTooltip: string;
+  packetTooltipLines: string[];
+  packetPortLines: Array<{ key: string; value: string; isCombatPort: boolean }>;
+  combatPort: string | null;
   mainActorName: string;
   pingActive: boolean;
   pingTone: string;
@@ -363,12 +367,57 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
           ) : (
             <Package className="h-3 w-3 text-slate-500" />
           )}
-          <span
-            className="cursor-help text-xs text-slate-200 select-none"
-            title={view === "history" ? "History records" : footerData.packetTooltip}
-          >
-            {view === "history" ? `${historyRecordsLength} records` : footerData.packetTotalKb}
-          </span>
+          {view === "history" ? (
+            <span className="cursor-help text-xs text-slate-200 select-none" title="History records">
+              {`${historyRecordsLength} records`}
+            </span>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="cursor-help text-xs text-slate-200 select-none"
+                >
+                  {footerData.packetTotalKb}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="start"
+                className="max-w-none border-white/10 bg-slate-950/95 text-slate-100"
+              >
+                <div className="flex flex-wrap items-center gap-2 text-xs whitespace-nowrap">
+                  {footerData.packetTooltipLines.map((line) => (
+                    <span key={line} className="text-slate-300">
+                      {line}
+                    </span>
+                  ))}
+                  {footerData.packetPortLines.map((entry) => (
+                    <span
+                      key={entry.key}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-md px-2 py-1",
+                        entry.isCombatPort
+                          ? "bg-cyan-500/15 text-cyan-100"
+                          : "bg-white/5 text-slate-200"
+                      )}
+                    >
+                      <span className="font-mono text-[11px]">{entry.key}</span>
+                      <span className="font-medium">{entry.value}</span>
+                      {entry.isCombatPort ? (
+                        <Badge
+                          variant="secondary"
+                          className="border-cyan-300/30 bg-cyan-400/15 text-cyan-100"
+                        >
+                          combat_port
+                        </Badge>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {footerData.pingActive ? (
@@ -416,10 +465,21 @@ export default function DpsPage() {
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
   const unlistenMainActorDetectedRef = useRef<null | (() => void)>(null);
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
+  const pinnedPlayerIdRef = useRef<number | null>(null);
+  const hoverPlayerIdRef = useRef<number | null>(null);
+  const detailHoverTokenRef = useRef(0);
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
   const latestResetHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const mainActorResetTimerRef = useRef<number | null>(null);
   const detailCloseTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    pinnedPlayerIdRef.current = pinnedPlayerId;
+  }, [pinnedPlayerId]);
+
+  useEffect(() => {
+    hoverPlayerIdRef.current = hoverPlayerId;
+  }, [hoverPlayerId]);
 
   useEffect(() => {
     let mounted = true;
@@ -840,12 +900,24 @@ export default function DpsPage() {
 
     const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
     const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
-    const packetTooltip =
+    const portPacketEntries = packetEntries.filter(([key]) => /^\d+-\d+$/.test(key));
+    const otherPacketEntries = packetEntries.filter(([key]) => !/^\d+-\d+$/.test(key));
+    const combatPort = memorySnapshot?.capPort ?? null;
+    const packetTooltipLines =
       packetEntries.length > 0
-        ? packetEntries
-            .map(([key, value]) => `${key}: ${(Number(value) / 1000).toFixed(2)}k`)
-            .join("\n")
-        : "No buffers";
+        ? [
+            `Total: ${(totalPacketSize / 1000).toFixed(2)}k`,
+            combatPort ? `Combat port: ${combatPort}` : "Combat port: --",
+            ...otherPacketEntries.map(
+              ([key, value]) => `${key}: ${(Number(value) / 1000).toFixed(2)}k`
+            ),
+          ]
+        : ["No buffers"];
+    const packetPortLines = portPacketEntries.map(([key, value]) => ({
+      key,
+      value: `${(Number(value) / 1000).toFixed(2)}k`,
+      isCombatPort: key === combatPort,
+    }));
 
     return {
       fightingTime: formatDuration(targetFightingTime),
@@ -853,8 +925,9 @@ export default function DpsPage() {
       ram: formatMemory(memorySnapshot?.rssMb),
       ping: pingValue,
       packetTotalKb: totalPacketSize > 0 ? `${(totalPacketSize / 1000).toFixed(1)}k` : "0k",
-      packetTooltip,
-      capPort: memorySnapshot?.capPort ?? null,
+      packetTooltipLines,
+      packetPortLines,
+      combatPort,
       mainActorName: memorySnapshot?.mainActorName ?? "--",
       pingActive:
         typeof memorySnapshot?.pingMs === "number" && Number.isFinite(memorySnapshot.pingMs),
@@ -1085,6 +1158,7 @@ export default function DpsPage() {
 
   const handlePlayerClick = useCallback(
     async (playerId: number) => {
+      detailHoverTokenRef.current += 1;
       const nextPayload = buildDetailPayload(playerId);
       if (!nextPayload) {
         return;
@@ -1112,12 +1186,30 @@ export default function DpsPage() {
       }
 
       cancelDetailCloseTimer();
+      const hoverToken = detailHoverTokenRef.current + 1;
+      detailHoverTokenRef.current = hoverToken;
       setHoverPlayerId(playerId);
       detailPayloadRef.current = nextPayload;
       await ensureDetailWindow();
+      if (
+        detailHoverTokenRef.current !== hoverToken ||
+        pinnedPlayerIdRef.current !== null ||
+        hoverPlayerIdRef.current !== playerId
+      ) {
+        await hideDetailWindow();
+        scheduleDetailWindowDestroy();
+        return;
+      }
       await emit("dps-detail-update", nextPayload);
     },
-    [buildDetailPayload, cancelDetailCloseTimer, ensureDetailWindow, pinnedPlayerId]
+    [
+      buildDetailPayload,
+      cancelDetailCloseTimer,
+      ensureDetailWindow,
+      hideDetailWindow,
+      pinnedPlayerId,
+      scheduleDetailWindowDestroy,
+    ]
   );
 
   const handlePlayerHoverEnd = useCallback(
@@ -1126,7 +1218,10 @@ export default function DpsPage() {
         return;
       }
 
+      detailHoverTokenRef.current += 1;
       setHoverPlayerId(null);
+      detailPayloadRef.current = null;
+      void emit("dps-detail-clear");
       await hideDetailWindow();
       scheduleDetailWindowDestroy();
     },

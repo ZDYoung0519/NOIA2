@@ -4,6 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./index.css";
 import "./i18n";
 import { MainShell } from "./components/main-shell";
+import { TooltipProvider } from "./components/ui/tooltip";
 import Splash from "./Splash";
 import HomePage from "./pages/home";
 import DpsViewPage from "./pages/dps_view";
@@ -69,6 +70,8 @@ function AppWrapper() {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <AppWrapper />
+    <TooltipProvider>
+      <AppWrapper />
+    </TooltipProvider>
   </React.StrictMode>
 );

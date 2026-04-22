@@ -128,7 +128,7 @@ impl StreamProcessor {
 
         let decompressed_size =
             u32::from_le_bytes([payload[2], payload[3], payload[4], payload[5]]) as usize;
-        if decompressed_size == 0 || decompressed_size > 5_000_000 {
+        if decompressed_size == 0 || decompressed_size > 10_000_000 {
             return;
         }
 

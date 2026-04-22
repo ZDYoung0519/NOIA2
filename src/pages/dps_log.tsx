@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { Package, RotateCcw } from "lucide-react";
 
 import { TitleBar } from "@/components/title-bar";
+import { Badge } from "@/components/ui/badge";
 import { useAppSettings } from "@/hooks/use-app-settings";
+import { cn } from "@/lib/utils";
+import { MemorySnapshot } from "@/types/aion2dps";
 
 type DpsLogEvent = {
   level: string;
@@ -61,11 +65,13 @@ export default function DpsLogPage() {
   const { settings } = useAppSettings();
   const dpsAppearance = settings.appearance.dpsWindow;
   const [lines, setLines] = useState<DpsLogEvent[]>([]);
+  const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
     let unlisten: null | (() => void) = null;
+    let unlistenMemory: null | (() => void) = null;
 
     const setup = async () => {
       unlisten = await listen<DpsLogEvent>("dps-logger", (event) => {
@@ -78,6 +84,14 @@ export default function DpsLogPage() {
           return next.slice(-300);
         });
       });
+
+      unlistenMemory = await listen<MemorySnapshot>("dps-memory", (event) => {
+        if (!mounted) {
+          return;
+        }
+
+        setMemorySnapshot(event.payload);
+      });
     };
 
     void setup();
@@ -85,6 +99,7 @@ export default function DpsLogPage() {
     return () => {
       mounted = false;
       unlisten?.();
+      unlistenMemory?.();
     };
   }, []);
 
@@ -112,6 +127,31 @@ export default function DpsLogPage() {
     () => hexToRgba(dpsAppearance.panelColor, dpsAppearance.panelOpacity),
     [dpsAppearance.panelColor, dpsAppearance.panelOpacity]
   );
+  const footerBackground = useMemo(
+    () =>
+      hexToRgba(
+        darkenHex(dpsAppearance.panelColor, 8),
+        Math.min(100, dpsAppearance.panelOpacity + 8)
+      ),
+    [dpsAppearance.panelColor, dpsAppearance.panelOpacity]
+  );
+  const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
+  const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
+  const portPacketEntries = packetEntries.filter(([key]) => /^\d+-\d+$/.test(key));
+  const otherPacketEntries = packetEntries.filter(([key]) => !/^\d+-\d+$/.test(key));
+  const combatPort = memorySnapshot?.capPort ?? null;
+  const packetPortLines = portPacketEntries.map(([key, value]) => ({
+    key,
+    value: `${(Number(value) / 1000).toFixed(2)}k`,
+    isCombatPort: key === combatPort,
+  }));
+  const otherPacketLines = otherPacketEntries.map(([key, value]) => ({
+    key,
+    value: `${(Number(value) / 1000).toFixed(2)}k`,
+  }));
+  const handleClearLogs = () => {
+    setLines([]);
+  };
 
   return (
     <div
@@ -128,6 +168,14 @@ export default function DpsLogPage() {
                 DPS Log
               </span>
             </div>
+            <button
+              type="button"
+              title="Clear logs"
+              onClick={handleClearLogs}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
           </div>
         }
         className="border-white/10"
@@ -163,6 +211,59 @@ export default function DpsLogPage() {
             <div className="flex min-h-24 items-center justify-center rounded border border-dashed border-white/10 bg-white/[0.03] text-xs text-slate-400">
               Waiting for log output
             </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300"
+        style={{ backgroundColor: footerBackground }}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Package className="h-3 w-3 text-slate-500" />
+          <span className="text-xs text-slate-200 select-none">
+            {totalPacketSize > 0 ? `${(totalPacketSize / 1000).toFixed(1)}k` : "0k"}
+          </span>
+          <span className="text-xs text-slate-400 select-none">
+            {combatPort ? `combat_port ${combatPort}` : "combat_port --"}
+          </span>
+          {otherPacketLines.map((entry) => (
+            <span
+              key={entry.key}
+              className="inline-flex items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-slate-200"
+            >
+              <span className="font-mono text-[11px]">{entry.key}</span>
+              <span className="font-medium">{entry.value}</span>
+            </span>
+          ))}
+        </div>
+
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          {packetPortLines.length > 0 ? (
+            packetPortLines.map((entry) => (
+              <span
+                key={entry.key}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2 py-1",
+                  entry.isCombatPort
+                    ? "bg-cyan-500/15 text-cyan-100"
+                    : "bg-white/5 text-slate-200"
+                )}
+              >
+                <span className="font-mono text-[11px]">{entry.key}</span>
+                <span className="font-medium">{entry.value}</span>
+                {entry.isCombatPort ? (
+                  <Badge
+                    variant="secondary"
+                    className="border-cyan-300/30 bg-cyan-400/15 text-cyan-100"
+                  >
+                    combat_port
+                  </Badge>
+                ) : null}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-slate-500">No per-port buffers</span>
           )}
         </div>
       </div>

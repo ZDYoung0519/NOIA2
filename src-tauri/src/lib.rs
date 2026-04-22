@@ -1,8 +1,6 @@
 mod dps_meter;
 mod plugins;
 
-use std::thread;
-use std::time::Duration;
 use tauri::Manager;
 use tauri_plugin_window_state::StateFlags;
 
@@ -56,7 +54,7 @@ pub fn run() {
         ])
         .setup(|app| {
             // Temporary delay to preview the startup loading screen.
-            thread::sleep(Duration::from_secs(5));
+            // thread::sleep(Duration::from_secs(5));
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
             app.manage(meter);
             if let Some(window) = app.get_webview_window("main") {

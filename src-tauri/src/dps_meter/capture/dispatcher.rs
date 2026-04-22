@@ -17,6 +17,7 @@ use crate::dps_meter::storage::data_storage::DataStorage;
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
 const MAGIC: [u8; 3] = [0x06, 0x00, 0x36];
+// const MAX_TRACKED_PACKET_COUNT_BEFORE_BUFFER_CLEAR: usize = 10_000;
 
 #[derive(Default)]
 struct RecentPortWindow {
@@ -60,6 +61,7 @@ struct DispatcherState {
 struct TrackedAssembler {
     assembler: StreamAssembler,
     last_processed_at: Instant,
+    packet_count: usize,
 }
 
 impl TrackedAssembler {
@@ -67,13 +69,21 @@ impl TrackedAssembler {
         Self {
             assembler,
             last_processed_at: Instant::now(),
+            packet_count: 0,
         }
     }
 
     fn mark_processed(&mut self) {
         self.last_processed_at = Instant::now();
+        self.packet_count += 1;
+    }
+
+    fn clear_buffer(&mut self) {
+        self.assembler.clear();
+        self.packet_count = 0;
     }
 }
+
 
 impl DispatcherState {
     fn new(data_storage: Arc<DataStorage>, logger: Arc<DpsLogger>) -> Self {
@@ -224,7 +234,7 @@ impl CaptureDispatcher {
                 // if contains_magic {
                 //     let _ = state.unified1.process_chunk(&packet.data);
                 // }
-                if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
+                if contains_magic && combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
                     let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
@@ -261,11 +271,10 @@ impl CaptureDispatcher {
         self.combat_port.read().unwrap().clone()
     }
 
-    pub fn cleanup_stale_assemblers(&self, max_idle: Duration) -> Vec<String> {
+    pub fn cleanup_stale_assemblers(&self, max_idle: Duration) {
         let now = Instant::now();
         let mut state = self.state.lock().unwrap();
         let mut combat_port = self.combat_port.write().unwrap();
-        let mut removed = Vec::new();
 
         state.assemblers.retain(|key, tracked| {
             let is_stale = now.duration_since(tracked.last_processed_at) > max_idle;
@@ -273,15 +282,22 @@ impl CaptureDispatcher {
                 return true;
             }
 
-            tracked.assembler.clear();
+            tracked.clear_buffer();
             if combat_port.as_deref() == Some(key.as_str()) {
                 *combat_port = None;
             }
-            removed.push(key.clone());
+
             false
         });
 
-        removed
+        // for (key, tracked) in state.assemblers.iter_mut() {
+        //     if tracked.packet_count > MAX_TRACKED_PACKET_COUNT_BEFORE_BUFFER_CLEAR {
+        //         tracked.clear_buffer();
+        //         cleared_buffer_ports.push(key.clone());
+        //     }
+        // }
+
+
     }
 
     pub fn assembler_buffer_sizes(&self) -> HashMap<String, usize> {
@@ -324,12 +340,12 @@ fn looks_like_tls_payload(data: &[u8]) -> bool {
 }
 
 fn normalized_port_key(src_port: u16, dst_port: u16) -> String {
-    let (a, b) = if src_port <= dst_port {
-        (src_port, dst_port)
-    } else {
-        (dst_port, src_port)
-    };
-    format!("{a}-{b}")
+    // let (a, b) = if src_port <= dst_port {
+    //     (src_port, dst_port)
+    // } else {
+    //     (dst_port, src_port)
+    // };
+    format!("{src_port}-{dst_port}")
 }
 
 fn format_packet_prefix(data: &[u8], max_bytes: usize) -> String {
