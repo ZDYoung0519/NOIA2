@@ -48,6 +48,10 @@ type CharacterCardState = {
   error?: string;
 };
 
+type CharacterCardCarouselProps = {
+  onActiveCharacterChange?: (card: MainActorCard | null) => void;
+};
+
 type CarouselCardProps = {
   card: MainActorCard;
   index: number;
@@ -280,7 +284,9 @@ const CarouselCard = React.memo(function CarouselCard({
   );
 });
 
-export default function CharacterCardCarousel() {
+export default function CharacterCardCarousel({
+  onActiveCharacterChange,
+}: CharacterCardCarouselProps) {
   const cards = React.useMemo(
     () =>
       Aion2MainActorHistory.get()
@@ -305,6 +311,10 @@ export default function CharacterCardCarousel() {
 
     setActiveIndex((current) => Math.min(current, cards.length - 1));
   }, [cards.length]);
+
+  React.useEffect(() => {
+    onActiveCharacterChange?.(cards[activeIndex] ?? null);
+  }, [activeIndex, cards, onActiveCharacterChange]);
 
   React.useEffect(() => {
     let cancelled = false;

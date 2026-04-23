@@ -195,7 +195,7 @@ function TitleIconButton({
       title={title}
       onClick={() => void onClick()}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-md border text-slate-300 transition",
+        "flex h-6 w-6 items-center justify-center rounded-md border text-slate-300 transition",
         "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
         active &&
           tone === "accent" &&
@@ -241,7 +241,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
   onSelect,
 }: HistoryTargetListProps) {
   return (
-    <aside className="w-44 border-r border-white/10 bg-white/[0.03]">
+    <aside className="w-40 border-r border-white/10 bg-white/[0.03]">
       <div className="border-b border-white/10 px-3 py-2">
         <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
           History
@@ -249,7 +249,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
       </div>
 
       {historyRecords.length > 0 ? (
-        <div className="max-h-[220px] overflow-y-auto bg-transparent p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="max-h-[500px] overflow-y-auto bg-transparent p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
           <div className="space-y-1.5">
             {historyRecords.map((record) => {
               const recordTargetInfo = record.combatInfos.targetInfos?.[String(record.targetId)];
@@ -360,25 +360,15 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
           <span className="text-xs text-slate-200 select-none">{footerData.ram}</span>
         </div>
 
-        <div className="flex items-center gap-1">
-          {view === "history" ? (
-            <ChevronLeft className="h-3 w-3 text-slate-500" />
-          ) : (
-            <Package className="h-3 w-3 text-slate-500" />
-          )}
-          {view === "history" ? (
-            <span className="cursor-help text-xs text-slate-200 select-none" title="History records">
-              {`${historyRecordsLength} records`}
-            </span>
-          ) : (
-              <button
-                type="button"
-                className="cursor-help text-xs text-slate-200 select-none"
-              >
-                {footerData.packetTotalKb}
-              </button>
-          )}
-        </div>
+        {/* <div className="flex items-center gap-1">
+          <Package className="h-3 w-3 text-slate-500" />
+          <button
+            type="button"
+            className="cursor-help text-xs text-slate-200 select-none"
+          >
+            {footerData.packetTotalKb}
+          </button>
+        </div> */}
 
         {footerData.pingActive ? (
           <div className={cn("flex items-center gap-1", footerData.pingTone)}>
@@ -1255,19 +1245,20 @@ export default function DpsPage() {
     void closeDetailWindowNow();
   }, [cancelDetailCloseTimer, closeDetailWindowNow, resolvedTargetId, selectedHistoryId, view]);
 
-  const handleOpenSettings = useCallback(async () => {
-    await createWindow("settings", {
-      title: t("settings.title"),
-      url: "/settings",
-      width: 760,
-      height: 560,
-      minWidth: 680,
-      minHeight: 10,
-      resizable: true,
-      transparent: true,
-      decorations: false,
-    });
-  }, [t]);
+  // const handleOpenSettings = useCallback(async () => {
+  //   await createWindow("settings", {
+  //     title: t("settings.title"),
+  //     url: "/settings",
+  //     width: 760,
+  //     height: 560,
+  //     minWidth: 680,
+  //     minHeight: 10,
+  //     resizable: true,
+  //     transparent: true,
+  //     decorations: false,
+  //   });
+    
+  // }, [t]);
 
   const handleOpenHistory = useCallback(() => {
     if (view === "history") {
@@ -1297,7 +1288,7 @@ export default function DpsPage() {
                 title={t("dps.actions.stop")}
                 tone="danger"
               >
-                <Square className="h-3.5 w-3.5" />
+                <Square className="h-3 w-3" />
               </TitleIconButton>
             </div>
           </TooltipTrigger>
@@ -1313,7 +1304,7 @@ export default function DpsPage() {
                 title={t("dps.actions.start")}
                 tone="accent"
               >
-                <Play className="h-3.5 w-3.5" />
+                <Play className="h-3 w-3" />
               </TitleIconButton>
             </div>
           </TooltipTrigger>
@@ -1324,27 +1315,27 @@ export default function DpsPage() {
         <TooltipTrigger asChild>
           <div>
             <TitleIconButton onClick={handleReset} title={t("dps.actions.reset")}>
-              <RotateCcw className="h-3.5 w-3.5" />
+              <RotateCcw className="h-3 w-3" />
             </TitleIconButton>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("dps.actions.reset")}</TooltipContent>
       </Tooltip>
-      <Tooltip>
+      {/* <Tooltip>
         <TooltipTrigger asChild>
           <div>
             <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
-              <Settings2 className="h-3.5 w-3.5" />
+              <Settings2 className="h-3 w-3" />
             </TitleIconButton>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("dps.actions.settings")}</TooltipContent>
-      </Tooltip>
+      </Tooltip> */}
       <Tooltip>
         <TooltipTrigger asChild>
           <div>
             <TitleIconButton onClick={handleOpenLog} title="Open log">
-              <ScrollText className="h-3.5 w-3.5" />
+              <ScrollText className="h-3 w-3" />
             </TitleIconButton>
           </div>
         </TooltipTrigger>
@@ -1358,7 +1349,7 @@ export default function DpsPage() {
               onClick={handleOpenHistory}
               title={t("dps.actions.history")}
             >
-              <History className="h-3.5 w-3.5" />
+              <History className="h-3 w-3" />
             </TitleIconButton>
           </div>
         </TooltipTrigger>

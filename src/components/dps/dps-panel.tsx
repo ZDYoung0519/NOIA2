@@ -85,7 +85,7 @@ const DpsPanel = function DpsPanel({
         return (
           <div
             key={player.playerId || index}
-            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded hover:bg-white/5"
+            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:bg-white/5 hover:border hover:border-cyan-500"
             onClick={() => onPlayerClicked(player.playerId)}
             onMouseEnter={() => onPlayerHovered?.(player.playerId)}
             onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
