@@ -610,6 +610,33 @@ export function SettingsContent() {
                     />
                   }
                 />
+                <SettingsRow
+                  label="Bar Opacity"
+                  control={
+                    <div className="flex w-64 items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={dpsAppearance.barOpacity}
+                        onChange={(event) => {
+                          void saveSettings({
+                            appearance: {
+                              dpsWindow: {
+                                barOpacity: Number(event.currentTarget.value),
+                              },
+                            },
+                          });
+                        }}
+                        className="w-full"
+                      />
+                      <span className="text-muted-foreground w-10 text-right text-xs">
+                        {dpsAppearance.barOpacity}%
+                      </span>
+                    </div>
+                  }
+                />
               </SettingsGroup>
 
               <div className="space-y-3">
@@ -648,6 +675,7 @@ export function SettingsContent() {
                         combatInfos={previewCombatInfos as never}
                         mainPlayerColor={dpsAppearance.mainPlayerColor}
                         otherPlayerColor={dpsAppearance.otherPlayerColor}
+                        barOpacity={dpsAppearance.barOpacity}
                         onPlayerClicked={() => undefined}
                       />
                     </div>
@@ -776,23 +804,7 @@ export function SettingsContent() {
                     />
                   }
                 />
-                <SettingsRow
-                  label={t("settings.dps.outputDebugLog")}
-                  control={
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={settings.dpsMeter.outputDebugLog}
-                      onChange={(event) => {
-                        void saveSettings({
-                          dpsMeter: {
-                            outputDebugLog: event.currentTarget.checked,
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
+
               </SettingsGroup>
             </div>
           )}

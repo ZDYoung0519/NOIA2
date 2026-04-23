@@ -26,6 +26,8 @@ pub struct TrackedWindowOptions {
     pub shadow: Option<bool>,
     pub always_on_top: Option<bool>,
     pub skip_taskbar: Option<bool>,
+    pub focus: Option<bool>,
+    pub focusable: Option<bool>,
 }
 
 fn pair_key(parent_label: &str, child_label: &str) -> String {
@@ -141,14 +143,19 @@ pub fn ensure_tracked_window<R: Runtime>(
     let gap = options.gap.unwrap_or(10.0);
     let width = options.width.unwrap_or(520.0);
     let height = options.height.unwrap_or(620.0);
+    let focus = options.focus.unwrap_or(true);
+    let focusable = options.focusable.unwrap_or(true);
     let parent_window = app
         .get_webview_window(&options.parent_label)
         .ok_or_else(|| format!("parent window '{}' not found", options.parent_label))?;
 
     if let Some(existing_window) = app.get_webview_window(&options.child_label) {
+        let _ = existing_window.set_focusable(focusable);
         let _ = existing_window.show();
         let _ = existing_window.unminimize();
-        let _ = existing_window.set_focus();
+        if focus {
+            let _ = existing_window.set_focus();
+        }
         position_child_next_to_parent(&parent_window, &existing_window, gap)?;
         register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
         schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);
@@ -168,13 +175,17 @@ pub fn ensure_tracked_window<R: Runtime>(
     .shadow(options.shadow.unwrap_or(false))
     .always_on_top(options.always_on_top.unwrap_or(true))
     .skip_taskbar(options.skip_taskbar.unwrap_or(true))
+    .focused(focus)
+    .focusable(focusable)
     .visible(false)
     .build()
     .map_err(|e| e.to_string())?;
 
     child_window.show().map_err(|e| e.to_string())?;
     child_window.unminimize().map_err(|e| e.to_string())?;
-    child_window.set_focus().map_err(|e| e.to_string())?;
+    if focus {
+        child_window.set_focus().map_err(|e| e.to_string())?;
+    }
     position_child_next_to_parent(&parent_window, &child_window, gap)?;
     register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
     schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);

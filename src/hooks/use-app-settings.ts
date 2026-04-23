@@ -16,7 +16,6 @@ import {
   type DpsMeterConfig,
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
-import { APP_SETTINGS_UPDATED_EVENT, DPS_RESET_REQUEST_EVENT } from "@/lib/events";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
 import { createWindow, toggleWindow } from "@/lib/window";
 
@@ -36,6 +35,7 @@ export type DpsWindowAppearance = {
   panelOpacity: number;
   mainPlayerColor: string;
   otherPlayerColor: string;
+  barOpacity: number;
   scaleFactor: number;
   autoResizeHeight: boolean;
   showHeaderStats: boolean;
@@ -82,6 +82,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       panelOpacity: 0,
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
+      barOpacity: 100,
       scaleFactor: 1,
       autoResizeHeight: true,
       showHeaderStats: true,
@@ -193,6 +194,10 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
           input?.appearance?.dpsWindow?.panelOpacity,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.panelOpacity
         ),
+        barOpacity: clampPercentage(
+          input?.appearance?.dpsWindow?.barOpacity,
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.barOpacity
+        ),
         scaleFactor: clampScaleFactor(
           input?.appearance?.dpsWindow?.scaleFactor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.scaleFactor
@@ -269,7 +274,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const setup = async () => {
-      const unlisten = await listen<AppSettings>(APP_SETTINGS_UPDATED_EVENT, (event) => {
+      const unlisten = await listen<AppSettings>("app-settings-updated", (event) => {
         if (!mounted) {
           return;
         }
@@ -328,7 +333,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     };
 
     const handleResetDps = async () => {
-      await emit(DPS_RESET_REQUEST_EVENT);
+      await emit('dps-reset-requested');
     };
 
     const registerAllShortcuts = async () => {
@@ -393,7 +398,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
       const next = mergeSettings(settings, updater);
       setSettings(next);
       localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(next));
-      await emit(APP_SETTINGS_UPDATED_EVENT, next);
+      await emit("app-settings-updated", next);
     },
     [mergeSettings, settings]
   );

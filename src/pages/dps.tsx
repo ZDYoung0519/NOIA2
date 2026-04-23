@@ -20,12 +20,12 @@ import {
 
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { TitleBar } from "@/components/title-bar";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { DPS_RESET_REQUEST_EVENT } from "@/lib/events";
+
 import { createWindow } from "@/lib/window";
 import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
 import { cn } from "@/lib/utils";
@@ -57,7 +57,6 @@ const formatLocalRecordTime = (timestampSeconds: number) => {
   if (!timestampSeconds || !Number.isFinite(timestampSeconds)) {
     return "--";
   }
-
   return new Date(timestampSeconds * 1000).toLocaleTimeString();
 };
 
@@ -372,51 +371,12 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
               {`${historyRecordsLength} records`}
             </span>
           ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="cursor-help text-xs text-slate-200 select-none"
-                >
-                  {footerData.packetTotalKb}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="start"
-                className="max-w-none border-white/10 bg-slate-950/95 text-slate-100"
+              <button
+                type="button"
+                className="cursor-help text-xs text-slate-200 select-none"
               >
-                <div className="flex flex-wrap items-center gap-2 text-xs whitespace-nowrap">
-                  {footerData.packetTooltipLines.map((line) => (
-                    <span key={line} className="text-slate-300">
-                      {line}
-                    </span>
-                  ))}
-                  {footerData.packetPortLines.map((entry) => (
-                    <span
-                      key={entry.key}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-md px-2 py-1",
-                        entry.isCombatPort
-                          ? "bg-cyan-500/15 text-cyan-100"
-                          : "bg-white/5 text-slate-200"
-                      )}
-                    >
-                      <span className="font-mono text-[11px]">{entry.key}</span>
-                      <span className="font-medium">{entry.value}</span>
-                      {entry.isCombatPort ? (
-                        <Badge
-                          variant="secondary"
-                          className="border-cyan-300/30 bg-cyan-400/15 text-cyan-100"
-                        >
-                          combat_port
-                        </Badge>
-                      ) : null}
-                    </span>
-                  ))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
+                {footerData.packetTotalKb}
+              </button>
           )}
         </div>
 
@@ -491,6 +451,7 @@ export default function DpsPage() {
           setIsRunning(status);
         }
 
+        // 收听dps-snapshot事件，更新当前战斗快照
         unlistenSnapshotRef.current = await listen<CombatSnapshot>("dps-snapshot", (event) => {
           if (!mounted) {
             return;
@@ -507,6 +468,7 @@ export default function DpsPage() {
           );
         });
 
+        // 收听 dps-memory, 更新内存占用
         unlistenMemoryRef.current = await listen<MemorySnapshot>("dps-memory", (event) => {
           if (!mounted) {
             return;
@@ -530,6 +492,7 @@ export default function DpsPage() {
           setMemorySnapshot(nextMemory);
         });
 
+        // dps-meter的状态，运行/停止
         unlistenStatusRef.current = await listen<boolean>("dps-meter-status", (event) => {
           if (!mounted) {
             return;
@@ -554,6 +517,14 @@ export default function DpsPage() {
           }
         });
 
+        // 收听dps-reset-requested事件，重置当前状态（快捷键触发后会emit这个信号）
+        unlistenResetRequestRef.current = await listen("dps-reset-requested", () => {
+          if (!mounted) {return}
+          void latestResetHandlerRef.current?.();
+        });
+
+        
+        // 检测到主角色
         unlistenMainActorDetectedRef.current = await listen<{
           actorId: number;
           actorName: string;
@@ -578,28 +549,28 @@ export default function DpsPage() {
             window.clearTimeout(mainActorResetTimerRef.current);
           }
 
+          // 检测到主角色1000ms后清空状态
           mainActorResetTimerRef.current = window.setTimeout(() => {
             mainActorResetTimerRef.current = null;
             void latestResetHandlerRef.current?.();
           }, 1_000);
         });
 
+        // 响应dps_detail窗口的请求，发送当前选中玩家的详情数据
         const unlistenDetailRequest = await listen("dps-detail-request", async () => {
           if (detailPayloadRef.current) {
             await emit("dps-detail-update", detailPayloadRef.current);
           }
         });
 
+        // dps-detail窗口关闭时，清除选中状态
         const unlistenDetailClosed = await listen("dps-detail-window-closed", () => {
           if (!mounted) {
             return;
           }
           setPinnedPlayerId(null);
+          setHoverPlayerId(null)
           detailPayloadRef.current = null;
-        });
-
-        unlistenResetRequestRef.current = await listen(DPS_RESET_REQUEST_EVENT, () => {
-          void latestResetHandlerRef.current?.();
         });
 
         const previousUnlistenStatus = unlistenStatusRef.current;
@@ -654,6 +625,8 @@ export default function DpsPage() {
 
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
+
+    // dps窗口关闭时，停止后台的dps-meter进程
     const unlisten = appWindow.onCloseRequested(async () => {
       try {
         await invoke("stop_dps_meter");
@@ -667,6 +640,7 @@ export default function DpsPage() {
     };
   }, []);
 
+  // resize 窗口
   const resizeWindow = useCallback(async () => {
     if (!contentRef.current || !dpsAppearance.autoResizeHeight) {
       return;
@@ -684,7 +658,8 @@ export default function DpsPage() {
         return;
       }
 
-      const contentHeight = element.scrollHeight * dpsAppearance.scaleFactor;
+      const FOOTER_HEIGHT = 26;
+      const contentHeight = (element.scrollHeight + FOOTER_HEIGHT) * dpsAppearance.scaleFactor;
       const targetHeight = Math.max(
         MIN_HEIGHT,
         Math.min(MAX_HEIGHT, Math.ceil(contentHeight + TITLE_BAR_HEIGHT + WINDOW_BORDER_HEIGHT))
@@ -1022,6 +997,7 @@ export default function DpsPage() {
       shadow: false,
       alwaysOnTop: true,
       skipTaskbar: true,
+      focus: false,
     });
 
     await waitForWindowReady("dps_detail");
@@ -1041,6 +1017,8 @@ export default function DpsPage() {
         shadow: false,
         alwaysOnTop: true,
         skipTaskbar: true,
+        focus: false,
+        focusable: false,
       },
     });
   }, []);
@@ -1116,10 +1094,8 @@ export default function DpsPage() {
   const handleStartDpsMeter = useCallback(async () => {
     try {
       await invoke("start_dps_meter");
-      // toast.success(t("dps.toast.started"));
     } catch (error) {
       console.error("start dps meter failed:", error);
-      // toast.error(t("dps.toast.startFailed"));
     }
   }, []);
 
@@ -1312,71 +1288,123 @@ export default function DpsPage() {
   const rightActions = (
     <div className="flex items-center gap-1 pr-1">
       {isRunning ? (
-        <TitleIconButton
-          active
-          onClick={handleStopDpsMeter}
-          title={t("dps.actions.stop")}
-          tone="danger"
-        >
-          <Square className="h-3.5 w-3.5" />
-        </TitleIconButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <TitleIconButton
+                active
+                onClick={handleStopDpsMeter}
+                title={t("dps.actions.stop")}
+                tone="danger"
+              >
+                <Square className="h-3.5 w-3.5" />
+              </TitleIconButton>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t("dps.actions.stop")}</TooltipContent>
+        </Tooltip>
       ) : (
-        <TitleIconButton
-          active
-          onClick={handleStartDpsMeter}
-          title={t("dps.actions.start")}
-          tone="accent"
-        >
-          <Play className="h-3.5 w-3.5" />
-        </TitleIconButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <TitleIconButton
+                active
+                onClick={handleStartDpsMeter}
+                title={t("dps.actions.start")}
+                tone="accent"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </TitleIconButton>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{t("dps.actions.start")}</TooltipContent>
+        </Tooltip>
       )}
-      <TitleIconButton onClick={handleReset} title={t("dps.actions.reset")}>
-        <RotateCcw className="h-3.5 w-3.5" />
-      </TitleIconButton>
-      <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
-        <Settings2 className="h-3.5 w-3.5" />
-      </TitleIconButton>
-      <TitleIconButton onClick={handleOpenLog} title="Open log">
-        <ScrollText className="h-3.5 w-3.5" />
-      </TitleIconButton>
-      <TitleIconButton
-        active={view === "history"}
-        onClick={handleOpenHistory}
-        title={t("dps.actions.history")}
-      >
-        <History className="h-3.5 w-3.5" />
-      </TitleIconButton>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>
+            <TitleIconButton onClick={handleReset} title={t("dps.actions.reset")}>
+              <RotateCcw className="h-3.5 w-3.5" />
+            </TitleIconButton>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("dps.actions.reset")}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>
+            <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
+              <Settings2 className="h-3.5 w-3.5" />
+            </TitleIconButton>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("dps.actions.settings")}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>
+            <TitleIconButton onClick={handleOpenLog} title="Open log">
+              <ScrollText className="h-3.5 w-3.5" />
+            </TitleIconButton>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">数据日志</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>
+            <TitleIconButton
+              active={view === "history"}
+              onClick={handleOpenHistory}
+              title={t("dps.actions.history")}
+            >
+              <History className="h-3.5 w-3.5" />
+            </TitleIconButton>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">历史记录</TooltipContent>
+      </Tooltip>
     </div>
   );
 
   const leftActions = (
     <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
-      <button
-        onClick={() => setView("dps")}
-        className="flex h-6 w-6 cursor-pointer items-center justify-center p-0"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <img
-          src="icon.png"
-          alt="icon"
-          className="h-6 w-6"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => setView("dps")}
+            className="flex h-6 w-6 cursor-pointer items-center justify-center p-0"
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <img
+              src="icon.png"
+              alt="icon"
+              className="h-6 w-6"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">DPS</TooltipContent>
+      </Tooltip>
 
-      <div
-        className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1"
-        data-tauri-drag-region
-      >
-        <span
-          className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase max-w-15"
-          data-tauri-drag-region
-        >
-          {targetName}
-        </span>
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1"
+            data-tauri-drag-region
+          >
+            <span
+              className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase max-w-15"
+              data-tauri-drag-region
+            >
+              {targetName}
+            </span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{targetName}</TooltipContent>
+      </Tooltip>
     </div>
   );
 
@@ -1386,6 +1414,7 @@ export default function DpsPage() {
         <TitleBar
           title=""
           showMaximize={false}
+          showMinimize={false}
           leftActions={leftActions}
           rightActions={rightActions}
           className="border-white/10"
@@ -1393,21 +1422,21 @@ export default function DpsPage() {
         />
       }
       className="border-white/10 text-slate-100"
-      contentClassName="flex flex-1 items-start"
+      contentClassName="flex flex-1 items-stretch"
     >
       <div
-        ref={contentRef}
-        className="flex w-full flex-col self-start bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)]"
+        className="flex h-full w-full flex-col self-stretch bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)]"
         style={{
           backgroundColor: shellBackground,
           zoom: dpsAppearance.scaleFactor,
         }}
       >
         <section
-          className="flex flex-col border border-white/10"
+          className="flex h-full flex-col border border-white/10"
           style={{ backgroundColor: panelBackground }}
         >
-          <div className="p-0">
+          <div className="flex h-full flex-col p-0">
+            <div ref={contentRef}>
             {view === "history" && (
               <div className="flex min-h-10 gap-0">
                 <MemoizedHistoryTargetList
@@ -1424,6 +1453,7 @@ export default function DpsPage() {
                       combatInfos={dpsPanelData.combatInfos || undefined}
                       mainPlayerColor={dpsAppearance.mainPlayerColor}
                       otherPlayerColor={dpsAppearance.otherPlayerColor}
+                      barOpacity={dpsAppearance.barOpacity}
                       onPlayerClicked={handlePlayerClick}
                       onPlayerHovered={handlePlayerHover}
                       onPlayerHoverEnd={handlePlayerHoverEnd}
@@ -1447,14 +1477,17 @@ export default function DpsPage() {
                   combatInfos={dpsPanelData.combatInfos || undefined}
                   mainPlayerColor={dpsAppearance.mainPlayerColor}
                   otherPlayerColor={dpsAppearance.otherPlayerColor}
+                  barOpacity={dpsAppearance.barOpacity}
                   onPlayerClicked={handlePlayerClick}
                   onPlayerHovered={handlePlayerHover}
                   onPlayerHoverEnd={handlePlayerHoverEnd}
                 />
               </div>
             )}
+            </div>
 
-            <MemoizedBottomStatusBar
+            <div className="mt-auto">
+              <MemoizedBottomStatusBar
               footerData={footerData}
               view={view}
               isRunning={isRunning}
@@ -1462,6 +1495,8 @@ export default function DpsPage() {
               historyRecordsLength={historyRecords.length}
               footerBackground={footerBackground}
             />
+            </div>
+
           </div>
         </section>
       </div>

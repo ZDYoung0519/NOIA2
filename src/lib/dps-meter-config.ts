@@ -3,19 +3,17 @@ import { invoke } from "@tauri-apps/api/core";
 export const DPS_METER_CONFIG_KEY = "dps-meter-config";
 
 export type DpsMeterConfig = {
-  dpsSnapshotIntervalMs: number;
-  memorySnapshotIntervalMs: number;
-  bossOnly: boolean;
-  myMuzhuangOnly: boolean;
-  outputDebugLog: boolean;
+  dpsSnapshotIntervalMs: number;        // dps 推送的延迟间隔
+  memorySnapshotIntervalMs: number;     // 内存使用情况推送的延迟间隔
+  bossOnly: boolean;                    // 只显示boss
+  myMuzhuangOnly: boolean;              // 只显示我的木桩
 };
 
 export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
-  dpsSnapshotIntervalMs: 500,
-  memorySnapshotIntervalMs: 1500,
+  dpsSnapshotIntervalMs: 250,
+  memorySnapshotIntervalMs: 1000,
   bossOnly: false,
   myMuzhuangOnly: false,
-  outputDebugLog: false,
 };
 
 export function loadDpsMeterConfig(): DpsMeterConfig {

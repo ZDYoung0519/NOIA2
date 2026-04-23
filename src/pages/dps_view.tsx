@@ -27,8 +27,8 @@ export default function DpsViewPage() {
     await createWindow("dps", {
       title: "DPS Meter",
       url: "/dps",
-      width: 100,
-      height: 400,
+      width: 200,
+      height: 50,
       resizable: true,
       maximizable: false,
       minimizable: false,

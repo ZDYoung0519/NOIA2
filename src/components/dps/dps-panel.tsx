@@ -17,6 +17,7 @@ const DpsPanel = function DpsPanel({
   combatInfos,
   mainPlayerColor,
   otherPlayerColor,
+  barOpacity,
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
@@ -26,6 +27,7 @@ const DpsPanel = function DpsPanel({
   combatInfos: CombatInfos | undefined;
   mainPlayerColor: string;
   otherPlayerColor: string;
+  barOpacity?: number;
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
   onPlayerHoverEnd?: (playerId: number) => void;
@@ -93,6 +95,7 @@ const DpsPanel = function DpsPanel({
               style={{
                 width: `${barPercent}%`,
                 background: isMainPlayer ? mainPlayerColor : otherPlayerColor,
+                opacity: Math.min(100, Math.max(0, barOpacity ?? 100)) / 100,
               }}
             />
 
@@ -152,3 +155,4 @@ const DpsPanel = function DpsPanel({
 };
 
 export const MemoizedDpsPanel = memo(DpsPanel);
+

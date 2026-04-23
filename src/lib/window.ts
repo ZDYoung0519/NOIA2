@@ -81,7 +81,7 @@ export async function toggleWindow(label: string) {
   }
 }
 
-export async function showWindow(label: string) {
+export async function showWindow(label: string, focus = true) {
   const window = await WebviewWindow.getByLabel(label);
   if (!window) {
     return;
@@ -95,7 +95,7 @@ export async function showWindow(label: string) {
   if (await window.isMinimized()) {
     await window.unminimize();
   }
-  if (!(await window.isFocused())) {
+  if (focus && !(await window.isFocused())) {
     await window.setFocus();
   }
 }
@@ -185,6 +185,7 @@ export async function createWindow(
     skipTaskbar?: boolean;
     shadow?: boolean;
     parent?: string;
+    focus?: boolean;
   },
   handlers?: {
     onCreated?: () => void;
@@ -224,7 +225,7 @@ export async function createWindow(
         }
       }
 
-      await showWindow(label);
+      await showWindow(label, options.focus ?? true);
       createWindowLoading[label] = false;
       return;
     }
