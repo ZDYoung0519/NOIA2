@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
-import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   DEFAULT_DPS_METER_CONFIG,
   DPS_METER_CONFIG_KEY,
@@ -17,7 +17,7 @@ import {
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
-import { createWindow, toggleWindow } from "@/lib/window";
+import { toggleWindow } from "@/lib/window";
 
 export const APP_SETTINGS_KEY = "app-settings";
 const LEGACY_SHORTCUT_KEY = "global-shortcut-show-main";
@@ -310,55 +310,54 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
       await toggleWindow("main");
     };
 
-    const handleShowDpsWindow = async () => {
-      const existingWindow = await WebviewWindow.getByLabel("dps");
-      if (existingWindow) {
-        await toggleWindow("dps");
-        return;
-      }
-
-      await createWindow("dps", {
-        title: "DPS Meter",
-        url: "/dps",
-        width: 100,
-        height: 400,
-        resizable: true,
-        maximizable: false,
-        minimizable: false,
-        decorations: false,
-        transparent: true,
-        shadow: false,
-        alwaysOnTop: true,
-      });
-    };
-
-    const handleResetDps = async () => {
-      await emit('dps-reset-requested');
-    };
-
     const registerAllShortcuts = async () => {
-      const { showMain, showDps, resetDps } = settings.shortcuts;
+      const { showMain } = settings.shortcuts;
 
       if (showMain) {
         await registerShortcut(showMain, handleShowMainWindow);
-      }
-      if (showDps) {
-        await registerShortcut(showDps, handleShowDpsWindow);
-      }
-      if (resetDps) {
-        await registerShortcut(resetDps, handleResetDps);
       }
     };
 
     void registerAllShortcuts();
 
     return () => {
-      const { showMain, showDps, resetDps } = settings.shortcuts;
+      const { showMain } = settings.shortcuts;
       void unregisterShortcut(showMain);
+    };
+  }, [settings.shortcuts.showMain]);
+
+  useEffect(() => {
+    if (getCurrentWebviewWindow().label !== "dps") {
+      return;
+    }
+
+    const handleToggleDpsWindow = async () => {
+      await toggleWindow("dps");
+    };
+
+    const handleResetDps = async () => {
+      await emit("dps-reset-requested");
+    };
+
+    const registerDpsShortcuts = async () => {
+      const { showDps, resetDps } = settings.shortcuts;
+
+      if (showDps) {
+        await registerShortcut(showDps, handleToggleDpsWindow);
+      }
+      if (resetDps) {
+        await registerShortcut(resetDps, handleResetDps);
+      }
+    };
+
+    void registerDpsShortcuts();
+
+    return () => {
+      const { showDps, resetDps } = settings.shortcuts;
       void unregisterShortcut(showDps);
       void unregisterShortcut(resetDps);
     };
-  }, [settings.shortcuts]);
+  }, [settings.shortcuts.showDps, settings.shortcuts.resetDps]);
 
   const mergeSettings = useCallback(
     (

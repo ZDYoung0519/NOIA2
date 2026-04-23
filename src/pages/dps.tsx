@@ -11,6 +11,7 @@ import {
   RotateCcw,
   ScrollText,
   Square,
+  Trash2,
   Wifi,
   WifiOff,
 } from "lucide-react";
@@ -189,7 +190,7 @@ function TitleIconButton({
       title={title}
       onClick={() => void onClick()}
       className={cn(
-        "flex h-6 w-6 items-center justify-center rounded-md border text-slate-300 transition",
+        "flex h-7 w-7 items-center justify-center rounded-md border text-slate-300 transition",
         "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
         active &&
           tone === "accent" &&
@@ -199,6 +200,14 @@ function TitleIconButton({
     >
       {children}
     </button>
+    // <Tooltip>
+    //   <TooltipTrigger asChild>
+    //     <div>
+
+    //     </div>
+    //   </TooltipTrigger>
+    //   <TooltipContent side="bottom">{title}</TooltipContent>
+    // </Tooltip>
   );
 }
 
@@ -227,19 +236,39 @@ type HistoryTargetListProps = {
   historyRecords: HistoryTargetRecord[];
   selectedHistoryId: string | null;
   onSelect: (id: string) => void;
+  onClear: () => void;
 };
 
 const MemoizedHistoryTargetList = memo(function HistoryTargetList({
   historyRecords,
   selectedHistoryId,
   onSelect,
+  onClear,
 }: HistoryTargetListProps) {
   return (
     <aside className="w-40 border-r border-white/10 bg-white/[0.03]">
-      <div className="border-b border-white/10 px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
         <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
           History
         </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={historyRecords.length === 0}
+              className={cn(
+                "flex h-5 w-5 items-center justify-center rounded-md border transition",
+                historyRecords.length === 0
+                  ? "cursor-not-allowed border-white/5 bg-white/[0.03] text-slate-600"
+                  : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Clear history</TooltipContent>
+        </Tooltip>
       </div>
 
       {historyRecords.length > 0 ? (
@@ -344,17 +373,17 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
         </div>
 
         <div className="flex items-center gap-1">
-          <Cpu className="h-3 w-3 text-slate-500" />
+          <Cpu className="h-3.5 w-3.5 text-slate-500" />
           <span className="text-xs text-slate-200 select-none">{footerData.cpu}</span>
         </div>
 
         <div className="flex items-center gap-1">
-          <Database className="h-3 w-3 text-slate-500" />
+          <Database className="h-3.5 w-3.5 text-slate-500" />
           <span className="text-xs text-slate-200 select-none">{footerData.ram}</span>
         </div>
 
         {/* <div className="flex items-center gap-1">
-          <Package className="h-3 w-3 text-slate-500" />
+          <Package className="h-3.5 w-3.5 text-slate-500" />
           <button
             type="button"
             className="cursor-help text-xs text-slate-200 select-none"
@@ -365,12 +394,12 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
 
         {footerData.pingActive ? (
           <div className={cn("flex items-center gap-1", footerData.pingTone)}>
-            <Wifi className="h-3 w-3" />
+            <Wifi className="h-3.5 w-3.5" />
             <span className="text-xs font-medium select-none">{footerData.ping}</span>
           </div>
         ) : (
           <div className="flex items-center gap-1 text-white/60">
-            <WifiOff className="h-3 w-3" />
+            <WifiOff className="h-3.5 w-3.5" />
             <span className="text-xs select-none">--</span>
           </div>
         )}
@@ -822,7 +851,7 @@ export default function DpsPage() {
     return Math.max(0, lastTime - startTime);
   }, [displayTargetInfo]);
 
-  const targetName = displayTargetInfo?.targetName || t("dps.target.none");
+  const targetName = displayTargetInfo?.targetName || (t("dps_panel.targ") as string);
   const shellBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
   const titleBarBackground = hexToRgba(
     darkenHex(dpsAppearance.backgroundColor, 22),
@@ -1264,6 +1293,17 @@ export default function DpsPage() {
     setView("history");
   }, [view]);
 
+  const handleClearHistory = useCallback(async () => {
+    Aion2DpsHistory.clear();
+    setHistoryRecords([]);
+    setSelectedHistoryId(null);
+    setPinnedPlayerId(null);
+    setHoverPlayerId(null);
+    detailPayloadRef.current = null;
+    void emit("dps-detail-clear");
+    await closeDetailWindowNow();
+  }, [closeDetailWindowNow]);
+
   const handleOpenLog = useCallback(async () => {
     await ensureLogWindow();
   }, [ensureLogWindow]);
@@ -1271,106 +1311,65 @@ export default function DpsPage() {
   const rightActions = (
     <div className="flex items-center gap-1 pr-1">
       {isRunning ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <TitleIconButton
-                active
-                onClick={handleStopDpsMeter}
-                title={t("dps.actions.stop")}
-                tone="danger"
-              >
-                <Square className="h-3 w-3" />
-              </TitleIconButton>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{t("dps.actions.stop")}</TooltipContent>
-        </Tooltip>
+        <TitleIconButton
+          active
+          onClick={handleStopDpsMeter}
+          title={t("dps.actions.stop")}
+          tone="danger"
+        >
+          <Square className="h-3.5 w-3.5" />
+        </TitleIconButton>
       ) : (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <TitleIconButton
-                active
-                onClick={handleStartDpsMeter}
-                title={t("dps.actions.start")}
-                tone="accent"
-              >
-                <Play className="h-3 w-3" />
-              </TitleIconButton>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{t("dps.actions.start")}</TooltipContent>
-        </Tooltip>
+        <TitleIconButton
+          active
+          onClick={handleStartDpsMeter}
+          title={t("dps.actions.start")}
+          tone="accent"
+        >
+          <Play className="h-3.5 w-3.5" />
+        </TitleIconButton>
       )}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <TitleIconButton onClick={handleReset} title={t("dps.actions.reset")}>
-              <RotateCcw className="h-3 w-3" />
-            </TitleIconButton>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{t("dps.actions.reset")}</TooltipContent>
-      </Tooltip>
+
+      <TitleIconButton active onClick={handleReset} title={t("dps.actions.reset")}>
+        <RotateCcw className="h-3.5 w-3.5" />
+      </TitleIconButton>
       {/* <Tooltip>
         <TooltipTrigger asChild>
           <div>
             <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
-              <Settings2 className="h-3 w-3" />
+              <Settings2 className="h-3.5 w-3.5" />
             </TitleIconButton>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t("dps.actions.settings")}</TooltipContent>
       </Tooltip> */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <TitleIconButton onClick={handleOpenLog} title="Open log">
-              <ScrollText className="h-3 w-3" />
-            </TitleIconButton>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">数据日志</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <TitleIconButton
-              active={view === "history"}
-              onClick={handleOpenHistory}
-              title={t("dps.actions.history")}
-            >
-              <History className="h-3 w-3" />
-            </TitleIconButton>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">历史记录</TooltipContent>
-      </Tooltip>
+
+      <TitleIconButton active onClick={handleOpenLog} title={t("dps.actions.log")}>
+        <ScrollText className="h-3.5 w-3.5" />
+      </TitleIconButton>
+
+      <TitleIconButton active onClick={handleOpenHistory} title={t("dps.actions.history")}>
+        <History className="h-3.5 w-3.5" />
+      </TitleIconButton>
     </div>
   );
 
   const leftActions = (
     <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={() => setView("dps")}
-            className="flex h-6 w-6 cursor-pointer items-center justify-center p-0"
-            onContextMenu={(e) => e.preventDefault()}
-          >
-            <img
-              src="icon.png"
-              alt="icon"
-              className="h-6 w-6"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">DPS</TooltipContent>
-      </Tooltip>
+      <button
+        onClick={() => setView("dps")}
+        className="flex h-6 w-6 cursor-pointer items-center justify-center p-0 hover:scale-110 hover:brightness-110 data-[tauri-drag-region]:pointer-events-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <img
+          src="icon.png"
+          alt="icon"
+          className="h-6 w-6"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+      </button>
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -1386,7 +1385,10 @@ export default function DpsPage() {
             </span>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom">{targetName}</TooltipContent>
+        <TooltipContent side="bottom">
+          <div>{displayTargetInfo?.targetMobCode}</div>
+          <div>{displayTargetInfo?.id}</div>
+        </TooltipContent>
       </Tooltip>
     </div>
   );
@@ -1426,6 +1428,7 @@ export default function DpsPage() {
                     historyRecords={historyRecords}
                     selectedHistoryId={selectedHistoryId}
                     onSelect={setSelectedHistoryId}
+                    onClear={() => void handleClearHistory()}
                   />
 
                   <div className="min-w-0 flex-1">
