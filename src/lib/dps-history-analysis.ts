@@ -128,11 +128,11 @@ export function getBattleTargetSummaries(
   }
 
   return Array.from(summaryMap.values()).sort((a, b) => {
-    if (a.count !== b.count) {
-      return a.count - b.count;
-    }
     if (a.lastSeenAt !== b.lastSeenAt) {
-      return a.lastSeenAt - b.lastSeenAt;
+      return b.lastSeenAt - a.lastSeenAt;
+    }
+    if (a.count !== b.count) {
+      return b.count - a.count;
     }
     return a.targetName.localeCompare(b.targetName, "zh-CN");
   });
@@ -183,10 +183,7 @@ export function getBattleRecordChartGroups(
           };
         })
         .sort((a, b) => {
-          if (a.isMainCharacter !== b.isMainCharacter) {
-            return a.isMainCharacter ? -1 : 1;
-          }
-          return b.dps - a.dps;
+          return a.dps - b.dps;
         });
 
       return {

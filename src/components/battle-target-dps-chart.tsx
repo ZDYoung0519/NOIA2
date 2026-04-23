@@ -1,28 +1,32 @@
 import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Aion2DpsHistory } from "@/lib/localStorageHistory";
 import {
   getBattleRecordChartGroups,
   getBattleTargetSummaries,
-  type BattleRecordChartGroup,
 } from "@/lib/dps-history-analysis";
 import type { MainActorRecord } from "@/types/aion2dps";
 
 type BattleTargetDpsChartProps = {
   mainCharacter: MainActorRecord | null;
   selectedTargetKey: string | null;
+  onSelectTargetKey: (targetKey: string | null) => void;
 };
-
-const TEAMMATE_COLORS = [
-  "hsl(var(--chart-2, 340 70% 70%))",
-  "hsl(214 88% 64%)",
-  "hsl(160 65% 52%)",
-  "hsl(39 96% 58%)",
-  "hsl(272 72% 68%)",
-  "hsl(10 82% 66%)",
-];
 
 function formatDps(value: number) {
   if (!Number.isFinite(value) || value <= 0) {
@@ -38,37 +42,33 @@ function formatDps(value: number) {
   return Math.round(value).toString();
 }
 
-function getLegend(groups: BattleRecordChartGroup[]) {
-  const colorMap = new Map<string, { name: string; color: string; isMainCharacter: boolean }>();
-  let teammateIndex = 0;
-
-  for (const group of groups) {
-    for (const actor of group.actors) {
-      if (colorMap.has(actor.actorKey)) {
-        continue;
-      }
-
-      colorMap.set(actor.actorKey, {
-        name: actor.actorName,
-        color: actor.isMainCharacter
-          ? "var(--primary)"
-          : TEAMMATE_COLORS[teammateIndex++ % TEAMMATE_COLORS.length],
-        isMainCharacter: actor.isMainCharacter,
-      });
-    }
-  }
-
-  return colorMap;
+function sanitizeKey(value: string) {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
 
 export default function BattleTargetDpsChart({
   mainCharacter,
   selectedTargetKey,
+  onSelectTargetKey,
 }: BattleTargetDpsChartProps) {
   const targetSummaries = React.useMemo(
     () => getBattleTargetSummaries(Aion2DpsHistory.get(), mainCharacter),
     [mainCharacter]
   );
+
+  React.useEffect(() => {
+    if (targetSummaries.length === 0) {
+      if (selectedTargetKey !== null) {
+        onSelectTargetKey(null);
+      }
+      return;
+    }
+
+    const hasSelected = targetSummaries.some((summary) => summary.key === selectedTargetKey);
+    if (!hasSelected) {
+      onSelectTargetKey(targetSummaries[0].key);
+    }
+  }, [onSelectTargetKey, selectedTargetKey, targetSummaries]);
 
   const selectedTarget =
     targetSummaries.find((summary) => summary.key === selectedTargetKey) ?? null;
@@ -78,15 +78,72 @@ export default function BattleTargetDpsChart({
     [mainCharacter, selectedTarget]
   );
 
-  const legend = React.useMemo(() => getLegend(chartGroups), [chartGroups]);
-  const maxDps = React.useMemo(() => {
-    return Math.max(1, ...chartGroups.flatMap((group) => group.actors.map((actor) => actor.dps)));
+  const actorMetrics = React.useMemo(() => {
+    const actorMap = new Map<
+      string,
+      {
+        label: string;
+        color: string;
+        totalDps: number;
+        count: number;
+        isMainCharacter: boolean;
+      }
+    >();
+
+    for (const group of chartGroups) {
+      for (const actor of group.actors) {
+        const key = sanitizeKey(actor.actorKey);
+        const current = actorMap.get(key);
+
+        actorMap.set(key, {
+          label: actor.isMainCharacter ? `${actor.actorName} (Main)` : actor.actorName,
+          color: actor.isMainCharacter ? "var(--primary)" : "var(--secondary)",
+          totalDps: (current?.totalDps ?? 0) + actor.dps,
+          count: (current?.count ?? 0) + 1,
+          isMainCharacter: actor.isMainCharacter,
+        });
+      }
+    }
+
+    return Array.from(actorMap.entries()).sort(([, a], [, b]) => {
+      const avgA = a.totalDps / a.count;
+      const avgB = b.totalDps / b.count;
+      return avgA - avgB;
+    });
   }, [chartGroups]);
 
-  const yAxisTicks = [1, 0.75, 0.5, 0.25, 0].map((ratio) => ({
-    ratio,
-    value: maxDps * ratio,
-  }));
+  const chartConfig = React.useMemo(() => {
+    const config: ChartConfig = {};
+
+    for (const [key, metric] of actorMetrics) {
+      config[key] = {
+        label: metric.label,
+        color: metric.color,
+      };
+    }
+
+    return config;
+  }, [actorMetrics]);
+
+  const chartData = React.useMemo(() => {
+    return chartGroups.map((group) => {
+      const row: Record<string, number | string> = {
+        label: group.label,
+        recordTime: group.label,
+      };
+
+      for (const actor of group.actors) {
+        row[sanitizeKey(actor.actorKey)] = Math.round(actor.dps);
+      }
+
+      return row;
+    });
+  }, [chartGroups]);
+
+  const chartWidth = React.useMemo(() => {
+    const maxActors = Math.max(1, ...chartGroups.map((group) => group.actors.length));
+    return Math.max(chartGroups.length * Math.max(72, maxActors * 24), 520);
+  }, [chartGroups]);
 
   return (
     <div className="min-w-0">
@@ -94,101 +151,84 @@ export default function BattleTargetDpsChart({
         <h3 className="text-foreground text-[20px] font-semibold md:text-[22px]">
           Battle DPS History
         </h3>
+
+        {targetSummaries.length > 0 ? (
+          <Select
+            value={selectedTargetKey ?? targetSummaries[0]?.key ?? ""}
+            onValueChange={(value) => onSelectTargetKey(value || null)}
+          >
+            <SelectTrigger className="h-11 min-w-56 rounded-2xl bg-card">
+              <SelectValue placeholder="Select target" />
+            </SelectTrigger>
+            <SelectContent>
+              {targetSummaries.map((summary) => (
+                <SelectItem key={summary.key} value={summary.key}>
+                  {summary.targetName} ({summary.count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
       </div>
 
-      <Card className="border-border/50 bg-card rounded-[28px] border shadow-none">
+      <Card className="rounded-[28px] border border-border/50 bg-card shadow-none">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-[18px] font-semibold">
+            {selectedTarget?.targetName ?? "Select a battle target"}
+          </CardTitle>
+        </CardHeader>
+
         <CardContent className="p-4 pt-2">
           {!mainCharacter ? (
-            <div className="border-border/50 bg-muted/30 text-muted-foreground rounded-[22px] border px-4 py-6 text-sm">
+            <div className="rounded-[22px] border border-border/50 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
               Select a main character to view DPS history.
             </div>
           ) : !selectedTarget ? (
-            <div className="border-border/50 bg-muted/30 text-muted-foreground rounded-[22px] border px-4 py-6 text-sm">
+            <div className="rounded-[22px] border border-border/50 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
               Select a battle target from the left list.
             </div>
           ) : chartGroups.length === 0 ? (
-            <div className="border-border/50 bg-muted/30 text-muted-foreground rounded-[22px] border px-4 py-6 text-sm">
+            <div className="rounded-[22px] border border-border/50 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
               No chartable DPS history for this target.
             </div>
           ) : (
-            <div className="flex gap-4">
-              <div className="text-muted-foreground relative flex h-[320px] w-16 flex-col justify-between pb-12 text-right text-xs">
-                {yAxisTicks.map((tick) => (
-                  <div key={tick.ratio}>{formatDps(tick.value)}</div>
-                ))}
-              </div>
-
-              <div className="relative min-w-0 flex-1 overflow-x-auto pb-2">
-                <div className="pointer-events-none absolute inset-x-0 top-0 bottom-12">
-                  {yAxisTicks.slice(0, -1).map((tick) => (
-                    <div
-                      key={tick.ratio}
-                      className="border-border/60 absolute inset-x-0 border-t border-dashed"
-                      style={{ top: `${(1 - tick.ratio) * 100}%` }}
+            <div className="overflow-x-auto pb-2">
+              <div style={{ width: chartWidth }}>
+                <ChartContainer config={chartConfig} className="h-[340px] w-full">
+                  <BarChart accessibilityLayer data={chartData} barGap={4} barCategoryGap={20}>
+                    <CartesianGrid vertical={false} strokeDasharray="4 4" />
+                    <XAxis
+                      dataKey="recordTime"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                      interval={0}
+                      angle={-32}
+                      textAnchor="end"
+                      height={64}
                     />
-                  ))}
-                </div>
-
-                <div className="flex min-h-[320px] items-end gap-4 pr-2">
-                  {chartGroups.map((group) => {
-                    const groupWidth = Math.max(92, group.actors.length * 18 + 28);
-
-                    return (
-                      <div
-                        key={group.recordId}
-                        className="relative flex shrink-0 flex-col items-center justify-end gap-3"
-                        style={{ width: groupWidth }}
-                      >
-                        <div className="flex h-[260px] items-end gap-1.5">
-                          {group.actors.map((actor) => {
-                            const actorLegend = legend.get(actor.actorKey);
-                            const height = `${Math.max((actor.dps / maxDps) * 100, 3)}%`;
-
-                            return (
-                              <Tooltip key={actor.actorKey}>
-                                <TooltipTrigger asChild>
-                                  <div className="flex h-full items-end">
-                                    <div
-                                      className={
-                                        actor.isMainCharacter
-                                          ? "w-4 rounded-t-full rounded-b-sm transition-all"
-                                          : "w-3 rounded-t-full rounded-b-sm transition-all"
-                                      }
-                                      style={{
-                                        height,
-                                        backgroundColor: actorLegend?.color,
-                                        boxShadow: actor.isMainCharacter
-                                          ? "0 0 18px color-mix(in oklch, var(--primary) 45%, transparent)"
-                                          : undefined,
-                                      }}
-                                    />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <div className="text-background font-medium">
-                                    {actor.actorName}
-                                  </div>
-                                  <div className="text-muted-foreground mt-1">
-                                    DPS: {formatDps(actor.dps)}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            );
-                          })}
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1 text-center">
-                          <span className="text-foreground max-w-full text-xs font-medium">
-                            {group.label}
-                          </span>
-                          <span className="text-muted-foreground text-[11px]">
-                            {group.actors.length} players
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      tickFormatter={(value) => formatDps(Number(value))}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dashed" />}
+                    />
+                    {actorMetrics.map(([key, metric]) => (
+                      <Bar
+                        key={key}
+                        dataKey={key}
+                        name={metric.label}
+                        fill={`var(--color-${key})`}
+                        radius={4}
+                        maxBarSize={18}
+                      />
+                    ))}
+                  </BarChart>
+                </ChartContainer>
               </div>
             </div>
           )}

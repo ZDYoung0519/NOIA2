@@ -55,9 +55,23 @@ export default function BattleTargetTransactions({
           Transactions
         </h3>
 
-        <Button className="h-11 rounded-2xl px-5 text-sm font-medium shadow-none">
-          Ask a report
-        </Button>
+        {targetSummaries.length > 0 ? (
+          <select
+            value={selectedTargetKey ?? ""}
+            onChange={(event) => onSelectTargetKey(event.currentTarget.value || null)}
+            className="border-border/50 bg-card text-foreground focus-visible:ring-ring h-11 min-w-52 rounded-2xl border px-4 text-sm shadow-none outline-none focus-visible:ring-1"
+          >
+            {targetSummaries.map((summary) => (
+              <option key={summary.key} value={summary.key}>
+                {summary.targetName} ({summary.count})
+              </option>
+            ))}
+          </select>
+        ) : (
+          <Button className="h-11 rounded-2xl px-5 text-sm font-medium shadow-none">
+            Ask a report
+          </Button>
+        )}
       </div>
 
       {!mainCharacter ? (

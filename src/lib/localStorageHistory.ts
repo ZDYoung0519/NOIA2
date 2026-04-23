@@ -1,6 +1,5 @@
 import { MainActorRecord } from "@/types/aion2dps";
 
-
 export class GenericLocalHistory<T extends Record<string, any>> {
   private readonly storageKey: string;
   private readonly maxItems: number;
@@ -92,13 +91,11 @@ import { HistoryTargetRecord } from "@/types/aion2dps";
 export const Aion2DpsHistory = new GenericLocalHistory<HistoryTargetRecord>(
   "AION2DPSHISTORY", // localStorage key
   "id",
-  500,
+  500000
 );
-
 
 export const Aion2MainActorHistory = new GenericLocalHistory<MainActorRecord>(
   "AION2MainActorHistory", // localStorage key
   "id",
-  20,
+  20
 );
-

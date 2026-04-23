@@ -1109,6 +1109,7 @@ export default function DpsPage() {
       setCurrentTarget(null);
       setPinnedPlayerId(null);
       setHoverPlayerId(null);
+      setView("dps");
       detailPayloadRef.current = null;
       void emit("dps-detail-clear");
       await closeDetailWindowNow();

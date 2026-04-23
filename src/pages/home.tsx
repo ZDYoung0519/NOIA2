@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Bell, MoreVertical, Search, Plus, ArrowUp, FileText } from "lucide-react";
 // import BankCardCarousel from "@/components/bank-card-carousel";
 import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
-import BattleTargetTransactions from "@/components/battle-target-transactions";
 import CharacterCardCarousel from "@/components/character-card-carousel";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
 import { useState } from "react";
@@ -104,16 +103,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-x-8 gap-y-8 xl:grid-cols-[1.02fr_1fr]">
-          <BattleTargetTransactions
-            mainCharacter={mainCharacter}
-            selectedTargetKey={selectedTargetKey}
-            onSelectTargetKey={setSelectedTargetKey}
-          />
-
+        <section>
           <BattleTargetDpsChart
             mainCharacter={mainCharacter}
             selectedTargetKey={selectedTargetKey}
+            onSelectTargetKey={setSelectedTargetKey}
           />
         </section>
       </div>
