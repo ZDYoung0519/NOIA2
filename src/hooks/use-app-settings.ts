@@ -54,8 +54,8 @@ export type AppSettingsUpdate = {
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   shortcuts: {
     showMain: "",
-    showDps: "Alt+W",
-    resetDps: "Alt+Q",
+    showDps: "",
+    resetDps: "",
   },
   dpsMeter: DEFAULT_DPS_METER_CONFIG,
   appearance: {

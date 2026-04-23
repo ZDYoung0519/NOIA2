@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { emit } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Activity,
@@ -212,6 +213,14 @@ export function SettingsContent() {
     await toggleWindow("main");
   }, []);
 
+  const handleShowDpsWindow = useCallback(async () => {
+    await toggleWindow("dps");
+  }, []);
+
+  const handleResetDps = useCallback(async () => {
+    await invoke("reset_dps_meter");
+  }, []);
+
   useEffect(() => {
     if (showMainShortcut) {
       void registerShortcut(showMainShortcut, handleShowMainWindow);
@@ -245,19 +254,55 @@ export function SettingsContent() {
   };
 
   const handleShowDpsShortcutChange = async (newShortcut: string) => {
-    await saveSettings({
-      shortcuts: {
-        showDps: newShortcut,
-      },
-    });
+    const oldShortcut = showDpsShortcut;
+
+    if (newShortcut) {
+      await saveSettings({
+        shortcuts: {
+          showDps: newShortcut,
+        },
+      });
+      await registerShortcut(newShortcut, handleShowDpsWindow, oldShortcut);
+      await emit("shortcut-changed", { shortcut: newShortcut });
+      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
+    } else {
+      await saveSettings({
+        shortcuts: {
+          showDps: "",
+        },
+      });
+      if (oldShortcut) {
+        await unregisterShortcut(oldShortcut);
+      }
+      await emit("shortcut-changed", { shortcut: "" });
+      toast.info(t("settings.shortcut.cleared"));
+    }
   };
 
   const handleResetDpsShortcutChange = async (newShortcut: string) => {
-    await saveSettings({
-      shortcuts: {
-        resetDps: newShortcut,
-      },
-    });
+    const oldShortcut = resetDpsShortcut;
+
+    if (newShortcut) {
+      await saveSettings({
+        shortcuts: {
+          resetDps: newShortcut,
+        },
+      });
+      await registerShortcut(newShortcut, handleResetDps, oldShortcut);
+      await emit("shortcut-changed", { shortcut: newShortcut });
+      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
+    } else {
+      await saveSettings({
+        shortcuts: {
+          resetDps: "",
+        },
+      });
+      if (oldShortcut) {
+        await unregisterShortcut(oldShortcut);
+      }
+      await emit("shortcut-changed", { shortcut: "" });
+      toast.info(t("settings.shortcut.cleared"));
+    }
   };
 
   const handleOpenGithub = async () => {
