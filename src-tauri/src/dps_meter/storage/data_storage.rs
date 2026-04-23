@@ -223,6 +223,9 @@ impl DataStorage {
 
     pub fn append_summon(&self, owner_id: u32, summon_id: u32) {
         let mut inner = self.inner.write().unwrap();
+        if inner.actor_id_name_map.contains_key(&summon_id) {
+            return;
+        }
         inner.summon_owner_map.insert(summon_id, owner_id);
     }
 

@@ -186,6 +186,8 @@ impl StreamProcessor {
             return false;
         }
 
+        // self.try_extract_replication_summon_link(packet);
+
         if self.mode == ProcessingMode::Full {
             if self.parse_damage_packet(packet) {
                 return true;
@@ -207,6 +209,7 @@ impl StreamProcessor {
         self.parse_4436_optimized(packet); // otehr
         false
     }
+
 
     #[allow(unused_assignments)]
     fn parse_damage_packet(&mut self, packet: &[u8]) -> bool {
