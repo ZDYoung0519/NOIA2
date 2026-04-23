@@ -1,14 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { emit, listen } from "@tauri-apps/api/event";
+import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   DEFAULT_DPS_METER_CONFIG,
   DPS_METER_CONFIG_KEY,
   type DpsMeterConfig,
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
+import { APP_SETTINGS_UPDATED_EVENT, DPS_RESET_REQUEST_EVENT } from "@/lib/events";
+import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
+import { createWindow, toggleWindow } from "@/lib/window";
 
 export const APP_SETTINGS_KEY = "app-settings";
-const APP_SETTINGS_UPDATED_EVENT = "app-settings-updated";
 const LEGACY_SHORTCUT_KEY = "global-shortcut-show-main";
 const LEGACY_DPS_SETTINGS_KEY = "dps-settings";
 
@@ -237,7 +249,16 @@ function loadAppSettingsFromStorage(): AppSettings {
   }
 }
 
-export function useAppSettings() {
+type AppSettingsContextValue = {
+  settings: AppSettings;
+  saveSettings: (
+    updater: AppSettingsUpdate | ((current: AppSettings) => AppSettings)
+  ) => Promise<void>;
+};
+
+const AppSettingsContext = createContext<AppSettingsContextValue | null>(null);
+
+function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => loadAppSettingsFromStorage());
 
   useEffect(() => {
@@ -274,6 +295,65 @@ export function useAppSettings() {
   useEffect(() => {
     void syncDpsMeterConfigToBackend(settings.dpsMeter);
   }, [settings.dpsMeter]);
+
+  useEffect(() => {
+    if (getCurrentWebviewWindow().label !== "main") {
+      return;
+    }
+
+    const handleShowMainWindow = async () => {
+      await toggleWindow("main");
+    };
+
+    const handleShowDpsWindow = async () => {
+      const existingWindow = await WebviewWindow.getByLabel("dps");
+      if (existingWindow) {
+        await toggleWindow("dps");
+        return;
+      }
+
+      await createWindow("dps", {
+        title: "DPS Meter",
+        url: "/dps",
+        width: 100,
+        height: 400,
+        resizable: true,
+        maximizable: false,
+        minimizable: false,
+        decorations: false,
+        transparent: true,
+        shadow: false,
+        alwaysOnTop: true,
+      });
+    };
+
+    const handleResetDps = async () => {
+      await emit(DPS_RESET_REQUEST_EVENT);
+    };
+
+    const registerAllShortcuts = async () => {
+      const { showMain, showDps, resetDps } = settings.shortcuts;
+
+      if (showMain) {
+        await registerShortcut(showMain, handleShowMainWindow);
+      }
+      if (showDps) {
+        await registerShortcut(showDps, handleShowDpsWindow);
+      }
+      if (resetDps) {
+        await registerShortcut(resetDps, handleResetDps);
+      }
+    };
+
+    void registerAllShortcuts();
+
+    return () => {
+      const { showMain, showDps, resetDps } = settings.shortcuts;
+      void unregisterShortcut(showMain);
+      void unregisterShortcut(showDps);
+      void unregisterShortcut(resetDps);
+    };
+  }, [settings.shortcuts]);
 
   const mergeSettings = useCallback(
     (
@@ -318,5 +398,27 @@ export function useAppSettings() {
     [mergeSettings, settings]
   );
 
-  return { settings, saveSettings };
+  const value = useMemo(
+    () => ({
+      settings,
+      saveSettings,
+    }),
+    [saveSettings, settings]
+  );
+
+  return createElement(AppSettingsContext.Provider, { value }, children);
+}
+
+export function AppSettingsProvider({ children }: { children: ReactNode }) {
+  return createElement(AppSettingsProviderInner, null, children);
+}
+
+export function useAppSettings() {
+  const context = useContext(AppSettingsContext);
+
+  if (!context) {
+    throw new Error("useAppSettings must be used within an AppSettingsProvider");
+  }
+
+  return context;
 }

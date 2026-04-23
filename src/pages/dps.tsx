@@ -25,9 +25,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { DPS_RESET_REQUEST_EVENT } from "@/lib/events";
 import { createWindow } from "@/lib/window";
 import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
-import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
 import { cn } from "@/lib/utils";
 import {
   CombatSnapshot,
@@ -444,7 +444,6 @@ export default function DpsPage() {
   const { settings } = useAppSettings();
   const { t } = useAppTranslation();
   const dpsAppearance = settings.appearance.dpsWindow;
-  const resetDpsShortcut = settings.shortcuts.resetDps;
   const [view, setView] = useState<"dps" | "history">("dps");
   const [isRunning, setIsRunning] = useState(false);
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
@@ -464,6 +463,7 @@ export default function DpsPage() {
   const unlistenStatusRef = useRef<null | (() => void)>(null);
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
   const unlistenMainActorDetectedRef = useRef<null | (() => void)>(null);
+  const unlistenResetRequestRef = useRef<null | (() => void)>(null);
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
   const pinnedPlayerIdRef = useRef<number | null>(null);
   const hoverPlayerIdRef = useRef<number | null>(null);
@@ -598,11 +598,17 @@ export default function DpsPage() {
           detailPayloadRef.current = null;
         });
 
+        unlistenResetRequestRef.current = await listen(DPS_RESET_REQUEST_EVENT, () => {
+          void latestResetHandlerRef.current?.();
+        });
+
         const previousUnlistenStatus = unlistenStatusRef.current;
         unlistenStatusRef.current = () => {
           previousUnlistenStatus?.();
           unlistenMainActorDetectedRef.current?.();
           unlistenMainActorDetectedRef.current = null;
+          unlistenResetRequestRef.current?.();
+          unlistenResetRequestRef.current = null;
           unlistenDetailRequest();
           unlistenDetailClosed();
         };
@@ -630,6 +636,10 @@ export default function DpsPage() {
       if (unlistenMainActorDetectedRef.current) {
         void unlistenMainActorDetectedRef.current();
         unlistenMainActorDetectedRef.current = null;
+      }
+      if (unlistenResetRequestRef.current) {
+        void unlistenResetRequestRef.current();
+        unlistenResetRequestRef.current = null;
       }
       if (detailCloseTimerRef.current !== null) {
         window.clearTimeout(detailCloseTimerRef.current);
@@ -1213,7 +1223,7 @@ export default function DpsPage() {
   );
 
   const handlePlayerHoverEnd = useCallback(
-    async (_playerId: number) => {
+    async () => {
       if (pinnedPlayerId !== null) {
         return;
       }
@@ -1268,18 +1278,6 @@ export default function DpsPage() {
     void emit("dps-detail-clear");
     void closeDetailWindowNow();
   }, [cancelDetailCloseTimer, closeDetailWindowNow, resolvedTargetId, selectedHistoryId, view]);
-
-  useEffect(() => {
-    if (!resetDpsShortcut) {
-      return;
-    }
-
-    void registerShortcut(resetDpsShortcut, handleReset);
-
-    return () => {
-      void unregisterShortcut(resetDpsShortcut);
-    };
-  }, [handleReset, resetDpsShortcut]);
 
   const handleOpenSettings = useCallback(async () => {
     await createWindow("settings", {

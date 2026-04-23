@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import { emit } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Activity,
@@ -26,8 +24,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { useManualUpdateCheck } from "@/components/updater-dialog";
-import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
-import { toggleWindow } from "@/lib/window";
 import { cn } from "@/lib/utils";
 import packageJson from "../../package.json";
 
@@ -209,35 +205,13 @@ export function SettingsContent() {
     []
   );
 
-  const handleShowMainWindow = useCallback(async () => {
-    await toggleWindow("main");
-  }, []);
-
-  const handleShowDpsWindow = useCallback(async () => {
-    await toggleWindow("dps");
-  }, []);
-
-  const handleResetDps = useCallback(async () => {
-    await invoke("reset_dps_meter");
-  }, []);
-
-  useEffect(() => {
-    if (showMainShortcut) {
-      void registerShortcut(showMainShortcut, handleShowMainWindow);
-    }
-  }, [handleShowMainWindow, showMainShortcut]);
-
   const handleShortcutChange = async (newShortcut: string) => {
-    const oldShortcut = showMainShortcut;
-
     if (newShortcut) {
       await saveSettings({
         shortcuts: {
           showMain: newShortcut,
         },
       });
-      await registerShortcut(newShortcut, handleShowMainWindow, oldShortcut);
-      await emit("shortcut-changed", { shortcut: newShortcut });
       toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
     } else {
       await saveSettings({
@@ -245,25 +219,17 @@ export function SettingsContent() {
           showMain: "",
         },
       });
-      if (oldShortcut) {
-        await unregisterShortcut(oldShortcut);
-      }
-      await emit("shortcut-changed", { shortcut: "" });
       toast.info(t("settings.shortcut.cleared"));
     }
   };
 
   const handleShowDpsShortcutChange = async (newShortcut: string) => {
-    const oldShortcut = showDpsShortcut;
-
     if (newShortcut) {
       await saveSettings({
         shortcuts: {
           showDps: newShortcut,
         },
       });
-      await registerShortcut(newShortcut, handleShowDpsWindow, oldShortcut);
-      await emit("shortcut-changed", { shortcut: newShortcut });
       toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
     } else {
       await saveSettings({
@@ -271,25 +237,17 @@ export function SettingsContent() {
           showDps: "",
         },
       });
-      if (oldShortcut) {
-        await unregisterShortcut(oldShortcut);
-      }
-      await emit("shortcut-changed", { shortcut: "" });
       toast.info(t("settings.shortcut.cleared"));
     }
   };
 
   const handleResetDpsShortcutChange = async (newShortcut: string) => {
-    const oldShortcut = resetDpsShortcut;
-
     if (newShortcut) {
       await saveSettings({
         shortcuts: {
           resetDps: newShortcut,
         },
       });
-      await registerShortcut(newShortcut, handleResetDps, oldShortcut);
-      await emit("shortcut-changed", { shortcut: newShortcut });
       toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
     } else {
       await saveSettings({
@@ -297,10 +255,6 @@ export function SettingsContent() {
           resetDps: "",
         },
       });
-      if (oldShortcut) {
-        await unregisterShortcut(oldShortcut);
-      }
-      await emit("shortcut-changed", { shortcut: "" });
       toast.info(t("settings.shortcut.cleared"));
     }
   };
@@ -668,7 +622,7 @@ export function SettingsContent() {
                   </div>
 
                   <div
-                    className="rounded-2xl border border-white/10 p-2 text-slate-100"
+                    className="rounded-2xl border border-white/10 p-2 text-slate-100 max-w-150 items-center justify-center"
                     style={{
                       backgroundColor: hexToRgba(
                         dpsAppearance.backgroundColor,
@@ -686,22 +640,7 @@ export function SettingsContent() {
                         zoom: dpsAppearance.scaleFactor,
                       }}
                     >
-                      {dpsAppearance.showHeaderStats && (
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="rounded-lg border border-white/10 p-2 text-xs">
-                            <div className="text-slate-400">Total Damage</div>
-                            <div className="mt-1 font-semibold text-slate-100">864,000</div>
-                          </div>
-                          <div className="rounded-lg border border-white/10 p-2 text-xs">
-                            <div className="text-slate-400">Participants</div>
-                            <div className="mt-1 font-semibold text-slate-100">3</div>
-                          </div>
-                          <div className="rounded-lg border border-white/10 p-2 text-xs">
-                            <div className="text-slate-400">Target</div>
-                            <div className="mt-1 font-semibold text-slate-100">Training Dummy</div>
-                          </div>
-                        </div>
-                      )}
+
 
                       <MemoizedDpsPanel
                         targetInfo={previewCombatInfos.targetInfos[1]}
