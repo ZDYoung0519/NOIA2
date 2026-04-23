@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Aion2DpsHistory } from "@/lib/localStorageHistory";
 import {

@@ -4,24 +4,20 @@ import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
-  ChevronLeft,
   Cpu,
   Database,
   History,
-  Package,
   Play,
   RotateCcw,
   ScrollText,
   Square,
   Wifi,
   WifiOff,
-  Settings2
 } from "lucide-react";
 
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { TitleBar } from "@/components/title-bar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -118,8 +114,6 @@ const persistHistoryRecords = (records: HistoryTargetRecord[]) => {
     });
   }, 0);
 };
-
-
 
 const waitForWindowReady = async (label: string, timeoutMs = 1500) => {
   const startTime = Date.now();
@@ -325,7 +319,6 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
   view,
   isRunning,
   targetFightingTime,
-  historyRecordsLength,
   footerBackground,
 }: BottomStatusBarProps) {
   return (
@@ -509,11 +502,12 @@ export default function DpsPage() {
 
         // 收听dps-reset-requested事件，重置当前状态（快捷键触发后会emit这个信号）
         unlistenResetRequestRef.current = await listen("dps-reset-requested", () => {
-          if (!mounted) {return}
+          if (!mounted) {
+            return;
+          }
           void latestResetHandlerRef.current?.();
         });
 
-        
         // 检测到主角色
         unlistenMainActorDetectedRef.current = await listen<{
           actorId: number;
@@ -559,7 +553,7 @@ export default function DpsPage() {
             return;
           }
           setPinnedPlayerId(null);
-          setHoverPlayerId(null)
+          setHoverPlayerId(null);
           detailPayloadRef.current = null;
         });
 
@@ -1118,7 +1112,7 @@ export default function DpsPage() {
       detailPayloadRef.current = null;
       void emit("dps-detail-clear");
       await closeDetailWindowNow();
-      
+
       lastWindowHeightRef.current = null;
       window.requestAnimationFrame(() => {
         void resizeWindow();
@@ -1188,21 +1182,18 @@ export default function DpsPage() {
     ]
   );
 
-  const handlePlayerHoverEnd = useCallback(
-    async () => {
-      if (pinnedPlayerId !== null) {
-        return;
-      }
+  const handlePlayerHoverEnd = useCallback(async () => {
+    if (pinnedPlayerId !== null) {
+      return;
+    }
 
-      detailHoverTokenRef.current += 1;
-      setHoverPlayerId(null);
-      detailPayloadRef.current = null;
-      void emit("dps-detail-clear");
-      await hideDetailWindow();
-      scheduleDetailWindowDestroy();
-    },
-    [hideDetailWindow, pinnedPlayerId, scheduleDetailWindowDestroy]
-  );
+    detailHoverTokenRef.current += 1;
+    setHoverPlayerId(null);
+    detailPayloadRef.current = null;
+    void emit("dps-detail-clear");
+    await hideDetailWindow();
+    scheduleDetailWindowDestroy();
+  }, [hideDetailWindow, pinnedPlayerId, scheduleDetailWindowDestroy]);
 
   const activeDetailPlayerId = pinnedPlayerId ?? hoverPlayerId;
 
@@ -1257,7 +1248,7 @@ export default function DpsPage() {
   //     transparent: true,
   //     decorations: false,
   //   });
-    
+
   // }, [t]);
 
   const handleOpenHistory = useCallback(() => {
@@ -1387,7 +1378,7 @@ export default function DpsPage() {
             data-tauri-drag-region
           >
             <span
-              className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase max-w-15"
+              className="max-w-15 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
               data-tauri-drag-region
             >
               {targetName}
@@ -1428,70 +1419,68 @@ export default function DpsPage() {
         >
           <div className="flex h-full flex-col p-0">
             <div ref={contentRef}>
-            {view === "history" && (
-              <div className="flex min-h-10 gap-0">
-                <MemoizedHistoryTargetList
-                  historyRecords={historyRecords}
-                  selectedHistoryId={selectedHistoryId}
-                  onSelect={setSelectedHistoryId}
-                />
+              {view === "history" && (
+                <div className="flex min-h-10 gap-0">
+                  <MemoizedHistoryTargetList
+                    historyRecords={historyRecords}
+                    selectedHistoryId={selectedHistoryId}
+                    onSelect={setSelectedHistoryId}
+                  />
 
-                <div className="min-w-0 flex-1">
-                  {dpsPanelData ? (
-                    <MemoizedDpsPanel
-                      targetInfo={dpsPanelData.targetInfo || undefined}
-                      thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
-                      combatInfos={dpsPanelData.combatInfos || undefined}
-                      mainPlayerColor={dpsAppearance.mainPlayerColor}
-                      otherPlayerColor={dpsAppearance.otherPlayerColor}
-                      barOpacity={dpsAppearance.barOpacity}
-                      onPlayerClicked={handlePlayerClick}
-                      onPlayerHovered={handlePlayerHover}
-                      onPlayerHoverEnd={handlePlayerHoverEnd}
-                    />
-                  ) : (
-                    <div className="flex min-h-10 items-center justify-center rounded-xl text-center">
-                      <div className="space-y-1 px-4">
-                        <div className="text-sm font-medium text-slate-100">Select history</div>
+                  <div className="min-w-0 flex-1">
+                    {dpsPanelData ? (
+                      <MemoizedDpsPanel
+                        targetInfo={dpsPanelData.targetInfo || undefined}
+                        thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
+                        combatInfos={dpsPanelData.combatInfos || undefined}
+                        mainPlayerColor={dpsAppearance.mainPlayerColor}
+                        otherPlayerColor={dpsAppearance.otherPlayerColor}
+                        barOpacity={dpsAppearance.barOpacity}
+                        onPlayerClicked={handlePlayerClick}
+                        onPlayerHovered={handlePlayerHover}
+                        onPlayerHoverEnd={handlePlayerHoverEnd}
+                      />
+                    ) : (
+                      <div className="flex min-h-10 items-center justify-center rounded-xl text-center">
+                        <div className="space-y-1 px-4">
+                          <div className="text-sm font-medium text-slate-100">Select history</div>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {view === "dps" && dpsPanelData && (
-              <div className="p-1">
-                <MemoizedDpsPanel
-                  targetInfo={dpsPanelData.targetInfo || undefined}
-                  thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
-                  combatInfos={dpsPanelData.combatInfos || undefined}
-                  mainPlayerColor={dpsAppearance.mainPlayerColor}
-                  otherPlayerColor={dpsAppearance.otherPlayerColor}
-                  barOpacity={dpsAppearance.barOpacity}
-                  onPlayerClicked={handlePlayerClick}
-                  onPlayerHovered={handlePlayerHover}
-                  onPlayerHoverEnd={handlePlayerHoverEnd}
-                />
-              </div>
-            )}
+              {view === "dps" && dpsPanelData && (
+                <div className="p-1">
+                  <MemoizedDpsPanel
+                    targetInfo={dpsPanelData.targetInfo || undefined}
+                    thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
+                    combatInfos={dpsPanelData.combatInfos || undefined}
+                    mainPlayerColor={dpsAppearance.mainPlayerColor}
+                    otherPlayerColor={dpsAppearance.otherPlayerColor}
+                    barOpacity={dpsAppearance.barOpacity}
+                    onPlayerClicked={handlePlayerClick}
+                    onPlayerHovered={handlePlayerHover}
+                    onPlayerHoverEnd={handlePlayerHoverEnd}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mt-auto">
               <MemoizedBottomStatusBar
-              footerData={footerData}
-              view={view}
-              isRunning={isRunning}
-              targetFightingTime={targetFightingTime}
-              historyRecordsLength={historyRecords.length}
-              footerBackground={footerBackground}
-            />
+                footerData={footerData}
+                view={view}
+                isRunning={isRunning}
+                targetFightingTime={targetFightingTime}
+                historyRecordsLength={historyRecords.length}
+                footerBackground={footerBackground}
+              />
             </div>
-
           </div>
         </section>
       </div>
     </WindowFrame>
   );
 }
-
