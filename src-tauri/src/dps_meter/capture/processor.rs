@@ -1105,8 +1105,9 @@ impl StreamProcessor {
 
         offset += 1;
         let base = offset;
-        let mut actor_name = None;
-        let mut actor_name_end = None;
+        let mut best_actor_name: Option<String> = None;
+        let mut best_actor_name_end = None;
+        let mut best_actor_name_bytes = 0usize;
 
         for relative in 0..5usize {
             let name_offset = base + relative;
@@ -1137,13 +1138,16 @@ impl StreamProcessor {
                 continue;
             };
 
-            actor_name = Some(sanitized_name);
-            actor_name_end = Some(value_end);
-            break;
+            let sanitized_bytes = sanitized_name.len();
+            if sanitized_bytes > best_actor_name_bytes {
+                best_actor_name_bytes = sanitized_bytes;
+                best_actor_name = Some(sanitized_name);
+                best_actor_name_end = Some(value_end);
+            }
         }
 
-        let actor_name = actor_name?;
-        let actor_name_end = actor_name_end?;
+        let actor_name = best_actor_name?;
+        let actor_name_end = best_actor_name_end?;
         if actor_name_end >= payload.len() {
             return None;
         }
@@ -1258,6 +1262,7 @@ fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Opti
 
 fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
     let mut relative = 0usize;
+    let mut fallback_sid = None;
 
     loop {
         let offset = server_base + relative;
@@ -1272,6 +1277,10 @@ fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
             continue;
         }
 
+        if fallback_sid.is_none() {
+            fallback_sid = Some(sid);
+        }
+
         let legion_length_offset = offset + 2;
         if legion_length_offset >= payload.len() {
             continue;
@@ -1283,7 +1292,7 @@ fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
         }
 
         let legion_length = legion_length_info.value as usize;
-        if !(2..=24).contains(&legion_length) {
+        if legion_length > 24 {
             continue;
         }
 
@@ -1293,16 +1302,20 @@ fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
             continue;
         }
 
+        if legion_length == 0 {
+            return Some(sid);
+        }
+
         let Ok(legion_name) = std::str::from_utf8(&payload[legion_start..legion_end]) else {
             continue;
         };
 
-        if legion_name.chars().any(|ch| !ch.is_ascii_digit()) {
+        if legion_name.trim().is_empty() || legion_name.chars().any(|ch| !ch.is_ascii_digit()) {
             return Some(sid);
         }
     }
 
-    find_sid_0011(payload, server_base)
+    fallback_sid.or_else(|| find_sid_0011(payload, server_base))
 }
 
 fn is_available_server_id(sid: u32) -> bool {
