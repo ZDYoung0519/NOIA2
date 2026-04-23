@@ -109,11 +109,9 @@ const persistHistoryRecords = (records: HistoryTargetRecord[]) => {
   if (records.length === 0) {
     return;
   }
-  window.setTimeout(() => {
-    records.forEach((record) => {
-      Aion2DpsHistory.add(record);
-    });
-  }, 0);
+  records.forEach((record) => {
+    Aion2DpsHistory.add(record);
+  });
 };
 
 const waitForWindowReady = async (label: string, timeoutMs = 1500) => {
