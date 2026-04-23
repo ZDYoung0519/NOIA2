@@ -74,7 +74,16 @@ jobs:
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           NOTES=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
-          echo "notes=${NOTES:-See assets to download.}" >> $GITHUB_OUTPUT
+
+          if [ -z "$NOTES" ]; then
+            NOTES="See assets to download."
+          fi
+
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build the project
         uses: tauri-apps/tauri-action@v0
