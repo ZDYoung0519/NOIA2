@@ -1,6 +1,6 @@
-import { Moon, Sun, Settings } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
-import { createWindow } from "@/lib/window";
+
 import { TitleBar } from "@/components/title-bar";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useTranslation } from "react-i18next";
@@ -13,21 +13,21 @@ export function MainTitleBar() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const handleOpenSettings = async () => {
-    await createWindow("settings", {
-      title: t("settings.title"),
-      url: "/settings",
-      width: 600,
-      height: 500,
-      resizable: true,
-      maximizable: true,
-      minimizable: false,
-      decorations: false,
-      transparent: true,
-      shadow: false,
-      parent: "main",
-    });
-  };
+  // const handleOpenSettings = async () => {
+  //   await createWindow("settings", {
+  //     title: t("settings.title"),
+  //     url: "/settings",
+  //     width: 600,
+  //     height: 500,
+  //     resizable: true,
+  //     maximizable: true,
+  //     minimizable: false,
+  //     decorations: false,
+  //     transparent: true,
+  //     shadow: false,
+  //     parent: "main",
+  //   });
+  // };
 
   return (
     <TitleBar
