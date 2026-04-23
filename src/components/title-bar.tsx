@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface TitleBarProps {
   title?: string;
+  showAppIcon?: boolean;
   showMinimize?: boolean;
   showMaximize?: boolean;
   showClose?: boolean;
@@ -17,6 +18,7 @@ interface TitleBarProps {
 
 export function TitleBar({
   title,
+  showAppIcon = true,
   showMinimize = true,
   showMaximize = true,
   showClose = true,
@@ -109,6 +111,16 @@ export function TitleBar({
         onDoubleClick={handleDragRegionDoubleClick}
         className="flex grow items-center gap-2 pl-2"
       >
+        {showAppIcon && (
+          <img
+            src="icon.png"
+            alt="App icon"
+            className="size-4 shrink-0 rounded-sm"
+            onError={(event) => {
+              (event.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
         {title && <span className="text-sm font-medium text-slate-400">{title}</span>}
         {leftActions}
       </div>

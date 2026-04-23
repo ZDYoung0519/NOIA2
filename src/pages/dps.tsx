@@ -1396,6 +1396,7 @@ export default function DpsPage() {
       titleBar={
         <TitleBar
           title=""
+          showAppIcon={false}
           showMaximize={false}
           showMinimize={false}
           leftActions={leftActions}

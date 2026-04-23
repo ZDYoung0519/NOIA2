@@ -34,14 +34,14 @@ export function MainTitleBar() {
       title={t("app.title")}
       rightActions={
         <>
-          <button
+          {/* <button
             onClick={handleOpenSettings}
             className="title-bar-btn mr-1"
             aria-label={t("settings.button")}
             tabIndex={-1}
           >
             <Settings className="h-4 w-4" />
-          </button>
+          </button> */}
 
           <LanguageToggle />
 
