@@ -32,7 +32,7 @@ export default function HomePage() {
   const quickActions = [
     { label: "Dps水表", icon: Plus, onClick: handleOpenDps },
     { label: "角色评分", icon: ArrowUp, onClick: () => {} },
-    { label: "1234", icon: ArrowUp, onClick: () => {} },
+    { label: "数据排行", icon: ArrowUp, onClick: () => {} },
     { label: "1234", icon: FileText, onClick: () => {} },
   ];
 

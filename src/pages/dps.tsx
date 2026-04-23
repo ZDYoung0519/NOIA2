@@ -1378,7 +1378,7 @@ export default function DpsPage() {
             data-tauri-drag-region
           >
             <span
-              className="max-w-15 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
+              className="max-w-25 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
               data-tauri-drag-region
             >
               {targetName}
