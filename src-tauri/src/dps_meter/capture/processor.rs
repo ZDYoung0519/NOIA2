@@ -1080,31 +1080,77 @@ impl StreamProcessor {
             return None;
         }
 
-        let scan_start = pos + 2 + aid_info.length;
-        let scan_end = payload.len().saturating_sub(3).min(scan_start + 30);
-        let name_off = find_byte_in_range(payload, 0x07, scan_start, scan_end)?;
-        if name_off + 1 >= payload.len() {
+        let mut offset = pos + 2 + aid_info.length;
+        if payload.len() <= offset {
             return None;
         }
 
-        let name_len = payload[name_off + 1] as usize;
-        if !(1..=50).contains(&name_len) {
+        let unknown_info_1 = read_varint(payload, offset);
+        if !unknown_info_1.is_valid() {
+            return None;
+        }
+        offset += unknown_info_1.length;
+        if payload.len() <= offset {
             return None;
         }
 
-        let name_start = name_off + 2;
-        let name_end = name_start + name_len;
-        if name_end > payload.len() {
+        let unknown_info_2 = read_varint(payload, offset);
+        if !unknown_info_2.is_valid() {
+            return None;
+        }
+        offset += unknown_info_2.length;
+        if payload.len().saturating_sub(offset) <= 2 {
             return None;
         }
 
-        let Ok(candidate_name) = std::str::from_utf8(&payload[name_start..name_end]) else {
-            return None;
-        };
-        let actor_name = sanitize_nickname(candidate_name)?;
+        offset += 1;
+        let base = offset;
+        let mut actor_name = None;
+        let mut actor_name_end = None;
 
-        let actor_name_end = name_end;
-        let sid = find_server_id(payload, actor_name_end);
+        for relative in 0..5usize {
+            let name_offset = base + relative;
+            if name_offset >= payload.len() {
+                continue;
+            }
+
+            let name_length_info = read_varint(payload, name_offset);
+            if !name_length_info.is_valid() {
+                continue;
+            }
+
+            let candidate_length = name_length_info.value as usize;
+            if !(1..=71).contains(&candidate_length) {
+                continue;
+            }
+
+            let value_start = name_offset + name_length_info.length;
+            let value_end = value_start + candidate_length;
+            if value_end > payload.len() {
+                continue;
+            }
+
+            let Ok(candidate_name) = std::str::from_utf8(&payload[value_start..value_end]) else {
+                continue;
+            };
+            let Some(sanitized_name) = sanitize_nickname(candidate_name) else {
+                continue;
+            };
+
+            actor_name = Some(sanitized_name);
+            actor_name_end = Some(value_end);
+            break;
+        }
+
+        let actor_name = actor_name?;
+        let actor_name_end = actor_name_end?;
+        if actor_name_end >= payload.len() {
+            return None;
+        }
+
+        let _job = payload[actor_name_end];
+        let server_base = actor_name_end + 1;
+        let sid = find_server_id(payload, server_base);
 
         Some((aid_info.value as u32, actor_name, sid))
     }
@@ -1210,43 +1256,57 @@ fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Opti
         .map(|pos| start + pos)
 }
 
-fn find_server_id(payload: &[u8], name_end: usize) -> Option<u32> {
-    if let Some(cc_pos) = find_bytes(payload, 0, &[0xCC, 0x01]) {
-        let mut sid_offset = cc_pos + 2;
-        for _ in 0..10 {
-            if sid_offset + 2 > payload.len() {
-                break;
-            }
-            let sid = u16::from_le_bytes([payload[sid_offset], payload[sid_offset + 1]]) as u32;
-            if is_available_server_id(sid) {
-                return Some(sid);
-            }
-            let out = read_varint(payload, sid_offset);
-            if !out.is_valid() {
-                break;
-            }
-            sid_offset += out.length;
+fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
+    let mut relative = 0usize;
+
+    loop {
+        let offset = server_base + relative;
+        relative += 1;
+
+        if offset + 2 > payload.len() {
+            break;
+        }
+
+        let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
+        if !is_available_server_id(sid) {
+            continue;
+        }
+
+        let legion_length_offset = offset + 2;
+        if legion_length_offset >= payload.len() {
+            continue;
+        }
+
+        let legion_length_info = read_varint(payload, legion_length_offset);
+        if !legion_length_info.is_valid() {
+            continue;
+        }
+
+        let legion_length = legion_length_info.value as usize;
+        if !(2..=24).contains(&legion_length) {
+            continue;
+        }
+
+        let legion_start = legion_length_offset + legion_length_info.length;
+        let legion_end = legion_start + legion_length;
+        if legion_end > payload.len() {
+            continue;
+        }
+
+        let Ok(legion_name) = std::str::from_utf8(&payload[legion_start..legion_end]) else {
+            continue;
+        };
+
+        if legion_name.chars().any(|ch| !ch.is_ascii_digit()) {
+            return Some(sid);
         }
     }
 
-    for prefix_byte in [0xC6, 0xC7, 0xB7, 0xA8, 0xD2] {
-        let end = payload.len().saturating_sub(2).min(name_end + 200);
-        if let Some(prefix_pos) = find_byte_in_range(payload, prefix_byte, name_end, end) {
-            let sid_pos = prefix_pos + 2;
-            if sid_pos + 2 <= payload.len() {
-                let sid = u16::from_le_bytes([payload[sid_pos], payload[sid_pos + 1]]) as u32;
-                if is_available_server_id(sid) {
-                    return Some(sid);
-                }
-            }
-        }
-    }
-
-    find_sid_0011(payload, name_end)
+    find_sid_0011(payload, server_base)
 }
 
 fn is_available_server_id(sid: u32) -> bool {
-    (1001..=1018).contains(&sid) || (2001..=2018).contains(&sid)
+    (1001..=1021).contains(&sid) || (2001..=2021).contains(&sid)
 }
 
 fn find_sid_0011(payload: &[u8], search_start: usize) -> Option<u32> {
