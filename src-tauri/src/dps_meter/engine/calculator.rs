@@ -43,9 +43,12 @@ fn build_combat_snapshot(
 
     let raw_stats = data_storage.get_dps_stats_snapshot();
     let skill_records = data_storage.get_skill_records_snapshot();
+    let summon_owner_map = data_storage.summon_owner_snapshot();
+    let merged_stats = merge_summon_stats(&raw_stats, &summon_owner_map);
+    let merged_records = merge_summon_skill_records(&skill_records, &summon_owner_map);
 
     let mut target_damage_dict = HashMap::new();
-    for (target_id, target_stats) in &raw_stats {
+    for (target_id, target_stats) in &merged_stats {
         let total_damage = target_stats
             .values()
             .flat_map(|skill_map| skill_map.values())
@@ -65,8 +68,8 @@ fn build_combat_snapshot(
         })
         .collect();
 
-    let filtered_stats = filter_nested_map(&raw_stats, &kept_targets);
-    let filtered_records = filter_nested_map(&skill_records, &kept_targets);
+    let filtered_stats = filter_nested_map(&merged_stats, &kept_targets);
+    let filtered_records = filter_nested_map(&merged_records, &kept_targets);
     let total_damage = kept_targets
         .iter()
         .filter_map(|target_id| target_damage_dict.get(target_id))
@@ -79,8 +82,8 @@ fn build_combat_snapshot(
     *last_total_damage = Some(total_damage);
     drop(last_total_damage);
 
-    let target_infos = build_target_infos(data_storage, &kept_targets);
-    let actor_infos = build_actor_infos(data_storage, &filtered_stats);
+    let target_infos = build_target_infos(data_storage, &kept_targets, &summon_owner_map);
+    let actor_infos = build_actor_infos(data_storage, &filtered_stats, &summon_owner_map);
     let aggregated_stats = aggregate_target_actor_stats(&filtered_stats);
     let dps_curve = build_dps_curves(&filtered_records);
 
@@ -105,12 +108,15 @@ fn build_combat_snapshot(
 fn build_target_infos(
     data_storage: &DataStorage,
     kept_targets: &[u32],
+    summon_owner_map: &HashMap<u32, u32>,
 ) -> HashMap<u32, TargetInfo> {
     let mob_id_code_map = data_storage.mob_id_code_snapshot();
     let mob_code_name_map = data_storage.mob_code_name_snapshot();
     let boss_code_list = data_storage.boss_code_list_snapshot();
-    let start_time_by_target = data_storage.start_time_by_target_snapshot();
-    let last_time_by_target = data_storage.last_time_by_target_snapshot();
+    let start_time_by_target =
+        merge_time_map_min(&data_storage.start_time_by_target_snapshot(), summon_owner_map);
+    let last_time_by_target =
+        merge_time_map_max(&data_storage.last_time_by_target_snapshot(), summon_owner_map);
 
     kept_targets
         .iter()
@@ -145,11 +151,13 @@ fn build_target_infos(
 fn build_actor_infos(
     data_storage: &DataStorage,
     stats: &HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
+    summon_owner_map: &HashMap<u32, u32>,
 ) -> HashMap<u32, ActorInfo> {
     let actor_id_name_map = data_storage.actor_id_name_snapshot();
     let actor_id_server_map = data_storage.actor_id_server_snapshot();
     let actor_id_class_map = data_storage.actor_id_class_snapshot();
-    let actor_id_skill_spec_map = data_storage.actor_skill_spec_snapshot();
+    let actor_id_skill_spec_map =
+        merge_actor_skill_specs(&data_storage.actor_skill_spec_snapshot(), summon_owner_map);
 
     let mut actor_ids = Vec::new();
     for target_stats in stats.values() {
@@ -189,6 +197,155 @@ fn filter_nested_map<T: Clone>(data: &HashMap<u32, T>, kept_targets: &[u32]) -> 
                 .map(|value| (*target_id, value))
         })
         .collect()
+}
+
+fn resolve_owner_id(actor_id: u32, summon_owner_map: &HashMap<u32, u32>) -> u32 {
+    let mut current = actor_id;
+    let mut guard = 0usize;
+
+    while let Some(owner_id) = summon_owner_map.get(&current).copied() {
+        if owner_id == current || guard >= 8 {
+            break;
+        }
+        current = owner_id;
+        guard += 1;
+    }
+
+    current
+}
+
+fn merge_skill_stats_into(target: &mut SkillStats, source: &SkillStats) {
+    target.counts += source.counts;
+    target.total_damage += source.total_damage;
+    target.max_damage = target.max_damage.max(source.max_damage);
+    target.min_damage = target.min_damage.min(source.min_damage);
+
+    for (special_name, count) in &source.special_counts {
+        *target
+            .special_counts
+            .entry(special_name.clone())
+            .or_insert(0) += count;
+    }
+}
+
+fn merge_summon_stats(
+    raw_stats: &HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
+    summon_owner_map: &HashMap<u32, u32>,
+) -> HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>> {
+    let mut merged = HashMap::new();
+
+    for (target_id, actor_map) in raw_stats {
+        let target_entry = merged.entry(*target_id).or_insert_with(HashMap::new);
+
+        for (actor_id, skill_map) in actor_map {
+            let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
+            let actor_entry = target_entry
+                .entry(resolved_actor_id)
+                .or_insert_with(HashMap::new);
+
+            for (skill_code, stats) in skill_map {
+                let skill_entry = actor_entry
+                    .entry(*skill_code)
+                    .or_insert_with(SkillStats::new);
+                merge_skill_stats_into(skill_entry, stats);
+            }
+        }
+    }
+
+    merged
+}
+
+fn merge_summon_skill_records(
+    raw_records: &HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
+    summon_owner_map: &HashMap<u32, u32>,
+) -> HashMap<u32, HashMap<u32, Vec<SkillRecord>>> {
+    let mut merged = HashMap::new();
+
+    for (target_id, actor_map) in raw_records {
+        let target_entry = merged.entry(*target_id).or_insert_with(HashMap::new);
+
+        for (actor_id, records) in actor_map {
+            let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
+            let actor_entry = target_entry.entry(resolved_actor_id).or_insert_with(Vec::new);
+            actor_entry.extend(records.iter().cloned());
+        }
+
+        for actor_records in target_entry.values_mut() {
+            actor_records.sort_by(|a, b| a.time.total_cmp(&b.time));
+        }
+    }
+
+    merged
+}
+
+fn merge_time_map_min(
+    raw_times: &HashMap<u32, HashMap<u32, f64>>,
+    summon_owner_map: &HashMap<u32, u32>,
+) -> HashMap<u32, HashMap<u32, f64>> {
+    let mut merged = HashMap::new();
+
+    for (target_id, actor_times) in raw_times {
+        let target_entry = merged.entry(*target_id).or_insert_with(HashMap::new);
+
+        for (actor_id, time) in actor_times {
+            let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
+            target_entry
+                .entry(resolved_actor_id)
+                .and_modify(|current| {
+                    if *time < *current {
+                        *current = *time;
+                    }
+                })
+                .or_insert(*time);
+        }
+    }
+
+    merged
+}
+
+fn merge_time_map_max(
+    raw_times: &HashMap<u32, HashMap<u32, f64>>,
+    summon_owner_map: &HashMap<u32, u32>,
+) -> HashMap<u32, HashMap<u32, f64>> {
+    let mut merged = HashMap::new();
+
+    for (target_id, actor_times) in raw_times {
+        let target_entry = merged.entry(*target_id).or_insert_with(HashMap::new);
+
+        for (actor_id, time) in actor_times {
+            let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
+            target_entry
+                .entry(resolved_actor_id)
+                .and_modify(|current| {
+                    if *time > *current {
+                        *current = *time;
+                    }
+                })
+                .or_insert(*time);
+        }
+    }
+
+    merged
+}
+
+fn merge_actor_skill_specs(
+    raw_specs: &HashMap<u32, HashMap<u32, Vec<u32>>>,
+    summon_owner_map: &HashMap<u32, u32>,
+) -> HashMap<u32, HashMap<u32, Vec<u32>>> {
+    let mut merged = HashMap::new();
+
+    for (actor_id, skill_map) in raw_specs {
+        let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
+        let actor_entry = merged
+            .entry(resolved_actor_id)
+            .or_insert_with(HashMap::new);
+
+        for (skill_code, slots) in skill_map {
+            actor_entry.entry(*skill_code).or_insert_with(|| slots.clone());
+        }
+    }
+
+    merged
 }
 
 fn aggregate_target_actor_stats(

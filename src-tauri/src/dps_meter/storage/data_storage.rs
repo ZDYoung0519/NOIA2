@@ -94,10 +94,12 @@ impl DataStorage {
             return;
         }
 
-        let mut actor_id = packet.actor_id;
-        if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
-            actor_id = *owner_id;
-        }
+        let actor_id = packet.actor_id;
+        // 暂时不处理复制召唤链接，在前端获得dps snapshot后，聚合时会把复制召唤的伤害算到主人头上
+        // let mut actor_id = packet.actor_id;
+        // if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
+        //     actor_id = *owner_id;
+        // }
 
         let target_mob_code = inner.mob_id_code_map.get(&packet.target_id).copied();
         let is_target_boss = target_mob_code
@@ -119,12 +121,12 @@ impl DataStorage {
             inner.dot_skill_list.push(packet.skill_code);
         }
 
-        if inner.start_time.is_none() {
-            inner.start_time = Some(timestamp);
-        }
-
         if let Some(actor_class) = infer_actor_class(packet.skill_code) {
             inner.actor_id_class_map.insert(actor_id, actor_class);
+        }
+
+        if inner.start_time.is_none() {
+            inner.start_time = Some(timestamp);
         }
 
         let skill_spec = inner
@@ -286,6 +288,10 @@ impl DataStorage {
         self.inner.read().unwrap().actor_id_skill_spec_map.clone()
     }
 
+    pub fn summon_owner_snapshot(&self) -> HashMap<u32, u32> {
+        self.inner.read().unwrap().summon_owner_map.clone()
+    }
+
     pub fn mob_id_code_snapshot(&self) -> HashMap<u32, u32> {
         self.inner.read().unwrap().mob_id_code_map.clone()
     }
@@ -327,26 +333,6 @@ impl DataStorage {
     }
 }
 
-
-fn infer_actor_class(skill_code: u32) -> Option<String> {
-    let skill_code = skill_code.to_string();
-    if skill_code.len() < 2 {
-        return None;
-    }
-
-    match &skill_code[0..2] {
-        "11" => Some("GLADIATOR".to_string()),
-        "12" => Some("TEMPLAR".to_string()),
-        "13" => Some("ASSASSIN".to_string()),
-        "14" => Some("RANGER".to_string()),
-        "15" => Some("SORCERER".to_string()),
-        "16" => Some("ELEMENTALIST".to_string()),
-        "17" => Some("CLERIC".to_string()),
-        "18" => Some("CHANTER".to_string()),
-        _ => None,
-    }
-}
-
 fn infer_specialty_slots(skill_id: u32) -> Vec<u32> {
     let last_4_digits = skill_id % 10000;
     let slot_1 = (last_4_digits / 1000) % 10;
@@ -365,6 +351,25 @@ fn infer_specialty_slots(skill_id: u32) -> Vec<u32> {
     }
     slots.sort_unstable();
     slots
+}
+
+fn infer_actor_class(skill_code: u32) -> Option<String> {
+    let skill_code = skill_code.to_string();
+    if skill_code.len() < 2 {
+        return None;
+    }
+
+    match &skill_code[0..2] {
+        "11" => Some("GLADIATOR".to_string()),
+        "12" => Some("TEMPLAR".to_string()),
+        "13" => Some("ASSASSIN".to_string()),
+        "14" => Some("RANGER".to_string()),
+        "15" => Some("SORCERER".to_string()),
+        "16" => Some("ELEMENTALIST".to_string()),
+        "17" => Some("CLERIC".to_string()),
+        "18" => Some("CHANTER".to_string()),
+        _ => None,
+    }
 }
 
 fn current_timestamp_seconds() -> f64 {

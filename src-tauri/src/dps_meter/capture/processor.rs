@@ -89,7 +89,7 @@ impl StreamProcessor {
             }
 
             if offset + total_packet_bytes > buffer.len() {
-                if total_packet_bytes > 16_384 {
+                if total_packet_bytes > 16_384 / 2{
                     offset += 1;
                     continue;
                 }
@@ -1155,7 +1155,7 @@ impl StreamProcessor {
             return None;
         }
 
-        let _job = payload[actor_name_end];
+        let _job: u8 = payload[actor_name_end];
         let server_base = actor_name_end + 1;
         let sid = find_server_id(payload, server_base);
 
