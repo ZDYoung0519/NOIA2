@@ -4,6 +4,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { TitleBar } from "@/components/title-bar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getServerShortName } from "@/lib/aion2/servers";
@@ -129,7 +130,14 @@ const SkillNameCell = memo(function SkillNameCell({
       ) : (
         <div className="h-5 w-5 flex-shrink-0 rounded bg-white/5" />
       )}
-      <span className="truncate font-medium text-slate-100">{skillName}</span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="truncate font-medium text-slate-100">{skillName}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>{skillId}</span>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 });

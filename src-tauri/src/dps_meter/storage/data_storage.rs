@@ -13,6 +13,7 @@ use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes
 const ACTOR_METADATA_CAPACITY: usize = 2_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
+const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 1] = ["11340000"];
 
 #[derive(Debug, Clone)]
 struct BoundedMap<K, V> {
@@ -453,6 +454,9 @@ fn infer_specialty_slots(skill_id: u32) -> Vec<u32> {
 fn infer_actor_class(skill_code: u32) -> Option<String> {
     let skill_code = skill_code.to_string();
     if skill_code.len() < 2 {
+        return None;
+    }
+    if ACTOR_CLASS_SKILL_IGNORE_LIST.contains(&skill_code.as_str()) {
         return None;
     }
 
