@@ -25,6 +25,7 @@ import { useAppTranslation } from "@/hooks/use-app-translation";
 
 import { createWindow } from "@/lib/window";
 import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
+import { maskNickname } from "@/lib/name-mask";
 import { cn } from "@/lib/utils";
 import {
   CombatSnapshot,
@@ -339,6 +340,7 @@ type BottomStatusBarProps = {
   targetFightingTime: number;
   historyRecordsLength: number;
   footerBackground: string;
+  maskNicknames: boolean;
 };
 
 const MemoizedBottomStatusBar = memo(function BottomStatusBar({
@@ -347,6 +349,7 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
   isRunning,
   targetFightingTime,
   footerBackground,
+  maskNicknames,
 }: BottomStatusBarProps) {
   return (
     <div
@@ -404,7 +407,7 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
       </div>
 
       <div className="max-w-24 truncate text-xs text-slate-300 select-none">
-        {footerData.mainActorName}
+        {maskNickname(footerData.mainActorName, maskNicknames)}
       </div>
     </div>
   );
@@ -1439,6 +1442,7 @@ export default function DpsPage() {
                         mainPlayerColor={dpsAppearance.mainPlayerColor}
                         otherPlayerColor={dpsAppearance.otherPlayerColor}
                         barOpacity={dpsAppearance.barOpacity}
+                        maskNicknames={dpsAppearance.maskNicknames}
                         onPlayerClicked={handlePlayerClick}
                         onPlayerHovered={handlePlayerHover}
                         onPlayerHoverEnd={handlePlayerHoverEnd}
@@ -1463,6 +1467,7 @@ export default function DpsPage() {
                     mainPlayerColor={dpsAppearance.mainPlayerColor}
                     otherPlayerColor={dpsAppearance.otherPlayerColor}
                     barOpacity={dpsAppearance.barOpacity}
+                    maskNicknames={dpsAppearance.maskNicknames}
                     onPlayerClicked={handlePlayerClick}
                     onPlayerHovered={handlePlayerHover}
                     onPlayerHoverEnd={handlePlayerHoverEnd}
@@ -1479,6 +1484,7 @@ export default function DpsPage() {
                 targetFightingTime={targetFightingTime}
                 historyRecordsLength={historyRecords.length}
                 footerBackground={footerBackground}
+                maskNicknames={dpsAppearance.maskNicknames}
               />
             </div>
           </div>

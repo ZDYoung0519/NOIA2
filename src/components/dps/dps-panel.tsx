@@ -2,6 +2,7 @@ import { memo } from "react";
 import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { maskNickname } from "@/lib/name-mask";
 
 function getTotalDamage(stats: SkillStats | undefined) {
   if (!stats) {
@@ -18,6 +19,7 @@ const DpsPanel = function DpsPanel({
   mainPlayerColor,
   otherPlayerColor,
   barOpacity,
+  maskNicknames,
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
@@ -28,6 +30,7 @@ const DpsPanel = function DpsPanel({
   mainPlayerColor: string;
   otherPlayerColor: string;
   barOpacity?: number;
+  maskNicknames?: boolean;
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
   onPlayerHoverEnd?: (playerId: number) => void;
@@ -61,6 +64,7 @@ const DpsPanel = function DpsPanel({
       {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
         const playerName =
           actorInfos?.[player.playerId]?.actorName || `${t("dps.list.unknownPlayer")}(${player.playerId})`;
+        const displayPlayerName = maskNickname(playerName, Boolean(maskNicknames));
         const actorClass = actorInfos?.[player.playerId]?.actorClass;
         const playerServerId = actorInfos?.[player.playerId]?.actorServerId;
         const playerServerName = playerServerId
@@ -113,7 +117,7 @@ const DpsPanel = function DpsPanel({
                   />
                 </div>
 
-                <span className="truncate text-sm font-medium">{playerName}</span>
+                <span className="truncate text-sm font-medium">{displayPlayerName}</span>
 
                 <span className="flex-shrink-0 font-mono text-xs text-gray-500">
                   [{playerServerName}]
@@ -155,4 +159,3 @@ const DpsPanel = function DpsPanel({
 };
 
 export const MemoizedDpsPanel = memo(DpsPanel);
-

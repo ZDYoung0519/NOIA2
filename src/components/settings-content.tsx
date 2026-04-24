@@ -450,6 +450,25 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
+                  label="Mask Nicknames"
+                  control={
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={dpsAppearance.maskNicknames}
+                      onChange={(event) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              maskNicknames: event.currentTarget.checked,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+                <SettingsRow
                   label="Scale Factor"
                   control={
                     <div className="flex w-64 items-center gap-3">
@@ -676,6 +695,7 @@ export function SettingsContent() {
                         mainPlayerColor={dpsAppearance.mainPlayerColor}
                         otherPlayerColor={dpsAppearance.otherPlayerColor}
                         barOpacity={dpsAppearance.barOpacity}
+                        maskNicknames={dpsAppearance.maskNicknames}
                         onPlayerClicked={() => undefined}
                       />
                     </div>

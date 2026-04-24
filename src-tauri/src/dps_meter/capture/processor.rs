@@ -90,6 +90,7 @@ impl StreamProcessor {
 
             if offset + total_packet_bytes > buffer.len() {
                 if total_packet_bytes > 16_384 / 2{
+                // if total_packet_bytes > 16_384{
                     offset += 1;
                     continue;
                 }

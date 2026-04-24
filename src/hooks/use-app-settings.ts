@@ -39,6 +39,7 @@ export type DpsWindowAppearance = {
   scaleFactor: number;
   autoResizeHeight: boolean;
   showHeaderStats: boolean;
+  maskNicknames: boolean;
 };
 
 export type AppSettings = {
@@ -86,6 +87,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       scaleFactor: 1,
       autoResizeHeight: true,
       showHeaderStats: true,
+      maskNicknames: false,
     },
   },
 };
