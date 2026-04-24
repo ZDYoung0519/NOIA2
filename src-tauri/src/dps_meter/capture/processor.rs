@@ -197,12 +197,8 @@ impl StreamProcessor {
             }
         }
 
-        if self.parse_summon_ownership_packet(packet) {
-            return true;
-        }
-        if self.parse_summon_packet(packet) {
-            return true;
-        }
+        self.parse_summon_ownership_packet(packet);
+        self.parse_summon_packet(packet);
 
         self.parse_4036(packet);
         self.parse_3336(packet); // main actor
@@ -640,19 +636,21 @@ impl StreamProcessor {
 
     fn parse_summon_packet(&mut self, packet: &[u8]) -> bool {
         let mut idx = 0usize;
+        let mut found_any = false;
+
         while idx < packet.len() {
             let Some(pos) = find_bytes(packet, idx, &[0x40, 0x36]) else {
                 break;
             };
 
             if self.parse_summon_spawn_at(packet, pos + 2) {
-                return true;
+                found_any = true;
             }
 
             idx = pos + 1;
         }
 
-        false
+        found_any
     }
 
     fn parse_summon_spawn_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {
