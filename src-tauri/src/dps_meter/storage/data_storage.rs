@@ -1,4 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::hash::Hash;
 use std::sync::RwLock;
 
 use serde::Serialize;
@@ -9,16 +10,90 @@ use crate::dps_meter::models::combat::{SkillRecord, SkillStats};
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
 
-#[derive(Debug, Default)]
+const ACTOR_METADATA_CAPACITY: usize = 2_000;
+const MOB_METADATA_CAPACITY: usize = 5_000;
+const SUMMON_METADATA_CAPACITY: usize = 5_000;
+
+#[derive(Debug, Clone)]
+struct BoundedMap<K, V> {
+    map: HashMap<K, V>,
+    order: VecDeque<K>,
+    capacity: usize,
+}
+
+impl<K, V> BoundedMap<K, V>
+where
+    K: Eq + Hash + Clone,
+{
+    fn new(capacity: usize) -> Self {
+        Self {
+            map: HashMap::new(),
+            order: VecDeque::new(),
+            capacity,
+        }
+    }
+
+    fn insert(&mut self, key: K, value: V) -> Option<V> {
+        self.order.retain(|existing| existing != &key);
+        self.order.push_back(key.clone());
+        let previous = self.map.insert(key, value);
+        self.evict_oldest();
+        previous
+    }
+
+    fn get(&self, key: &K) -> Option<&V> {
+        self.map.get(key)
+    }
+
+    fn get_mut_or_insert_with<F>(&mut self, key: K, default: F) -> &mut V
+    where
+        F: FnOnce() -> V,
+    {
+        if self.map.contains_key(&key) {
+            self.order.retain(|existing| existing != &key);
+            self.order.push_back(key.clone());
+        } else {
+            self.order.push_back(key.clone());
+            self.map.insert(key.clone(), default());
+            self.evict_oldest();
+        }
+
+        self.map
+            .get_mut(&key)
+            .expect("bounded map entry must exist after insert")
+    }
+
+    fn contains_key(&self, key: &K) -> bool {
+        self.map.contains_key(key)
+    }
+
+    fn as_hash_map(&self) -> HashMap<K, V>
+    where
+        V: Clone,
+    {
+        self.map.clone()
+    }
+
+    fn evict_oldest(&mut self) {
+        while self.map.len() > self.capacity {
+            let Some(oldest_key) = self.order.pop_front() else {
+                break;
+            };
+            self.map.remove(&oldest_key);
+        }
+    }
+}
+
+#[derive(Debug)]
 struct DataStorageInner {
     dps_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
     by_target_player_skill_records: HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
-    actor_id_name_map: HashMap<u32, String>,
-    actor_id_server_map: HashMap<u32, String>,
-    actor_id_class_map: HashMap<u32, String>,
-    actor_id_skill_spec_map: HashMap<u32, HashMap<u32, Vec<u32>>>,
-    mob_id_code_map: HashMap<u32, u32>,
-    summon_owner_map: HashMap<u32, u32>,
+    actor_id_name_map: BoundedMap<u32, String>,
+    actor_id_server_map: BoundedMap<u32, String>,
+    actor_id_class_map: BoundedMap<u32, String>,
+    actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
+    mob_id_code_map: BoundedMap<u32, u32>,
+    summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
     start_time_by_target: HashMap<u32, HashMap<u32, f64>>,
     last_time_by_target: HashMap<u32, HashMap<u32, f64>>,
@@ -27,6 +102,29 @@ struct DataStorageInner {
     main_actor_name: Option<String>,
     last_target: Option<u32>,
     last_target_by_main_actor: Option<u32>,
+}
+
+impl Default for DataStorageInner {
+    fn default() -> Self {
+        Self {
+            dps_stats: HashMap::new(),
+            by_target_player_skill_records: HashMap::new(),
+            actor_id_name_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            actor_id_server_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
+            summon_owner_map: BoundedMap::new(SUMMON_METADATA_CAPACITY),
+            start_time: None,
+            start_time_by_target: HashMap::new(),
+            last_time_by_target: HashMap::new(),
+            dot_skill_list: Vec::new(),
+            main_actor_id: None,
+            main_actor_name: None,
+            last_target: None,
+            last_target_by_main_actor: None,
+        }
+    }
 }
 
 pub struct DataStorage {
@@ -131,8 +229,7 @@ impl DataStorage {
 
         let skill_spec = inner
             .actor_id_skill_spec_map
-            .entry(actor_id)
-            .or_default()
+            .get_mut_or_insert_with(actor_id, HashMap::new)
             .entry(packet.skill_code)
             .or_insert_with(|| infer_specialty_slots(packet.ori_skill_code))
             .clone();
@@ -273,27 +370,27 @@ impl DataStorage {
     }
 
     pub fn actor_id_name_snapshot(&self) -> HashMap<u32, String> {
-        self.inner.read().unwrap().actor_id_name_map.clone()
+        self.inner.read().unwrap().actor_id_name_map.as_hash_map()
     }
 
     pub fn actor_id_server_snapshot(&self) -> HashMap<u32, String> {
-        self.inner.read().unwrap().actor_id_server_map.clone()
+        self.inner.read().unwrap().actor_id_server_map.as_hash_map()
     }
 
     pub fn actor_id_class_snapshot(&self) -> HashMap<u32, String> {
-        self.inner.read().unwrap().actor_id_class_map.clone()
+        self.inner.read().unwrap().actor_id_class_map.as_hash_map()
     }
 
     pub fn actor_skill_spec_snapshot(&self) -> HashMap<u32, HashMap<u32, Vec<u32>>> {
-        self.inner.read().unwrap().actor_id_skill_spec_map.clone()
+        self.inner.read().unwrap().actor_id_skill_spec_map.as_hash_map()
     }
 
     pub fn summon_owner_snapshot(&self) -> HashMap<u32, u32> {
-        self.inner.read().unwrap().summon_owner_map.clone()
+        self.inner.read().unwrap().summon_owner_map.as_hash_map()
     }
 
     pub fn mob_id_code_snapshot(&self) -> HashMap<u32, u32> {
-        self.inner.read().unwrap().mob_id_code_map.clone()
+        self.inner.read().unwrap().mob_id_code_map.as_hash_map()
     }
 
     pub fn mob_code_name_snapshot(&self) -> HashMap<u32, String> {
