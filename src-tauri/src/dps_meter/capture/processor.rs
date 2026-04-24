@@ -186,8 +186,6 @@ impl StreamProcessor {
             return false;
         }
 
-        self.consume_pending_summons_for_owner();
-
         if self.mode == ProcessingMode::Full {
             if self.parse_damage_packet(packet) {
                 return true;
@@ -783,35 +781,17 @@ impl StreamProcessor {
                 }
             }
 
-            if let Some((_, nickname)) = best_match {
-                self.data_storage
-                    .add_pending_summon_by_nick(&nickname, real_actor_id);
+            if let Some((owner_id, nickname)) = best_match {
+                self.data_storage.append_summon(owner_id, real_actor_id);
                 self.logger.info(format!(
-                    "[{}] summon pending by nick nickname={} summon={}",
-                    self.port, nickname, real_actor_id
+                    "[{}] summon-nickname matched  nick owner={} owner_name={} summon={}",
+                    self.port, owner_id, nickname, real_actor_id
                 ));
                 return true;
             }
         }
 
         found_something
-    }
-
-    fn consume_pending_summons_for_owner(&mut self) {
-        let pending_items = self.data_storage.take_pending_summons_for_known_owners();
-        for (owner_id, summon_ids, nickname) in pending_items {
-            for summon_id in summon_ids {
-                if self.data_storage.has_summon_owner(summon_id) {
-                    continue;
-                }
-
-                self.data_storage.append_summon(owner_id, summon_id);
-                self.logger.info(format!(
-                    "[{}] summon pending resolved owner={} owner_name={} summon={}",
-                    self.port, owner_id, nickname, summon_id
-                ));
-            }
-        }
     }
 
     fn extract_summon_owner_kotlin_style(
