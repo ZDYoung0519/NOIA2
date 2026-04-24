@@ -366,11 +366,15 @@ impl Drop for PcapCapturer {
 }
 
 fn prioritize_devices(mut devices: Vec<DeviceInfo>) -> Vec<DeviceInfo> {
-    devices.retain(|device| device.has_addresses);
     devices.sort_by_key(|device| {
-        let virtual_priority = if device.is_virtual() { 0 } else { 1 };
+        let loopback_priority = if device.is_loopback || device.is_virtual() { 0 } else { 1 };
+        let address_priority = if !device.is_loopback && !device.is_virtual() && !device.has_addresses {
+            1
+        } else {
+            0
+        };
         let name = device.label().to_ascii_lowercase();
-        (virtual_priority, name)
+        (loopback_priority, address_priority, name)
     });
     devices
 }
