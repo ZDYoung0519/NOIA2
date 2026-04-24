@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { Package, RotateCcw } from "lucide-react";
+import { Package, RotateCcw, Search } from "lucide-react";
 
 import { TitleBar } from "@/components/title-bar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
 import { MemorySnapshot } from "@/types/aion2dps";
@@ -65,6 +66,7 @@ export default function DpsLogPage() {
   const { settings } = useAppSettings();
   const dpsAppearance = settings.appearance.dpsWindow;
   const [lines, setLines] = useState<DpsLogEvent[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
@@ -103,13 +105,31 @@ export default function DpsLogPage() {
     };
   }, []);
 
+  const filteredLines = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return lines;
+    }
+
+    return lines.filter((entry) => {
+      const normalizedLine = entry.line.toLowerCase();
+      const normalizedMessage = entry.message.toLowerCase();
+      const normalizedLevel = entry.level.toLowerCase();
+      return (
+        normalizedLine.includes(normalizedQuery) ||
+        normalizedMessage.includes(normalizedQuery) ||
+        normalizedLevel.includes(normalizedQuery)
+      );
+    });
+  }, [lines, searchQuery]);
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) {
       return;
     }
     viewport.scrollTop = viewport.scrollHeight;
-  }, [lines]);
+  }, [filteredLines]);
 
   const shellBackground = useMemo(
     () => hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity),
@@ -168,6 +188,16 @@ export default function DpsLogPage() {
                 DPS Log
               </span>
             </div>
+            <div className="relative w-52 min-w-0" data-tauri-drag-region="false">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search logs"
+                className="h-7 border-white/10 bg-white/5 pl-8 text-xs text-slate-100 placeholder:text-slate-400 focus-visible:border-white/20 focus-visible:ring-white/10"
+              />
+            </div>
             <button
               type="button"
               title="Clear logs"
@@ -188,8 +218,8 @@ export default function DpsLogPage() {
         style={{ backgroundColor: panelBackground, zoom: dpsAppearance.scaleFactor }}
       >
         <div className="space-y-1 font-mono text-xs">
-          {lines.length > 0 ? (
-            lines.map((entry, index) => (
+          {filteredLines.length > 0 ? (
+            filteredLines.map((entry, index) => (
               <div
                 key={`${entry.timestamp}-${index}`}
                 className="rounded border border-white/8 bg-black/10 px-2 py-1 text-slate-200"
@@ -207,6 +237,10 @@ export default function DpsLogPage() {
                 </span>
               </div>
             ))
+          ) : lines.length > 0 ? (
+            <div className="flex min-h-24 items-center justify-center rounded border border-dashed border-white/10 bg-white/[0.03] text-xs text-slate-400">
+              No logs matched "{searchQuery}"
+            </div>
           ) : (
             <div className="flex min-h-24 items-center justify-center rounded border border-dashed border-white/10 bg-white/[0.03] text-xs text-slate-400">
               Waiting for log output

@@ -197,8 +197,12 @@ impl StreamProcessor {
             }
         }
 
-        self.parse_summon_ownership_packet(packet);
-        self.parse_summon_packet(packet);
+        if self.parse_summon_ownership_packet(packet){
+            return true;
+        }
+        if self.parse_summon_packet(packet){
+            return true;
+        }
 
         self.parse_4036(packet);
         self.parse_3336(packet); // main actor
