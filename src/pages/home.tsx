@@ -1,17 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Bell, MoreVertical, Search, Plus, ArrowUp, FileText } from "lucide-react";
-// import BankCardCarousel from "@/components/bank-card-carousel";
+import { useState } from "react";
+import { ArrowUp, Bell, FileText, MoreVertical, Plus, Search } from "lucide-react";
+
 import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
 import CharacterCardCarousel from "@/components/character-card-carousel";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
-import { useState } from "react";
-import type { MainActorRecord } from "@/types/aion2dps";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createWindow } from "@/lib/window";
+import type { MainActorRecord } from "@/types/aion2dps";
 
 export default function HomePage() {
   const [mainCharacter, setMainCharacter] = useState<MainActorRecord | null>(null);
   const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
+  const { t } = useAppTranslation();
 
   const handleOpenDps = async () => {
     await createWindow("dps", {
@@ -30,10 +32,10 @@ export default function HomePage() {
   };
 
   const quickActions = [
-    { label: "Dps水表", icon: Plus, onClick: handleOpenDps },
-    { label: "角色评分", icon: ArrowUp, onClick: () => {} },
-    { label: "数据排行", icon: ArrowUp, onClick: () => {} },
-    { label: "1234", icon: FileText, onClick: () => {} },
+    { label: t("home.actions.openDps"), icon: Plus, onClick: handleOpenDps },
+    { label: t("home.actions.characterRating"), icon: ArrowUp, onClick: () => {} },
+    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => {} },
+    { label: t("home.actions.comingSoon"), icon: FileText, onClick: () => {} },
   ];
 
   return (
@@ -43,7 +45,7 @@ export default function HomePage() {
           <div className="relative w-full max-w-[290px]">
             <Search className="text-muted-foreground absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
             <Input
-              placeholder="Search"
+              placeholder={t("home.searchPlaceholder")}
               className="border-border/50 bg-muted/50 placeholder:text-muted-foreground focus-visible:ring-ring h-12 rounded-2xl pl-11 text-sm shadow-none focus-visible:ring-1"
             />
           </div>
@@ -65,10 +67,6 @@ export default function HomePage() {
             >
               <MoreVertical className="h-5 w-5" />
             </Button>
-            {/* <Avatar className="h-11 w-11 ring-4 ring-background">
-              <AvatarImage src="https://i.pravatar.cc/100?img=13" alt="User avatar" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar> */}
           </div>
         </header>
 
@@ -81,7 +79,7 @@ export default function HomePage() {
 
           <div className="min-w-0 pt-1">
             <h3 className="text-foreground mb-6 text-[18px] font-semibold md:text-[20px]">
-              Quick actions
+              {t("home.quickActions")}
             </h3>
             <div className="grid grid-cols-2 gap-4">
               {quickActions.map((item) => {

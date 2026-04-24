@@ -108,7 +108,50 @@
       "myMuzhuangOnly": "僅統計我的木樁傷害",
       "myMuzhuangOnlyDescription": "當目標是木樁時，只統計自己角色造成的傷害。",
       "outputDebugLog": "輸出除錯日誌",
-      "outputDebugLogDescription": "將額外的 DPS 擷取與分發除錯日誌寫入後端日誌檔案。"
+      "outputDebugLogDescription": "將額外的 DPS 擷取與分發除錯日誌寫入後端日誌檔案。",
+      "runtimeGroup": "Runtime",
+      "windowAppearanceGroup": "Window Appearance",
+      "previewGroup": "DPS Preview",
+      "previewWindowTitle": "DPS Window Preview",
+      "autoResizeHeight": "Auto Resize Height",
+      "maskNicknames": "Mask Nicknames",
+      "scaleFactor": "Scale Factor",
+      "shellColor": "Shell Color",
+      "shellOpacity": "Shell Opacity",
+      "panelColor": "Panel Color",
+      "panelOpacity": "Panel Opacity",
+      "mainPlayerBar": "Main Player Bar",
+      "otherPlayerBar": "Other Player Bar",
+      "barOpacity": "Bar Opacity"
+    },
+    "general": {
+      "title": "General",
+      "description": "Manage theme, language, and global shortcuts.",
+      "appearanceGroup": "Appearance",
+      "shortcutsGroup": "Shortcuts"
+    },
+    "aboutPage": {
+      "title": "About",
+      "description": "App information, support options, and local cache management.",
+      "applicationGroup": "Application",
+      "supportGroup": "Support",
+      "supportUs": "Support Us",
+      "supportDescription": "If this app helps you, you can support continued development here.",
+      "supportDialogTitle": "Support Us",
+      "supportDialogDescription": "Scan the WeChat QR code below to support ongoing development and maintenance of the app.",
+      "supportDialogMissing": "WeChat QR image not found",
+      "supportDialogMissingHint": "Put your QR image at {{path}} and it will show up here automatically.",
+      "supportDialogThanks": "Your support helps us keep improving parsing, overlays, history tools, and desktop stability. Thank you for helping the project keep moving.",
+      "storageGroup": "Storage",
+      "currentUsage": "Current Usage",
+      "entries": "{{count}} localStorage entries",
+      "refresh": "Refresh",
+      "clearCache": "Clear Cache",
+      "clearCacheDescription": "This clears all localStorage data for the app, including history, preferences, language, and theme.",
+      "noStorageData": "No localStorage data found.",
+      "clearDialogTitle": "Clear local cache?",
+      "clearDialogDescription": "This will remove all localStorage data for the app, including DPS history, main character history, settings, language, and theme. The page will reload after clearing.",
+      "clearAndReload": "Clear and Reload"
     }
   },
   "dps": {
@@ -231,6 +274,16 @@
       "packageVersionInvalid": "package.json 中的版本缺失或無效",
       "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本缺失或無效",
       "invalidLang": "無效的 --lang 參數。請使用 en、zh-CN、zh-TW、ko 或 zh。"
+    }
+  },
+  "home": {
+    "searchPlaceholder": "Search",
+    "quickActions": "Quick actions",
+    "actions": {
+      "openDps": "Open DPS Meter",
+      "characterRating": "Character Rating",
+      "rankings": "Rankings",
+      "comingSoon": "Coming Soon"
     }
   }
 }

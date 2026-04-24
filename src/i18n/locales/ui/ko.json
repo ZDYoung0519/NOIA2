@@ -108,7 +108,50 @@
       "myMuzhuangOnly": "내 허수아비 피해만 집계",
       "myMuzhuangOnlyDescription": "대상이 허수아비일 때 내 캐릭터가 준 피해만 집계합니다.",
       "outputDebugLog": "디버그 로그 출력",
-      "outputDebugLogDescription": "추가 DPS 캡처 및 디스패처 디버그 로그를 백엔드 로그 파일에 기록합니다."
+      "outputDebugLogDescription": "추가 DPS 캡처 및 디스패처 디버그 로그를 백엔드 로그 파일에 기록합니다.",
+      "runtimeGroup": "Runtime",
+      "windowAppearanceGroup": "Window Appearance",
+      "previewGroup": "DPS Preview",
+      "previewWindowTitle": "DPS Window Preview",
+      "autoResizeHeight": "Auto Resize Height",
+      "maskNicknames": "Mask Nicknames",
+      "scaleFactor": "Scale Factor",
+      "shellColor": "Shell Color",
+      "shellOpacity": "Shell Opacity",
+      "panelColor": "Panel Color",
+      "panelOpacity": "Panel Opacity",
+      "mainPlayerBar": "Main Player Bar",
+      "otherPlayerBar": "Other Player Bar",
+      "barOpacity": "Bar Opacity"
+    },
+    "general": {
+      "title": "General",
+      "description": "Manage theme, language, and global shortcuts.",
+      "appearanceGroup": "Appearance",
+      "shortcutsGroup": "Shortcuts"
+    },
+    "aboutPage": {
+      "title": "About",
+      "description": "App information, support options, and local cache management.",
+      "applicationGroup": "Application",
+      "supportGroup": "Support",
+      "supportUs": "Support Us",
+      "supportDescription": "If this app helps you, you can support continued development here.",
+      "supportDialogTitle": "Support Us",
+      "supportDialogDescription": "Scan the WeChat QR code below to support ongoing development and maintenance of the app.",
+      "supportDialogMissing": "WeChat QR image not found",
+      "supportDialogMissingHint": "Put your QR image at {{path}} and it will show up here automatically.",
+      "supportDialogThanks": "Your support helps us keep improving parsing, overlays, history tools, and desktop stability. Thank you for helping the project keep moving.",
+      "storageGroup": "Storage",
+      "currentUsage": "Current Usage",
+      "entries": "{{count}} localStorage entries",
+      "refresh": "Refresh",
+      "clearCache": "Clear Cache",
+      "clearCacheDescription": "This clears all localStorage data for the app, including history, preferences, language, and theme.",
+      "noStorageData": "No localStorage data found.",
+      "clearDialogTitle": "Clear local cache?",
+      "clearDialogDescription": "This will remove all localStorage data for the app, including DPS history, main character history, settings, language, and theme. The page will reload after clearing.",
+      "clearAndReload": "Clear and Reload"
     }
   },
   "dps": {
@@ -231,6 +274,16 @@
       "packageVersionInvalid": "package.json의 버전이 없거나 올바르지 않습니다",
       "tauriVersionInvalid": "src-tauri/tauri.conf.json의 버전이 없거나 올바르지 않습니다",
       "invalidLang": "잘못된 --lang 값입니다. en, zh-CN, zh-TW, ko 또는 zh 를 사용하세요."
+    }
+  },
+  "home": {
+    "searchPlaceholder": "Search",
+    "quickActions": "Quick actions",
+    "actions": {
+      "openDps": "Open DPS Meter",
+      "characterRating": "Character Rating",
+      "rankings": "Rankings",
+      "comingSoon": "Coming Soon"
     }
   }
 }
