@@ -97,12 +97,12 @@ impl DataStorage {
             return;
         }
 
-        let actor_id = packet.actor_id;
+        // let actor_id = packet.actor_id;
         // 暂时不处理复制召唤链接，在前端获得dps snapshot后，聚合时会把复制召唤的伤害算到主人头上
-        // let mut actor_id = packet.actor_id;
-        // if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
-        //     actor_id = *owner_id;
-        // }
+        let mut actor_id = packet.actor_id;
+        if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
+            actor_id = *owner_id;
+        }
 
         let target_mob_code = inner.mob_id_code_map.get(&packet.target_id).copied();
         let is_target_boss = target_mob_code
