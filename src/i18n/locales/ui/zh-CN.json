@@ -3,7 +3,7 @@
     "title": "永恒诺亚",
     "welcome": "欢迎来到永恒诺亚",
     "description": "一个用 Tauri、React 和 Rust 构建的浮动实用程序伴侣。",
-    "openDps": "打开DPS表"
+    "openDps": "打开DPS水表"
   },
   "greet": {
     "title": "来自 Rust 的问候",
@@ -53,18 +53,18 @@
     "button": "设置",
     "close": "关闭",
     "general": {
-      "title": "一般的",
-      "description": "管理主题、语言和全局快捷方式。",
+      "title": "通用设置",
+      "description": "管理主题、语言和全局快捷键。",
       "appearanceGroup": "外貌",
-      "shortcutsGroup": "快捷方式"
+      "shortcutsGroup": "快捷键"
     },
     "appearance": {
       "title": "外貌",
       "description": "自定义应用程序的外观和语言",
       "theme": "主题",
-      "light": "光",
-      "dark": "黑暗的",
-      "system": "系统",
+      "light": "白天",
+      "dark": "黑暗",
+      "system": "跟随系统",
       "language": "语言",
       "mainWindowTitle": "主窗口外观",
       "mainWindowDescription": "主窗口和DPS窗口是分开存储的，因此我们可以独立调整它们。",
@@ -84,8 +84,8 @@
       "shellOpacity": "外壳不透明度",
       "panelColor": "面板颜色",
       "panelOpacity": "面板不透明度",
-      "mainPlayerBar": "主玩家栏",
-      "otherPlayerBar": "其他玩家栏",
+      "mainPlayerBar": "主玩家颜色",
+      "otherPlayerBar": "其他玩家颜色",
       "previewTitle": "DPS 窗口预览",
       "previewDescription": "此处使用模拟战斗数据，以便您可以预览颜色、比例、面板不透明度和标题可见性。"
     },
@@ -97,13 +97,13 @@
       "showMainDesc": "使用快捷键快速显示主窗口",
       "showDps": "显示 DPS 窗口",
       "showDpsDesc": "使用快捷键快速打开或聚焦DPS窗口",
-      "resetDps": "重置 DPS 计",
+      "resetDps": "重置 DPS 统计",
       "resetDpsDesc": "使用快捷方式重置 DPS 仪表运行时数据而不停止它",
       "setSuccess": "快捷方式设置为{{shortcut}}！",
       "cleared": "快捷方式已清除！"
     },
     "dps": {
-      "title": "DPS 计",
+      "title": "水表设置",
       "description": "配置后端DPS快照频率、调试日志记录和战斗过滤规则。",
       "runtimeGroup": "运行时",
       "windowAppearanceGroup": "窗口外观",
@@ -113,15 +113,15 @@
       "snapshotIntervalDescription": "后端向前端发送 DPS 快照的频率（以毫秒为单位）。",
       "memorySnapshotInterval": "内存快照间隔",
       "memorySnapshotIntervalDescription": "后端向前端发送内存、CPU、ping 和缓冲区诊断信息的频率（以毫秒为单位）。",
-      "bossOnly": "仅限老板",
+      "bossOnly": "仅统计Boss",
       "bossOnlyDescription": "只计算对被识别为 Boss 的目标的伤害。",
-      "myMuzhuangOnly": "仅我的训练假人",
+      "myMuzhuangOnly": "仅统计我的训练假人",
       "myMuzhuangOnlyDescription": "当目标是训练假人时，仅计算您自己的角色造成的伤害。",
       "autoResizeHeight": "自动调整高度",
-      "maskNicknames": "面具昵称",
-      "scaleFactor": "比例因子",
-      "shellColor": "外壳颜色",
-      "shellOpacity": "外壳不透明度",
+      "maskNicknames": "昵称打码",
+      "scaleFactor": "页面缩放",
+      "shellColor": "标题栏颜色",
+      "shellOpacity": "标题栏不透明度",
       "panelColor": "面板颜色",
       "panelOpacity": "面板不透明度",
       "mainPlayerBar": "主玩家栏",
@@ -130,9 +130,22 @@
       "outputDebugLog": "输出调试日志",
       "outputDebugLogDescription": "将额外的 DPS 捕获和调度程序调试日志写入后端日志文件。"
     },
+    "supportPage": {
+      "title": "支持与鸣谢",
+      "description": "支持项目并浏览背后的人和技术。",
+      "supportMethodsGroup": "支持",
+      "supportUs": "支持我们",
+      "supportDescription": "如果这个应用程序对您有帮助，您可以在这里支持继续开发。",
+      "openSupportLink": "打开支持链接",
+      "qrAlt": "支持二维码",
+      "sponsorGroup": "赞助鸣谢",
+      "technicalGroup": "技术鸣谢",
+      "noSupporters": "暂无支持者",
+      "noTechnicalCredits": "暂无技术致谢"
+    },
     "aboutPage": {
       "title": "关于",
-      "description": "应用程序信息、支持选项和本地缓存管理。",
+      "description": "应用程序信息",
       "applicationGroup": "应用",
       "supportGroup": "支持",
       "supportUs": "支持我们",
@@ -142,7 +155,7 @@
       "supportDialogMissing": "找不到微信二维码",
       "supportDialogMissingHint": "将您的 QR 图片放在 {{path}} 处，它将自动显示在此处。",
       "supportDialogThanks": "您的支持帮助我们不断改进解析、覆盖、历史记录工具和桌面稳定性。感谢您帮助该项目继续前进。",
-      "storageGroup": "贮存",
+      "storageGroup": "存储空间",
       "currentUsage": "当前使用情况",
       "entries": "{{count}} 个本地存储条目",
       "refresh": "刷新",
@@ -151,15 +164,23 @@
       "noStorageData": "未找到本地存储数据。",
       "clearDialogTitle": "清除本地缓存？",
       "clearDialogDescription": "这将删除应用程序的所有本地存储数据，包括 DPS 历史记录、主要角色历史记录、设置、语言和主题。清除后页面将重新加载。",
-      "clearAndReload": "清除并重新加载"
+      "clearAndReload": "清除并重新加载",
+      "technicalAcknowledgements": "技术致谢",
+      "technicalAcknowledgementsDescription": "为本软件做出技术贡献的个人和项目",
+      "technicalAcknowledgementsDialogDescription": "为他们的贡献、支持和开源代码库感谢以下个人和项目",
+      "sponsorAcknowledgements": "赞助鸣谢",
+      "sponsorAcknowledgementsDescription": "本项目的充电者和支持者",
+      "sponsorAcknowledgementsDialogDescription": "为他们的支持和赞助表示由衷感谢",
+      "viewList": "查看列表",
+      "noAcknowledgements": "暂无致谢"
     }
   },
   "home": {
     "searchPlaceholder": "搜索",
-    "quickActions": "快速行动",
+    "quickActions": "快速启动",
     "actions": {
-      "openDps": "打开DPS表",
-      "characterRating": "角色评级",
+      "openDps": "DPS水表",
+      "characterRating": "角色查询",
       "rankings": "排行榜",
       "comingSoon": "即将推出"
     }

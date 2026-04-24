@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Activity,
+  ExternalLink,
+  HeartHandshake,
   Info,
   Monitor,
   Moon,
   RefreshCw,
-  HeartHandshake,
   Sun,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,13 +17,8 @@ import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ShortcutInput } from "@/components/shortcut-input";
 import { useTheme } from "@/components/theme-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Toaster } from "@/components/ui/sonner";
-import { Switch } from "@/components/ui/switch";
-import { useAppSettings } from "@/hooks/use-app-settings";
-import { useAppTranslation } from "@/hooks/use-app-translation";
-import { useManualUpdateCheck } from "@/components/updater-dialog";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +27,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
+import { Switch } from "@/components/ui/switch";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import { useAppTranslation } from "@/hooks/use-app-translation";
+import { useManualUpdateCheck } from "@/components/updater-dialog";
 import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary";
+import { cn } from "@/lib/utils";
 
 const hexToRgba = (hex: string, alphaPercent: number) => {
   const safeHex = hex.replace("#", "");
@@ -48,17 +51,36 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${Math.min(100, Math.max(0, alphaPercent)) / 100})`;
 };
 
-type SettingSection = "general" | "dps" | "about";
+type SettingSection = "general" | "dps" | "support" | "about";
+type SupportListItem = {
+  nickname: string;
+  href: string;
+  avatarSrc?: string;
+  avatarFallback: string;
+};
 
-const SUPPORT_WECHAT_QR_PATH = "/images/support-wechat-qr.png";
+const SUPPORT_WECHAT_QR_PATH = "/images/afdian.jpg";
+const SUPPORT_LIST: SupportListItem[] = [];
+const TECHNICAL_ACKNOWLEDGEMENTS: SupportListItem[] = [
+  {
+    nickname: "TK-open-public/",
+    href: "https://github.com/TK-open-public/Aion2-Dps-Meter",
+    avatarSrc: "https://avatars.githubusercontent.com/u/253818446?s=48&v=4",
+    avatarFallback: "AF",
+  },
+  {
+    nickname: "taengu",
+    href: "https://github.com/taengu/Aion2-Dps-Meter",
+    avatarFallback: "https://avatars.githubusercontent.com/u/7606218?s=48&v=4",
+  },
+  {
+    nickname: "p62003",
+    href: "https://github.com/p62003/aletheia_AION2_DPS_Meter",
+    avatarFallback: "https://avatars.githubusercontent.com/u/125135560?s=48&v=4",
+  },
+];
 
-function SettingsSectionHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description?: string;
-}) {
+function SettingsSectionHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="space-y-1">
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
@@ -67,19 +89,13 @@ function SettingsSectionHeader({
   );
 }
 
-function SettingsGroup({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function SettingsGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <h3 className="text-muted-foreground text-sm font-semibold tracking-[0.18em] uppercase">
         {title}
       </h3>
-      <div className="divide-border overflow-hidden rounded-2xl border bg-background/50 backdrop-blur-sm divide-y">
+      <div className="divide-border bg-background/50 divide-y overflow-hidden rounded-2xl border backdrop-blur-sm">
         {children}
       </div>
     </section>
@@ -108,12 +124,50 @@ function SettingsRow({
   );
 }
 
+function SupportList({
+  items,
+  emptyText,
+  onOpenLink,
+}: {
+  items: SupportListItem[];
+  emptyText: string;
+  onOpenLink: (href: string) => void;
+}) {
+  if (items.length === 0) {
+    return <div className="text-muted-foreground px-5 py-6 text-sm">{emptyText}</div>;
+  }
+
+  return (
+    <div className="flex flex-col">
+      {items.map((item) => (
+        <div
+          key={`${item.nickname}-${item.href}`}
+          className="flex items-center justify-between gap-4 px-5 py-4 not-last:border-b"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar size="lg">
+              {item.avatarSrc ? <AvatarImage src={item.avatarSrc} alt={item.nickname} /> : null}
+              <AvatarFallback>{item.avatarFallback}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{item.nickname}</div>
+              <div className="text-muted-foreground truncate text-xs">{item.href}</div>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => onOpenLink(item.href)}>
+            <ExternalLink data-icon="inline-start" />
+            Open
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SettingsContent() {
   const [activeSection, setActiveSection] = useState<SettingSection>("general");
   const [appVersion, setAppVersion] = useState("");
   const [clearStorageOpen, setClearStorageOpen] = useState(false);
-  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
-  const [supportImageError, setSupportImageError] = useState(false);
   const [storageSummary, setStorageSummary] = useState(() => getLocalStorageSummary());
   const { t } = useAppTranslation();
   const { theme, setTheme } = useTheme();
@@ -290,6 +344,10 @@ export function SettingsContent() {
     }
   };
 
+  const handleOpenLink = useCallback((href: string) => {
+    void openUrl(href);
+  }, []);
+
   const menuItems = [
     {
       id: "general" as SettingSection,
@@ -300,6 +358,11 @@ export function SettingsContent() {
       id: "dps" as SettingSection,
       label: t("settings.dps.title"),
       icon: Activity,
+    },
+    {
+      id: "support" as SettingSection,
+      label: t("settings.supportPage.title"),
+      icon: HeartHandshake,
     },
     {
       id: "about" as SettingSection,
@@ -334,7 +397,7 @@ export function SettingsContent() {
         </nav>
       </aside>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <div className="w-full p-5 lg:p-8">
           {activeSection === "general" && (
             <div className="space-y-8">
@@ -394,10 +457,7 @@ export function SettingsContent() {
                 <SettingsRow
                   label={t("settings.shortcut.showDps")}
                   control={
-                    <ShortcutInput
-                      value={showDpsShortcut}
-                      onChange={handleShowDpsShortcutChange}
-                    />
+                    <ShortcutInput value={showDpsShortcut} onChange={handleShowDpsShortcutChange} />
                   }
                 />
                 <SettingsRow
@@ -410,7 +470,6 @@ export function SettingsContent() {
                   }
                 />
               </SettingsGroup>
-
             </div>
           )}
 
@@ -724,16 +783,18 @@ export function SettingsContent() {
               </SettingsGroup>
 
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <h3 className="text-muted-foreground text-sm font-semibold tracking-[0.18em] uppercase">
                   {t("settings.dps.previewGroup")}
                 </h3>
                 <div className="rounded-xl border p-3">
                   <div className="mb-2">
-                    <h4 className="text-sm font-semibold">{t("settings.dps.previewWindowTitle")}</h4>
+                    <h4 className="text-sm font-semibold">
+                      {t("settings.dps.previewWindowTitle")}
+                    </h4>
                   </div>
 
                   <div
-                    className="rounded-2xl border border-white/10 p-2 text-slate-100 max-w-150 items-center justify-center"
+                    className="max-w-150 items-center justify-center rounded-2xl border border-white/10 p-2 text-slate-100"
                     style={{
                       backgroundColor: hexToRgba(
                         dpsAppearance.backgroundColor,
@@ -751,8 +812,6 @@ export function SettingsContent() {
                         zoom: dpsAppearance.scaleFactor,
                       }}
                     >
-
-
                       <MemoizedDpsPanel
                         targetInfo={previewCombatInfos.targetInfos[1]}
                         thisTargetPlayerStats={previewStats as never}
@@ -767,6 +826,62 @@ export function SettingsContent() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeSection === "support" && (
+            <div className="space-y-8">
+              <SettingsSectionHeader
+                title={t("settings.supportPage.title")}
+                description={t("settings.supportPage.description")}
+              />
+
+              <SettingsGroup title={t("settings.supportPage.supportMethodsGroup")}>
+                <div className="grid gap-4 px-5 py-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+                  <div className="bg-muted/30 overflow-hidden rounded-2xl border">
+                    <img
+                      src={SUPPORT_WECHAT_QR_PATH}
+                      alt={t("settings.supportPage.qrAlt")}
+                      className="aspect-square w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="text-base font-semibold">
+                        {t("settings.supportPage.supportUs")}
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-6">
+                        {t("settings.supportPage.supportDescription")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleOpenLink("https://afdian.com/")}
+                      >
+                        <HeartHandshake data-icon="inline-start" />
+                        {t("settings.supportPage.openSupportLink")}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </SettingsGroup>
+
+              <SettingsGroup title={t("settings.supportPage.sponsorGroup")}>
+                <SupportList
+                  items={SUPPORT_LIST}
+                  emptyText={t("settings.supportPage.noSupporters")}
+                  onOpenLink={handleOpenLink}
+                />
+              </SettingsGroup>
+
+              <SettingsGroup title={t("settings.supportPage.technicalGroup")}>
+                <SupportList
+                  items={TECHNICAL_ACKNOWLEDGEMENTS}
+                  emptyText={t("settings.supportPage.noTechnicalCredits")}
+                  onOpenLink={handleOpenLink}
+                />
+              </SettingsGroup>
             </div>
           )}
 
@@ -796,19 +911,6 @@ export function SettingsContent() {
                 />
               </SettingsGroup>
 
-              <SettingsGroup title={t("settings.aboutPage.supportGroup")}>
-                <SettingsRow
-                  label={t("settings.aboutPage.supportUs")}
-                  description={t("settings.aboutPage.supportDescription")}
-                  control={
-                    <Button onClick={() => setSupportDialogOpen(true)} variant="outline">
-                      <HeartHandshake data-icon="inline-start" />
-                      {t("settings.aboutPage.supportUs")}
-                    </Button>
-                  }
-                />
-              </SettingsGroup>
-
               <SettingsGroup title={t("settings.aboutPage.storageGroup")}>
                 <SettingsRow
                   label={t("settings.aboutPage.currentUsage")}
@@ -831,13 +933,17 @@ export function SettingsContent() {
                   label={t("settings.aboutPage.clearCache")}
                   description={t("settings.aboutPage.clearCacheDescription")}
                   control={
-                    <Button variant="destructive" size="sm" onClick={() => setClearStorageOpen(true)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setClearStorageOpen(true)}
+                    >
                       {t("settings.aboutPage.clearCache")}
                     </Button>
                   }
                 />
                 {storageSummary.entries.length === 0 ? (
-                  <div className="px-5 py-6 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground px-5 py-6 text-sm">
                     {t("settings.aboutPage.noStorageData")}
                   </div>
                 ) : (
@@ -867,7 +973,9 @@ export function SettingsContent() {
             <DialogDescription>{t("settings.aboutPage.clearDialogDescription")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setClearStorageOpen(false)}>{t("about.close")}</Button>
+            <Button variant="outline" onClick={() => setClearStorageOpen(false)}>
+              {t("about.close")}
+            </Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -879,48 +987,6 @@ export function SettingsContent() {
             >
               {t("settings.aboutPage.clearAndReload")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={supportDialogOpen}
-        onOpenChange={(open) => {
-          setSupportDialogOpen(open);
-          if (open) {
-            setSupportImageError(false);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("settings.aboutPage.supportDialogTitle")}</DialogTitle>
-            <DialogDescription>{t("settings.aboutPage.supportDialogDescription")}</DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-2">
-            {supportImageError ? (
-              <div className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-8 text-center">
-                <div className="text-sm font-medium">{t("settings.aboutPage.supportDialogMissing")}</div>
-                <div className="text-muted-foreground text-xs leading-5">
-                  {t("settings.aboutPage.supportDialogMissingHint", {
-                    path: SUPPORT_WECHAT_QR_PATH,
-                  })}
-                </div>
-              </div>
-            ) : (
-              <img
-                src={SUPPORT_WECHAT_QR_PATH}
-                alt="WeChat support QR code"
-                className="size-64 rounded-2xl border object-contain"
-                onError={() => setSupportImageError(true)}
-              />
-            )}
-            <p className="text-muted-foreground text-center text-sm leading-6">
-              {t("settings.aboutPage.supportDialogThanks")}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSupportDialogOpen(false)}>{t("about.close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
