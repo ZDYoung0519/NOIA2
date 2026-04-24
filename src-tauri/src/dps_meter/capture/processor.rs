@@ -186,7 +186,7 @@ impl StreamProcessor {
             return false;
         }
 
-        // self.try_extract_replication_summon_link(packet);
+        self.consume_pending_summons_for_owner();
 
         if self.mode == ProcessingMode::Full {
             if self.parse_damage_packet(packet) {
@@ -639,16 +639,20 @@ impl StreamProcessor {
     }
 
     fn parse_summon_packet(&mut self, packet: &[u8]) -> bool {
-        let packet_length_info = read_varint(packet, 0);
-        if !packet_length_info.is_valid() {
-            return false;
-        }
-        let offset = packet_length_info.length;
-        if offset + 1 >= packet.len() || packet[offset] != 0x40 || packet[offset + 1] != 0x36 {
-            return false;
+        let mut idx = 0usize;
+        while idx < packet.len() {
+            let Some(pos) = find_bytes(packet, idx, &[0x40, 0x36]) else {
+                break;
+            };
+
+            if self.parse_summon_spawn_at(packet, pos + 2) {
+                return true;
+            }
+
+            idx = pos + 1;
         }
 
-        self.parse_summon_spawn_at(packet, offset + 2)
+        false
     }
 
     fn parse_summon_spawn_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {
@@ -699,9 +703,9 @@ impl StreamProcessor {
             found_something = true;
         }
 
-        if self.data_storage.has_summon_owner(real_actor_id) {
-            return found_something;
-        }
+        // if self.data_storage.has_summon_owner(real_actor_id) {
+        //     return found_something;
+        // }
 
         if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
@@ -754,7 +758,57 @@ impl StreamProcessor {
             return true;
         }
 
+        if !self.data_storage.has_summon_owner(real_actor_id) {
+            let mut best_match: Option<(u32, String)> = None;
+            let mut best_len = 0usize;
+            let actor_id_name_map = self.data_storage.actor_id_name_snapshot();
+
+            for (actor_id, nickname) in actor_id_name_map {
+                if nickname.is_empty() {
+                    continue;
+                }
+
+                let nickname_bytes = nickname.as_bytes();
+                if nickname_bytes.is_empty() || !packet.windows(nickname_bytes.len()).any(|window| window == nickname_bytes) {
+                    continue;
+                }
+
+                let nickname_len = nickname.chars().count();
+                if nickname_len > best_len {
+                    best_len = nickname_len;
+                    best_match = Some((actor_id, nickname));
+                }
+            }
+
+            if let Some((_, nickname)) = best_match {
+                self.data_storage
+                    .add_pending_summon_by_nick(&nickname, real_actor_id);
+                self.logger.info(format!(
+                    "[{}] summon pending by nick nickname={} summon={}",
+                    self.port, nickname, real_actor_id
+                ));
+                return true;
+            }
+        }
+
         found_something
+    }
+
+    fn consume_pending_summons_for_owner(&mut self) {
+        let pending_items = self.data_storage.take_pending_summons_for_known_owners();
+        for (owner_id, summon_ids, nickname) in pending_items {
+            for summon_id in summon_ids {
+                if self.data_storage.has_summon_owner(summon_id) {
+                    continue;
+                }
+
+                self.data_storage.append_summon(owner_id, summon_id);
+                self.logger.info(format!(
+                    "[{}] summon pending resolved owner={} owner_name={} summon={}",
+                    self.port, owner_id, nickname, summon_id
+                ));
+            }
+        }
     }
 
     fn extract_summon_owner_kotlin_style(

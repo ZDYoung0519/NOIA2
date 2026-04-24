@@ -19,6 +19,7 @@ struct DataStorageInner {
     actor_id_skill_spec_map: HashMap<u32, HashMap<u32, Vec<u32>>>,
     mob_id_code_map: HashMap<u32, u32>,
     summon_owner_map: HashMap<u32, u32>,
+    pending_summon_by_nick: HashMap<String, Vec<u32>>,
     start_time: Option<f64>,
     start_time_by_target: HashMap<u32, HashMap<u32, f64>>,
     last_time_by_target: HashMap<u32, HashMap<u32, f64>>,
@@ -68,6 +69,7 @@ impl DataStorage {
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
         let mob_id_code_map = inner.mob_id_code_map.clone();
         let summon_owner_map = inner.summon_owner_map.clone();
+        let pending_summon_by_nick = inner.pending_summon_by_nick.clone();
         let dot_skill_list = inner.dot_skill_list.clone();        
 
         *inner = DataStorageInner::default();
@@ -79,6 +81,7 @@ impl DataStorage {
         inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
         inner.mob_id_code_map = mob_id_code_map;
         inner.summon_owner_map = summon_owner_map;
+        inner.pending_summon_by_nick = pending_summon_by_nick;
         inner.dot_skill_list = dot_skill_list;
     }
 
@@ -229,6 +232,51 @@ impl DataStorage {
             return;
         }
         inner.summon_owner_map.insert(summon_id, owner_id);
+    }
+
+    pub fn add_pending_summon_by_nick(&self, nickname: &str, summon_id: u32) {
+        if nickname.is_empty() {
+            return;
+        }
+
+        let mut inner = self.inner.write().unwrap();
+        let pending = inner
+            .pending_summon_by_nick
+            .entry(nickname.to_string())
+            .or_default();
+        if !pending.contains(&summon_id) {
+            pending.push(summon_id);
+        }
+    }
+
+    pub fn take_pending_summons_for_known_owners(&self) -> Vec<(u32, Vec<u32>, String)> {
+        let mut inner = self.inner.write().unwrap();
+        let mut known_owners_by_nick = HashMap::new();
+        for (actor_id, nickname) in &inner.actor_id_name_map {
+            known_owners_by_nick
+                .entry(nickname.clone())
+                .or_insert(*actor_id);
+        }
+
+        let ready_nicknames: Vec<String> = inner
+            .pending_summon_by_nick
+            .keys()
+            .filter(|nickname| known_owners_by_nick.contains_key(*nickname))
+            .cloned()
+            .collect();
+
+        let mut resolved = Vec::new();
+        for nickname in ready_nicknames {
+            let Some(owner_id) = known_owners_by_nick.get(&nickname).copied() else {
+                continue;
+            };
+            let Some(summon_ids) = inner.pending_summon_by_nick.remove(&nickname) else {
+                continue;
+            };
+            resolved.push((owner_id, summon_ids, nickname));
+        }
+
+        resolved
     }
 
     pub fn has_summon_owner(&self, summon_id: u32) -> bool {
