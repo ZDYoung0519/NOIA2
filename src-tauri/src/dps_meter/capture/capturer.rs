@@ -13,6 +13,7 @@ use libloading::{Library, Symbol};
 use serde::Serialize;
 
 use crate::dps_meter::capture::channel::Channel;
+use crate::dps_meter::logging::DpsLogger;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -227,6 +228,7 @@ unsafe impl Sync for NpcapLib {}
 #[derive(Clone)]
 pub struct PcapCapturer {
     channel: Channel<CapturedPacket>,
+    logger: Arc<DpsLogger>,
     running: Arc<AtomicBool>,
     detector_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
@@ -237,9 +239,10 @@ pub struct PcapCapturer {
 }
 
 impl PcapCapturer {
-    pub fn new(channel: Channel<CapturedPacket>) -> Self {
+    pub fn new(channel: Channel<CapturedPacket>, logger: Arc<DpsLogger>) -> Self {
         Self {
             channel,
+            logger,
             running: Arc::new(AtomicBool::new(false)),
             detector_thread: Arc::new(Mutex::new(None)),
             capture_threads: Arc::new(Mutex::new(Vec::new())),
@@ -256,6 +259,7 @@ impl PcapCapturer {
         }
 
         let channel = self.channel.clone();
+        let logger = Arc::clone(&self.logger);
         let running = Arc::clone(&self.running);
         let capture_threads = Arc::clone(&self.capture_threads);
         let target_device = Arc::clone(&self.target_device);
@@ -267,23 +271,47 @@ impl PcapCapturer {
             let npcap = match NpcapLib::load() {
                 Ok(api) => Arc::new(api),
                 Err(error) => {
-                    eprintln!("Npcap initialization failed: {error}");
+                    logger.error(format!("Npcap initialization failed: {error}"));
                     running.store(false, Ordering::SeqCst);
                     return;
                 }
             };
+            let mut last_device_inventory = String::new();
+            let mut last_detected_target = String::new();
 
             while running.load(Ordering::SeqCst) {
                 let devices = match npcap.find_all_devices() {
                     Ok(devices) => devices,
                     Err(error) => {
-                        eprintln!("Failed to enumerate capture devices: {error}");
+                        logger.error(format!("Failed to enumerate capture devices: {error}"));
                         thread::sleep(detection_interval);
                         continue;
                     }
                 };
 
                 let devices = prioritize_devices(devices);
+                let inventory = format_device_inventory(&devices);
+                if inventory != last_device_inventory {
+                    if devices.is_empty() {
+                        logger.info("capture device: none");
+                    } else {
+                        for device_line in &devices {
+                            logger.info(format!(
+                                "capture device: {} | desc={} | has_addresses={} | loopback={} | virtual={}",
+                                device_line.name,
+                                if device_line.description.is_empty() {
+                                    "--"
+                                } else {
+                                    device_line.description.as_str()
+                                },
+                                device_line.has_addresses,
+                                device_line.is_loopback,
+                                device_line.is_virtual()
+                            ));
+                        }
+                    }
+                    last_device_inventory = inventory;
+                }
                 let mut detected_target: Option<CaptureTarget> = None;
 
                 for device in devices {
@@ -302,6 +330,20 @@ impl PcapCapturer {
                 }
 
                 if let Some(target) = detected_target {
+                    let detected_signature = format!(
+                        "{}@{}",
+                        target.device_name,
+                        target.target_port.as_deref().unwrap_or("--")
+                    );
+                    if detected_signature != last_detected_target {
+                        logger.info(format!(
+                            "capture target detected: device={} port={}",
+                            target.device_name,
+                            target.target_port.as_deref().unwrap_or("--")
+                        ));
+                        last_detected_target = detected_signature;
+                    }
+
                     let previous_device = target_device.read().unwrap().clone();
                     let should_restart = previous_device.as_deref()
                         != Some(target.device_name.as_str())
@@ -363,6 +405,27 @@ impl Drop for PcapCapturer {
     fn drop(&mut self) {
         self.stop();
     }
+}
+
+fn format_device_inventory(devices: &[DeviceInfo]) -> String {
+    if devices.is_empty() {
+        return "none".to_string();
+    }
+
+    devices
+        .iter()
+        .map(|device| {
+            format!(
+                "{}|{}|{}|{}|{}",
+                device.name,
+                device.description,
+                device.has_addresses,
+                device.is_loopback,
+                device.is_virtual()
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn prioritize_devices(mut devices: Vec<DeviceInfo>) -> Vec<DeviceInfo> {

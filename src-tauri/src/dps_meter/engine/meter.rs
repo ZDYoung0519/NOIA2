@@ -48,7 +48,7 @@ impl DpsMeter {
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
         let packet_channel = Channel::new(2000);
-        let capturer = PcapCapturer::new(packet_channel.clone());
+        let capturer = PcapCapturer::new(packet_channel.clone(), Arc::clone(&logger));
         let dispatcher = CaptureDispatcher::new(
             packet_channel.clone(),
             Arc::clone(&data_storage),
