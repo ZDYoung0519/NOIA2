@@ -1,71 +1,51 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import React, { lazy } from "react";
 import ReactDOM from "react-dom/client";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import "./index.css";
 import "./i18n";
 import { MainShell } from "./components/main-shell";
 import { AppSettingsProvider } from "./hooks/use-app-settings";
 import { TooltipProvider } from "./components/ui/tooltip";
 import Splash from "./Splash";
+
 import HomePage from "./pages/home";
 import DpsViewPage from "./pages/dps_view";
-import CharacterScorePage from "./pages/character_score";
+import CharacterPage from "./pages/character";
+import CharacterViewPage from "./pages/character_view";
 import SettingsViewPage from "./pages/settings_view";
 
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
 const DpsLogPage = lazy(() => import("./pages/dps_log"));
 const AboutPage = lazy(() => import("./pages/about"));
-const SettingsPage = lazy(() => import("./pages/settings"));
 
-const shellPageMap = {
-  "/": HomePage,
-  "/dps-view": DpsViewPage,
-  "/character-score": CharacterScorePage,
-  "/settings-view": SettingsViewPage,
-};
-
-const standalonePageMap = {
-  "/dps": DpsPage,
-  "/dps_detail": DpsDetailPage,
-  "/dps_log": DpsLogPage,
-  "/about": AboutPage,
-  "/settings": SettingsPage,
-  "/splash": Splash,
-};
-
-function AppWrapper() {
-  const [pathname, setPathname] = React.useState(window.location.pathname);
-
-  useEffect(() => {
-    getCurrentWindow().show();
-
-    const handlePopState = () => {
-      setPathname(window.location.pathname);
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
-  const StandalonePageComponent =
-    standalonePageMap[pathname as keyof typeof standalonePageMap] ?? null;
-
-  if (StandalonePageComponent) {
-    return (
-      <Suspense fallback={null}>
-        <StandalonePageComponent />
-      </Suspense>
-    );
-  }
-
-  const InnerPage = shellPageMap[pathname as keyof typeof shellPageMap] ?? HomePage;
+function App() {
   return (
-    <MainShell>
-      <InnerPage />
-    </MainShell>
+    <Routes>
+      <Route element={<Outlet />}>
+        <Route path="/dps" element={<DpsPage />} />
+        <Route path="/dps_detail" element={<DpsDetailPage />} />
+        <Route path="/dps_log" element={<DpsLogPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/splash" element={<Splash />} />
+      </Route>
+
+      <Route
+        element={
+          <MainShell>
+            <Outlet />
+          </MainShell>
+        }
+      >
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dps-view" element={<DpsViewPage />} />
+        <Route path="/character/search" element={<CharacterPage />} />
+        <Route path="/character/view" element={<CharacterViewPage />} />
+        <Route path="/settings-view" element={<SettingsViewPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
@@ -73,7 +53,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AppSettingsProvider>
       <TooltipProvider>
-        <AppWrapper />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </TooltipProvider>
     </AppSettingsProvider>
   </React.StrictMode>

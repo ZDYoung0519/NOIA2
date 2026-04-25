@@ -1,11 +1,11 @@
 export interface CharacterSearchResult {
-  name: string;
+  characterName: string;
   characterId: string;
   serverId: string;
   serverName: string;
-  race: number;
-  level: number;
-  pcId: number;
+  raceId: number;
+  raceName: string;
+  className: string;
   profileImageUrl: string;
 }
 

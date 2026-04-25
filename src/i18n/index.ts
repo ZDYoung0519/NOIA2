@@ -10,18 +10,23 @@ import zhCNSkills from "./locales/skill/zh-CN.json";
 import zhTWSkills from "./locales/skill/zh-TW.json";
 import koSkills from "./locales/skill/ko.json";
 
+import enStats from "./locales/stats/en.json";
+import zhCNStats from "./locales/stats/zh-CN.json";
+import zhTWStats from "./locales/stats/zh-TW.json";
+import koStats from "./locales/stats/ko.json";
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
-      en: { ui: en, skills: enSkills },
-      "zh-CN": { ui: zhCN, skills: zhCNSkills },
-      "zh-TW": { ui: zhTW, skills: zhTWSkills },
-      ko: { ui: ko, skills: koSkills },
+      en: { ui: en, skills: enSkills, stats: enStats },
+      "zh-CN": { ui: zhCN, skills: zhCNSkills, stats: zhCNStats },
+      "zh-TW": { ui: zhTW, skills: zhTWSkills, stats: zhTWStats },
+      ko: { ui: ko, skills: koSkills, stats: koStats },
     },
     defaultNS: "ui",
-    ns: ["ui", "skills"],
+    ns: ["ui", "skills", "stats"],
     fallbackLng: "en",
     supportedLngs: ["en", "zh-CN", "zh-TW", "ko"],
     interpolation: {

@@ -28,6 +28,7 @@ export default function HomePage() {
       transparent: true,
       shadow: false,
       alwaysOnTop: true,
+      skipTaskbar: true,
     });
   };
 

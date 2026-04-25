@@ -1,8 +1,9 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, LineChart, LogIn, Settings, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Home, LineChart, LogIn, Settings, ShieldCheck, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 
 type WindowFrameProps = {
   titleBar: ReactNode;
@@ -15,73 +16,42 @@ type WindowFrameProps = {
 type NavItem = {
   label: string;
   path: string;
-  icon: typeof Home;
+  icon: LucideIcon;
 };
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", path: "/", icon: Home },
   { label: "DPS 水表", path: "/dps-view", icon: LineChart },
-  { label: "角色评分", path: "/character-score", icon: ShieldCheck },
+  { label: "角色评分", path: "/character/search", icon: ShieldCheck },
 ];
 
-export function navigateTo(path: string) {
-  if (window.location.pathname === path) {
-    return;
-  }
-
-  window.history.pushState({}, "", path);
-  window.dispatchEvent(new PopStateEvent("popstate"));
-}
-
-function SidebarNavButton({
-  active,
-  label,
-  icon: Icon,
-  onClick,
-}: {
-  active?: boolean;
-  label: string;
-  icon: typeof Home;
-  onClick: () => void | Promise<void>;
-}) {
+function SidebarNavItem({ path, label, icon: Icon }: NavItem) {
   return (
-    <Button
-      variant={active ? "secondary" : "ghost"}
-      className={cn(
-        "h-11 w-full justify-start gap-3 rounded-xl px-3",
-        active && "bg-primary/10 text-primary hover:bg-primary/15"
+    <NavLink to={path}>
+      {({ isActive }) => (
+        <Button
+          variant={isActive ? "secondary" : "ghost"}
+          className={cn(
+            "h-11 w-full justify-start gap-3 rounded-xl px-3",
+            isActive && "bg-primary/10 text-primary hover:bg-primary/15"
+          )}
+        >
+          <span
+            className={cn(
+              "bg-background flex h-7 w-7 items-center justify-center rounded-lg border",
+              isActive ? "border-primary/30 text-primary" : "border-border text-muted-foreground"
+            )}
+          >
+            <Icon className="h-4 w-4" />
+          </span>
+          <span className="truncate">{label}</span>
+        </Button>
       )}
-      onClick={() => void onClick()}
-    >
-      <span
-        className={cn(
-          "bg-background flex h-7 w-7 items-center justify-center rounded-lg border",
-          active ? "border-primary/30 text-primary" : "border-border text-muted-foreground"
-        )}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="truncate">{label}</span>
-    </Button>
+    </NavLink>
   );
 }
 
 function WindowSidebar() {
-  const [pathname, setPathname] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const onPopState = () => {
-      setPathname(window.location.pathname);
-    };
-
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.removeEventListener("popstate", onPopState);
-    };
-  }, []);
-
-  const navItems = useMemo(() => NAV_ITEMS, []);
-
   return (
     <aside className="bg-card/100 border-r px-4 py-4 backdrop-blur-sm">
       <div className="flex h-full w-40 flex-col gap-4">
@@ -96,24 +66,14 @@ function WindowSidebar() {
         </div>
 
         <div className="space-y-2">
-          {navItems.map((item) => (
-            <SidebarNavButton
-              key={item.path}
-              label={item.label}
-              icon={item.icon}
-              active={pathname === item.path}
-              onClick={() => navigateTo(item.path)}
-            />
+          {NAV_ITEMS.map((item) => (
+            <SidebarNavItem key={item.path} {...item} />
           ))}
         </div>
 
         <div className="mt-auto space-y-2 border-t pt-4">
-          <SidebarNavButton label="用户登录" icon={LogIn} onClick={() => {}} />
-          <SidebarNavButton
-            label="设置"
-            icon={Settings}
-            onClick={() => navigateTo("/settings-view")}
-          />
+          <SidebarNavItem path="/login" label="用户登录" icon={LogIn} />
+          <SidebarNavItem path="/settings-view" label="设置" icon={Settings} />
         </div>
       </div>
     </aside>
@@ -134,7 +94,28 @@ export function WindowFrame({
         <main className="min-h-0 flex-1">
           <div className="flex h-full min-h-0">
             {showSidebar && <WindowSidebar />}
-            <div className={cn("min-h-0 min-w-0 flex-1", contentClassName)}>{children}</div>
+
+            {/* 内容区域：relative 作为背景的定位上下文 */}
+            <div
+              className={cn("relative min-h-0 min-w-0 flex-1 overflow-hidden", contentClassName)}
+            >
+              {/* 背景图片层：absolute 相对于内容区域 */}
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url("/images/aion2/background.png")`,
+                  filter: "brightness(0.8) contrast(1.2)",
+                }}
+              />
+
+              {/* 遮罩层：同样 absolute */}
+              <div className="via-background/70 to-background/100 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
+              <div className="from-background/50 to-background/50 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
+              <div className="bg-background/65 pointer-events-none absolute inset-0" />
+
+              {/* 实际内容 */}
+              <div className="relative z-10 h-full overflow-auto">{children}</div>
+            </div>
           </div>
         </main>
       </div>

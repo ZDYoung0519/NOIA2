@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { fetchFengwo } from "@/lib/aion2/fetchFengwo";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { Aion2MainActorHistory } from "@/lib/localStorageHistory";
+import { Link } from "react-router-dom";
+
+import { renderEquipSlotSmall } from "@/components/aion2/slot-equip";
 
 const cardBackgrounds = [
   "bg-[radial-gradient(circle_at_18%_88%,rgba(255,135,121,0.95),transparent_34%),radial-gradient(circle_at_55%_72%,rgba(241,84,150,0.9),transparent_28%),radial-gradient(circle_at_80%_18%,rgba(38,108,255,0.95),transparent_22%),linear-gradient(135deg,#081126_0%,#091739_45%,#12204b_72%,#1d2152_100%)]",
@@ -25,6 +28,14 @@ type FengwoResult = {
       stat?: {
         statList?: { type: string; value: number }[];
       };
+      skill?: {
+        skillList?: unknown[];
+      };
+      itemDetails?: {
+        slotPos: number;
+        slotPosName: string;
+      }[];
+      daevanionDetails?: unknown[];
     };
   };
   rating?: {
@@ -55,6 +66,7 @@ type CarouselCardProps = {
   failedImage: boolean;
   onActivate: (index: number) => void;
   onImageError: (id: string) => void;
+  onCardClicked?: (card: MainActorCard) => void;
 };
 
 function formatLastSeen(lastSeenAt: number) {
@@ -67,7 +79,7 @@ function formatLastSeen(lastSeenAt: number) {
 
 function getInitials(name: string) {
   const trimmed = name.trim();
-  return trimmed ? trimmed.slice(0, 2).toUpperCase() : "NA";
+  return trimmed ? trimmed.slice(0, 1).toUpperCase() : "NA";
 }
 
 function formatScore(value?: number) {
@@ -121,13 +133,21 @@ const CarouselCard = React.memo(function CarouselCard({
   const placementClass = getPlacementClass(wrappedOffset);
   const loading = state?.loading ?? true;
   const result = state?.result;
+
   const serverName = getServerShortName(card.serverId) || String(card.serverId);
   const avatarUrl = result?.queryResult?.data?.profile?.profileImage;
   const actorClass = result?.queryResult?.data?.profile?.className;
-  const statList = result?.queryResult?.data?.stat?.statList;
-  const itemLevel = statList?.find((item) => item?.type === "ItemLevel")?.value;
+
   const combatPower = result?.queryResult?.data?.profile?.combatPower;
   const fengwoScore = result?.rating?.scores?.score;
+
+  const [equipmentList, itemLevel] = React.useMemo(() => {
+    const equipmentList = result?.queryResult?.data?.itemDetails || [];
+    // const skillList = result?.queryResult?.data?.skill?.skillList || [];
+    const statList = result?.queryResult?.data?.stat?.statList;
+    const itemLevel = statList?.find((item) => item?.type === "ItemLevel")?.value;
+    return [equipmentList, itemLevel];
+  }, [result]);
 
   return (
     <div
@@ -144,7 +164,7 @@ const CarouselCard = React.memo(function CarouselCard({
             onActivate(index);
           }
         }}
-        className={`group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[32px] p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] outline-none sm:p-6 lg:p-7 ${backgroundClass}`}
+        className={`group relative flex h-full flex-col overflow-hidden rounded-[32px] p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] outline-none sm:p-6 lg:p-7 ${backgroundClass}`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_36%,rgba(0,0,0,0.12)_100%)]" />
 
@@ -227,11 +247,20 @@ const CarouselCard = React.memo(function CarouselCard({
                     </div>
                   </div>
                 </div>
+                <div className="">
+                  <div className="grid grid-cols-10 items-center justify-center gap-2">
+                    {equipmentList.map((eq) => (
+                      <div className="h-full w-full">
+                        <div key={eq.slotPos}>{renderEquipSlotSmall({ eq: eq, size: 14 })}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <button
-              type="button"
+            <Link
+              to={`/character/view?serverId=${card.serverId}&characterName=${card.actorName}`}
               className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/90 transition hover:bg-white/15"
               title="Open character page"
               onClick={(event) => {
@@ -239,10 +268,10 @@ const CarouselCard = React.memo(function CarouselCard({
               }}
             >
               <ExternalLink className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
 
-          <div className="mt-auto flex items-center justify-between gap-4 pt-6">
+          {/* <div className="mt-auto flex items-center justify-between gap-4 pt-6">
             <div className="flex items-center gap-2 text-sm text-white/65">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
               Synced from recent searches
@@ -251,7 +280,7 @@ const CarouselCard = React.memo(function CarouselCard({
             <div className="rounded-full bg-black/15 px-3 py-1.5 text-xs text-white/70">
               {index + 1} / {total}
             </div>
-          </div>
+          </div> */}
 
           <div className="mt-3 flex items-center justify-between gap-3 text-sm text-white/70">
             <div className="inline-flex items-center gap-2">

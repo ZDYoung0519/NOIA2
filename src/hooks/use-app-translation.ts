@@ -21,5 +21,11 @@ export function useAppTranslation() {
       defaultValue: `#${skillId}`,
     });
 
-  return { t, tSkill, i18n };
+  const tStats = (statType: string) =>
+    i18n.t(statType, {
+      ns: "stats",
+      defaultValue: statType,
+    });
+
+  return { t, tSkill, tStats, i18n };
 }

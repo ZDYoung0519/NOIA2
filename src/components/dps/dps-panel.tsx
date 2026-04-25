@@ -60,7 +60,7 @@ const DpsPanel = function DpsPanel({
   const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0">
       {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
         const playerName =
           actorInfos?.[player.playerId]?.actorName ||

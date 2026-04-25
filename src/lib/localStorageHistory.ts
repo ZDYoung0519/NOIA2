@@ -1,4 +1,5 @@
 import { MainActorRecord } from "@/types/aion2dps";
+import { CharacterSearchResult } from "@/types/character";
 
 function isQuotaExceededError(error: unknown): boolean {
   if (!(error instanceof DOMException)) {
@@ -109,12 +110,11 @@ import { HistoryTargetRecord } from "@/types/aion2dps";
 //   50, // 最大条数
 // );
 
-// export const Aion2SearchHistory =
-//   new GenericLocalHistory<CharacterSearchResult>(
-//     "AION2CHARACTERSEARCH", // localStorage key
-//     "characterId", // 主键字段
-//     50, // 最大条数
-//   );
+export const Aion2SearchHistory = new GenericLocalHistory<CharacterSearchResult>(
+  "AION2CHARACTERSEARCH", // localStorage key
+  "characterId", // 主键字段
+  50 // 最大条数
+);
 
 // export const Aion2BUILDHistory = new GenericLocalHistory<BuildDataProps>(
 //   "AION2BUILD",
