@@ -1404,7 +1404,7 @@ export default function DpsPage() {
                         combatInfos={dpsPanelData.combatInfos || undefined}
                         mainPlayerColor={dpsAppearance.mainPlayerColor}
                         otherPlayerColor={dpsAppearance.otherPlayerColor}
-                        barOpacity={0.5}
+                        barOpacity={100}
                         maskNicknames={dpsAppearance.maskNicknames}
                         onPlayerClicked={handlePlayerClick}
                         onPlayerHovered={handlePlayerHover}
@@ -1428,7 +1428,7 @@ export default function DpsPage() {
                       combatInfos={dpsPanelData.combatInfos || undefined}
                       mainPlayerColor={dpsAppearance.mainPlayerColor}
                       otherPlayerColor={dpsAppearance.otherPlayerColor}
-                      barOpacity={0.5}
+                      barOpacity={100}
                       maskNicknames={dpsAppearance.maskNicknames}
                       onPlayerClicked={handlePlayerClick}
                       onPlayerHovered={handlePlayerHover}

@@ -1041,11 +1041,6 @@ impl StreamProcessor {
                     "[{}] boss actor={} mob_code={} name={}",
                     self.port, aid_info.value, boss_id, boss_name
                 ));
-            } else {
-                self.logger.info(format!(
-                    "[{}] mob actor={} mob_code={}",
-                    self.port, aid_info.value, boss_id
-                ));
             }
             idx = boss_pos + 3;
         }
