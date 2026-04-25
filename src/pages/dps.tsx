@@ -179,14 +179,6 @@ function TitleIconButton({
     >
       {children}
     </button>
-    // <Tooltip>
-    //   <TooltipTrigger asChild>
-    //     <div>
-
-    //     </div>
-    //   </TooltipTrigger>
-    //   <TooltipContent side="bottom">{title}</TooltipContent>
-    // </Tooltip>
   );
 }
 
@@ -225,10 +217,10 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
   onClear,
 }: HistoryTargetListProps) {
   return (
-    <aside className="w-40 border-r border-white/10 bg-white/[0.03]">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
+    <aside className="w-30">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-1 py-1">
         <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-          History
+          历史记录
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -251,8 +243,8 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
       </div>
 
       {historyRecords.length > 0 ? (
-        <div className="max-h-[500px] overflow-y-auto bg-transparent p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
-          <div className="space-y-1.5">
+        <div className="max-h-[250px] overflow-y-auto p-0 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="space-y-0">
             {historyRecords.map((record) => {
               const recordTargetInfo = record.combatInfos.targetInfos?.[String(record.targetId)];
               const recordDamage = getTargetTotalDamage(record.thisTargetAllPlayerStats);
@@ -265,7 +257,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                   type="button"
                   onClick={() => onSelect(record.id)}
                   className={cn(
-                    "w-full rounded-lg border px-2.5 py-2 text-left transition",
+                    "w-full border px-1.5 py-0.5 text-left transition",
                     selectedHistoryId === record.id
                       ? "border-cyan-400/40 bg-cyan-500/12 text-cyan-50"
                       : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]"
@@ -276,7 +268,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                       {recordTargetInfo?.targetName || `Target ${record.targetId}`}
                     </div>
                     {isBoss && (
-                      <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.14em] text-amber-200 uppercase">
+                      <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-0.5 py-0.5 text-[8px] text-amber-200 uppercase">
                         Boss
                       </span>
                     )}
@@ -1353,8 +1345,8 @@ export default function DpsPage() {
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <div>{displayTargetInfo?.targetMobCode}</div>
-          <div>{displayTargetInfo?.id}</div>
+          <div>MobCode: {displayTargetInfo?.targetMobCode}</div>
+          <div>TargetId: {displayTargetInfo?.id}</div>
         </TooltipContent>
       </Tooltip>
     </div>
@@ -1384,7 +1376,7 @@ export default function DpsPage() {
           zoom: dpsAppearance.scaleFactor,
         }}
       >
-        <section className="flex h-full flex-col border border-white/10 bg-transparent">
+        <section className="flex h-full flex-col border border-white/10">
           <div className="flex h-full flex-col p-0">
             <div ref={contentRef}>
               {view === "history" && (
