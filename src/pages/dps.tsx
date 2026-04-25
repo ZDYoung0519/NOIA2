@@ -148,26 +148,6 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-const darkenHex = (hex: string, amount: number) => {
-  const safeHex = hex.replace("#", "");
-  const normalizedHex =
-    safeHex.length === 3
-      ? safeHex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : safeHex;
-
-  const clamp = (value: number) => Math.max(0, Math.min(255, value));
-  const r = clamp(parseInt(normalizedHex.slice(0, 2), 16) - amount);
-  const g = clamp(parseInt(normalizedHex.slice(2, 4), 16) - amount);
-  const b = clamp(parseInt(normalizedHex.slice(4, 6), 16) - amount);
-
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
-    .toString(16)
-    .padStart(2, "0")}`;
-};
-
 type TitleIconButtonProps = {
   active?: boolean;
   onClick: () => void | Promise<void>;
@@ -339,7 +319,6 @@ type BottomStatusBarProps = {
   isRunning: boolean;
   targetFightingTime: number;
   historyRecordsLength: number;
-  footerBackground: string;
   maskNicknames: boolean;
 };
 
@@ -348,14 +327,10 @@ const MemoizedBottomStatusBar = memo(function BottomStatusBar({
   view,
   isRunning,
   targetFightingTime,
-  footerBackground,
   maskNicknames,
 }: BottomStatusBarProps) {
   return (
-    <div
-      className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300"
-      style={{ backgroundColor: footerBackground }}
-    >
+    <div className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300">
       <div className="flex min-w-0 items-center gap-2 overflow-hidden">
         <div className="flex items-center gap-1">
           <div
@@ -853,16 +828,7 @@ export default function DpsPage() {
   }, [displayTargetInfo]);
 
   const targetName = displayTargetInfo?.targetName || (t("dps_panel.targ") as string);
-  const shellBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
-  const titleBarBackground = hexToRgba(
-    darkenHex(dpsAppearance.backgroundColor, 22),
-    Math.min(100, dpsAppearance.backgroundOpacity + 18)
-  );
-  const panelBackground = hexToRgba(dpsAppearance.panelColor, dpsAppearance.panelOpacity);
-  const footerBackground = hexToRgba(
-    darkenHex(dpsAppearance.panelColor, 8),
-    Math.min(100, dpsAppearance.panelOpacity + 8)
-  );
+  const dpsBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
 
   const footerData = useMemo(() => {
     const formatDuration = (seconds: number) => {
@@ -1405,7 +1371,7 @@ export default function DpsPage() {
           leftActions={leftActions}
           rightActions={rightActions}
           className="border-white/10"
-          style={{ backgroundColor: titleBarBackground }}
+          style={{ backgroundColor: dpsBackground }}
         />
       }
       className="border-white/10 text-slate-100"
@@ -1414,14 +1380,11 @@ export default function DpsPage() {
       <div
         className="flex h-full w-full flex-col self-stretch bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)]"
         style={{
-          backgroundColor: shellBackground,
+          backgroundColor: dpsBackground,
           zoom: dpsAppearance.scaleFactor,
         }}
       >
-        <section
-          className="flex h-full flex-col border border-white/10"
-          style={{ backgroundColor: panelBackground }}
-        >
+        <section className="flex h-full flex-col border border-white/10 bg-transparent">
           <div className="flex h-full flex-col p-0">
             <div ref={contentRef}>
               {view === "history" && (
@@ -1441,37 +1404,41 @@ export default function DpsPage() {
                         combatInfos={dpsPanelData.combatInfos || undefined}
                         mainPlayerColor={dpsAppearance.mainPlayerColor}
                         otherPlayerColor={dpsAppearance.otherPlayerColor}
-                        barOpacity={dpsAppearance.barOpacity}
+                        barOpacity={0.5}
                         maskNicknames={dpsAppearance.maskNicknames}
                         onPlayerClicked={handlePlayerClick}
                         onPlayerHovered={handlePlayerHover}
                         onPlayerHoverEnd={handlePlayerHoverEnd}
                       />
                     ) : (
-                      <div className="flex min-h-10 items-center justify-center rounded-xl text-center">
-                        <div className="space-y-1 px-4">
-                          <div className="text-sm font-medium text-slate-100">Select history</div>
-                        </div>
+                      <div className="flex h-10 max-h-10 items-center justify-center rounded-xl px-4 text-center">
+                        <div className="text-sm font-medium text-slate-100">无数据</div>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {view === "dps" && dpsPanelData && (
+              {view === "dps" && (
                 <div className="p-1">
-                  <MemoizedDpsPanel
-                    targetInfo={dpsPanelData.targetInfo || undefined}
-                    thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
-                    combatInfos={dpsPanelData.combatInfos || undefined}
-                    mainPlayerColor={dpsAppearance.mainPlayerColor}
-                    otherPlayerColor={dpsAppearance.otherPlayerColor}
-                    barOpacity={dpsAppearance.barOpacity}
-                    maskNicknames={dpsAppearance.maskNicknames}
-                    onPlayerClicked={handlePlayerClick}
-                    onPlayerHovered={handlePlayerHover}
-                    onPlayerHoverEnd={handlePlayerHoverEnd}
-                  />
+                  {dpsPanelData ? (
+                    <MemoizedDpsPanel
+                      targetInfo={dpsPanelData.targetInfo || undefined}
+                      thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
+                      combatInfos={dpsPanelData.combatInfos || undefined}
+                      mainPlayerColor={dpsAppearance.mainPlayerColor}
+                      otherPlayerColor={dpsAppearance.otherPlayerColor}
+                      barOpacity={0.5}
+                      maskNicknames={dpsAppearance.maskNicknames}
+                      onPlayerClicked={handlePlayerClick}
+                      onPlayerHovered={handlePlayerHover}
+                      onPlayerHoverEnd={handlePlayerHoverEnd}
+                    />
+                  ) : (
+                    <div className="flex h-10 max-h-10 items-center justify-center rounded-xl px-4 text-center">
+                      <div className="text-sm font-medium text-slate-100">无数据</div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1483,7 +1450,6 @@ export default function DpsPage() {
                 isRunning={isRunning}
                 targetFightingTime={targetFightingTime}
                 historyRecordsLength={historyRecords.length}
-                footerBackground={footerBackground}
                 maskNicknames={dpsAppearance.maskNicknames}
               />
             </div>

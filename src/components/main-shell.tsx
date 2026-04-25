@@ -24,11 +24,7 @@ export function MainShell({ children }: { children: ReactNode }) {
   }, [t]);
 
   return (
-    <WindowFrame
-      titleBar={<MainTitleBar />}
-      showSidebar
-      contentClassName="overflow-auto bg-muted/30"
-    >
+    <WindowFrame titleBar={<MainTitleBar />} showSidebar contentClassName="bg-background/90">
       <UpdaterDialog />
       {children}
     </WindowFrame>

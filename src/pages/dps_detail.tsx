@@ -28,26 +28,6 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${Math.min(100, Math.max(0, alphaPercent)) / 100})`;
 };
 
-const darkenHex = (hex: string, amount: number) => {
-  const safeHex = hex.replace("#", "");
-  const normalizedHex =
-    safeHex.length === 3
-      ? safeHex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : safeHex;
-
-  const clamp = (value: number) => Math.max(0, Math.min(255, value));
-  const r = clamp(parseInt(normalizedHex.slice(0, 2), 16) - amount);
-  const g = clamp(parseInt(normalizedHex.slice(2, 4), 16) - amount);
-  const b = clamp(parseInt(normalizedHex.slice(4, 6), 16) - amount);
-
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
-    .toString(16)
-    .padStart(2, "0")}`;
-};
-
 const getStatDamage = (stats?: SkillStats | null) =>
   Number(stats?.totalDamage ?? stats?.total_damage ?? 0);
 
@@ -225,7 +205,7 @@ export default function DpsDetailPage() {
       });
       const nextHeight = Math.max(
         180,
-        Math.min(1400, Math.ceil(contentRef.current.scrollHeight * dpsAppearance.scaleFactor + 2))
+        Math.min(1400, Math.ceil(contentRef.current.scrollHeight + 2))
       );
 
       await invoke("resize_window", {
@@ -236,7 +216,7 @@ export default function DpsDetailPage() {
     } catch (error) {
       console.error("resize dps detail failed:", error);
     }
-  }, [dpsAppearance.scaleFactor]);
+  }, []);
 
   useEffect(() => {
     if (resizeTimerRef.current !== null) {
@@ -328,11 +308,8 @@ export default function DpsDetailPage() {
   const actorSkillSpecMap = actorInfo?.actorSkillSpec ?? {};
 
   const shellBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
-  const titleBarBackground = hexToRgba(
-    darkenHex(dpsAppearance.backgroundColor, 22),
-    Math.min(100, dpsAppearance.backgroundOpacity + 18)
-  );
-  const panelBackground = hexToRgba(dpsAppearance.panelColor, dpsAppearance.panelOpacity);
+  const titleBarBackground = shellBackground;
+  const panelBackground = shellBackground;
   const actorName = actorInfo?.actorName ?? "Unknown";
   const actorClass = actorInfo?.actorClass ?? "";
   const actorServerName = actorInfo?.actorServerId
@@ -378,7 +355,7 @@ export default function DpsDetailPage() {
 
       <div
         className="flex w-full flex-col gap-2 self-start bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)] p-2"
-        style={{ zoom: dpsAppearance.scaleFactor }}
+        style={{ zoom: 1 }}
       >
         <section
           className="rounded-lg  p-0"

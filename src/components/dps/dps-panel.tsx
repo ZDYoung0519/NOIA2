@@ -60,10 +60,11 @@ const DpsPanel = function DpsPanel({
   const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-1">
       {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
         const playerName =
-          actorInfos?.[player.playerId]?.actorName || `${t("dps.list.unknownPlayer")}(${player.playerId})`;
+          actorInfos?.[player.playerId]?.actorName ||
+          `${t("dps.list.unknownPlayer")}(${player.playerId})`;
         const displayPlayerName = maskNickname(playerName, Boolean(maskNicknames));
         const actorClass = actorInfos?.[player.playerId]?.actorClass;
         const playerServerId = actorInfos?.[player.playerId]?.actorServerId;
@@ -83,19 +84,18 @@ const DpsPanel = function DpsPanel({
           thisTargetLastTime - (playerStartTime ?? thisTargetLastTime)
         );
         const dpsValue = player.totalDamageValue / fightDurationSeconds;
-        const damagePercent =
-          totalDamage > 0 ? (player.totalDamageValue / totalDamage) * 100 : 0;
+        const damagePercent = totalDamage > 0 ? (player.totalDamageValue / totalDamage) * 100 : 0;
 
         return (
           <div
             key={player.playerId || index}
-            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:bg-white/5 hover:border hover:border-cyan-500"
+            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
             onMouseEnter={() => onPlayerHovered?.(player.playerId)}
             onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
           >
             <div
-              className="absolute bottom-0 left-0 top-0 rounded transition-all duration-500 ease-out"
+              className="absolute top-0 bottom-0 left-0 rounded transition-all duration-500 ease-out"
               style={{
                 width: `${barPercent}%`,
                 background: isMainPlayer ? mainPlayerColor : otherPlayerColor,
@@ -126,7 +126,7 @@ const DpsPanel = function DpsPanel({
 
               <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="text-right">
-                  <span className="font-mono text-sm tabular-nums text-gray-200">
+                  <span className="font-mono text-sm text-gray-200 tabular-nums">
                     {(player.totalDamageValue / 10000).toFixed(1)}
                   </span>
                   <span className="ml-0.5 text-xs text-gray-500">w</span>
@@ -134,7 +134,7 @@ const DpsPanel = function DpsPanel({
 
                 <div className="text-right">
                   <span
-                    className={`text-sm font-medium font-mono tabular-nums ${
+                    className={`font-mono text-sm font-medium tabular-nums ${
                       dpsValue > 0 ? "text-emerald-400" : "text-gray-400"
                     }`}
                   >
@@ -144,7 +144,7 @@ const DpsPanel = function DpsPanel({
                 </div>
 
                 <div className="text-right">
-                  <span className="font-mono text-sm tabular-nums text-gray-300">
+                  <span className="font-mono text-sm text-gray-300 tabular-nums">
                     {damagePercent.toFixed(0)}
                   </span>
                   <span className="ml-0.5 text-xs text-gray-500">%</span>

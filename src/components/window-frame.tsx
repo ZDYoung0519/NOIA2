@@ -1,7 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Home, LineChart, LogIn, Settings, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -84,10 +83,12 @@ function WindowSidebar() {
   const navItems = useMemo(() => NAV_ITEMS, []);
 
   return (
-    <aside className="bg-card/60 border-r px-4 py-4 backdrop-blur-sm">
+    <aside className="bg-card/100 border-r px-4 py-4 backdrop-blur-sm">
       <div className="flex h-full w-40 flex-col gap-4">
-        <div className="bg-background/70 rounded-2xl border p-4">
-          <div className="text-primary text-xs font-semibold tracking-[0.24em] uppercase">NOIA2</div>
+        <div className="bg-card rounded-2xl border p-4">
+          <div className="text-primary text-xs font-semibold tracking-[0.24em] uppercase">
+            NOIA2
+          </div>
           <div className="mt-1 text-lg font-semibold">Workspace</div>
           <div className="text-muted-foreground mt-1 text-sm">
             Control your tools from one place.
@@ -126,32 +127,9 @@ export function WindowFrame({
   contentClassName,
   showSidebar = false,
 }: WindowFrameProps) {
-  const [isMaximized, setIsMaximized] = useState(false);
-
-  useEffect(() => {
-    const appWindow = getCurrentWebviewWindow();
-
-    appWindow.isMaximized().then(setIsMaximized);
-
-    const unlistenResize = appWindow.onResized(async () => {
-      const maximized = await appWindow.isMaximized();
-      setIsMaximized(maximized);
-    });
-
-    return () => {
-      unlistenResize.then((fn) => fn());
-    };
-  }, []);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="tauri-ui-theme">
-      <div
-        className={cn(
-          "bg-background flex h-screen w-screen flex-col overflow-hidden",
-          isMaximized ? "" : "border-border rounded-lg border",
-          className
-        )}
-      >
+      <div className={cn("flex h-screen w-screen flex-col overflow-hidden", className)}>
         {titleBar}
         <main className="min-h-0 flex-1">
           <div className="flex h-full min-h-0">

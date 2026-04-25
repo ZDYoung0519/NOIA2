@@ -19,7 +19,7 @@ export default function HomePage() {
     await createWindow("dps", {
       title: "DPS Meter",
       url: "/dps",
-      width: 200,
+      width: 250,
       height: 50,
       resizable: true,
       maximizable: false,
@@ -46,7 +46,7 @@ export default function HomePage() {
             <Search className="text-muted-foreground absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={t("home.searchPlaceholder")}
-              className="border-border/50 bg-muted/50 placeholder:text-muted-foreground focus-visible:ring-ring h-12 rounded-2xl pl-11 text-sm shadow-none focus-visible:ring-1"
+              className="border-border/50 placeholder:text-muted-foreground focus-visible:ring-ring h-12 rounded-2xl pl-11 text-sm shadow-none focus-visible:ring-1"
             />
           </div>
 

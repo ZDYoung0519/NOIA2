@@ -115,6 +115,8 @@
       "previewWindowTitle": "DPS Window Preview",
       "autoResizeHeight": "Auto Resize Height",
       "maskNicknames": "Mask Nicknames",
+      "enableBlurBackground": "Enable Blurred Background",
+      "blurStrength": "Blur Strength",
       "scaleFactor": "Scale Factor",
       "shellColor": "Shell Color",
       "shellOpacity": "Shell Opacity",

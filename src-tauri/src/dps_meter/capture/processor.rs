@@ -623,18 +623,20 @@ impl StreamProcessor {
 
         self.data_storage
             .append_summon(owner_info.value as u32, summon_info.value as u32);
-        self.logger.info(format!(
-            "[{}] summon ownership owner={} owner_name={} summon={}",
-            self.port,
-            owner_info.value,
-            self
-                .data_storage
-                .actor_id_name_snapshot()
-                .get(&(owner_info.value as u32))
-                .cloned()
-                .unwrap_or_else(|| "Unknown".to_string()),
-            summon_info.value
-        ));
+        if self.is_boss_summon(summon_info.value as u32) {
+            self.logger.info(format!(
+                "[{}] summon ownership owner={} owner_name={} summon={}",
+                self.port,
+                owner_info.value,
+                self
+                    .data_storage
+                    .actor_id_name_snapshot()
+                    .get(&(owner_info.value as u32))
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                summon_info.value
+            ));
+        }
         true
     }
 
@@ -711,52 +713,58 @@ impl StreamProcessor {
 
         if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon kotlin owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self
-                    .data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
+            if self.is_boss_summon(real_actor_id) {
+                self.logger.info(format!(
+                    "[{}] summon kotlin owner={} owner_name={} summon={}",
+                    self.port,
+                    owner_id,
+                    self
+                        .data_storage
+                        .actor_id_name_snapshot()
+                        .get(&owner_id)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown".to_string()),
+                    real_actor_id
+                ));
+            }
             return true;
         }
 
         if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon fallback le32 owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self
-                    .data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
+            if self.is_boss_summon(real_actor_id) {
+                self.logger.info(format!(
+                    "[{}] summon fallback le32 owner={} owner_name={} summon={}",
+                    self.port,
+                    owner_id,
+                    self
+                        .data_storage
+                        .actor_id_name_snapshot()
+                        .get(&owner_id)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown".to_string()),
+                    real_actor_id
+                ));
+            }
             return true;
         }
 
         if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
             self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon fallback marker owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self
-                    .data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
+            if self.is_boss_summon(real_actor_id) {
+                self.logger.info(format!(
+                    "[{}] summon fallback marker owner={} owner_name={} summon={}",
+                    self.port,
+                    owner_id,
+                    self
+                        .data_storage
+                        .actor_id_name_snapshot()
+                        .get(&owner_id)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown".to_string()),
+                    real_actor_id
+                ));
+            }
             return true;
         }
 
@@ -784,10 +792,12 @@ impl StreamProcessor {
 
             if let Some((owner_id, nickname)) = best_match {
                 self.data_storage.append_summon(owner_id, real_actor_id);
-                self.logger.info(format!(
-                    "[{}] summon-nickname matched  nick owner={} owner_name={} summon={}",
-                    self.port, owner_id, nickname, real_actor_id
-                ));
+                if self.is_boss_summon(real_actor_id) {
+                    self.logger.info(format!(
+                        "[{}] summon-nickname matched nick owner={} owner_name={} summon={}",
+                        self.port, owner_id, nickname, real_actor_id
+                    ));
+                }
                 return true;
             }
         }
@@ -922,10 +932,12 @@ impl StreamProcessor {
 
             self.data_storage.append_summon(owner_id, summon_id);
             self.data_storage.append_actor(owner_id, &sanitized_name, None);
-            self.logger.info(format!(
-                "[{}] embedded 04 8D owner={} summon={} owner_name={}",
-                self.port, owner_id, summon_id, sanitized_name
-            ));
+            if self.is_boss_summon(summon_id) {
+                self.logger.info(format!(
+                    "[{}] embedded 04 8D owner={} summon={} owner_name={}",
+                    self.port, owner_id, summon_id, sanitized_name
+                ));
+            }
             found_any = true;
 
             search_offset = skip_guild_name(data, name_end);
@@ -956,6 +968,18 @@ impl StreamProcessor {
         }
 
         Some(owner_id)
+    }
+
+    fn is_boss_summon(&self, summon_id: u32) -> bool {
+        let mob_code = self
+            .data_storage
+            .mob_id_code_snapshot()
+            .get(&summon_id)
+            .copied();
+
+        mob_code
+            .map(|code| self.data_storage.boss_code_list_snapshot().contains(&code))
+            .unwrap_or(false)
     }
 
     fn scan_for_known_player_le32(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {

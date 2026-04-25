@@ -13,10 +13,7 @@
   "plugins": {
     "updater": {
       "pubkey": "__TAURI_UPDATER_PUBKEY__",
-      "endpoints": [
-        "__TAURI_UPDATER_ENDPOINT_1__",
-        "__TAURI_UPDATER_ENDPOINT_2__"
-      ],
+      "endpoints": ["__TAURI_UPDATER_ENDPOINT_1__", "__TAURI_UPDATER_ENDPOINT_2__"],
       "windows": {
         "installMode": "passive"
       }
@@ -49,7 +46,11 @@
         "transparent": true,
         "center": true,
         "shadow": true,
-        "visible": false
+        "visible": false,
+        "windowEffects": {
+          "effects": ["hudWindow", "acrylic"],
+          "radius": 12
+        }
       }
     ],
     "security": {
@@ -63,10 +64,7 @@
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
-        "languages": [
-          "SimpChinese",
-          "English"
-        ]
+        "languages": ["SimpChinese", "English"]
       }
     },
     "icon": [

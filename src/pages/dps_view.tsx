@@ -34,6 +34,7 @@ export default function DpsViewPage() {
       minimizable: false,
       decorations: false,
       transparent: true,
+      backgroundColor: [0, 0, 0, 0],
       shadow: false,
       alwaysOnTop: true,
     });

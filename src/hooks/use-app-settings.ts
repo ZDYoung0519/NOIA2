@@ -31,15 +31,11 @@ export type MainWindowAppearance = {
 export type DpsWindowAppearance = {
   backgroundColor: string;
   backgroundOpacity: number;
-  panelColor: string;
-  panelOpacity: number;
+  autoResizeHeight: boolean;
+  scaleFactor: number;
+  maskNicknames: boolean;
   mainPlayerColor: string;
   otherPlayerColor: string;
-  barOpacity: number;
-  scaleFactor: number;
-  autoResizeHeight: boolean;
-  showHeaderStats: boolean;
-  maskNicknames: boolean;
 };
 
 export type AppSettings = {
@@ -78,26 +74,18 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     },
     dpsWindow: {
       backgroundColor: "#000000",
-      backgroundOpacity: 100,
-      panelColor: "#000000",
-      panelOpacity: 0,
+      backgroundOpacity: 75,
+      autoResizeHeight: true,
+      scaleFactor: 1,
+      maskNicknames: false,
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
-      barOpacity: 100,
-      scaleFactor: 1,
-      autoResizeHeight: true,
-      showHeaderStats: true,
-      maskNicknames: false,
     },
   },
 };
 
 type LegacyDpsSettings = {
   bgColor?: string;
-  mainPlayerColor?: string;
-  otherPlayerColor?: string;
-  autoResizeHeight?: boolean;
-  scaleFactor?: number;
 };
 
 function normalizeColorValue(value: unknown, fallback: string) {
@@ -130,7 +118,7 @@ function clampScaleFactor(value: unknown, fallback: number) {
   if (!Number.isFinite(numeric)) {
     return fallback;
   }
-  return Math.min(1.4, Math.max(0.8, numeric));
+  return Math.min(1.5, Math.max(0.5, numeric));
 }
 
 type PartialAppSettings = {
@@ -176,10 +164,20 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
           input?.appearance?.dpsWindow?.backgroundColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.backgroundColor
         ),
-        panelColor: normalizeColorValue(
-          input?.appearance?.dpsWindow?.panelColor,
-          DEFAULT_APP_SETTINGS.appearance.dpsWindow.panelColor
+        backgroundOpacity: clampPercentage(
+          input?.appearance?.dpsWindow?.backgroundOpacity,
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.backgroundOpacity
         ),
+        autoResizeHeight:
+          input?.appearance?.dpsWindow?.autoResizeHeight ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.autoResizeHeight,
+        scaleFactor: clampScaleFactor(
+          input?.appearance?.dpsWindow?.scaleFactor,
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.scaleFactor
+        ),
+        maskNicknames:
+          input?.appearance?.dpsWindow?.maskNicknames ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.maskNicknames,
         mainPlayerColor: normalizeColorValue(
           input?.appearance?.dpsWindow?.mainPlayerColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.mainPlayerColor
@@ -187,22 +185,6 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
         otherPlayerColor: normalizeColorValue(
           input?.appearance?.dpsWindow?.otherPlayerColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.otherPlayerColor
-        ),
-        backgroundOpacity: clampPercentage(
-          input?.appearance?.dpsWindow?.backgroundOpacity,
-          DEFAULT_APP_SETTINGS.appearance.dpsWindow.backgroundOpacity
-        ),
-        panelOpacity: clampPercentage(
-          input?.appearance?.dpsWindow?.panelOpacity,
-          DEFAULT_APP_SETTINGS.appearance.dpsWindow.panelOpacity
-        ),
-        barOpacity: clampPercentage(
-          input?.appearance?.dpsWindow?.barOpacity,
-          DEFAULT_APP_SETTINGS.appearance.dpsWindow.barOpacity
-        ),
-        scaleFactor: clampScaleFactor(
-          input?.appearance?.dpsWindow?.scaleFactor,
-          DEFAULT_APP_SETTINGS.appearance.dpsWindow.scaleFactor
         ),
       },
     },
@@ -219,10 +201,6 @@ function loadLegacyDpsAppearance(): Partial<DpsWindowAppearance> {
     const parsed = JSON.parse(raw) as LegacyDpsSettings;
     return {
       backgroundColor: parsed.bgColor ? parsed.bgColor : undefined,
-      mainPlayerColor: parsed.mainPlayerColor,
-      otherPlayerColor: parsed.otherPlayerColor,
-      autoResizeHeight: parsed.autoResizeHeight,
-      scaleFactor: parsed.scaleFactor,
     };
   } catch {
     return {};

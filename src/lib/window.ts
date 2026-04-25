@@ -181,6 +181,7 @@ export async function createWindow(
     y?: number;
     decorations?: boolean;
     transparent?: boolean;
+    backgroundColor?: [number, number, number, number] | string;
     alwaysOnTop?: boolean;
     skipTaskbar?: boolean;
     shadow?: boolean;

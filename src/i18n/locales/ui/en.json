@@ -119,6 +119,8 @@
       "myMuzhuangOnlyDescription": "When the target is a training dummy, only count damage dealt by your own character.",
       "autoResizeHeight": "Auto Resize Height",
       "maskNicknames": "Mask Nicknames",
+      "enableBlurBackground": "Enable Blurred Background",
+      "blurStrength": "Blur Strength",
       "scaleFactor": "Scale Factor",
       "shellColor": "Shell Color",
       "shellOpacity": "Shell Opacity",

@@ -100,8 +100,8 @@ export function TitleBar({
     <div
       style={style}
       className={cn(
-        "bg-background/95 supports-backdrop-filter:bg-background/60 border-border/40 flex h-8 items-center justify-between border-b backdrop-blur select-none",
-        showMaximize && isMaximized ? "" : "rounded-t-lg",
+        "bg-background flex h-8 items-center justify-between select-none",
+
         className
       )}
     >

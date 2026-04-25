@@ -1,12 +1,5 @@
 import * as React from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  ExternalLink,
-  Server,
-  Sparkles,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, ExternalLink, Server, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { fetchFengwo } from "@/lib/aion2/fetchFengwo";
@@ -138,7 +131,7 @@ const CarouselCard = React.memo(function CarouselCard({
 
   return (
     <div
-      className={`absolute left-1/2 top-0 h-full w-[86%] max-w-[780px] origin-center transition-all duration-500 ease-out sm:w-[78%] ${placementClass} hover:brightness-115`}
+      className={`absolute top-0 left-1/2 h-full w-[86%] max-w-[780px] origin-center transition-all duration-500 ease-out sm:w-[78%] ${placementClass} hover:brightness-115`}
       aria-hidden={isHidden}
     >
       <div
@@ -217,9 +210,7 @@ const CarouselCard = React.memo(function CarouselCard({
                           className="h-5 w-5"
                         />
                         <span className="text-sm font-semibold text-white">
-                          {typeof combatPower === "number"
-                            ? (combatPower / 1000).toFixed(2)
-                            : "--"}
+                          {typeof combatPower === "number" ? (combatPower / 1000).toFixed(2) : "--"}
                         </span>
                       </div>
 
@@ -230,9 +221,7 @@ const CarouselCard = React.memo(function CarouselCard({
                           className="h-5 w-5"
                         />
                         <span className="text-sm font-semibold text-white">
-                          {typeof fengwoScore === "number"
-                            ? fengwoScore.toFixed(0)
-                            : "--"}
+                          {typeof fengwoScore === "number" ? fengwoScore.toFixed(0) : "--"}
                         </span>
                       </div>
                     </div>
@@ -296,12 +285,8 @@ export default function CharacterCardCarousel({
   );
 
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const [cardStateMap, setCardStateMap] = React.useState<
-    Record<string, CharacterCardState>
-  >({});
-  const [failedImageIds, setFailedImageIds] = React.useState<
-    Record<string, boolean>
-  >({});
+  const [cardStateMap, setCardStateMap] = React.useState<Record<string, CharacterCardState>>({});
+  const [failedImageIds, setFailedImageIds] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     if (cards.length === 0) {
@@ -335,10 +320,7 @@ export default function CharacterCardCarousel({
 
     const loadCard = async (card: MainActorCard) => {
       try {
-        const result = await fetchFengwo(
-          card.actorName,
-          getServerShortName(card.serverId)
-        );
+        const result = await fetchFengwo(card.actorName, getServerShortName(card.serverId));
         if (cancelled) return;
 
         setCardStateMap((current) => ({
@@ -356,10 +338,7 @@ export default function CharacterCardCarousel({
           [card.id]: {
             loading: false,
             result: current[card.id]?.result,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Failed to load character",
+            error: error instanceof Error ? error.message : "Failed to load character",
           },
         }));
       }
@@ -391,7 +370,7 @@ export default function CharacterCardCarousel({
 
   if (cards.length === 0) {
     return (
-      <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-border/50 bg-muted/35 text-sm text-muted-foreground">
+      <div className="border-border/50 bg-muted/35 text-muted-foreground flex min-h-[320px] items-center justify-center rounded-[28px] border text-sm">
         No recent characters
       </div>
     );
@@ -421,7 +400,7 @@ export default function CharacterCardCarousel({
             variant="secondary"
             size="icon"
             onClick={prev}
-            className="pointer-events-auto h-10 w-10 rounded-full border border-border/50 bg-background/80 shadow-sm backdrop-blur hover:bg-accent"
+            className="border-border/50 bg-background/90 hover:bg-accent pointer-events-auto h-10 w-10 rounded-full border shadow-sm backdrop-blur"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -433,7 +412,7 @@ export default function CharacterCardCarousel({
             variant="secondary"
             size="icon"
             onClick={next}
-            className="pointer-events-auto h-10 w-10 rounded-full border border-border/50 bg-background/80 shadow-sm backdrop-blur hover:bg-accent"
+            className="border-border/50 bg-background/90 hover:bg-accent pointer-events-auto h-10 w-10 rounded-full border shadow-sm backdrop-blur"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -448,8 +427,8 @@ export default function CharacterCardCarousel({
             onClick={() => setActiveIndex(index)}
             className={`transition-all ${
               index === activeIndex
-                ? "h-2.5 w-8 rounded-full bg-primary"
-                : "h-2.5 w-2.5 rounded-full bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                ? "bg-primary h-2.5 w-8 rounded-full"
+                : "bg-muted-foreground/30 hover:bg-muted-foreground/50 h-2.5 w-2.5 rounded-full"
             }`}
             aria-label={`Go to card ${index + 1}`}
           />

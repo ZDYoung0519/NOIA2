@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -35,21 +35,7 @@ import { useAppTranslation } from "@/hooks/use-app-translation";
 import { useManualUpdateCheck } from "@/components/updater-dialog";
 import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary";
 import { cn } from "@/lib/utils";
-
-const hexToRgba = (hex: string, alphaPercent: number) => {
-  const safeHex = hex.replace("#", "");
-  const normalizedHex =
-    safeHex.length === 3
-      ? safeHex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : safeHex;
-  const r = parseInt(normalizedHex.slice(0, 2), 16);
-  const g = parseInt(normalizedHex.slice(2, 4), 16);
-  const b = parseInt(normalizedHex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${Math.min(100, Math.max(0, alphaPercent)) / 100})`;
-};
+import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 
 type SettingSection = "general" | "dps" | "support" | "about";
 type SupportListItem = {
@@ -80,6 +66,21 @@ const TECHNICAL_ACKNOWLEDGEMENTS: SupportListItem[] = [
   },
 ];
 
+const hexToRgba = (hex: string, alphaPercent: number) => {
+  const safeHex = hex.replace("#", "");
+  const normalizedHex =
+    safeHex.length === 3
+      ? safeHex
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : safeHex;
+  const r = parseInt(normalizedHex.slice(0, 2), 16);
+  const g = parseInt(normalizedHex.slice(2, 4), 16);
+  const b = parseInt(normalizedHex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${Math.min(100, Math.max(0, alphaPercent)) / 100})`;
+};
+
 function SettingsSectionHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="space-y-1">
@@ -89,13 +90,13 @@ function SettingsSectionHeader({ title, description }: { title: string; descript
   );
 }
 
-function SettingsGroup({ title, children }: { title: string; children: React.ReactNode }) {
+function SettingsGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
       <h3 className="text-muted-foreground text-sm font-semibold tracking-[0.18em] uppercase">
         {title}
       </h3>
-      <div className="divide-border bg-background/50 divide-y overflow-hidden rounded-2xl border backdrop-blur-sm">
+      <div className="divide-border divide-y overflow-hidden rounded-2xl border backdrop-blur-sm">
         {children}
       </div>
     </section>
@@ -109,7 +110,7 @@ function SettingsRow({
 }: {
   label: string;
   description?: string;
-  control: React.ReactNode;
+  control: ReactNode;
 }) {
   return (
     <div className="flex min-h-[72px] items-center justify-between gap-6 px-5 py-4">
@@ -208,34 +209,34 @@ export function SettingsContent() {
     };
   }, [refreshStorageSummary]);
 
-  const previewCombatInfos = useMemo(
+  const previewCombatInfos = useMemo<CombatInfos>(
     () => ({
       actorInfos: {
         1001: {
           id: 1001,
-          actorName: "You",
+          actorName: "MainPlayer",
           actorClass: "ASSASSIN",
-          actorServerId: "1",
+          actorServerId: "1001",
           actorSkillSpec: {},
         },
         1002: {
           id: 1002,
-          actorName: "Support",
+          actorName: "Supporter",
           actorClass: "CLERIC",
-          actorServerId: "2",
+          actorServerId: "1002",
           actorSkillSpec: {},
         },
         1003: {
           id: 1003,
-          actorName: "Ranger",
+          actorName: "Blaster",
           actorClass: "RANGER",
-          actorServerId: "3",
+          actorServerId: "1003",
           actorSkillSpec: {},
         },
       },
       targetInfos: {
-        1: {
-          id: 1,
+        9001: {
+          id: 9001,
           targetMobCode: 2400032,
           targetName: "Training Dummy",
           isBoss: false,
@@ -252,15 +253,20 @@ export function SettingsContent() {
         },
       },
       mainActorId: 1001,
-      mainActorName: "You",
-      lastTargetByMainActor: 1,
-      lastTarget: 1,
+      mainActorName: "MainPlayer",
+      lastTargetByMainActor: 9001,
+      lastTarget: 9001,
       timeNow: 120,
     }),
     []
   );
 
-  const previewStats = useMemo(
+  const previewTargetInfo = useMemo<TargetInfo | undefined>(
+    () => previewCombatInfos.targetInfos["9001"],
+    [previewCombatInfos]
+  );
+
+  const previewStats = useMemo<Record<number, SkillStats>>(
     () => ({
       1001: {
         counts: 96,
@@ -576,6 +582,33 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
+                  label={t("settings.dps.scaleFactor")}
+                  control={
+                    <div className="flex w-64 items-center gap-3">
+                      <input
+                        type="range"
+                        min={0.5}
+                        max={1.5}
+                        step={0.1}
+                        value={dpsAppearance.scaleFactor}
+                        onChange={(event) => {
+                          void saveSettings({
+                            appearance: {
+                              dpsWindow: {
+                                scaleFactor: Number(event.currentTarget.value || 1),
+                              },
+                            },
+                          });
+                        }}
+                        className="w-full"
+                      />
+                      <span className="text-muted-foreground w-12 text-right text-xs">
+                        {dpsAppearance.scaleFactor.toFixed(1)}
+                      </span>
+                    </div>
+                  }
+                />
+                <SettingsRow
                   label={t("settings.dps.maskNicknames")}
                   control={
                     <Switch
@@ -593,34 +626,7 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
-                  label={t("settings.dps.scaleFactor")}
-                  control={
-                    <div className="flex w-64 items-center gap-3">
-                      <input
-                        type="range"
-                        min={0.8}
-                        max={1.4}
-                        step={0.05}
-                        value={dpsAppearance.scaleFactor}
-                        onChange={(event) => {
-                          void saveSettings({
-                            appearance: {
-                              dpsWindow: {
-                                scaleFactor: Number(event.currentTarget.value),
-                              },
-                            },
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <span className="text-muted-foreground w-12 text-right text-xs">
-                        {Math.round(dpsAppearance.scaleFactor * 100)}%
-                      </span>
-                    </div>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.shellColor")}
+                  label={t("settings.dps.panelColor")}
                   control={
                     <input
                       type="color"
@@ -638,7 +644,7 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
-                  label={t("settings.dps.shellOpacity")}
+                  label={t("settings.dps.panelOpacity")}
                   control={
                     <div className="flex w-64 items-center gap-3">
                       <input
@@ -665,60 +671,11 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
-                  label={t("settings.dps.panelColor")}
-                  control={
-                    <input
-                      type="color"
-                      value={dpsAppearance.panelColor}
-                      onChange={(event) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              panelColor: event.currentTarget.value,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.panelOpacity")}
-                  control={
-                    <div className="flex w-64 items-center gap-3">
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={dpsAppearance.panelOpacity}
-                        onChange={(event) => {
-                          void saveSettings({
-                            appearance: {
-                              dpsWindow: {
-                                panelOpacity: Number(event.currentTarget.value),
-                              },
-                            },
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <span className="text-muted-foreground w-10 text-right text-xs">
-                        {dpsAppearance.panelOpacity}%
-                      </span>
-                    </div>
-                  }
-                />
-                <SettingsRow
                   label={t("settings.dps.mainPlayerBar")}
                   control={
                     <input
                       type="color"
-                      value={
-                        dpsAppearance.mainPlayerColor.startsWith("#")
-                          ? dpsAppearance.mainPlayerColor
-                          : "#22c55e"
-                      }
+                      value={dpsAppearance.mainPlayerColor}
                       onChange={(event) => {
                         void saveSettings({
                           appearance: {
@@ -736,11 +693,7 @@ export function SettingsContent() {
                   control={
                     <input
                       type="color"
-                      value={
-                        dpsAppearance.otherPlayerColor.startsWith("#")
-                          ? dpsAppearance.otherPlayerColor
-                          : "#38bdf8"
-                      }
+                      value={dpsAppearance.otherPlayerColor}
                       onChange={(event) => {
                         void saveSettings({
                           appearance: {
@@ -753,48 +706,13 @@ export function SettingsContent() {
                     />
                   }
                 />
-                <SettingsRow
-                  label={t("settings.dps.barOpacity")}
-                  control={
-                    <div className="flex w-64 items-center gap-3">
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={dpsAppearance.barOpacity}
-                        onChange={(event) => {
-                          void saveSettings({
-                            appearance: {
-                              dpsWindow: {
-                                barOpacity: Number(event.currentTarget.value),
-                              },
-                            },
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <span className="text-muted-foreground w-10 text-right text-xs">
-                        {dpsAppearance.barOpacity}%
-                      </span>
-                    </div>
-                  }
-                />
               </SettingsGroup>
 
-              <div className="space-y-3">
-                <h3 className="text-muted-foreground text-sm font-semibold tracking-[0.18em] uppercase">
-                  {t("settings.dps.previewGroup")}
-                </h3>
-                <div className="rounded-xl border p-3">
-                  <div className="mb-2">
-                    <h4 className="text-sm font-semibold">
-                      {t("settings.dps.previewWindowTitle")}
-                    </h4>
-                  </div>
-
+              <SettingsGroup title={t("settings.dps.previewGroup")}>
+                <div className="space-y-3 px-5 py-5">
+                  <div className="text-sm font-medium">{t("settings.dps.previewWindowTitle")}</div>
                   <div
-                    className="max-w-150 items-center justify-center rounded-2xl border border-white/10 p-2 text-slate-100"
+                    className="max-w-100 overflow-auto rounded-xl border border-white/10 p-3"
                     style={{
                       backgroundColor: hexToRgba(
                         dpsAppearance.backgroundColor,
@@ -802,30 +720,19 @@ export function SettingsContent() {
                       ),
                     }}
                   >
-                    <div
-                      className="space-y-2 rounded-2xl border border-white/10 p-2"
-                      style={{
-                        backgroundColor: hexToRgba(
-                          dpsAppearance.panelColor,
-                          dpsAppearance.panelOpacity
-                        ),
-                        zoom: dpsAppearance.scaleFactor,
-                      }}
-                    >
-                      <MemoizedDpsPanel
-                        targetInfo={previewCombatInfos.targetInfos[1]}
-                        thisTargetPlayerStats={previewStats as never}
-                        combatInfos={previewCombatInfos as never}
-                        mainPlayerColor={dpsAppearance.mainPlayerColor}
-                        otherPlayerColor={dpsAppearance.otherPlayerColor}
-                        barOpacity={dpsAppearance.barOpacity}
-                        maskNicknames={dpsAppearance.maskNicknames}
-                        onPlayerClicked={() => undefined}
-                      />
-                    </div>
+                    <MemoizedDpsPanel
+                      targetInfo={previewTargetInfo}
+                      thisTargetPlayerStats={previewStats}
+                      combatInfos={previewCombatInfos}
+                      mainPlayerColor={dpsAppearance.mainPlayerColor}
+                      otherPlayerColor={dpsAppearance.otherPlayerColor}
+                      barOpacity={100}
+                      maskNicknames={dpsAppearance.maskNicknames}
+                      onPlayerClicked={() => {}}
+                    />
                   </div>
                 </div>
-              </div>
+              </SettingsGroup>
             </div>
           )}
 

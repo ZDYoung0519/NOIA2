@@ -34,26 +34,6 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-const darkenHex = (hex: string, amount: number) => {
-  const safeHex = hex.replace("#", "");
-  const normalizedHex =
-    safeHex.length === 3
-      ? safeHex
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : safeHex;
-
-  const clamp = (value: number) => Math.max(0, Math.min(255, value));
-  const r = clamp(parseInt(normalizedHex.slice(0, 2), 16) - amount);
-  const g = clamp(parseInt(normalizedHex.slice(2, 4), 16) - amount);
-  const b = clamp(parseInt(normalizedHex.slice(4, 6), 16) - amount);
-
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
-    .toString(16)
-    .padStart(2, "0")}`;
-};
-
 const formatLocalLogTime = (timestamp: number) => {
   if (!Number.isFinite(timestamp)) {
     return "--:--:--";
@@ -135,26 +115,9 @@ export default function DpsLogPage() {
     () => hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity),
     [dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity]
   );
-  const titleBarBackground = useMemo(
-    () =>
-      hexToRgba(
-        darkenHex(dpsAppearance.backgroundColor, 22),
-        Math.min(100, dpsAppearance.backgroundOpacity + 18)
-      ),
-    [dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity]
-  );
-  const panelBackground = useMemo(
-    () => hexToRgba(dpsAppearance.panelColor, dpsAppearance.panelOpacity),
-    [dpsAppearance.panelColor, dpsAppearance.panelOpacity]
-  );
-  const footerBackground = useMemo(
-    () =>
-      hexToRgba(
-        darkenHex(dpsAppearance.panelColor, 8),
-        Math.min(100, dpsAppearance.panelOpacity + 8)
-      ),
-    [dpsAppearance.panelColor, dpsAppearance.panelOpacity]
-  );
+  const titleBarBackground = shellBackground;
+  const panelBackground = shellBackground;
+  const footerBackground = shellBackground;
   const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
   const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
   const portPacketEntries = packetEntries.filter(([key]) => /^\d+-\d+$/.test(key));
@@ -215,7 +178,7 @@ export default function DpsLogPage() {
       <div
         ref={viewportRef}
         className="flex-1 overflow-y-auto p-2 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-track]:bg-transparent"
-        style={{ backgroundColor: panelBackground, zoom: dpsAppearance.scaleFactor }}
+        style={{ backgroundColor: panelBackground, zoom: 1 }}
       >
         <div className="space-y-1 font-mono text-xs">
           {filteredLines.length > 0 ? (
