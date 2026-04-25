@@ -1,52 +1,71 @@
 <div align="center">
 
-# Tauri App Template
+# NOIA2
 
-[English](./README.md) | 简体中文
+简体中文 | [English](./README.md)
 
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8DB?logo=tauri)](https://tauri.app/)
+[![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 
-基于 Tauri v2 + React 19 + TypeScript + shadcn/ui 的桌面应用模板。
+一个面向永恒之塔 2 的桌面工具，包含悬浮 DPS、水表历史、多窗口辅助和 Rust 后端解析能力。
 
 </div>
 
+## 项目简介
+
+NOIA2 是一个基于 Tauri 的 AION2 桌面辅助工具，主要面向以下场景：
+
+- 悬浮 DPS 统计
+- 战斗详情和历史查看
+- 首页角色、队友、目标历史面板
+- 设置、日志、详情等多窗口工具页
+- Rust 后端负责抓包、解析、聚合和诊断
+
 ## 预览
 
-![应用截图](./screenshots/app.png)
+主页
 
-## 特点
+![App Screenshot](./screenshots/app.jpg)
 
-- ✨ **现代化技术栈** - Tauri v2 + React 19 + TypeScript + Vite
-- 🎨 **精美 UI 组件** - 集成 shadcn/ui 组件库和 Tailwind CSS v4
-- 🌓 **暗色模式支持** - 内置亮色/暗色主题切换
-- 🌍 **国际化支持** - 集成 i18next，支持中英文切换
-- 🖼️ **自定义标题栏** - 无边框透明窗口，支持拖拽、最小化、最大化、关闭
-- 🗂️ **多窗口管理** - 支持创建子窗口、窗口生命周期管理、延迟销毁机制
-- 🔔 **系统托盘集成** - 支持托盘图标、菜单和窗口隐藏/显示
-- ⌨️ **全局快捷键** - 支持注册全局快捷键，应用未聚焦时也能响应
-- 🔄 **自动发布与更新** - 支持基于 `vX.Y.Z` 标签的 GitHub Actions 自动构建、Release 发布与自动更新
-- 📦 **开箱即用** - 预配置 Prettier、ESLint 和 TypeScript 严格模式
-- 🚀 **快速开发** - Vite HMR + Tauri 热重载
+DPS 悬浮窗:
+
+![App Screenshot](./screenshots/dps.jpg)
+
+DPS 技能窗:
+
+![App Screenshot](./screenshots/dps_detail.jpg)
+
+## 功能特性
+
+- 支持悬浮 DPS 窗口，自定义颜色、透明度、缩放和昵称打码
+- 支持 `main`、`dps`、`dps_detail`、`dps_log`、设置页等多窗口协作
+- Rust 实现实时战斗快照、聚合和诊断链路
+- 本地历史存储与设置管理，内置存储占用查看与清理
+- 支持全局快捷键、托盘、自动更新和自定义标题栏
+- 首页展示最近角色、最近队友、战斗目标 DPS 历史
+- 支持英文、简体中文、繁体中文、韩文 UI 国际化
 
 ## 技术栈
 
-- **桌面框架**: [Tauri v2](https://tauri.app/)
-- **前端框架**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **构建工具**: [Vite](https://vite.dev/)
-- **UI 组件**: [shadcn/ui](https://ui.shadcn.com/)
-- **样式方案**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **代码格式化**: [Prettier](https://prettier.io/)
+- 桌面框架：[Tauri v2](https://tauri.app/)
+- 前端：[React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- 构建工具：[Vite](https://vite.dev/)
+- UI：[shadcn/ui](https://ui.shadcn.com/) + [Tailwind CSS v4](https://tailwindcss.com/)
+- 国际化：[i18next](https://www.i18next.com/)
+- 图表：[Recharts](https://recharts.org/)
+- 后端：Rust
 
-## 开始使用
+## 环境要求
 
-### 环境要求
+- Node.js 18+
+- pnpm 9+
+- Rust toolchain
+- Windows 环境
+- 已安装 Npcap，用于抓包
 
-- Node.js >= 18
-- pnpm >= 9
-- Rust >= 1.70
+## 快速开始
 
 ### 安装依赖
 
@@ -60,133 +79,91 @@ pnpm install
 pnpm tauri dev
 ```
 
-### 构建发布
+### 生产构建
 
 ```bash
 pnpm tauri build
 ```
 
-### 版本管理
+## 常用脚本
 
-`pnpm release:version` 是版本发布的唯一入口。
+```bash
+pnpm dev
+pnpm build
+pnpm tauri:dev
+pnpm tauri:build
+pnpm lint
+pnpm lint:fix
+pnpm format
+pnpm format:check
+pnpm check
+```
+
+## 发版流程
+
+项目使用下面的命令进行版本发布：
 
 ```bash
 pnpm release:version
-pnpm release:version --lang zh
-pnpm release:version --lang en
 ```
 
-它会交互式完成发布前检查和版本更新流程：
-- 确保工作区干净
-- 强制要求当前分支为 `main`
-- 校验 `package.json`、`src-tauri/tauri.conf.json` 和 `src-tauri/Cargo.toml` 的版本一致
-- 检查目标 tag 是否已在本地或远端 `origin` 存在
-- 同步更新这三个版本文件
-- 创建发布提交和 `vX.Y.Z` tag
-- 可选地推送分支和 tag
+这个脚本会自动完成：
 
-## 添加 shadcn/ui 组件
+- 检查工作区是否干净
+- 要求当前分支为 `main`
+- 校验前端与 Tauri 版本号是否一致
+- 创建发布提交和对应的 `vX.Y.Z` tag
+- 可选地推送分支与标签
 
-```bash
-pnpm dlx shadcn@latest add <component-name>
-```
+之后 GitHub Actions 会根据发布标签构建安装包和自动更新文件。
 
-示例：
+## 目录结构
 
-```bash
-pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add input
-pnpm dlx shadcn@latest add dialog
-```
-
-## 代码格式化
-
-```bash
-pnpm format        # 格式化代码
-pnpm format:check  # 检查代码格式
-```
-
-## 项目结构
-
-```
+```text
 .
-├── src/                    # 前端源码
-│   ├── components/         # React 组件
-│   │   └── ui/            # shadcn/ui 组件
-│   ├── i18n/              # 国际化
-│   │   ├── index.ts       # i18n 配置
-│   │   └── locales/       # 翻译文件
-│   ├── lib/               # 工具函数
-│   ├── pages/             # 页面组件
-│   │   ├── home.tsx       # 主窗口页面
-│   │   ├── about.tsx      # 关于窗口页面
-│   │   └── settings.tsx   # 设置窗口页面
-│   └── main.tsx           # 前端入口和基于 pathname 的页面选择器
-├── src-tauri/             # Tauri/Rust 后端
-│   ├── src/               # Rust 源码
-│   └── tauri.conf.json    # Tauri 配置
-├── docs/                  # 文档
-│   ├── AUTO_UPDATE.zh-CN.md # 自动更新指南
-│   ├── I18N.zh-CN.md      # 国际化指南
-│   └── GLOBAL_SHORTCUT.zh-CN.md # 全局快捷键指南
-├── components.json        # shadcn/ui 配置
-└── package.json
+├─ src/
+│  ├─ components/
+│  │  ├─ dps/
+│  │  └─ ui/
+│  ├─ hooks/
+│  ├─ i18n/
+│  ├─ lib/
+│  ├─ pages/
+│  │  ├─ home.tsx
+│  │  ├─ dps.tsx
+│  │  ├─ dps_detail.tsx
+│  │  ├─ dps_log.tsx
+│  │  ├─ settings.tsx
+│  │  └─ settings_view.tsx
+│  └─ types/
+├─ src-tauri/
+│  ├─ src/
+│  │  ├─ dps_meter/
+│  │  │  ├─ api/
+│  │  │  ├─ capture/
+│  │  │  ├─ engine/
+│  │  │  ├─ models/
+│  │  │  └─ storage/
+│  │  └─ plugins/
+│  └─ tauri.conf.json
+├─ src-python/
+├─ docs/
+├─ public/
+└─ screenshots/
 ```
 
-## CI/CD
+## 相关文档
 
-本项目使用 GitHub Actions 实现自动化构建和发布。
+- [自动更新](./docs/AUTO_UPDATE.zh-CN.md)
+- [全局快捷键](./docs/GLOBAL_SHORTCUT.zh-CN.md)
+- [国际化](./docs/I18N.zh-CN.md)
 
-### 自动化发布
+## 补充说明
 
-工作流会在推送符合 `v*` 格式的标签时触发，例如 `v0.1.0`。
-推荐通过 `pnpm release:version` 发版，它会自动创建匹配的 `vX.Y.Z` tag。
-
-**手动创建并推送标签示例：**
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-### 构建产物
-
-工作流会生成：
-- **NSIS 安装包** - Windows 安装程序
-- **更新文件** - `latest.json` 用于自动更新支持
-
-### 自动更新配置
-
-要启用自动更新功能，需要：
-
-1. 生成签名密钥：`pnpm tauri signer generate -w ~/.tauri/myapp.key`
-2. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-
-**注意：** `src-tauri/tauri.conf.json` 中的公钥和更新端点占位符会在发布构建期间由 GitHub Actions 自动替换。自动更新依赖已发布的 GitHub Release 对外提供最新版本的 `latest.json` 资源。
-
-详细配置说明请查看 [自动更新配置文档](./docs/AUTO_UPDATE.zh-CN.md)。
-
-### 代码签名（可选）
-
-如需启用代码签名，在 GitHub 仓库设置中添加以下 Secrets：
-- `TAURI_SIGNING_PRIVATE_KEY` - 私钥内容
-- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - 私钥密码
-
-不配置这些 Secrets 也能正常构建，只是安装包不会被签名。
-
-### 多平台支持
-
-如需启用 macOS 和 Linux 构建，取消 `.github/workflows/release.yml` 中对应平台配置的注释即可。
-
-## IDE 推荐
-
-- [VS Code](https://code.visualstudio.com/)
-- [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
-- [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- 当前抓包和检测链路主要面向 Windows 桌面环境。
+- `src-python/` 中保留了一部分旧版 Python 解析实现，主要作为参考。
+- 项目使用 localStorage 保存 UI 设置、主角色历史和 DPS 历史。
 
 ## License
 
 MIT
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=kitlib/tauri-app-template&type=Date)](https://star-history.com/#kitlib/tauri-app-template&Date)

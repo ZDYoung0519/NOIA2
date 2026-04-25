@@ -1438,7 +1438,7 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
     if result.is_empty() || only_numbers {
         return None;
     }
-    if result.chars().count() < 3 && !has_han {
+    if result.chars().count() < 2 && !has_han {
         return None;
     }
     if result.chars().count() == 1 && result.chars().all(|ch| ch.is_alphabetic()) {
