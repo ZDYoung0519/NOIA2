@@ -35,7 +35,7 @@ DPS 悬浮窗:
 
 DPS 技能窗:
 
-![App Screenshot](./screenshots/dps_detail.jpg)
+![App Screenshot](./screenshots/dps_detail.png)
 
 ## 功能特性
 

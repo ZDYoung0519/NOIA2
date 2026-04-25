@@ -37,7 +37,7 @@ DPS overlay:
 
 DPS Detail:
 
-![App Screenshot](./screenshots/dps_detail.jpg)
+![App Screenshot](./screenshots/dps_detail.png)
 
 ## Features
 
