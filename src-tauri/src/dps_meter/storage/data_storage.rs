@@ -314,6 +314,7 @@ impl DataStorage {
         if let Some(sid) = sid {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
         }
+        inner.summon_owner_map.remove(&actor_id);
     }
 
     pub fn append_mob(&self, target_id: u32, mob_code: u32) {

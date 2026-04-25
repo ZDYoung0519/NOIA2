@@ -931,7 +931,7 @@ impl StreamProcessor {
             }
 
             self.data_storage.append_summon(owner_id, summon_id);
-            self.data_storage.append_actor(owner_id, &sanitized_name, None);
+            // self.data_storage.append_actor(owner_id, &sanitized_name, None);
             if self.is_boss_summon(summon_id) {
                 self.logger.info(format!(
                     "[{}] embedded 04 8D owner={} summon={} owner_name={}",

@@ -110,7 +110,6 @@ export function ArcanaTooltip({ eq }: { eq: any }) {
 export function renderArcanaSlot({ eq }: { eq: any }) {
   const grade = eq.detail.grade as GradeType;
   const cfg = gradeConfig[grade];
-  // const textClass = gradeConfig[grade]?.text;
 
   return (
     <Tooltip>

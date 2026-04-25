@@ -14,12 +14,32 @@ import CharacterPage from "./pages/character";
 import CharacterViewPage from "./pages/character_view";
 import SettingsViewPage from "./pages/settings_view";
 
+import { useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useAppTranslation } from "@/hooks/use-app-translation";
+
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
 const DpsLogPage = lazy(() => import("./pages/dps_log"));
 const AboutPage = lazy(() => import("./pages/about"));
 
 function App() {
+  const { t } = useAppTranslation();
+
+  useEffect(() => {
+    const initTrayMenu = async () => {
+      try {
+        await invoke("update_tray_menu", {
+          showText: t("tray.show"),
+          quitText: t("tray.quit"),
+        });
+      } catch (error) {
+        console.error("Failed to initialize tray menu:", error);
+      }
+    };
+    void initTrayMenu();
+  }, [t]);
+
   return (
     <Routes>
       <Route element={<Outlet />}>
