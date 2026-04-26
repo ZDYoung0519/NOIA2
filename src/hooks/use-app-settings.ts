@@ -36,6 +36,7 @@ export type DpsWindowAppearance = {
   maskNicknames: boolean;
   mainPlayerColor: string;
   otherPlayerColor: string;
+  showDetailOnHover: boolean;
 };
 
 export type AppSettings = {
@@ -80,6 +81,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       maskNicknames: false,
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
+      showDetailOnHover: false,
     },
   },
 };

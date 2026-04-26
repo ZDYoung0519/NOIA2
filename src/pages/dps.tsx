@@ -1139,6 +1139,10 @@ export default function DpsPage() {
         return;
       }
 
+      if (!settings.appearance.dpsWindow.showDetailOnHover) {
+        return;
+      }
+
       const nextPayload = buildDetailPayload(playerId);
       if (!nextPayload) {
         return;

@@ -509,6 +509,7 @@ export function SettingsContent() {
                     </div>
                   }
                 />
+
                 <SettingsRow
                   label={t("settings.dps.memorySnapshotInterval")}
                   control={
@@ -564,6 +565,23 @@ export function SettingsContent() {
               </SettingsGroup>
 
               <SettingsGroup title={t("settings.dps.windowAppearanceGroup")}>
+                <SettingsRow
+                  label={t("settings.dps.showDetailOnHover")}
+                  control={
+                    <Switch
+                      checked={dpsAppearance.showDetailOnHover}
+                      onCheckedChange={(checked) => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              showDetailOnHover: checked,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
                 <SettingsRow
                   label={t("settings.dps.autoResizeHeight")}
                   control={

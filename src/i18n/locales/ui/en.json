@@ -75,6 +75,7 @@
       "dpsWindowTitle": "DPS Window Appearance",
       "dpsWindowDescription": "These settings directly affect the floating DPS window and the preview below uses mock data.",
       "autoResizeHeight": "Auto Resize Height",
+      "showDetailOnHover": "Show Dps Details on Hover",
       "autoResizeHeightDescription": "Automatically adjusts the DPS window height to its current content.",
       "showHeaderStats": "Show Header Stats",
       "showHeaderStatsDescription": "Controls whether the compact damage, participants, and target cards are shown above the panel.",
