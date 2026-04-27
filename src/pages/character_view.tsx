@@ -14,19 +14,99 @@ import {
   renderStatInfo,
   renderDetailedStatInfo,
   renderStat,
-  useFormulaStats,
+  FormulaStat,
 } from "@/components/aion2/stat-info";
 import { getStatEntriesMap, StatEntry } from "@/lib/aion2/stat-utils";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 
+import Splash from "./Splash";
+
+function CharacterBanner({ characterData }: { characterData: Record<string, any> | undefined }) {
+  const profile = characterData?.queryResult?.data.profile;
+
+  const combatPower = characterData?.queryResult?.data?.profile?.combatPower;
+  const fengwoScore = characterData?.rating?.scores?.score;
+  const statList = characterData?.queryResult?.data?.stat?.statList as {
+    type: string;
+    value: number;
+  }[];
+  const itemLevel = statList?.find((item) => item?.type === "ItemLevel")?.value;
+  const fetchedAt = characterData?.queryResult?.fetchedAt;
+
+  const profileImage = profile?.profileImage || "/images/default-avatar.png";
+  const characterName = profile?.characterName || "Unkonwn";
+  const characterLevel = profile?.characterLevel || "Unkonwn";
+  const characterClass = profile?.className || "";
+  const raceName = profile?.raceName || "Unkonwn";
+  const serverName = profile?.serverName || "Unkonwn";
+
+  return (
+    <Card className="bg-background/60 flex flex-row items-center gap-5 px-5 py-4 backdrop-blur-lg">
+      {/* 左侧信息区 */}
+      <div className="flex flex-1 flex-col gap-2">
+        {/* 角色名 */}
+        <div className="text-2xl font-bold">{characterName}</div>
+
+        {/* 职业/等级/服务器/种族 */}
+        <p className="text-muted-foreground text-sm">
+          {characterClass} Lv.{characterLevel} · {serverName} · {raceName}
+        </p>
+
+        {/* 评分标签组 */}
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5">
+            <img
+              src="/images/aion2/profile_level_icon_pc.png"
+              alt="Item level"
+              className="h-5 w-4"
+            />
+            <span className="text-sm font-semibold text-white">{itemLevel ?? "--"}</span>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5">
+            <img
+              src="/images/aion2/profile_power_icon_pc.png"
+              alt="Combat power"
+              className="h-5 w-5"
+            />
+            <span className="text-sm font-semibold text-white">
+              {typeof combatPower === "number" ? (combatPower / 1000).toFixed(2) + "k" : "--"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5">
+            <img src="/images/aion2/fengwo.png" alt="Fengwo score" className="h-5 w-5" />
+            <span className="text-sm font-semibold text-white">
+              {typeof fengwoScore === "number" ? fengwoScore.toFixed(0) : "--"}
+            </span>
+          </div>
+        </div>
+
+        {/* 更新时间 */}
+        <p className="text-muted-foreground/60 mt-1 text-xs">
+          数据更新于 {new Date(fetchedAt).toLocaleString()}
+        </p>
+      </div>
+
+      {/* 右侧头像 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={profileImage}
+        alt={characterName}
+        className="border-primary/60 h-36 w-36 shrink-0 rounded-full border-3 object-cover"
+      />
+    </Card>
+  );
+}
+
 function EquipmentDetailPage({
   equipmentList,
-  skillList,
+  // skillList,
   // boardList,
   // titleList,
   // petwing,
-  statList,
-  statEntriesMap,
+  // statList,
+  // statEntriesMap,
 }: {
   equipmentList: any[];
   skillList: any[];
@@ -69,122 +149,49 @@ function EquipmentDetailPage({
 
   // 阿尔卡纳
   const ArcanaList = equipmentList.filter((eq) => eq.slotPos >= 41 && eq.slotPos <= 46);
-  const ActiveSkillList = skillList.filter((s) => s.category === "Active");
-  const PassiveSkillList = skillList.filter((s) => s.category === "Passive");
-  const DpSkillList = skillList.filter((s) => s.category === "Dp");
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row">
-      <div className="w-full space-y-2 md:w-3/4">
-        {/* 装备 */}
-        <Card className="bg-background/60 grid grid-cols-1 justify-center gap-0 rounded-lg p-0 backdrop-blur-lg sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
-          {normalEquipmentList.map((eq) => (
-            <div key={eq.slotPos}>{renderEquipmentInfo({ eq: eq })}</div>
-          ))}
-        </Card>
-
-        <Card className="bg-background/60 grid grid-cols-3 justify-center gap-2 rounded-lg p-5 backdrop-blur-lg sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6">
-          {ArcanaList.map((eq) => (
-            <div key={eq.slotPos}>{renderArcanaSlot({ eq: eq })}</div>
-          ))}
-        </Card>
-
-        <Card className="bg-background/60 rounded-lg backdrop-blur-lg">
-          <div className="grid grid-cols-6 justify-center gap-10 p-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
-            {ActiveSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-6 justify-center gap-10 p-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
-            {PassiveSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-6 justify-center gap-10 p-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
-            {DpSkillList.map((skill) => (
-              <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
-            ))}
-          </div>
-        </Card>
+    <div className="w-full space-y-2">
+      {/* 装备 */}
+      <div className="grid grid-cols-1 justify-center gap-0 rounded-2xl border p-0 backdrop-blur-lg sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+        {normalEquipmentList.map((eq) => (
+          <div key={eq.slotPos}>{renderEquipmentInfo({ eq: eq })}</div>
+        ))}
       </div>
 
-      <div className="w-full space-y-2 md:w-1/4">
-        {renderStatInfo({ statList: statList })}
-
-        {renderDetailedStatInfo({
-          statEntriesMap: statEntriesMap,
-        })}
-
-        {/* 称号 */}
-
-        {/* 宠物翅膀 */}
-
-        {/* 守护力量 */}
-
-        {/* <GearDamageCurveChart /> */}
+      {/* 卡牌 */}
+      <div className="grid grid-cols-3 items-center justify-center gap-2 rounded-2xl border p-5 backdrop-blur-lg sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6">
+        {ArcanaList.map((eq) => (
+          <div key={eq.slotPos}>{renderArcanaSlot({ eq: eq })}</div>
+        ))}
       </div>
     </div>
   );
 }
 
-export function FormulaStat({
-  formula,
-  statEntriesMap,
-  name,
-  round,
-  t,
-  unit = "",
-}: {
-  formula: string;
-  statEntriesMap: Record<string, any[]>;
-  name: string;
-  round: number;
-  t: (key: string) => string;
-  unit?: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  const { fieldNames, fieldStats, totalValue } = useFormulaStats(formula, statEntriesMap);
-
-  const formulaTranslated = useMemo(() => {
-    let result = formula;
-    fieldNames.forEach((field) => {
-      const translated = t(field);
-      result = result.replace(new RegExp(`\\{${field}\\}`, "g"), translated);
-    });
-    return result;
-  }, [formula, fieldNames, t]);
-
-  const toggleExpand = () => setExpanded((prev) => !prev);
-
+function SkillPage({ skillList }: { skillList: any[] }) {
+  const ActiveSkillList = skillList.filter((s) => s.category === "Active");
+  const PassiveSkillList = skillList.filter((s) => s.category === "Passive");
+  const DpSkillList = skillList.filter((s) => s.category === "Dp");
   return (
-    <div className="">
-      <div
-        className="hover:bg-primary/5 flex h-8 cursor-pointer items-center justify-between rounded p-4"
-        onClick={toggleExpand}
-      >
-        <span className="font-medium">{t(`${name}`)}</span>
-        <span className="text-md font-bold">
-          {totalValue.toFixed(round)}
-          {unit}
-        </span>
-      </div>
-
-      {expanded && (
-        <div className="mt-1 space-y-1 border-t pt-2 pr-4 pb-2 pl-4">
-          {fieldNames.map((field) => {
-            const stat = fieldStats[field];
-            return renderStat(stat, field, unit, round, t);
-          })}
-          <div className="text-muted-foreground mt-2 border-t pt-2 text-sm">
-            <div>Formula: {formulaTranslated}</div>
-            <div>
-              Final: {totalValue.toFixed(round)}
-              {unit}
-            </div>
-          </div>
+    <div>
+      <div className="rounded-2xl border backdrop-blur-lg">
+        <div className="backdrop-blur-lgsm:grid-cols-6 grid grid-cols-6 justify-center gap-10 p-5 md:grid-cols-8 lg:grid-cols-8">
+          {ActiveSkillList.map((skill) => (
+            <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
+          ))}
         </div>
-      )}
+        <div className="backdrop-blur-lgsm:grid-cols-6 grid grid-cols-6 justify-center gap-10 p-5 md:grid-cols-8 lg:grid-cols-8">
+          {PassiveSkillList.map((skill) => (
+            <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
+          ))}
+        </div>
+        <div className="backdrop-blur-lgsm:grid-cols-6 grid grid-cols-6 justify-center gap-10 p-5 md:grid-cols-8 lg:grid-cols-8">
+          {DpSkillList.map((skill) => (
+            <div key={skill.name}>{renderSkillSlot({ skill: skill, scaleFactor: 1 })}</div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -318,14 +325,14 @@ function StatDetailPage({ statEntriesMap }: { statEntriesMap: Record<string, Sta
 }
 
 export default function CharacterViewPage() {
+  const [loading, setLoading] = useState(true);
+  const [characterData, setCharacterData] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState<string>("equip");
   const [searchParams] = useSearchParams();
-
   const characterName = searchParams.get("characterName") || "";
   const serverId = searchParams.get("serverId") || "";
 
-  const [loading, setLoading] = useState(true);
-
-  const [characterData, setCharacterData] = useState<Record<string, any>>();
+  const { tStats } = useAppTranslation();
 
   const fetchData = async () => {
     try {
@@ -375,33 +382,60 @@ export default function CharacterViewPage() {
 
     return [equipmentList, skillList, statList, statEntriesMap];
   }, [characterData]);
-
   if (loading) {
-    return <div>加载中</div>;
+    return <Splash></Splash>;
   }
-
   return (
     <div className="mx-auto max-w-[2000px] pr-5 pl-5">
-      <Tabs onValueChange={() => {}} className="space-y-2">
-        <TabsList variant={"line"} className="w-100">
-          <TabsTrigger value="equip">装备详情</TabsTrigger>
-          <TabsTrigger value="stat">属性分析</TabsTrigger>
-        </TabsList>
-        <TabsContent value="equip">
-          <EquipmentDetailPage
-            equipmentList={equipmentList}
-            skillList={skillList}
-            // boardList={boardList}
-            // titleList={titleList}
-            // petwing={petwing}
-            statList={statList}
-            statEntriesMap={statEntriesMap}
-          />
-        </TabsContent>
-        <TabsContent value="stat">
-          <StatDetailPage statEntriesMap={statEntriesMap} />
-        </TabsContent>
-      </Tabs>
+      <div className="w-full space-y-5">
+        <CharacterBanner characterData={characterData}></CharacterBanner>
+      </div>
+
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="w-full space-y-2 md:w-3/4">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)} className="space-y-2">
+            <TabsList variant={"line"} className="w-100">
+              <TabsTrigger value="equip">装备卡牌</TabsTrigger>
+              <TabsTrigger value="skill">技能等级</TabsTrigger>
+              <TabsTrigger value="daevaion">守护石板</TabsTrigger>
+              <TabsTrigger value="stat-detail">综合分析</TabsTrigger>
+            </TabsList>
+            <TabsContent value="equip">
+              <EquipmentDetailPage
+                equipmentList={equipmentList}
+                skillList={skillList}
+                // boardList={boardList}
+                // titleList={titleList}
+                // petwing={petwing}
+                statList={statList}
+                statEntriesMap={statEntriesMap}
+              />
+            </TabsContent>
+            <TabsContent value="skill">
+              <SkillPage skillList={skillList}></SkillPage>
+            </TabsContent>
+            <TabsContent value="stat-detail">
+              <StatDetailPage statEntriesMap={statEntriesMap} />
+            </TabsContent>
+          </Tabs>
+        </div>
+        <div className="w-full space-y-2 md:w-1/4">
+          {renderStatInfo({ statList: statList })}
+
+          {renderDetailedStatInfo({
+            statEntriesMap: statEntriesMap,
+            tStats: tStats,
+          })}
+
+          {/* 称号 */}
+
+          {/* 宠物翅膀 */}
+
+          {/* 守护力量 */}
+
+          {/* <GearDamageCurveChart /> */}
+        </div>
+      </div>
     </div>
   );
 }

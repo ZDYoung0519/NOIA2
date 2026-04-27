@@ -6,7 +6,7 @@ import "./i18n";
 import { MainShell } from "./components/main-shell";
 import { AppSettingsProvider } from "./hooks/use-app-settings";
 import { TooltipProvider } from "./components/ui/tooltip";
-import Splash from "./Splash";
+import Splash from "./pages/Splash";
 
 import HomePage from "./pages/home";
 import DpsViewPage from "./pages/dps_view";

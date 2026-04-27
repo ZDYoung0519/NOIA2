@@ -1,9 +1,8 @@
+import { useState } from "react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../custom-tooltip";
 import { Separator } from "@/components/ui/separator";
 import { getStatSum } from "@/lib/aion2/stat-utils";
 import { Card } from "@/components/ui/card";
-
-import { useAppTranslation } from "@/hooks/use-app-translation";
 
 import { useMemo } from "react";
 
@@ -214,8 +213,10 @@ export function renderStat(
 
 export function renderDetailedStatInfo({
   statEntriesMap,
+  tStats,
 }: {
   statEntriesMap: Record<string, any[]>;
+  tStats: any;
 }) {
   const Damage = getStatSum(["FixingDamage", "WeaponFixingDamage"], statEntriesMap);
   const DamageRatio = getStatSum(["DamageRatio"], statEntriesMap);
@@ -236,8 +237,6 @@ export function renderDetailedStatInfo({
   const CombatSpeed = getStatSum(["CombatSpeed"], statEntriesMap);
   const MoveSpeed = getStatSum(["MoveSpeed"], statEntriesMap);
   const CoolTimeDecrease = getStatSum(["CoolTimeDecrease"], statEntriesMap);
-
-  const { tStats } = useAppTranslation();
 
   return (
     <Card className="bg-background/60 p-2 text-sm backdrop-blur-lg">
@@ -266,5 +265,67 @@ export function renderDetailedStatInfo({
         </Button>
       </div> */}
     </Card>
+  );
+}
+
+export function FormulaStat({
+  formula,
+  statEntriesMap,
+  name,
+  round,
+  t,
+  unit = "",
+}: {
+  formula: string;
+  statEntriesMap: Record<string, any[]>;
+  name: string;
+  round: number;
+  t: (key: string) => string;
+  unit?: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const { fieldNames, fieldStats, totalValue } = useFormulaStats(formula, statEntriesMap);
+
+  const formulaTranslated = useMemo(() => {
+    let result = formula;
+    fieldNames.forEach((field) => {
+      const translated = t(field);
+      result = result.replace(new RegExp(`\\{${field}\\}`, "g"), translated);
+    });
+    return result;
+  }, [formula, fieldNames, t]);
+
+  const toggleExpand = () => setExpanded((prev) => !prev);
+
+  return (
+    <div className="">
+      <div
+        className="hover:bg-primary/5 flex h-8 cursor-pointer items-center justify-between rounded p-4"
+        onClick={toggleExpand}
+      >
+        <span className="font-medium">{t(`${name}`)}</span>
+        <span className="text-md font-bold">
+          {totalValue.toFixed(round)}
+          {unit}
+        </span>
+      </div>
+
+      {expanded && (
+        <div className="mt-1 space-y-1 border-t pt-2 pr-4 pb-2 pl-4">
+          {fieldNames.map((field) => {
+            const stat = fieldStats[field];
+            return renderStat(stat, field, unit, round, t);
+          })}
+          <div className="text-muted-foreground mt-2 border-t pt-2 text-sm">
+            <div>Formula: {formulaTranslated}</div>
+            <div>
+              Final: {totalValue.toFixed(round)}
+              {unit}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

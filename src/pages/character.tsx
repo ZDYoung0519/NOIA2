@@ -168,7 +168,7 @@ export default function CharacterSearchPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto h-full w-full max-w-5xl px-4 py-10 py-50">
       <div className="mx-auto max-w-xl">
         <div className="text-center">
           <CardTitle className="text-3xl font-bold">角色信息查询</CardTitle>

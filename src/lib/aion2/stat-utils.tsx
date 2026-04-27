@@ -412,7 +412,6 @@ export function getStatEntriesMap(
   // 主神属性转换
 
   statList.forEach((stat) => {
-    debugger;
     const statSecondList = calStatSecondList(stat as { type: string; value: number });
     statSecondList.forEach((statSecond) => {
       statsEntries.push({
