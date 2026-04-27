@@ -250,7 +250,7 @@ const CarouselCard = React.memo(function CarouselCard({
                 <div className="">
                   <div className="grid grid-cols-10 items-center justify-center gap-2">
                     {equipmentList.map((eq) => (
-                      <div className="h-full w-full">
+                      <div className="h-full w-full" key={eq.slotPos}>
                         <div key={eq.slotPos}>{renderEquipSlotSmall({ eq: eq, size: 14 })}</div>
                       </div>
                     ))}

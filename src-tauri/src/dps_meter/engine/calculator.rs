@@ -113,10 +113,14 @@ fn build_target_infos(
     let mob_id_code_map = data_storage.mob_id_code_snapshot();
     let mob_code_name_map = data_storage.mob_code_name_snapshot();
     let boss_code_list = data_storage.boss_code_list_snapshot();
-    let start_time_by_target =
-        merge_time_map_min(&data_storage.start_time_by_target_snapshot(), summon_owner_map);
-    let last_time_by_target =
-        merge_time_map_max(&data_storage.last_time_by_target_snapshot(), summon_owner_map);
+    let start_time_by_target = merge_time_map_min(
+        &data_storage.start_time_by_target_snapshot(),
+        summon_owner_map,
+    );
+    let last_time_by_target = merge_time_map_max(
+        &data_storage.last_time_by_target_snapshot(),
+        summon_owner_map,
+    );
 
     kept_targets
         .iter()
@@ -266,7 +270,9 @@ fn merge_summon_skill_records(
 
         for (actor_id, records) in actor_map {
             let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
-            let actor_entry = target_entry.entry(resolved_actor_id).or_insert_with(Vec::new);
+            let actor_entry = target_entry
+                .entry(resolved_actor_id)
+                .or_insert_with(Vec::new);
             actor_entry.extend(records.iter().cloned());
         }
 
@@ -336,12 +342,12 @@ fn merge_actor_skill_specs(
 
     for (actor_id, skill_map) in raw_specs {
         let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
-        let actor_entry = merged
-            .entry(resolved_actor_id)
-            .or_insert_with(HashMap::new);
+        let actor_entry = merged.entry(resolved_actor_id).or_insert_with(HashMap::new);
 
         for (skill_code, slots) in skill_map {
-            actor_entry.entry(*skill_code).or_insert_with(|| slots.clone());
+            actor_entry
+                .entry(*skill_code)
+                .or_insert_with(|| slots.clone());
         }
     }
 

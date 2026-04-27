@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { ArrowUp, Bell, FileText, MoreVertical, Plus, Search } from "lucide-react";
+import { ArrowUp, FileText, Plus } from "lucide-react";
 
 import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
 import CharacterCardCarousel from "@/components/character-card-carousel";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
@@ -40,37 +39,8 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="mx-auto max-w-[2500px] pr-5 pl-5">
+    <div className="mx-auto max-w-[2500px] pt-5 pr-5 pl-5">
       <div className="space-y-8">
-        <header className="grid items-center gap-4 xl:grid-cols-[1.15fr_0.72fr_0.55fr]">
-          <div className="relative w-full max-w-[290px]">
-            <Search className="text-muted-foreground absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder={t("home.searchPlaceholder")}
-              className="border-border/50 placeholder:text-muted-foreground focus-visible:ring-ring h-12 rounded-2xl pl-11 text-sm shadow-none focus-visible:ring-1"
-            />
-          </div>
-
-          <div />
-
-          <div className="flex items-center justify-end gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full"
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
-        </header>
-
         <section className="grid gap-x-8 gap-y-8 xl:grid-cols-[1.16fr_0.6fr_0.56fr]">
           <div className="min-w-0">
             <CharacterCardCarousel onActiveCharacterChange={setMainCharacter} />

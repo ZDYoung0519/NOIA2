@@ -214,8 +214,8 @@ impl DpsMeter {
             let mut system = System::new_all();
 
             while memory_snapshot_running.load(Ordering::SeqCst) {
-                let removed_ports =
-                    dispatcher.cleanup_stale_assemblers(Duration::from_secs(STALE_ASSEMBLER_IDLE_SECS));
+                let removed_ports = dispatcher
+                    .cleanup_stale_assemblers(Duration::from_secs(STALE_ASSEMBLER_IDLE_SECS));
                 if !removed_ports.is_empty() {
                     logger.info(format!(
                         "cleaned stale assembler ports: {}",

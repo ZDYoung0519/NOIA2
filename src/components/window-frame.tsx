@@ -1,9 +1,18 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, LineChart, LogIn, Settings, ShieldCheck, type LucideIcon } from "lucide-react";
+
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
+
+import { Input } from "@/components/ui/input";
+
+import { useAppTranslation } from "@/hooks/use-app-translation";
+import { AuthModal } from "./auth-modal";
+
+import { useNavigate } from "react-router-dom";
+import { Home, LineChart, Settings, ShieldCheck, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, Search, Bell, MoreVertical } from "lucide-react";
 
 type WindowFrameProps = {
   titleBar: ReactNode;
@@ -72,7 +81,7 @@ function WindowSidebar() {
         </div>
 
         <div className="mt-auto space-y-2 border-t pt-4">
-          <SidebarNavItem path="/login" label="用户登录" icon={LogIn} />
+          {/* <SidebarNavItem path="/user" label="用户" icon={LogIn} /> */}
           <SidebarNavItem path="/settings-view" label="设置" icon={Settings} />
         </div>
       </div>
@@ -87,6 +96,9 @@ export function WindowFrame({
   contentClassName,
   showSidebar = false,
 }: WindowFrameProps) {
+  const { t } = useAppTranslation();
+  const navigate = useNavigate();
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="tauri-ui-theme">
       <div className={cn("flex h-screen w-screen flex-col overflow-hidden", className)}>
@@ -95,11 +107,10 @@ export function WindowFrame({
           <div className="flex h-full min-h-0">
             {showSidebar && <WindowSidebar />}
 
-            {/* 内容区域：relative 作为背景的定位上下文 */}
             <div
               className={cn("relative min-h-0 min-w-0 flex-1 overflow-hidden", contentClassName)}
             >
-              {/* 背景图片层：absolute 相对于内容区域 */}
+              {/* 背景层（absolute，不占据文档流） */}
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
@@ -107,14 +118,78 @@ export function WindowFrame({
                   filter: "brightness(0.8) contrast(1.2)",
                 }}
               />
-
-              {/* 遮罩层：同样 absolute */}
               <div className="via-background/70 to-background/100 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
               <div className="from-background/50 to-background/50 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
               <div className="bg-background/65 pointer-events-none absolute inset-0" />
 
-              {/* 实际内容 */}
-              <div className="relative z-10 h-full overflow-auto">{children}</div>
+              {/* ✅ 实际内容区：flex col，header 固定，children 滚动 */}
+              <div className="relative z-10 flex h-full flex-col">
+                <header className="bg-background/50 sticky top-0 z-50 grid shrink-0 items-center gap-4 px-5 backdrop-blur-sm xl:grid-cols-[1.15fr_0.72fr_0.55fr]">
+                  {/* 左侧：导航按钮 + 搜索框 */}
+                  <div className="flex items-center gap-3">
+                    {/* 后退 / 前进 / 刷新 */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(-1)}
+                        className="text-muted-foreground hover:bg-accent hover:text-accent-foreground h-8 w-8 rounded-full"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(1)}
+                        className="text-muted-foreground hover:bg-accent hover:text-accent-foreground h-8 w-8 rounded-full"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => window.location.reload()}
+                        className="text-muted-foreground hover:bg-accent hover:text-accent-foreground h-8 w-8 rounded-full"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* 搜索框 */}
+                    <div className="relative w-full max-w-[290px] pt-2 pb-2">
+                      <Search className="text-muted-foreground absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
+                      <Input
+                        placeholder={t("home.searchPlaceholder")}
+                        className="border-border/50 placeholder:text-muted-foreground focus-visible:ring-ring h-10 rounded-2xl pl-11 text-sm shadow-none focus-visible:ring-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div />
+
+                  {/* 右侧 */}
+                  <div className="flex items-center justify-end gap-3">
+                    <AuthModal />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full"
+                    >
+                      <Bell className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </header>
+
+                {/* ✅ 只有这里滚动 */}
+                <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+              </div>
             </div>
           </div>
         </main>

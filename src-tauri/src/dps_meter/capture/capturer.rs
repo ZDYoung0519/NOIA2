@@ -280,6 +280,8 @@ impl PcapCapturer {
             let mut last_detected_target = String::new();
 
             while running.load(Ordering::SeqCst) {
+
+                // 1. find magic devices
                 let devices = match npcap.find_all_devices() {
                     Ok(devices) => devices,
                     Err(error) => {
@@ -430,12 +432,17 @@ fn format_device_inventory(devices: &[DeviceInfo]) -> String {
 
 fn prioritize_devices(mut devices: Vec<DeviceInfo>) -> Vec<DeviceInfo> {
     devices.sort_by_key(|device| {
-        let loopback_priority = if device.is_loopback || device.is_virtual() { 0 } else { 1 };
-        let address_priority = if !device.is_loopback && !device.is_virtual() && !device.has_addresses {
-            1
-        } else {
+        let loopback_priority = if device.is_loopback || device.is_virtual() {
             0
+        } else {
+            1
         };
+        let address_priority =
+            if !device.is_loopback && !device.is_virtual() && !device.has_addresses {
+                1
+            } else {
+                0
+            };
         let name = device.label().to_ascii_lowercase();
         (loopback_priority, address_priority, name)
     });

@@ -17,6 +17,7 @@ import SettingsViewPage from "./pages/settings_view";
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { UserPage } from "./pages/user";
 
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
@@ -62,6 +63,7 @@ function App() {
         <Route path="/character/search" element={<CharacterPage />} />
         <Route path="/character/view" element={<CharacterViewPage />} />
         <Route path="/settings-view" element={<SettingsViewPage />} />
+        <Route path="/user" element={<UserPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -167,7 +167,7 @@ impl DataStorage {
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
         let mob_id_code_map = inner.mob_id_code_map.clone();
         let summon_owner_map = inner.summon_owner_map.clone();
-        let dot_skill_list = inner.dot_skill_list.clone();        
+        let dot_skill_list = inner.dot_skill_list.clone();
 
         *inner = DataStorageInner::default();
         inner.main_actor_id = main_actor_id;
@@ -313,7 +313,7 @@ impl DataStorage {
             .insert(actor_id, actor_name.to_string());
         if let Some(sid) = sid {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
-            }
+        }
         inner.summon_owner_map.map.remove(&actor_id);
     }
 
@@ -339,7 +339,11 @@ impl DataStorage {
     }
 
     pub fn has_mob(&self, actor_id: u32) -> bool {
-        self.inner.read().unwrap().mob_id_code_map.contains_key(&actor_id)
+        self.inner
+            .read()
+            .unwrap()
+            .mob_id_code_map
+            .contains_key(&actor_id)
     }
 
     pub fn set_main_actor(&self, actor_id: u32, actor_name: &str) {
@@ -356,7 +360,6 @@ impl DataStorage {
                 sid,
             },
         );
-
     }
 
     pub fn get_dps_stats_snapshot(&self) -> HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>> {
@@ -384,7 +387,11 @@ impl DataStorage {
     }
 
     pub fn actor_skill_spec_snapshot(&self) -> HashMap<u32, HashMap<u32, Vec<u32>>> {
-        self.inner.read().unwrap().actor_id_skill_spec_map.as_hash_map()
+        self.inner
+            .read()
+            .unwrap()
+            .actor_id_skill_spec_map
+            .as_hash_map()
     }
 
     pub fn summon_owner_snapshot(&self) -> HashMap<u32, u32> {

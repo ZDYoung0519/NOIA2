@@ -210,7 +210,6 @@ impl StreamProcessor {
         false
     }
 
-
     #[allow(unused_assignments)]
     fn parse_damage_packet(&mut self, packet: &[u8]) -> bool {
         let packet_length_info = read_varint(packet, 0);
@@ -585,11 +584,7 @@ impl StreamProcessor {
         self.data_storage.append_damage(parsed);
         self.logger.debug(format!(
             "[{}] dot target={} actor={} skill={} damage={}",
-            self.port,
-            log_target_id,
-            log_actor_id,
-            log_skill_code,
-            log_damage
+            self.port, log_target_id, log_actor_id, log_skill_code, log_damage
         ));
         true
     }
@@ -628,8 +623,7 @@ impl StreamProcessor {
                 "[{}] summon ownership owner={} owner_name={} summon={}",
                 self.port,
                 owner_info.value,
-                self
-                    .data_storage
+                self.data_storage
                     .actor_id_name_snapshot()
                     .get(&(owner_info.value as u32))
                     .cloned()
@@ -718,8 +712,7 @@ impl StreamProcessor {
                     "[{}] summon kotlin owner={} owner_name={} summon={}",
                     self.port,
                     owner_id,
-                    self
-                        .data_storage
+                    self.data_storage
                         .actor_id_name_snapshot()
                         .get(&owner_id)
                         .cloned()
@@ -737,8 +730,7 @@ impl StreamProcessor {
                     "[{}] summon fallback le32 owner={} owner_name={} summon={}",
                     self.port,
                     owner_id,
-                    self
-                        .data_storage
+                    self.data_storage
                         .actor_id_name_snapshot()
                         .get(&owner_id)
                         .cloned()
@@ -756,8 +748,7 @@ impl StreamProcessor {
                     "[{}] summon fallback marker owner={} owner_name={} summon={}",
                     self.port,
                     owner_id,
-                    self
-                        .data_storage
+                    self.data_storage
                         .actor_id_name_snapshot()
                         .get(&owner_id)
                         .cloned()
@@ -779,7 +770,11 @@ impl StreamProcessor {
                 }
 
                 let nickname_bytes = nickname.as_bytes();
-                if nickname_bytes.is_empty() || !packet.windows(nickname_bytes.len()).any(|window| window == nickname_bytes) {
+                if nickname_bytes.is_empty()
+                    || !packet
+                        .windows(nickname_bytes.len())
+                        .any(|window| window == nickname_bytes)
+                {
                     continue;
                 }
 
@@ -805,11 +800,7 @@ impl StreamProcessor {
         found_something
     }
 
-    fn extract_summon_owner_kotlin_style(
-        &self,
-        packet: &[u8],
-        summon_id: u32,
-    ) -> Option<u32> {
+    fn extract_summon_owner_kotlin_style(&self, packet: &[u8], summon_id: u32) -> Option<u32> {
         let key_idx = find_bytes(packet, 0, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])?;
         let after_packet_start = key_idx + 8;
         if after_packet_start >= packet.len() {
@@ -822,8 +813,7 @@ impl StreamProcessor {
             return None;
         }
 
-        let owner_id =
-            u16::from_le_bytes([packet[owner_offset], packet[owner_offset + 1]]) as u32;
+        let owner_id = u16::from_le_bytes([packet[owner_offset], packet[owner_offset + 1]]) as u32;
         if !(100..=999_999).contains(&owner_id) {
             return None;
         }
@@ -865,7 +855,10 @@ impl StreamProcessor {
                 continue;
             }
 
-            let scan_end = data.len().saturating_sub(1).min(search_offset + summon_info.length + 128);
+            let scan_end = data
+                .len()
+                .saturating_sub(1)
+                .min(search_offset + summon_info.length + 128);
             let mut anchor_idx = None;
             for i in search_offset + summon_info.length..scan_end {
                 if matches!(data[i], 0xE0 | 0xE2) && data.get(i + 1) == Some(&0x07) {
@@ -919,7 +912,11 @@ impl StreamProcessor {
             let Ok(possible_name) = std::str::from_utf8(&data[name_start..name_end]) else {
                 continue;
             };
-            if !possible_name.chars().next().is_some_and(|ch| ch.is_alphanumeric()) {
+            if !possible_name
+                .chars()
+                .next()
+                .is_some_and(|ch| ch.is_alphanumeric())
+            {
                 continue;
             }
 
@@ -1030,7 +1027,11 @@ impl StreamProcessor {
                 | ((payload[boss_pos + 1] as u32) << 8)
                 | ((payload[boss_pos + 2] as u32) << 16);
             self.data_storage.append_mob(aid_info.value as u32, boss_id);
-            if self.data_storage.boss_code_list_snapshot().contains(&boss_id) {
+            if self
+                .data_storage
+                .boss_code_list_snapshot()
+                .contains(&boss_id)
+            {
                 let boss_name = self
                     .data_storage
                     .mob_code_name_snapshot()
