@@ -9,7 +9,7 @@ function getTotalDamage(stats: SkillStats | undefined) {
     return 0;
   }
 
-  return stats.total_damage ?? stats.totalDamage ?? 0;
+  return stats.total_damage ?? 0;
 }
 
 const DpsPanel = function DpsPanel({

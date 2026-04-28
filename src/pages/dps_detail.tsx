@@ -29,16 +29,16 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
 };
 
 const getStatDamage = (stats?: SkillStats | null) =>
-  Number(stats?.totalDamage ?? stats?.total_damage ?? 0);
+  Number(stats?.total_damage ?? stats?.total_damage ?? 0);
 
 const getStatMinDamage = (stats?: SkillStats | null) =>
-  Number(stats?.minDamage ?? stats?.min_damage ?? 0);
+  Number(stats?.min_damage ?? stats?.min_damage ?? 0);
 
 const getStatMaxDamage = (stats?: SkillStats | null) =>
-  Number(stats?.maxDamage ?? stats?.max_damage ?? 0);
+  Number(stats?.max_damage ?? stats?.max_damage ?? 0);
 
 const getSpecialCount = (stats: SkillStats | null | undefined, key: string) =>
-  Number(stats?.specialCounts?.[key] ?? stats?.special_counts?.[key] ?? 0);
+  Number(stats?.special_counts?.[key] ?? stats?.special_counts?.[key] ?? 0);
 
 const formatDuration = (seconds: number) => {
   if (!Number.isFinite(seconds) || seconds <= 0) {
@@ -94,7 +94,7 @@ const SkillNameCell = memo(function SkillNameCell({
   const iconPath = getSkillIconPath(skillId);
 
   return (
-    <div className="flex min-w-0 items-center gap-2 max-w-50">
+    <div className="flex max-w-50 min-w-0 items-center gap-2">
       {iconPath ? (
         <img
           src={iconPath}
@@ -357,10 +357,7 @@ export default function DpsDetailPage() {
         className="flex w-full flex-col gap-2 self-start bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)] p-2"
         style={{ zoom: 1 }}
       >
-        <section
-          className="rounded-lg  p-0"
-          style={{ backgroundColor: panelBackground }}
-        >
+        <section className="rounded-lg p-0" style={{ backgroundColor: panelBackground }}>
           {payload && actorInfo && targetInfo && summary ? (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
@@ -384,9 +381,7 @@ export default function DpsDetailPage() {
 
               <div className="grid grid-cols-4 gap-2">
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.damage")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.damage")}</div>
                   <div className="mt-1 text-xs font-semibold text-slate-100">
                     {formatCompactDamage(summary.totalDamage)}
                   </div>
@@ -398,9 +393,7 @@ export default function DpsDetailPage() {
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.fight")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.fight")}</div>
                   <div className="mt-1 text-xs font-semibold text-slate-100">
                     {formatDuration(summary.fightDurationSeconds)}
                   </div>
@@ -415,9 +408,7 @@ export default function DpsDetailPage() {
 
               <div className="grid grid-cols-6 gap-2">
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.critical")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.critical")}</div>
                   <div className="mt-1 text-xs font-semibold text-rose-300">{summary.critRate}</div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
@@ -425,33 +416,25 @@ export default function DpsDetailPage() {
                   <div className="mt-1 text-xs font-semibold text-cyan-300">{summary.backRate}</div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.double")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.double")}</div>
                   <div className="mt-1 text-xs font-semibold text-yellow-300">
                     {summary.doubleRate}
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.perfect")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.perfect")}</div>
                   <div className="mt-1 text-xs font-semibold text-emerald-300">
                     {summary.perfectRate}
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.parry")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.parry")}</div>
                   <div className="mt-1 text-xs font-semibold text-slate-300">
                     {summary.parryRate}
                   </div>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                  <div className="text-xs text-slate-400 uppercase">
-                    {t("dps.detail.multi")}
-                  </div>
+                  <div className="text-xs text-slate-400 uppercase">{t("dps.detail.multi")}</div>
                   <div className="mt-1 text-xs font-semibold text-rose-200">
                     {summary.multiRate}
                   </div>
@@ -469,8 +452,6 @@ export default function DpsDetailPage() {
           className="overflow-hidden rounded-lg border border-white/10"
           style={{ backgroundColor: panelBackground }}
         >
-
-
           {skillRows.length > 0 ? (
             <div className="overflow-x-auto overflow-y-visible [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-track]:bg-transparent">
               <div className="min-w-[1000px]">
@@ -518,7 +499,7 @@ export default function DpsDetailPage() {
                     <div
                       key={row.skillId}
                       className={cn(
-                        "h-8 grid grid-cols-[minmax(180px,0.2fr)_0.2fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-xs",
+                        "grid h-8 grid-cols-[minmax(180px,0.2fr)_0.2fr_0.5fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.7fr_0.9fr_0.8fr_0.8fr_0.8fr_1.2fr] gap-2 border-b border-white/5 px-3 py-2 text-xs",
                         "hover:bg-white/[0.04]"
                       )}
                     >

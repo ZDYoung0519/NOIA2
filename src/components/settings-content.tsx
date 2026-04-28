@@ -279,7 +279,6 @@ export function SettingsContent() {
       1001: {
         counts: 96,
         total_damage: 420000,
-        totalDamage: 420000,
         minDamage: 1200,
         maxDamage: 9800,
         specialCounts: {},
@@ -287,7 +286,7 @@ export function SettingsContent() {
       1002: {
         counts: 74,
         total_damage: 258000,
-        totalDamage: 258000,
+
         minDamage: 800,
         maxDamage: 6600,
         specialCounts: {},
@@ -295,7 +294,6 @@ export function SettingsContent() {
       1003: {
         counts: 68,
         total_damage: 186000,
-        totalDamage: 186000,
         minDamage: 900,
         maxDamage: 7200,
         specialCounts: {},

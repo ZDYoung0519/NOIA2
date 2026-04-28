@@ -31,7 +31,7 @@ export type BattleRecordChartGroup = {
 };
 
 export function getSkillStatsDamage(stats?: SkillStats | null) {
-  return Number(stats?.totalDamage ?? stats?.total_damage ?? 0);
+  return Number(stats?.total_damage ?? 0);
 }
 
 export function getHistoryRecordTargetInfo(record: HistoryTargetRecord): TargetInfo | null {

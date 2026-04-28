@@ -38,8 +38,7 @@ import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
 
 const HISTORY_DAMAGE_THRESHOLD = 1_000_000;
 
-const getSkillStatsDamage = (stats?: SkillStats | null) =>
-  Number(stats?.totalDamage ?? stats?.total_damage ?? 0);
+const getSkillStatsDamage = (stats?: SkillStats | null) => Number(stats?.total_damage ?? 0);
 
 const getTargetTotalDamage = (playerStats?: Record<string, SkillStats> | null) =>
   Object.values(playerStats ?? {}).reduce((sum, stats) => sum + getSkillStatsDamage(stats), 0);
