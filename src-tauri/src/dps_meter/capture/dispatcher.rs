@@ -51,8 +51,8 @@ impl RecentPortWindow {
 struct DispatcherState {
     data_storage: Arc<DataStorage>,
     config: SharedDpsMeterConfig,
-    unified: StreamAssembler,
-    unified1: StreamAssembler,
+    // unified: StreamAssembler,
+    // unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
     recent_ports: RecentPortWindow,
     logged_packets: usize,
@@ -80,26 +80,26 @@ impl TrackedAssembler {
 impl DispatcherState {
     fn new(
         data_storage: Arc<DataStorage>,
-        logger: Arc<DpsLogger>,
+        _logger: Arc<DpsLogger>,
         config: SharedDpsMeterConfig,
     ) -> Self {
         Self {
             data_storage: Arc::clone(&data_storage),
             config: Arc::clone(&config),
-            unified: StreamAssembler::new(
-                Arc::clone(&data_storage),
-                Arc::clone(&logger),
-                "unified".to_string(),
-                ProcessingMode::MetadataOnly,
-                Arc::clone(&config),
-            ),
-            unified1: StreamAssembler::new(
-                data_storage,
-                logger,
-                "unified1".to_string(),
-                ProcessingMode::MetadataOnly,
-                config,
-            ),
+            // unified: StreamAssembler::new(
+            //     Arc::clone(&data_storage),
+            //     Arc::clone(&logger),
+            //     "unified".to_string(),
+            //     ProcessingMode::MetadataOnly,
+            //     Arc::clone(&config),
+            // ),
+            // unified1: StreamAssembler::new(
+            //     data_storage,
+            //     logger,
+            //     "unified1".to_string(),
+            //     ProcessingMode::MetadataOnly,
+            //     config,
+            // ),
             assemblers: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
             logged_packets: 0,
@@ -108,8 +108,8 @@ impl DispatcherState {
     }
 
     fn clear(&mut self) {
-        self.unified.clear();
-        self.unified1.clear();
+        // self.unified.clear();
+        // self.unified1.clear();
         for assembler in self.assemblers.values() {
             assembler.assembler.clear();
         }
@@ -304,15 +304,15 @@ impl CaptureDispatcher {
         let current_port = self.current_combat_port();
         let mut sizes = HashMap::new();
 
-        let unified_size = state.unified.buffer_size();
-        if unified_size > 0 {
-            sizes.insert("unified".to_string(), unified_size);
-        }
+        // let unified_size = state.unified.buffer_size();
+        // if unified_size > 0 {
+        //     sizes.insert("unified".to_string(), unified_size);
+        // }
 
-        let unified1_size = state.unified1.buffer_size();
-        if unified1_size > 0 {
-            sizes.insert("unified1".to_string(), unified1_size);
-        }
+        // let unified1_size = state.unified1.buffer_size();
+        // if unified1_size > 0 {
+        //     sizes.insert("unified1".to_string(), unified1_size);
+        // }
 
         for (key, assembler) in &state.assemblers {
             let size = assembler.assembler.buffer_size();

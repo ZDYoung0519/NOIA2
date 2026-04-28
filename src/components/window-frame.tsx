@@ -29,9 +29,9 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home", path: "/", icon: Home },
-  { label: "DPS 水表", path: "/dps-view", icon: LineChart },
+  { label: "主页", path: "/", icon: Home },
   { label: "角色评分", path: "/character/search", icon: ShieldCheck },
+  { label: "伤害统计", path: "/dps-view", icon: LineChart },
 ];
 
 function SidebarNavItem({ path, label, icon: Icon }: NavItem) {

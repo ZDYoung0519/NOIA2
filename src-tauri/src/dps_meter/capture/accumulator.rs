@@ -45,7 +45,8 @@ impl PacketAccumulator {
     }
 
     pub fn clear(&self) {
-        self.inner.lock().unwrap().buffer.clear();
+        let mut inner = self.inner.lock().unwrap();
+        inner.buffer = Vec::with_capacity(INITIAL_CAPACITY);
     }
 
     pub fn size(&self) -> usize {

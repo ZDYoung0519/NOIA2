@@ -11,7 +11,7 @@ use crate::dps_meter::storage::data_storage::DataStorage;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProcessingMode {
     Full,
-    MetadataOnly,
+    // MetadataOnly,
 }
 
 #[derive(Debug)]

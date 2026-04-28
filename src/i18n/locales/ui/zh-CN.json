@@ -186,8 +186,8 @@
     "quickActions": "快速启动",
     "actions": {
       "openDps": "DPS水表",
-      "characterRating": "角色查询",
-      "rankings": "排行榜",
+      "characterRating": "角色评分",
+      "rankings": "伤害统计",
       "comingSoon": "即将推出"
     }
   },
@@ -319,9 +319,9 @@
     "signOut": "退出登录",
     "membership": {
       "loading": "正在加载会员状态",
-      "expiresAt": "会员到期时间：{{date}}",
-      "permanent": "会员到期时间：永久",
-      "inactive": "会员未激活"
+      "expiresAt": "订阅到期时间：{{date}}",
+      "permanent": "订阅到期时间：永久",
+      "inactive": "无订阅"
     },
     "signIn": {
       "emailLabel": "邮箱地址",
@@ -331,8 +331,8 @@
       "button": "登录",
       "loadingButton": "登录中...",
       "socialProviderText": "使用 {{provider}} 登录",
-      "linkText": "?????????",
-      "description": "???????????????????"
+      "linkText": "已经有账户？在此登录",
+      "description": "登录到你的个人账户"
     },
     "signUp": {
       "emailLabel": "邮箱地址",
@@ -345,8 +345,8 @@
       "loadingButton": "注册中...",
       "socialProviderText": "使用 {{provider}} 注册",
       "linkText": "没有账号？去注册",
-      "confirmationText": "???????????????????????",
-      "description": "?????????????????????"
+      "confirmationText": "注册成功！请在本设备上检查并打开邮件中的链接，以激活账户",
+      "description": "注册一个新的账户来解锁云端功能和体验"
     },
     "forgottenPassword": {
       "emailLabel": "邮箱地址",
@@ -355,9 +355,9 @@
       "button": "发送重置邮件",
       "loadingButton": "发送中...",
       "linkText": "忘记密码？",
-      "confirmationText": "????????????????????",
-      "description": "??????????????????????",
-      "backToSignIn": "????"
+      "confirmationText": "请检查邮箱中的链接",
+      "description": "输入你的邮件地址，我们会给你发送一个重置密码的链接",
+      "backToSignIn": "返回登录"
     },
     "magicLink": {
       "emailLabel": "邮箱地址",
@@ -368,14 +368,14 @@
       "confirmationText": "请检查邮箱中的登录链接"
     },
     "updatePassword": {
-      "passwordLabel": "???",
-      "passwordPlaceholder": "??????",
-      "button": "?????",
-      "loadingButton": "???...",
-      "confirmationText": "????????",
-      "description": "????????????????",
-      "confirmPasswordLabel": "?????",
-      "confirmPasswordPlaceholder": "????????"
+      "passwordLabel": "新密码",
+      "passwordPlaceholder": "输入你的新密码",
+      "button": "设置新密码",
+      "loadingButton": "更新密码中...",
+      "confirmationText": "你的密码已经成功更新",
+      "description": "为你的账户设置一个新的密码",
+      "confirmPasswordLabel": "确认新密码",
+      "confirmPasswordPlaceholder": "重新输入你的密码"
     },
     "verifyOtp": {
       "emailLabel": "邮箱地址",
@@ -388,16 +388,16 @@
       "loadingButton": "验证中..."
     },
     "feedback": {
-      "deepLinkSuccess": "????????",
-      "deepLinkFailed": "???????????????",
-      "recoveryReady": "????????????????",
-      "invalidCredentials": "????????????????????",
-      "userAlreadyExists": "??????????????",
-      "resetEmailAlreadySent": "????????????????????????",
-      "rateLimited": "?????????????????"
+      "deepLinkSuccess": "账号验证成功。",
+      "deepLinkFailed": "处理邮件链接失败，请重试。",
+      "recoveryReady": "验证完成，你现在可以设置新密码。",
+      "invalidCredentials": "邮箱或密码错误，或邮箱尚未验证。",
+      "userAlreadyExists": "该邮箱已注册，请直接登录。",
+      "resetEmailAlreadySent": "重置邮件已发送，请检查邮箱后稍后再试。",
+      "rateLimited": "短时间内操作过于频繁，请稍后再试。"
     },
     "validation": {
-      "invalidEmail": "???????????"
+      "invalidEmail": "请输入有效的邮箱地址。"
     }
   }
 }
