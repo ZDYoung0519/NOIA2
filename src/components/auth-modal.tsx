@@ -12,7 +12,7 @@ import { LogOut, User as UserIcon } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function AuthDialog({
@@ -54,8 +54,8 @@ export function AuthDialog({
 }
 
 export function AuthModal() {
-  const { user, signOut } = useUser();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, signOut, isPremium, membershipLoading, membership } = useUser();
+  const [showAuthModal, setShowAuthModal] = useState(true);
 
   const userEmail = user?.email ?? "";
   const userName =
@@ -77,6 +77,13 @@ export function AuthModal() {
       </>
     );
   }
+  const membershipText = membershipLoading
+    ? "会员状态加载中"
+    : isPremium
+      ? membership?.premium_until
+        ? `会员到期：${new Date(membership.premium_until).toLocaleDateString("zh-CN")}`
+        : "会员到期：永久有效"
+      : "未开通会员";
 
   // 已登录状态
   return (
@@ -95,19 +102,27 @@ export function AuthModal() {
 
         <TooltipContent side="bottom" align="end" className="w-56 p-0">
           <div className="flex flex-col">
-            {/* 用户信息 */}
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium">{userName}</p>
-              <p className="text-muted-foreground text-xs">{userEmail}</p>
+            <div className="px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-medium">{userName}</p>
+
+                {isPremium && (
+                  <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-medium">
+                    PRO
+                  </span>
+                )}
+              </div>
+
+              <p className="text-muted-foreground mt-0.5 truncate text-xs">{userEmail}</p>
+
+              <p className="text-muted-foreground mt-1 text-xs">{membershipText}</p>
             </div>
 
-            {/* 分隔线 */}
             <div className="bg-border h-px" />
 
-            {/* 退出按钮 */}
             <button
               onClick={(e) => {
-                e.preventDefault(); // 阻止跳转到 /user
+                e.preventDefault();
                 signOut();
               }}
               className="flex cursor-pointer items-center px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"

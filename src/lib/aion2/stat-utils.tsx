@@ -1,3 +1,5 @@
+import { CharacterProps } from "@/types/character";
+
 // 属性名映射表
 export const STAT_NAME_MAP = {
   None: "無",
@@ -252,22 +254,12 @@ function calStatSecondList(stat: { type: string; value: number }) {
 }
 
 // 将玩家所有物品属性转换为属性条目Map, key:属性类型，value:该属性类型的所有条目列表
-export function getStatEntriesMap(
-  equipmentList: any[],
-  boardList: {
-    name: string;
-    openStatEffectList: [];
-  }[],
-  titleList: {
-    id: string;
-    equipCategory: string;
-    name: string;
-    grade: string;
-    equipStatList: { desc: string }[];
-    statList: { desc: string }[];
-  }[],
-  statList: Record<string, any>[]
-): Record<string, StatEntry[]> {
+export function getStatEntriesMap(character: CharacterProps): Record<string, StatEntry[]> {
+  const equipmentList = character.data.equipmentDetailList;
+  const daevanionDetails = character.data.daevanionDetails;
+  const titleList = character.data.title.titleList || [];
+  const statList = character.data.statList;
+
   const DEFAULT_ICON = "images/aion2/aion2.png";
 
   // 基础属性
@@ -365,8 +357,8 @@ export function getStatEntriesMap(
   });
 
   // 守护力
-  boardList.forEach((board) => {
-    (board?.openStatEffectList || []).forEach((item: any) => {
+  daevanionDetails.forEach((board) => {
+    (board?.detail?.openStatEffectList || []).forEach((item: any) => {
       const [name, value] = item.desc.split(" ");
       const unit = String(value).includes("%") ? "%" : "";
       statsEntries.push({
@@ -374,7 +366,7 @@ export function getStatEntriesMap(
         name: name,
         value: toNum(value),
         minValue: toNum(value),
-        from: `${board.name}[守护力]`,
+        from: `${board.boardName}[守护力]`,
         icon: "images/aion2/aion2.png",
         unit: unit,
       });

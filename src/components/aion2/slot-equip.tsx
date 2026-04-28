@@ -356,9 +356,8 @@ const isEffectValue = (s: string) => {
 
 export function renderEquipmentInfo({ eq }: { eq: Record<string, any> }) {
   const info = eq.detail;
-
   const soulBindRate = Number(info?.soulBindRate);
-  const magicStoneStat = info.magicStoneStat;
+  const magicStoneStat = info?.magicStoneStat;
   // const godStoneStat = info?.godStoneStat;
   return (
     <div className="rounded-lg p-2">

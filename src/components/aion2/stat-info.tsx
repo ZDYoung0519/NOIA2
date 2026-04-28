@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 import { useMemo } from "react";
 
-export function renderStatInfo({ statList }: { statList: { type: string }[] }) {
+export function renderStatInfo({ statList }: { statList: Record<string, any>[] }) {
   // 主属性类型
   const mainStatTypes = ["STR", "DEX", "INT", "CON", "AGI", "WIS"];
 

@@ -34,8 +34,9 @@ import {
   MemorySnapshot,
   SkillStats,
 } from "@/types/aion2dps";
+import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
 
-const HISTORY_DAMAGE_THRESHOLD = 2_000_000;
+const HISTORY_DAMAGE_THRESHOLD = 1_000_000;
 
 const getSkillStatsDamage = (stats?: SkillStats | null) =>
   Number(stats?.totalDamage ?? stats?.total_damage ?? 0);
@@ -1085,10 +1086,10 @@ export default function DpsPage() {
         window.clearTimeout(mainActorResetTimerRef.current);
         mainActorResetTimerRef.current = null;
       }
-
+      // 构建历史记录
       const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
-      persistHistoryRecords(historyToPersist);
 
+      // 清空状态
       await invoke("reset_dps_meter");
       lastSnapshotDamageRef.current = null;
       lastMemorySignatureRef.current = null;
@@ -1106,6 +1107,19 @@ export default function DpsPage() {
       window.requestAnimationFrame(() => {
         void resizeWindow();
       });
+
+      if (historyToPersist.length > 0) {
+        // 保存到本地
+        persistHistoryRecords(historyToPersist);
+        // 上传到数据库
+        try {
+          console.log(`开始上传 ${historyToPersist.length} 条数据`);
+          await uploadDpsDataBatch(historyToPersist);
+          console.log(`✅ 上传成功！`);
+        } catch (err) {
+          console.error("❌ 上传失败:", err);
+        }
+      }
     } catch (error) {
       console.error("reset dps meter failed:", error);
     }

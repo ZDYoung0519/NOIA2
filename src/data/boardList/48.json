@@ -1,0 +1,3386 @@
+[
+  {
+    "boardId": 48,
+    "nodeId": 480007,
+    "name": "最大生命力",
+    "row": 1,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480006,
+    "name": "",
+    "row": 1,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480005,
+    "name": "",
+    "row": 1,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480004,
+    "name": "",
+    "row": 1,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480003,
+    "name": "防禦力、最大生命力",
+    "row": 1,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480002,
+    "name": "格擋",
+    "row": 1,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480001,
+    "name": "防禦力增加",
+    "row": 1,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "防禦力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480015,
+    "name": "攻擊力增加",
+    "row": 1,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "攻擊力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480014,
+    "name": "命中",
+    "row": 1,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480013,
+    "name": "防禦力、最大生命力",
+    "row": 1,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480012,
+    "name": "格擋貫穿",
+    "row": 1,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480011,
+    "name": "命中",
+    "row": 1,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480010,
+    "name": "",
+    "row": 1,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480009,
+    "name": "最大精神力",
+    "row": 1,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480008,
+    "name": "攻擊力增加",
+    "row": 1,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "攻擊力增加 +1.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480023,
+    "name": "",
+    "row": 2,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480022,
+    "name": "格擋貫穿",
+    "row": 2,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480021,
+    "name": "防禦力",
+    "row": 2,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480020,
+    "name": "完美抵抗",
+    "row": 2,
+    "col": 5,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480019,
+    "name": "最大攻擊力",
+    "row": 2,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480018,
+    "name": "迴避",
+    "row": 2,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480017,
+    "name": "",
+    "row": 2,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480016,
+    "name": "最大精神力",
+    "row": 2,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480031,
+    "name": "格擋貫穿",
+    "row": 3,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480030,
+    "name": "最大生命力",
+    "row": 2,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480029,
+    "name": "",
+    "row": 2,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480028,
+    "name": "最大攻擊力",
+    "row": 2,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480027,
+    "name": "",
+    "row": 2,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480026,
+    "name": "格擋、迴避",
+    "row": 2,
+    "col": 11,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480025,
+    "name": "最大精神力",
+    "row": 2,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480024,
+    "name": "最大攻擊力",
+    "row": 2,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480039,
+    "name": "防禦力",
+    "row": 3,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480038,
+    "name": "",
+    "row": 3,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480037,
+    "name": "",
+    "row": 3,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480036,
+    "name": "命中",
+    "row": 3,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480035,
+    "name": "",
+    "row": 3,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480034,
+    "name": "",
+    "row": 3,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480033,
+    "name": "命中",
+    "row": 3,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480032,
+    "name": "完美",
+    "row": 3,
+    "col": 2,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480047,
+    "name": "最大精神力",
+    "row": 4,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480046,
+    "name": "",
+    "row": 4,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480045,
+    "name": "最大攻擊力、最大精神力",
+    "row": 3,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480044,
+    "name": "防禦力",
+    "row": 3,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480043,
+    "name": "迴避",
+    "row": 3,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480042,
+    "name": "完美",
+    "row": 3,
+    "col": 12,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480041,
+    "name": "最大生命力",
+    "row": 3,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480040,
+    "name": "",
+    "row": 3,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480055,
+    "name": "最大生命力",
+    "row": 4,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480054,
+    "name": "格擋貫穿、命中",
+    "row": 4,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480053,
+    "name": "格擋",
+    "row": 4,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480052,
+    "name": "最大精神力",
+    "row": 4,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480051,
+    "name": "格擋、迴避",
+    "row": 4,
+    "col": 6,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480050,
+    "name": "最大生命力",
+    "row": 4,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480049,
+    "name": "",
+    "row": 4,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480048,
+    "name": "",
+    "row": 4,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480063,
+    "name": "完美抵抗",
+    "row": 5,
+    "col": 3,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480062,
+    "name": "最大攻擊力",
+    "row": 5,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480061,
+    "name": "格擋貫穿、命中",
+    "row": 5,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480060,
+    "name": "迴避",
+    "row": 4,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480059,
+    "name": "",
+    "row": 4,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480058,
+    "name": "",
+    "row": 4,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480057,
+    "name": "",
+    "row": 4,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480056,
+    "name": "格擋貫穿",
+    "row": 4,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480071,
+    "name": "格擋、迴避",
+    "row": 5,
+    "col": 11,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480070,
+    "name": "",
+    "row": 5,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480069,
+    "name": "",
+    "row": 5,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480068,
+    "name": "",
+    "row": 5,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480067,
+    "name": "完美",
+    "row": 5,
+    "col": 7,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480066,
+    "name": "",
+    "row": 5,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480065,
+    "name": "防禦力",
+    "row": 5,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480064,
+    "name": "命中",
+    "row": 5,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480079,
+    "name": "",
+    "row": 6,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480078,
+    "name": "迴避",
+    "row": 6,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480077,
+    "name": "",
+    "row": 6,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480076,
+    "name": "迴避",
+    "row": 6,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480075,
+    "name": "完美抵抗",
+    "row": 5,
+    "col": 15,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480074,
+    "name": "格擋",
+    "row": 5,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480073,
+    "name": "最大生命力",
+    "row": 5,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480072,
+    "name": "最大攻擊力",
+    "row": 5,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480087,
+    "name": "",
+    "row": 6,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480086,
+    "name": "最大精神力",
+    "row": 6,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480085,
+    "name": "格擋貫穿",
+    "row": 6,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480084,
+    "name": "",
+    "row": 6,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480083,
+    "name": "防禦力",
+    "row": 6,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480082,
+    "name": "最大生命力",
+    "row": 6,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480081,
+    "name": "最大攻擊力、最大精神力",
+    "row": 6,
+    "col": 6,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480080,
+    "name": "格擋貫穿",
+    "row": 6,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480095,
+    "name": "防禦力、最大生命力",
+    "row": 7,
+    "col": 5,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480094,
+    "name": "最大攻擊力",
+    "row": 7,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480093,
+    "name": "格擋",
+    "row": 7,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480092,
+    "name": "最大攻擊力、最大精神力",
+    "row": 7,
+    "col": 2,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480091,
+    "name": "命中",
+    "row": 7,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480090,
+    "name": "",
+    "row": 6,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480089,
+    "name": "格擋貫穿、命中",
+    "row": 6,
+    "col": 14,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480088,
+    "name": "",
+    "row": 6,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480103,
+    "name": "完美",
+    "row": 7,
+    "col": 13,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480102,
+    "name": "",
+    "row": 7,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480101,
+    "name": "",
+    "row": 7,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480100,
+    "name": "完美抵抗",
+    "row": 7,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480099,
+    "name": "格擋",
+    "row": 7,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480098,
+    "name": "最大攻擊力",
+    "row": 7,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480097,
+    "name": "",
+    "row": 7,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480096,
+    "name": "",
+    "row": 7,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480111,
+    "name": "迴避",
+    "row": 8,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480110,
+    "name": "命中",
+    "row": 8,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480109,
+    "name": "",
+    "row": 8,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480108,
+    "name": "格擋貫穿",
+    "row": 8,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480107,
+    "name": "",
+    "row": 8,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480106,
+    "name": "防禦力增加",
+    "row": 8,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "防禦力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480105,
+    "name": "格擋貫穿",
+    "row": 7,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480104,
+    "name": "防禦力",
+    "row": 7,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480119,
+    "name": "",
+    "row": 8,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480118,
+    "name": "格擋",
+    "row": 8,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480117,
+    "name": "",
+    "row": 8,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480116,
+    "name": "迴避",
+    "row": 8,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480115,
+    "name": "命中",
+    "row": 8,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480114,
+    "name": "",
+    "row": 8,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480113,
+    "name": "尤斯迪埃 - 開始",
+    "row": 8,
+    "col": 8,
+    "grade": "None",
+    "type": "Start",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Start_Sprite.png",
+    "effectList": [
+      {
+        "desc": ""
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480112,
+    "name": "",
+    "row": 8,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480127,
+    "name": "格擋貫穿",
+    "row": 9,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480126,
+    "name": "完美抵抗",
+    "row": 9,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480125,
+    "name": "",
+    "row": 9,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480124,
+    "name": "",
+    "row": 9,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480123,
+    "name": "完美",
+    "row": 9,
+    "col": 3,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480122,
+    "name": "最大攻擊力",
+    "row": 9,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480121,
+    "name": "格擋",
+    "row": 9,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480120,
+    "name": "防禦力增加",
+    "row": 8,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "防禦力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480135,
+    "name": "迴避",
+    "row": 9,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480134,
+    "name": "防禦力、最大生命力",
+    "row": 9,
+    "col": 14,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480133,
+    "name": "格擋貫穿",
+    "row": 9,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480132,
+    "name": "防禦力",
+    "row": 9,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480131,
+    "name": "最大攻擊力、最大精神力",
+    "row": 9,
+    "col": 11,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480130,
+    "name": "",
+    "row": 9,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480129,
+    "name": "",
+    "row": 9,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480128,
+    "name": "防禦力",
+    "row": 9,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480143,
+    "name": "最大攻擊力",
+    "row": 10,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480142,
+    "name": "",
+    "row": 10,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480141,
+    "name": "格擋",
+    "row": 10,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480140,
+    "name": "最大生命力",
+    "row": 10,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480139,
+    "name": "",
+    "row": 10,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480138,
+    "name": "",
+    "row": 10,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480137,
+    "name": "格擋、迴避",
+    "row": 10,
+    "col": 2,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480136,
+    "name": "",
+    "row": 10,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480151,
+    "name": "完美抵抗",
+    "row": 11,
+    "col": 1,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480150,
+    "name": "命中",
+    "row": 10,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480149,
+    "name": "",
+    "row": 10,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480148,
+    "name": "命中",
+    "row": 10,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480147,
+    "name": "",
+    "row": 10,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480146,
+    "name": "格擋",
+    "row": 10,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480145,
+    "name": "防禦力、最大生命力",
+    "row": 10,
+    "col": 10,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480144,
+    "name": "最大精神力",
+    "row": 10,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480159,
+    "name": "完美",
+    "row": 11,
+    "col": 9,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480158,
+    "name": "",
+    "row": 11,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480157,
+    "name": "",
+    "row": 11,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480156,
+    "name": "",
+    "row": 11,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480155,
+    "name": "格擋貫穿、命中",
+    "row": 11,
+    "col": 5,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480154,
+    "name": "防禦力",
+    "row": 11,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480153,
+    "name": "最大精神力",
+    "row": 11,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480152,
+    "name": "格擋貫穿",
+    "row": 11,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480167,
+    "name": "",
+    "row": 12,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480166,
+    "name": "命中",
+    "row": 12,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480165,
+    "name": "格擋、迴避",
+    "row": 11,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480164,
+    "name": "防禦力",
+    "row": 11,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480163,
+    "name": "完美抵抗",
+    "row": 11,
+    "col": 13,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480162,
+    "name": "迴避",
+    "row": 11,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480161,
+    "name": "最大攻擊力",
+    "row": 11,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480160,
+    "name": "",
+    "row": 11,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480175,
+    "name": "格擋貫穿、命中",
+    "row": 12,
+    "col": 10,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480174,
+    "name": "最大生命力",
+    "row": 12,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480173,
+    "name": "格擋貫穿",
+    "row": 12,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480172,
+    "name": "格擋、迴避",
+    "row": 12,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      },
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480171,
+    "name": "最大精神力",
+    "row": 12,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480170,
+    "name": "格擋",
+    "row": 12,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480169,
+    "name": "",
+    "row": 12,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480168,
+    "name": "",
+    "row": 12,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480183,
+    "name": "命中",
+    "row": 13,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480182,
+    "name": "最大攻擊力",
+    "row": 13,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480181,
+    "name": "防禦力、最大生命力",
+    "row": 13,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      },
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480180,
+    "name": "",
+    "row": 12,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480179,
+    "name": "最大生命力",
+    "row": 12,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480178,
+    "name": "",
+    "row": 12,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480177,
+    "name": "",
+    "row": 12,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480176,
+    "name": "最大精神力",
+    "row": 12,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480191,
+    "name": "",
+    "row": 13,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480190,
+    "name": "迴避",
+    "row": 13,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480189,
+    "name": "",
+    "row": 13,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480188,
+    "name": "",
+    "row": 13,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480187,
+    "name": "最大攻擊力",
+    "row": 13,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480186,
+    "name": "",
+    "row": 13,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480185,
+    "name": "最大精神力",
+    "row": 13,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480184,
+    "name": "完美",
+    "row": 13,
+    "col": 4,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480199,
+    "name": "",
+    "row": 14,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480198,
+    "name": "防禦力",
+    "row": 14,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480197,
+    "name": "",
+    "row": 14,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480196,
+    "name": "最大精神力",
+    "row": 14,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480195,
+    "name": "格擋",
+    "row": 13,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480194,
+    "name": "完美",
+    "row": 13,
+    "col": 14,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480193,
+    "name": "迴避",
+    "row": 13,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480192,
+    "name": "",
+    "row": 13,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480207,
+    "name": "防禦力",
+    "row": 14,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480206,
+    "name": "完美抵抗",
+    "row": 14,
+    "col": 11,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "完美抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480205,
+    "name": "最大攻擊力",
+    "row": 14,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480204,
+    "name": "格擋",
+    "row": 14,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480203,
+    "name": "",
+    "row": 14,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480202,
+    "name": "防禦力",
+    "row": 14,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480201,
+    "name": "最大生命力",
+    "row": 14,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480200,
+    "name": "格擋貫穿、命中",
+    "row": 14,
+    "col": 5,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      },
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480215,
+    "name": "迴避",
+    "row": 15,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480214,
+    "name": "格擋",
+    "row": 15,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480213,
+    "name": "最大攻擊力、最大精神力",
+    "row": 15,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480212,
+    "name": "迴避",
+    "row": 15,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480211,
+    "name": "攻擊力增加",
+    "row": 15,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "攻擊力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480210,
+    "name": "最大生命力",
+    "row": 14,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480209,
+    "name": "",
+    "row": 14,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480208,
+    "name": "命中",
+    "row": 14,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480223,
+    "name": "最大攻擊力、最大精神力",
+    "row": 15,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "最大攻擊力 +5"
+      },
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480222,
+    "name": "",
+    "row": 15,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480221,
+    "name": "",
+    "row": 15,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480220,
+    "name": "",
+    "row": 15,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480219,
+    "name": "最大精神力",
+    "row": 15,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480218,
+    "name": "攻擊力增加",
+    "row": 15,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "攻擊力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480217,
+    "name": "最大生命力",
+    "row": 15,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480216,
+    "name": "",
+    "row": 15,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480225,
+    "name": "防禦力增加",
+    "row": 15,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "防禦力增加 +1.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 48,
+    "nodeId": 480224,
+    "name": "格擋貫穿",
+    "row": 15,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "格擋貫穿 +10"
+      }
+    ],
+    "open": 0
+  }
+]

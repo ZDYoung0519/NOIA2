@@ -1,36 +1,95 @@
-import { useState, useCallback } from "react";
-import { Camera, Loader2, LogOut, Save } from "lucide-react";
+// src/pages/UserPage.tsx
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Crown, Gift, Loader2, LogOut, Save, XCircle } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { supabase } from "@/lib/supabase";
-import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase/supabase";
+import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/use-user";
+import { UserAvatar } from "@/components/user-avatar";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
-export function UserPage() {
-  const { user, signOut, refreshUser } = useUser();
+interface ActivateResult {
+  type: "success" | "error";
+  message: string;
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "永久有效";
+
+  return new Date(value).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getDaysLeft(premiumUntil?: string | null) {
+  if (!premiumUntil) return null;
+
+  const expireDate = new Date(premiumUntil);
+  const now = new Date();
+  const diffDays = Math.ceil((expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  return Math.max(diffDays, 0);
+}
+
+export default function UserPage() {
+  const {
+    user,
+    loading,
+    signOut,
+    refreshUser,
+    membership,
+    membershipLoading,
+    refreshMembership,
+    isPremium,
+  } = useUser();
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [nickname, setNickname] = useState(user?.user_metadata?.full_name ?? "");
+  const [nickname, setNickname] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
-  // 头像 URL（本地 blob 或远程 URL）
-  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url ?? "");
+  const [keyCode, setKeyCode] = useState("");
+  const [activating, setActivating] = useState(false);
+  const [activateResult, setActivateResult] = useState<ActivateResult | null>(null);
 
   const userEmail = user?.email ?? "";
-  const userName =
-    user?.user_metadata?.full_name ??
-    user?.user_metadata?.name ??
-    userEmail?.split("@")[0] ??
-    "用户";
 
-  // ─── 使用 Tauri 文件对话框选择图片 ───
+  const userName = useMemo(() => {
+    return (
+      user?.user_metadata?.full_name ??
+      user?.user_metadata?.name ??
+      userEmail?.split("@")[0] ??
+      "用户"
+    );
+  }, [user?.user_metadata?.full_name, user?.user_metadata?.name, userEmail]);
+
+  const daysLeft = getDaysLeft(membership?.premium_until);
+
+  const membershipTimeText = isPremium
+    ? membership?.premium_until
+      ? `${daysLeft ?? 0} 天`
+      : "永久"
+    : "未激活";
+
+  useEffect(() => {
+    setNickname(user?.user_metadata?.full_name ?? "");
+    setAvatarUrl(user?.user_metadata?.avatar_url ?? "");
+  }, [user?.user_metadata?.full_name, user?.user_metadata?.avatar_url]);
+
   const handleSelectAvatar = useCallback(async () => {
+    if (!user) return;
+
     try {
       const selected = await open({
         multiple: false,
@@ -43,22 +102,21 @@ export function UserPage() {
         ],
       });
 
-      if (!selected) return; // 用户取消
+      if (!selected) return;
 
       setIsUploading(true);
 
-      // 读取本地文件为 Uint8Array
-      const fileData = await readFile(selected as string);
+      const selectedPath = selected as string;
+      const fileData = await readFile(selectedPath);
+      const fileName = selectedPath.split(/[/\\]/).pop() ?? "avatar.png";
+      const extension = fileName.split(".").pop()?.toLowerCase() || "png";
 
-      // 转换为 File 对象（用于上传）
-      const fileName = selected.split(/[/\\]/).pop() ?? "avatar.png";
       const file = new File([fileData], fileName, {
-        type: `image/${fileName.split(".").pop()}`,
+        type: `image/${extension}`,
       });
 
-      // 上传到 Supabase Storage
-      //   const filePath = `avatars/${user?.id}/${Date.now()}_${fileName}`;
-      const filePath = `${user?.id}/${Date.now()}_${fileName}`;
+      const filePath = `${user.id}/${Date.now()}_${fileName}`;
+
       const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, file, {
         cacheControl: "3600",
         upsert: true,
@@ -66,28 +124,25 @@ export function UserPage() {
 
       if (uploadError) throw uploadError;
 
-      // 获取公开 URL
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      // 更新本地预览
       setAvatarUrl(publicUrl);
-
       toast.success("头像上传成功");
     } catch (error) {
       console.error("上传头像失败:", error);
-      toast.error("上传头像失败");
+      toast.error("头像上传失败");
     } finally {
       setIsUploading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
-  // ─── 保存用户信息 ───
   const handleSave = useCallback(async () => {
     if (!user) return;
 
     setIsUpdating(true);
+
     try {
       const { error } = await supabase.auth.updateUser({
         data: {
@@ -98,116 +153,219 @@ export function UserPage() {
 
       if (error) throw error;
 
-      // 刷新用户状态
       await refreshUser();
-
-      toast.success("资料已更新");
+      toast.success("资料已保存");
     } catch (error) {
-      console.error("更新失败:", error);
-      toast.error("更新失败");
+      console.error("保存资料失败:", error);
+      toast.error("保存失败");
     } finally {
       setIsUpdating(false);
     }
-  }, [user, nickname, avatarUrl, userName, refreshUser]);
+  }, [avatarUrl, nickname, refreshUser, user, userName]);
+
+  const handleActivate = useCallback(async () => {
+    const trimmedKey = keyCode.trim().toUpperCase();
+
+    if (!trimmedKey) {
+      toast.error("请输入激活码");
+      return;
+    }
+
+    setActivating(true);
+    setActivateResult(null);
+
+    try {
+      const { data, error } = await supabase.rpc("activate_membership", {
+        p_key_code: trimmedKey,
+      });
+
+      if (error) {
+        const message = error.message || "激活失败，请稍后重试";
+        setActivateResult({ type: "error", message });
+        toast.error(message);
+        return;
+      }
+
+      if (data?.success) {
+        const message = data.message || (isPremium ? "续期成功" : "激活成功");
+        setActivateResult({ type: "success", message });
+        toast.success(message);
+        setKeyCode("");
+        await refreshMembership();
+        return;
+      }
+
+      const message = data?.error || "激活失败，请检查激活码";
+      setActivateResult({ type: "error", message });
+      toast.error(message);
+    } catch (error) {
+      console.error("激活会员失败:", error);
+      const message = "网络错误，请检查网络连接后重试";
+      setActivateResult({ type: "error", message });
+      toast.error(message);
+    } finally {
+      setActivating(false);
+    }
+  }, [isPremium, keyCode, refreshMembership]);
+
+  const handleActivateKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && keyCode.trim() && !activating) {
+      handleActivate();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-muted-foreground flex h-[50vh] items-center justify-center text-sm">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        加载用户信息中...
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground">请先登录</p>
+      <div className="text-muted-foreground flex h-[50vh] items-center justify-center text-sm">
+        请先登录
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6 p-6">
-      {/* 页面标题 */}
-      <div>
-        <h1 className="text-2xl font-bold">个人资料</h1>
-        <p className="text-muted-foreground text-sm">管理你的账户信息和头像</p>
-      </div>
+    <div className="mx-auto w-full max-w-2xl p-4 sm:p-6">
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-4">
+            <UserAvatar
+              avatarUrl={avatarUrl}
+              userName={userName}
+              isPremium={isPremium}
+              size="lg"
+              onSelect={handleSelectAvatar}
+              isUploading={isUploading}
+            />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-4">
-          {/* 头像区域 - 可点击更换 */}
-          <div className="group relative cursor-pointer" onClick={handleSelectAvatar}>
-            <Avatar className="h-20 w-20 hover:brightness-110">
-              <AvatarImage src={avatarUrl} alt={userName} />
-              <AvatarFallback className="text-2xl">
-                {userName.slice(0, 1).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="truncate text-xl">{userName}</CardTitle>
 
-            {/* Hover 遮罩 */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-              {isUploading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-              ) : (
-                <Camera className="h-6 w-6 text-white" />
-              )}
+                {isPremium && <Badge className="rounded-full">PRO</Badge>}
+
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-xs",
+                    isPremium ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {membershipTimeText}
+                </span>
+              </div>
+
+              <CardDescription className="mt-1 truncate">{userEmail}</CardDescription>
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <CardTitle>{userName}</CardTitle>
-            <p className="text-muted-foreground text-sm">{userEmail}</p>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* 昵称 */}
-          <div className="space-y-2">
-            <Label htmlFor="nickname">昵称</Label>
-            <Input
-              id="nickname"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="设置你的昵称"
-            />
-          </div>
+          <Separator />
 
-          {/* 邮箱（只读） */}
-          <div className="space-y-2">
-            <Label htmlFor="email">邮箱</Label>
-            <Input id="email" value={userEmail} disabled />
-            <p className="text-muted-foreground text-xs">邮箱地址不可修改</p>
-          </div>
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nickname">昵称</Label>
+              <Input
+                id="nickname"
+                value={nickname}
+                onChange={(event) => setNickname(event.target.value)}
+                placeholder="设置你的昵称"
+              />
+            </div>
 
-          {/* 用户 ID（只读） */}
-          <div className="space-y-2">
-            <Label htmlFor="userId">用户 ID</Label>
-            <Input id="userId" value={user.id} disabled className="font-mono text-xs" />
+            <div className="space-y-2">
+              <Label htmlFor="email">邮箱</Label>
+              <Input id="email" value={userEmail} disabled />
+            </div>
           </div>
 
           <Separator />
 
-          {/* 操作按钮 */}
-          <div className="flex gap-3">
-            <Button onClick={handleSave} disabled={isUpdating || isUploading} className="flex-1">
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  保存中...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  保存修改
-                </>
-              )}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                {isPremium ? (
+                  <Crown className="text-primary h-4 w-4" />
+                ) : (
+                  <Gift className="text-primary h-4 w-4" />
+                )}
+                会员激活码
+              </div>
+
+              <span className="text-muted-foreground text-xs">
+                {membershipLoading
+                  ? "状态加载中"
+                  : isPremium
+                    ? `有效期至 ${formatDate(membership?.premium_until)}`
+                    : "当前未激活"}
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                value={keyCode}
+                onChange={(event) => setKeyCode(event.target.value.toUpperCase())}
+                onKeyDown={handleActivateKeyDown}
+                placeholder={isPremium ? "输入激活码可继续续期" : "输入激活码"}
+                disabled={activating}
+                autoComplete="off"
+                className="font-mono tracking-wide uppercase"
+              />
+
+              <Button onClick={handleActivate} disabled={!keyCode.trim() || activating}>
+                {activating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isPremium ? (
+                  "续期"
+                ) : (
+                  "激活"
+                )}
+              </Button>
+            </div>
+
+            {activateResult && (
+              <div
+                className={cn(
+                  "flex items-center gap-2 text-sm",
+                  activateResult.type === "success" ? "text-emerald-600" : "text-destructive"
+                )}
+              >
+                {activateResult.type === "success" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+                {activateResult.message}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <Button variant="outline" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              退出登录
             </Button>
 
-            <Button variant="destructive" onClick={signOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              退出
+            <Button onClick={handleSave} disabled={isUpdating || isUploading}>
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isUpdating ? "保存中" : "保存修改"}
             </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* 创建时间 */}
-      <p className="text-muted-foreground text-center text-xs">
-        账户创建于 {new Date(user.created_at).toLocaleDateString("zh-CN")}
-      </p>
     </div>
   );
 }

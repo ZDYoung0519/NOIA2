@@ -13,11 +13,10 @@ import DpsViewPage from "./pages/dps_view";
 import CharacterPage from "./pages/character";
 import CharacterViewPage from "./pages/character_view";
 import SettingsViewPage from "./pages/settings_view";
-
+import UserPage from "./pages/user";
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { UserPage } from "./pages/user";
 
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));

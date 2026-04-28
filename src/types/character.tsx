@@ -11,42 +11,54 @@ export interface CharacterSearchResult {
 
 export interface CharacterProps {
   characterId: string;
-  serverId: number;
-  updatedAt: string;
-  profile: {
-    pcId: number;
-    gender: number;
-    raceId: number;
-    titleId: number;
-    raceName: string;
-    serverId: number;
-    className: string;
-    titleName: string;
-    genderName: string;
-    regionName: string;
-    serverName: string;
-    titleGrade: string;
-    characterId: string;
-    profileImage: string;
-    characterName: string;
-    characterLevel: string;
-  };
-  info: {
+  fetchedAt: string;
+  data: {
+    profile: Record<string, any>;
+    statList: Record<string, any>[];
     equipmentList: any[];
-    skinList: any[];
-    pet: Record<string, any>;
-    wing: Record<string, any>;
-    skillList: any[];
-    daevanion: any;
-    ranking: Record<string, any>;
-    title: Record<string, any>;
-    stat: Record<string, any>;
+    equipmentDetailList: any[];
+    daevanionDetails: {
+      boardId: number;
+      boardName: number;
+      detail: {
+        openStatEffectList: {
+          desc: string;
+        }[];
+        openSkillEffectList: {
+          desc: string;
+        }[];
+      };
+    }[];
+    activeNodes: { boardId: number; nodeId: number }[];
+    skillList: {
+      id: number;
+      name: number;
+      needLevel: number;
+      skillLevel: number;
+      icon: string;
+      category: string;
+      acquired: string;
+      equip: string;
+    }[];
+    petwing: Record<string, any>;
+    ranking: {
+      rankingList: Record<string, any>[];
+    };
+
+    title: {
+      totalCount: number;
+      ownedCount: number;
+      titleList: {
+        id: number;
+        equipCategory: string;
+        name: string;
+        grade: string;
+        totalCount: 148;
+        ownedCount: 89;
+        ownedPercent: 60;
+        statList: { desc: string }[];
+        equipStatList: { desc: string }[];
+      }[];
+    };
   };
-  processed: {
-    statEntriesMap: Record<string, any[]>;
-    parts: Array<{ name: string; value: number; details: string[] }>;
-    statsProfile: Record<string, any>;
-    finalScore: Number;
-  };
-  scores: Record<string, number>;
 }
