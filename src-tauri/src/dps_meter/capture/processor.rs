@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use lz4_flex::block::decompress;
 
@@ -45,6 +46,7 @@ pub struct StreamProcessor {
     port: String,
     mode: ProcessingMode,
     config: SharedDpsMeterConfig,
+    stalled_since: Option<Instant>,
 }
 
 impl StreamProcessor {
@@ -60,15 +62,20 @@ impl StreamProcessor {
             logger,
             port,
             mode,
-            config
+            config,
+            stalled_since: None,
         }
     }
 
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
-        let max_packet_size_threshold = {
+        let (max_packet_size_threshold, enable_resync_on_stall, resync_delay_ms) = {
             let config = self.config.read().unwrap();
-            usize::try_from(config.max_packet_size_threshold).unwrap_or(1024*8)
+            (
+                usize::try_from(config.max_packet_size_threshold).unwrap_or(1024 * 8),
+                config.enable_resync_on_stall,
+                config.resync_delay_ms,
+            )
         };
 
         while offset < buffer.len() {
@@ -125,6 +132,32 @@ impl StreamProcessor {
 
         if buffer.len() >= 4 {
             self.scan_for_embedded_048d(buffer);
+        }
+
+        if offset == 0 && !buffer.is_empty() {
+            if enable_resync_on_stall {
+                let now = Instant::now();
+                if let Some(stalled_since) = self.stalled_since {
+                    if now.duration_since(stalled_since)
+                        >= Duration::from_millis(resync_delay_ms)
+                    {
+                        self.logger.info(format!(
+                            "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
+                            self.port,
+                            resync_delay_ms,
+                            buffer.len()
+                        ));
+                        self.stalled_since = Some(now);
+                        return 1;
+                    }
+                } else {
+                    self.stalled_since = Some(now);
+                }
+            } else {
+                self.stalled_since = None;
+            }
+        } else {
+            self.stalled_since = None;
         }
 
         offset

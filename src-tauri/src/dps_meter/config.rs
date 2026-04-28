@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub const DEFAULT_DPS_SNAPSHOT_INTERVAL_MS: u64 = 500;
 pub const DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS: u64 = 1500;
 pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 4 * 1024;
+pub const DEFAULT_ENABLE_RESYNC_ON_STALL: bool = true;
+pub const DEFAULT_RESYNC_DELAY_MS: u64 = 5_000;
 pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,6 +18,10 @@ pub struct DpsMeterConfig {
     pub memory_snapshot_interval_ms: u64,
     #[serde(default = "default_max_packet_size_threshold")]
     pub max_packet_size_threshold: u64,
+    #[serde(default = "default_enable_resync_on_stall")]
+    pub enable_resync_on_stall: bool,
+    #[serde(default = "default_resync_delay_ms")]
+    pub resync_delay_ms: u64,
     #[serde(default)]
     pub boss_only: bool,
     #[serde(default)]
@@ -30,6 +36,8 @@ impl Default for DpsMeterConfig {
             dps_snapshot_interval_ms: DEFAULT_DPS_SNAPSHOT_INTERVAL_MS,
             memory_snapshot_interval_ms: DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS,
             max_packet_size_threshold: DEFAULT_MAX_PACKET_SIZE_THRESHOLD,
+            enable_resync_on_stall: DEFAULT_ENABLE_RESYNC_ON_STALL,
+            resync_delay_ms: DEFAULT_RESYNC_DELAY_MS,
             boss_only: false,
             my_muzhuang_only: false,
             output_debug_log: false,
@@ -50,6 +58,7 @@ impl DpsMeterConfig {
         self.max_packet_size_threshold = normalize_max_packet_size_threshold(
             self.max_packet_size_threshold,
         );
+        self.resync_delay_ms = self.resync_delay_ms.clamp(1_000, 30_000);
         self
     }
 }
@@ -66,6 +75,14 @@ fn default_memory_snapshot_interval_ms() -> u64 {
 
 fn default_max_packet_size_threshold() -> u64 {
     DEFAULT_MAX_PACKET_SIZE_THRESHOLD
+}
+
+fn default_enable_resync_on_stall() -> bool {
+    DEFAULT_ENABLE_RESYNC_ON_STALL
+}
+
+fn default_resync_delay_ms() -> u64 {
+    DEFAULT_RESYNC_DELAY_MS
 }
 
 fn normalize_max_packet_size_threshold(value: u64) -> u64 {

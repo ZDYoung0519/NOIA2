@@ -568,6 +568,46 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
+                  label={t("settings.dps.enableResyncOnStall")}
+                  description={t("settings.dps.enableResyncOnStallDescription")}
+                  control={
+                    <Switch
+                      checked={settings.dpsMeter.enableResyncOnStall}
+                      onCheckedChange={(checked) => {
+                        void saveSettings({
+                          dpsMeter: {
+                            enableResyncOnStall: checked,
+                          },
+                        });
+                      }}
+                    />
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.resyncDelay")}
+                  description={t("settings.dps.resyncDelayDescription")}
+                  control={
+                    <div className="flex w-44 items-center gap-2">
+                      <Input
+                        type="number"
+                        min={1000}
+                        step={500}
+                        value={settings.dpsMeter.resyncDelayMs}
+                        onChange={(event) => {
+                          const nextValue = Number(event.currentTarget.value || 5000);
+                          void saveSettings({
+                            dpsMeter: {
+                              resyncDelayMs: nextValue,
+                            },
+                          });
+                        }}
+                        disabled={!settings.dpsMeter.enableResyncOnStall}
+                      />
+                      <span className="text-muted-foreground text-xs">ms</span>
+                    </div>
+                  }
+                />
+                <SettingsRow
                   label={t("settings.dps.bossOnly")}
                   control={
                     <Switch

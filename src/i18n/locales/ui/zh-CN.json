@@ -134,7 +134,11 @@
       "outputDebugLog": "输出调试日志",
       "outputDebugLogDescription": "将额外的 DPS 捕获和调度程序调试日志写入后端日志文件。",
       "maxPacketSizeThreshold": "最大数据包阈值",
-      "maxPacketSizeThresholdDescription": "水表只会接受<该阈值的数据压缩包"
+      "maxPacketSizeThresholdDescription": "水表只会接受<该阈值的数据压缩包",
+      "enableResyncOnStall": "数据包自动重同步",
+      "enableResyncOnStallDescription": "如果数据包超过一定时间没有正确同步，自动前进一位以重同步",
+      "resyncDelay": "重同步",
+      "resyncDelayDescription": "重同步等待的时间阈值"
     },
     "supportPage": {
       "title": "支持与鸣谢",

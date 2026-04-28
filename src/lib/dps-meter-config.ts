@@ -7,6 +7,8 @@ export type DpsMeterConfig = {
   dpsSnapshotIntervalMs: number;
   memorySnapshotIntervalMs: number;
   maxPacketSizeThreshold: number;
+  enableResyncOnStall: boolean;
+  resyncDelayMs: number;
   bossOnly: boolean;
   myMuzhuangOnly: boolean;
   outputDebugLog: boolean;
@@ -16,6 +18,8 @@ export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   dpsSnapshotIntervalMs: 250,
   memorySnapshotIntervalMs: 1000,
   maxPacketSizeThreshold: 4096,
+  enableResyncOnStall: true,
+  resyncDelayMs: 5000,
   bossOnly: true,
   myMuzhuangOnly: true,
   outputDebugLog: false,
@@ -34,10 +38,16 @@ function normalizeMaxPacketSizeThreshold(value: unknown) {
 }
 
 function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfig {
+  const resyncDelayMs = Number(input?.resyncDelayMs ?? DEFAULT_DPS_METER_CONFIG.resyncDelayMs);
   return {
     ...DEFAULT_DPS_METER_CONFIG,
     ...(input ?? {}),
     maxPacketSizeThreshold: normalizeMaxPacketSizeThreshold(input?.maxPacketSizeThreshold),
+    enableResyncOnStall:
+      input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
+    resyncDelayMs: Number.isFinite(resyncDelayMs)
+      ? Math.min(30000, Math.max(1000, resyncDelayMs))
+      : DEFAULT_DPS_METER_CONFIG.resyncDelayMs,
     outputDebugLog: input?.outputDebugLog ?? DEFAULT_DPS_METER_CONFIG.outputDebugLog,
   };
 }
