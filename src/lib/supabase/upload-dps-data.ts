@@ -9,10 +9,11 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
       const mainActorName = data.combatInfos.mainActorName;
       const mainActorId = data.combatInfos.mainActorId;
       const mainActorServerId = data.combatInfos.actorInfos[String(mainActorId)].actorServerId;
+      const mainActorClass = data.combatInfos.actorInfos[String(mainActorId)].actorClass;
 
       return {
         record_id: data.id,
-        created_at: new Date().toISOString(), // 转换为 ISO 字符串
+        created_at: new Date().toISOString(),
         profile: {
           id: targetInfo.id,
           targetMobCode: targetInfo.targetMobCode,
@@ -23,6 +24,7 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
           mainActorId: mainActorId,
           mainActorName: mainActorName,
           mainActorServerId: mainActorServerId,
+          mainActorClasss: mainActorClass,
         },
         data: data,
       };

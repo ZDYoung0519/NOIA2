@@ -4,6 +4,7 @@ use crate::dps_meter::capture::accumulator::PacketAccumulator;
 use crate::dps_meter::capture::processor::{ProcessingMode, StreamProcessor};
 use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::dps_meter::config::{SharedDpsMeterConfig};
 
 pub struct StreamAssembler {
     accumulator: PacketAccumulator,
@@ -16,10 +17,11 @@ impl StreamAssembler {
         logger: Arc<DpsLogger>,
         port: String,
         mode: ProcessingMode,
+        config:  SharedDpsMeterConfig,
     ) -> Self {
         Self {
             accumulator: PacketAccumulator::new(),
-            processor: StreamProcessor::new(data_storage, logger, port, mode),
+            processor: StreamProcessor::new(data_storage, logger, port, mode, config),
         }
     }
 

@@ -11,6 +11,7 @@ use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::capture::processor::ProcessingMode;
+use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
@@ -49,6 +50,7 @@ impl RecentPortWindow {
 
 struct DispatcherState {
     data_storage: Arc<DataStorage>,
+    config: SharedDpsMeterConfig,
     unified: StreamAssembler,
     unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
@@ -76,20 +78,27 @@ impl TrackedAssembler {
 }
 
 impl DispatcherState {
-    fn new(data_storage: Arc<DataStorage>, logger: Arc<DpsLogger>) -> Self {
+    fn new(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<DpsLogger>,
+        config: SharedDpsMeterConfig,
+    ) -> Self {
         Self {
             data_storage: Arc::clone(&data_storage),
+            config: Arc::clone(&config),
             unified: StreamAssembler::new(
                 Arc::clone(&data_storage),
                 Arc::clone(&logger),
                 "unified".to_string(),
                 ProcessingMode::MetadataOnly,
+                Arc::clone(&config),
             ),
             unified1: StreamAssembler::new(
                 data_storage,
                 logger,
                 "unified1".to_string(),
                 ProcessingMode::MetadataOnly,
+                config,
             ),
             assemblers: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
@@ -128,10 +137,12 @@ impl CaptureDispatcher {
         data_storage: Arc<DataStorage>,
         logger: Arc<DpsLogger>,
         ping_tracker: Arc<PingTracker>,
+        config: SharedDpsMeterConfig,
     ) -> Self {
         let state = Arc::new(Mutex::new(DispatcherState::new(
             data_storage,
             Arc::clone(&logger),
+            Arc::clone(&config),
         )));
 
         Self {
@@ -209,12 +220,14 @@ impl CaptureDispatcher {
                         *combat_port.write().unwrap() = Some(locked.clone());
                         let data_storage = Arc::clone(&state.data_storage);
                         let logger = Arc::clone(&logger);
+                        let config = Arc::clone(&state.config);
                         state.assemblers.entry(locked.clone()).or_insert_with(|| {
                             TrackedAssembler::new(StreamAssembler::new(
                                 data_storage,
                                 logger,
                                 locked,
                                 ProcessingMode::Full,
+                                Arc::clone(&config),
                             ))
                         });
                     }
@@ -227,12 +240,14 @@ impl CaptureDispatcher {
                 if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
+                    let config = Arc::clone(&state.config);
                     let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
                         TrackedAssembler::new(StreamAssembler::new(
                             data_storage,
                             assembler_logger,
                             key.clone(),
                             ProcessingMode::Full,
+                            Arc::clone(&config),
                         ))
                     });
                     let _ = assembler.assembler.process_chunk(&packet.data);

@@ -1,20 +1,46 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export const DPS_METER_CONFIG_KEY = "dps-meter-config";
+export const MAX_PACKET_SIZE_THRESHOLD_OPTIONS = [2048, 4096, 8192, 16384] as const;
 
 export type DpsMeterConfig = {
-  dpsSnapshotIntervalMs: number; // dps 推送的延迟间隔
-  memorySnapshotIntervalMs: number; // 内存使用情况推送的延迟间隔
-  bossOnly: boolean; // 只显示boss
-  myMuzhuangOnly: boolean; // 只显示我的木桩
+  dpsSnapshotIntervalMs: number;
+  memorySnapshotIntervalMs: number;
+  maxPacketSizeThreshold: number;
+  bossOnly: boolean;
+  myMuzhuangOnly: boolean;
+  outputDebugLog: boolean;
 };
 
 export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   dpsSnapshotIntervalMs: 250,
   memorySnapshotIntervalMs: 1000,
+  maxPacketSizeThreshold: 4096,
   bossOnly: true,
   myMuzhuangOnly: true,
+  outputDebugLog: false,
 };
+
+function normalizeMaxPacketSizeThreshold(value: unknown) {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (
+    MAX_PACKET_SIZE_THRESHOLD_OPTIONS.includes(
+      numeric as (typeof MAX_PACKET_SIZE_THRESHOLD_OPTIONS)[number]
+    )
+  ) {
+    return numeric;
+  }
+  return DEFAULT_DPS_METER_CONFIG.maxPacketSizeThreshold;
+}
+
+function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfig {
+  return {
+    ...DEFAULT_DPS_METER_CONFIG,
+    ...(input ?? {}),
+    maxPacketSizeThreshold: normalizeMaxPacketSizeThreshold(input?.maxPacketSizeThreshold),
+    outputDebugLog: input?.outputDebugLog ?? DEFAULT_DPS_METER_CONFIG.outputDebugLog,
+  };
+}
 
 export function loadDpsMeterConfig(): DpsMeterConfig {
   try {
@@ -23,21 +49,19 @@ export function loadDpsMeterConfig(): DpsMeterConfig {
       return DEFAULT_DPS_METER_CONFIG;
     }
 
-    return {
-      ...DEFAULT_DPS_METER_CONFIG,
-      ...JSON.parse(raw),
-    };
+    return normalizeDpsMeterConfig(JSON.parse(raw) as Partial<DpsMeterConfig>);
   } catch {
     return DEFAULT_DPS_METER_CONFIG;
   }
 }
 
 export async function syncDpsMeterConfigToBackend(config?: DpsMeterConfig) {
-  const resolved = config ?? loadDpsMeterConfig();
+  const resolved = normalizeDpsMeterConfig(config ?? loadDpsMeterConfig());
   return invoke<DpsMeterConfig>("apply_dps_meter_config", { config: resolved });
 }
 
 export async function saveDpsMeterConfig(config: DpsMeterConfig) {
-  localStorage.setItem(DPS_METER_CONFIG_KEY, JSON.stringify(config));
-  return syncDpsMeterConfigToBackend(config);
+  const resolved = normalizeDpsMeterConfig(config);
+  localStorage.setItem(DPS_METER_CONFIG_KEY, JSON.stringify(resolved));
+  return syncDpsMeterConfigToBackend(resolved);
 }

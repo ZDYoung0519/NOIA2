@@ -132,7 +132,9 @@
       "otherPlayerBar": "其他玩家栏",
       "barOpacity": "条形不透明度",
       "outputDebugLog": "输出调试日志",
-      "outputDebugLogDescription": "将额外的 DPS 捕获和调度程序调试日志写入后端日志文件。"
+      "outputDebugLogDescription": "将额外的 DPS 捕获和调度程序调试日志写入后端日志文件。",
+      "maxPacketSizeThreshold": "最大数据包阈值",
+      "maxPacketSizeThresholdDescription": "水表只会接受<该阈值的数据压缩包"
     },
     "supportPage": {
       "title": "支持与鸣谢",
@@ -190,7 +192,7 @@
     }
   },
   "dps": {
-    "title": "DPS 计",
+    "title": "DPS Meter",
     "target": {
       "none": "无目标",
       "boss": "老板目标",
@@ -309,6 +311,93 @@
       "packageVersionInvalid": "package.json 版本丢失或无效",
       "tauriVersionInvalid": "src-tauri/tauri.conf.json 版本丢失或无效",
       "invalidLang": "--lang 值无效。使用 en、zh-CN、zh-TW、ko 或 zh。"
+    }
+  },
+  "auth": {
+    "title": "登录",
+    "userFallback": "用户",
+    "signOut": "退出登录",
+    "membership": {
+      "loading": "正在加载会员状态",
+      "expiresAt": "会员到期时间：{{date}}",
+      "permanent": "会员到期时间：永久",
+      "inactive": "会员未激活"
+    },
+    "signIn": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请输入密码",
+      "button": "登录",
+      "loadingButton": "登录中...",
+      "socialProviderText": "使用 {{provider}} 登录",
+      "linkText": "?????????",
+      "description": "???????????????????"
+    },
+    "signUp": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "请重复输入密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请设置密码",
+      "button": "注册",
+      "loadingButton": "注册中...",
+      "socialProviderText": "使用 {{provider}} 注册",
+      "linkText": "没有账号？去注册",
+      "confirmationText": "???????????????????????",
+      "description": "?????????????????????"
+    },
+    "forgottenPassword": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "新密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送重置邮件",
+      "loadingButton": "发送中...",
+      "linkText": "忘记密码？",
+      "confirmationText": "????????????????????",
+      "description": "??????????????????????",
+      "backToSignIn": "????"
+    },
+    "magicLink": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送魔法链接",
+      "loadingButton": "发送中...",
+      "linkText": "使用魔法链接登录",
+      "confirmationText": "请检查邮箱中的登录链接"
+    },
+    "updatePassword": {
+      "passwordLabel": "???",
+      "passwordPlaceholder": "??????",
+      "button": "?????",
+      "loadingButton": "???...",
+      "confirmationText": "????????",
+      "description": "????????????????",
+      "confirmPasswordLabel": "?????",
+      "confirmPasswordPlaceholder": "????????"
+    },
+    "verifyOtp": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "phoneLabel": "手机号",
+      "phonePlaceholder": "请输入手机号",
+      "tokenLabel": "验证码",
+      "tokenPlaceholder": "请输入验证码",
+      "button": "验证",
+      "loadingButton": "验证中..."
+    },
+    "feedback": {
+      "deepLinkSuccess": "????????",
+      "deepLinkFailed": "???????????????",
+      "recoveryReady": "????????????????",
+      "invalidCredentials": "????????????????????",
+      "userAlreadyExists": "??????????????",
+      "resetEmailAlreadySent": "????????????????????????",
+      "rateLimited": "?????????????????"
+    },
+    "validation": {
+      "invalidEmail": "???????????"
     }
   }
 }

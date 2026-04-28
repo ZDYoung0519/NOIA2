@@ -3,8 +3,10 @@ use std::sync::Arc;
 use lz4_flex::block::decompress;
 
 use crate::dps_meter::logging::DpsLogger;
+use crate::dps_meter::config::{SharedDpsMeterConfig};
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProcessingMode {
@@ -42,6 +44,7 @@ pub struct StreamProcessor {
     logger: Arc<DpsLogger>,
     port: String,
     mode: ProcessingMode,
+    config: SharedDpsMeterConfig,
 }
 
 impl StreamProcessor {
@@ -50,17 +53,23 @@ impl StreamProcessor {
         logger: Arc<DpsLogger>,
         port: String,
         mode: ProcessingMode,
+        config: SharedDpsMeterConfig
     ) -> Self {
         Self {
             data_storage,
             logger,
             port,
             mode,
+            config
         }
     }
 
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
+        let max_packet_size_threshold = {
+            let config = self.config.read().unwrap();
+            usize::try_from(config.max_packet_size_threshold).unwrap_or(1024*8)
+        };
 
         while offset < buffer.len() {
             if buffer[offset] == 0x00 {
@@ -89,8 +98,7 @@ impl StreamProcessor {
             }
 
             if offset + total_packet_bytes > buffer.len() {
-                if total_packet_bytes > 16_384 / 2{
-                // if total_packet_bytes > 16_384 {
+                if total_packet_bytes > max_packet_size_threshold {
                     offset += 1;
                     continue;
                 }

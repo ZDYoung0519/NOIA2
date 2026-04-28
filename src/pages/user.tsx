@@ -296,7 +296,7 @@ export default function UserPage() {
                 ) : (
                   <Gift className="text-primary h-4 w-4" />
                 )}
-                会员激活码
+                订阅计划
               </div>
 
               <span className="text-muted-foreground text-xs">

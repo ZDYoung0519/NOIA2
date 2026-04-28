@@ -4,6 +4,9 @@ mod plugins;
 use tauri::Manager;
 use tauri_plugin_window_state::StateFlags;
 
+#[cfg(any(windows, target_os = "linux"))]
+use tauri_plugin_deep_link::DeepLinkExt;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -21,6 +24,7 @@ fn update_tray_menu(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -55,6 +59,11 @@ pub fn run() {
             plugins::window_tracking::get_window_size
         ])
         .setup(|app| {
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                app.deep_link().register_all()?;
+            }
+
             // Temporary delay to preview the startup loading screen.
             // thread::sleep(Duration::from_secs(5));
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());

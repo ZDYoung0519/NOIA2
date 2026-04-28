@@ -11,6 +11,13 @@
     "frontendDist": "../dist"
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "noia2"
+        ]
+      }
+    },
     "updater": {
       "pubkey": "__TAURI_UPDATER_PUBKEY__",
       "endpoints": [

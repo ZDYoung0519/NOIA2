@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import "./index.css";
 import "./i18n";
+import { AuthDeepLinkHandler } from "./components/auth-deep-link-handler";
 import { MainShell } from "./components/main-shell";
 import { AppSettingsProvider } from "./hooks/use-app-settings";
 import { TooltipProvider } from "./components/ui/tooltip";
@@ -75,6 +76,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <AppSettingsProvider>
       <TooltipProvider>
         <BrowserRouter>
+          <AuthDeepLinkHandler />
           <App />
         </BrowserRouter>
       </TooltipProvider>

@@ -124,7 +124,9 @@
       "panelOpacity": "Panel Opacity",
       "mainPlayerBar": "Main Player Bar",
       "otherPlayerBar": "Other Player Bar",
-      "barOpacity": "Bar Opacity"
+      "barOpacity": "Bar Opacity",
+      "maxPacketSizeThreshold": "最大数据包阈值",
+      "maxPacketSizeThresholdDescription": "水表只会接受<该阈值的数据压缩包"
     },
     "general": {
       "title": "General",

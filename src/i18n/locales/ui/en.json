@@ -114,6 +114,8 @@
       "snapshotIntervalDescription": "How often the backend sends DPS snapshots to the frontend, in milliseconds.",
       "memorySnapshotInterval": "Memory Snapshot Interval",
       "memorySnapshotIntervalDescription": "How often the backend sends memory, CPU, ping, and buffer diagnostics to the frontend, in milliseconds.",
+      "maxPacketSizeThreshold": "Max Packet Size Threshold",
+      "maxPacketSizeThresholdDescription": "Limit used by backend packet handling.",
       "bossOnly": "Boss Only",
       "bossOnlyDescription": "Only count damage against targets that are recognized as bosses.",
       "myMuzhuangOnly": "My Training Dummy Only",
@@ -308,6 +310,93 @@
       "packageVersionInvalid": "package.json version is missing or invalid",
       "tauriVersionInvalid": "src-tauri/tauri.conf.json version is missing or invalid",
       "invalidLang": "Invalid --lang value. Use en, zh-CN, zh-TW, ko, or zh."
+    }
+  },
+  "auth": {
+    "title": "Sign In",
+    "userFallback": "User",
+    "signOut": "Sign Out",
+    "membership": {
+      "loading": "Loading membership status",
+      "expiresAt": "Membership expires: {{date}}",
+      "permanent": "Membership expires: Permanent",
+      "inactive": "Membership not activated"
+    },
+    "signIn": {
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Enter your password",
+      "button": "Sign In",
+      "loadingButton": "Signing in...",
+      "socialProviderText": "Sign in with {{provider}}",
+      "linkText": "Already have an account? Sign in",
+      "description": "Sign in to your account to sync your profile and membership status."
+    },
+    "signUp": {
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Enter your password again",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Create a password",
+      "button": "Sign Up",
+      "loadingButton": "Creating account...",
+      "socialProviderText": "Sign up with {{provider}}",
+      "linkText": "Don't have an account? Sign up",
+      "confirmationText": "Registration successful. Check your email and open the link on this device to complete verification.",
+      "description": "Create a new account to unlock cloud-based features later."
+    },
+    "forgottenPassword": {
+      "emailLabel": "Email address",
+      "passwordLabel": "New password",
+      "emailPlaceholder": "Enter your email address",
+      "button": "Send Reset Instructions",
+      "loadingButton": "Sending reset instructions...",
+      "linkText": "Forgot your password?",
+      "confirmationText": "Check your email and open the reset link on this device.",
+      "description": "Enter your email address and we will send you a password reset link.",
+      "backToSignIn": "Back to sign in"
+    },
+    "magicLink": {
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email address",
+      "button": "Send Magic Link",
+      "loadingButton": "Sending magic link...",
+      "linkText": "Send a magic link instead",
+      "confirmationText": "Check your email for the magic link."
+    },
+    "updatePassword": {
+      "passwordLabel": "New password",
+      "passwordPlaceholder": "Enter your new password",
+      "button": "Set New Password",
+      "loadingButton": "Updating password...",
+      "confirmationText": "Your password has been updated successfully.",
+      "description": "Set a new password to complete account recovery.",
+      "confirmPasswordLabel": "Confirm new password",
+      "confirmPasswordPlaceholder": "Enter your new password again"
+    },
+    "verifyOtp": {
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email address",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "Enter your phone number",
+      "tokenLabel": "Verification code",
+      "tokenPlaceholder": "Enter the verification code",
+      "button": "Verify Code",
+      "loadingButton": "Verifying code..."
+    },
+    "feedback": {
+      "deepLinkSuccess": "Account verification completed successfully.",
+      "deepLinkFailed": "Failed to process the email link. Please try again.",
+      "recoveryReady": "Verification complete. You can now set a new password.",
+      "invalidCredentials": "The email or password is incorrect, or the email has not been verified yet.",
+      "userAlreadyExists": "This email is already registered. Please sign in directly.",
+      "resetEmailAlreadySent": "A reset email was already sent recently. Please check your inbox and try again later.",
+      "rateLimited": "Too many attempts in a short time. Please wait a moment and try again."
+    },
+    "validation": {
+      "invalidEmail": "Please enter a valid email address."
     }
   }
 }

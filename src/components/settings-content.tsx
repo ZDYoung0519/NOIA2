@@ -33,8 +33,16 @@ import { Switch } from "@/components/ui/switch";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { useManualUpdateCheck } from "@/components/updater-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary";
 import { cn } from "@/lib/utils";
+import { MAX_PACKET_SIZE_THRESHOLD_OPTIONS } from "@/lib/dps-meter-config";
 import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 
 type SettingSection = "general" | "dps" | "support" | "about";
@@ -489,6 +497,7 @@ export function SettingsContent() {
               <SettingsGroup title={t("settings.dps.runtimeGroup")}>
                 <SettingsRow
                   label={t("settings.dps.snapshotInterval")}
+                  description={t("settings.dps.snapshotIntervalDescription")}
                   control={
                     <div className="flex w-44 items-center gap-2">
                       <Input
@@ -512,6 +521,7 @@ export function SettingsContent() {
 
                 <SettingsRow
                   label={t("settings.dps.memorySnapshotInterval")}
+                  description={t("settings.dps.memorySnapshotIntervalDescription")}
                   control={
                     <div className="flex w-44 items-center gap-2">
                       <Input
@@ -530,6 +540,33 @@ export function SettingsContent() {
                       />
                       <span className="text-muted-foreground text-xs">ms</span>
                     </div>
+                  }
+                />
+                <SettingsRow
+                  label={t("settings.dps.maxPacketSizeThreshold")}
+                  description={t("settings.dps.maxPacketSizeThresholdDescription")}
+                  control={
+                    <Select
+                      value={String(settings.dpsMeter.maxPacketSizeThreshold)}
+                      onValueChange={(value) => {
+                        void saveSettings({
+                          dpsMeter: {
+                            maxPacketSizeThreshold: Number(value),
+                          },
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-44">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MAX_PACKET_SIZE_THRESHOLD_OPTIONS.map((value) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {value / 1024} KB
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   }
                 />
                 <SettingsRow

@@ -54,6 +54,7 @@ impl DpsMeter {
             Arc::clone(&data_storage),
             Arc::clone(&logger),
             Arc::clone(&ping_tracker),
+            Arc::clone(&config),
         );
 
         Self {
@@ -80,9 +81,10 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_output_debug_log(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms boss_only={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} boss_only={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
+            config.max_packet_size_threshold,
             config.boss_only,
             config.my_muzhuang_only,
             config.output_debug_log

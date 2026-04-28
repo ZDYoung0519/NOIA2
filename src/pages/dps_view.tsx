@@ -1,110 +1,365 @@
-import { Activity, History, MonitorSmartphone, Waves } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { KdaRingCard, WinRateRingCard } from "@/components/ring-card";
+import { supabase } from "@/lib/supabase/supabase";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createWindow } from "@/lib/window";
+type TargetMobStat = {
+  mob_code: string;
+  target_name: string;
+  battle_count: number;
+};
 
-const overviewCards = [
-  {
-    title: "悬浮浮窗",
-    description: "主战斗视图保持透明背景和紧凑布局，适合在游戏过程中常驻显示。",
-    icon: MonitorSmartphone,
-  },
-  {
-    title: "实时诊断",
-    description: "Ping、CPU、RAM、日志与抓包状态会持续在浮窗链路中更新。",
-    icon: Activity,
-  },
-  {
-    title: "历史记录",
-    description: "重置前按目标保存历史快照，后续可以继续扩展过滤与回放能力。",
-    icon: History,
-  },
+type StatByClassMobRow = {
+  record_id: string;
+  data: any;
+  total_count: number;
+};
+
+type BattleRankItem = {
+  recordId: string;
+  actorName: string;
+  actorClass: string;
+  totalDamage: number;
+  fightSeconds: number;
+  dps: number;
+};
+
+const PAGE_SIZE = 20;
+
+const ACTOR_CLASSES = [
+  "ALL",
+  "GLADIATOR",
+  "TEMPLAR",
+  "ASSASSIN",
+  "RANGER",
+  "SORCERER",
+  "ELEMENTALIST",
+  "CLERIC",
+  "CHANTER",
 ];
 
+const ACTOR_CLASS_NAME_MAP: Record<string, string> = {
+  ALL: "全部",
+  GLADIATOR: "剑星",
+  TEMPLAR: "守护星",
+  ASSASSIN: "杀星",
+  RANGER: "弓星",
+  SORCERER: "魔道星",
+  ELEMENTALIST: "精灵星",
+  CLERIC: "治愈星",
+  CHANTER: "护法星",
+};
+
+function getClassName(actorClass: string) {
+  return ACTOR_CLASS_NAME_MAP[actorClass] ?? actorClass;
+}
+
+function getMainActorId(data: any) {
+  return String(data?.combatInfos?.mainActorId ?? "");
+}
+
+function getMainActorInfo(data: any, actorId: string) {
+  return data?.combatInfos?.actorInfos?.[actorId] ?? null;
+}
+
+function getTargetInfo(data: any) {
+  const targetId = String(data?.targetId ?? "");
+  return data?.combatInfos?.targetInfos?.[targetId] ?? null;
+}
+
+function getTotalDamage(data: any, actorId: string) {
+  const stat = data?.thisTargetAllPlayerStats?.[actorId];
+
+  if (!stat) return 0;
+  if (typeof stat === "number") return stat;
+
+  return Number(stat.total_damage ?? stat.max_damage ?? 0);
+}
+
+function getFightSeconds(data: any, actorId: string) {
+  const targetInfo = getTargetInfo(data);
+
+  const start = Number(targetInfo?.targetStartTime?.[actorId] ?? 0);
+  const end = Number(targetInfo?.targetLastTime?.[actorId] ?? 0);
+
+  return start > 0 && end > start ? end - start : 0;
+}
+
+function buildBattleRanks(rows: StatByClassMobRow[]): BattleRankItem[] {
+  return rows
+    .map((row) => {
+      const data = row.data;
+      const actorId = getMainActorId(data);
+      const actorInfo = getMainActorInfo(data, actorId);
+
+      const totalDamage = getTotalDamage(data, actorId);
+      const fightSeconds = getFightSeconds(data, actorId);
+      const dps = fightSeconds > 0 ? totalDamage / fightSeconds : 0;
+
+      return {
+        recordId: row.record_id,
+        actorName: actorInfo?.actorName ?? data?.combatInfos?.mainActorName ?? "-",
+        actorClass: actorInfo?.actorClass ?? "-",
+        totalDamage,
+        fightSeconds,
+        dps,
+      };
+    })
+    .filter((item) => item.totalDamage > 0 && item.fightSeconds > 0)
+    .sort((a, b) => b.dps - a.dps);
+}
+
 export default function DpsViewPage() {
-  const handleOpenDps = async () => {
-    await createWindow("dps", {
-      title: "DPS Meter",
-      url: "/dps",
-      width: 200,
-      height: 50,
-      resizable: true,
-      maximizable: false,
-      minimizable: false,
-      decorations: false,
-      transparent: true,
-      backgroundColor: [0, 0, 0, 0],
-      shadow: false,
-      alwaysOnTop: true,
-    });
-  };
+  const [stats, setStats] = useState<TargetMobStat[]>([]);
+  const [selectedMob, setSelectedMob] = useState<TargetMobStat | null>(null);
+  const [selectedClass, setSelectedClass] = useState("ALL");
+  const [battleRanks, setBattleRanks] = useState<BattleRankItem[]>([]);
+
+  const [page, setPage] = useState(1);
+  const [totalRankCount, setTotalRankCount] = useState(0);
+
+  const [loading, setLoading] = useState(true);
+  const [rankLoading, setRankLoading] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [rankErrorMessage, setRankErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadTargetStats() {
+      try {
+        setLoading(true);
+        setErrorMessage(null);
+
+        const { data, error } = await supabase.rpc("get_dps_target_mob_stats");
+        if (error) throw error;
+
+        const list = (data ?? []) as TargetMobStat[];
+        setStats(list);
+
+        if (list.length > 0) {
+          setSelectedMob(list[0]);
+        }
+      } catch (error) {
+        console.error("获取目标统计失败:", error);
+        setErrorMessage(error instanceof Error ? error.message : "获取目标统计失败");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTargetStats();
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedMob, selectedClass]);
+
+  useEffect(() => {
+    if (!selectedMob?.mob_code || !selectedClass) return;
+
+    async function loadBattleRanks() {
+      try {
+        setRankLoading(true);
+        setRankErrorMessage(null);
+
+        const { data, error } = await supabase.rpc("get_stat_by_class_mob", {
+          p_mob_code: selectedMob?.mob_code,
+          p_actor_class: selectedClass,
+          p_limit: PAGE_SIZE,
+          p_offset: (page - 1) * PAGE_SIZE,
+        });
+
+        if (error) throw error;
+
+        const rows = (data ?? []) as StatByClassMobRow[];
+
+        setBattleRanks(buildBattleRanks(rows));
+        setTotalRankCount(Number(rows[0]?.total_count ?? 0));
+      } catch (error) {
+        console.error("获取排行失败:", error);
+        setBattleRanks([]);
+        setTotalRankCount(0);
+        setRankErrorMessage(error instanceof Error ? error.message : "获取排行失败");
+      } finally {
+        setRankLoading(false);
+      }
+    }
+
+    loadBattleRanks();
+  }, [selectedMob, selectedClass, page]);
+
+  const totalCount = useMemo(() => {
+    return stats.reduce((sum, item) => sum + Number(item.battle_count), 0);
+  }, [stats]);
+
+  const selectedClassAvgDps = useMemo(() => {
+    const totalDamage = battleRanks.reduce((sum, item) => sum + item.totalDamage, 0);
+    const totalFightSeconds = battleRanks.reduce((sum, item) => sum + item.fightSeconds, 0);
+
+    return totalFightSeconds > 0 ? totalDamage / totalFightSeconds : 0;
+  }, [battleRanks]);
+
+  const totalPages = Math.max(1, Math.ceil(totalRankCount / PAGE_SIZE));
 
   return (
-    <div className="flex min-h-full flex-col gap-6 p-6">
-      <Card>
-        <CardHeader className="gap-4">
-          <div className="bg-primary/10 text-primary inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase">
-            <Waves className="h-3.5 w-3.5" />
-            Dps View
-          </div>
-          <div className="space-y-2">
-            <CardTitle className="text-4xl tracking-tight">DPS 水表工作区</CardTitle>
-            <CardDescription className="max-w-2xl text-sm leading-6">
-              从主窗口进入你的悬浮水表体系。这里更像控制面板，真正的实时战斗内容仍然在独立的透明浮窗中显示。
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between gap-6">
-          <div className="text-muted-foreground max-w-2xl text-sm leading-6">
-            你可以从这里快速打开悬浮水表，并在未来继续扩展更完整的实时状态概览、战斗历史入口和目标筛选能力。
-          </div>
-          <Button onClick={() => void handleOpenDps()}>启动 DPS 浮窗</Button>
-        </CardContent>
-      </Card>
+    <section className="w-full space-y-6 px-6 py-4 text-white">
+      {errorMessage ? (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {errorMessage}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 md:justify-start">
+          <KdaRingCard label="全部战斗" value={loading ? "..." : String(totalCount)} />
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        {overviewCards.map(({ title, description, icon: Icon }) => (
-          <Card key={title}>
-            <CardHeader>
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                <Icon className="h-5 w-5" />
+          {loading ? (
+            <WinRateRingCard label="加载中" value="..." subValue="请稍候" />
+          ) : stats.length > 0 ? (
+            stats.map((item) => {
+              const count = Number(item.battle_count);
+              const percent = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+              const active = selectedMob?.mob_code === item.mob_code;
+
+              return (
+                <button
+                  key={item.mob_code}
+                  type="button"
+                  onClick={() => setSelectedMob(item)}
+                  className={[
+                    "rounded-full transition",
+                    active
+                      ? "scale-105 ring-2 ring-[#d9a73a] ring-offset-2 ring-offset-[#171717]"
+                      : "hover:scale-105",
+                  ].join(" ")}
+                >
+                  <WinRateRingCard
+                    label={item.target_name}
+                    value={`${percent}%`}
+                    subValue={`${count}场`}
+                  />
+                </button>
+              );
+            })
+          ) : (
+            <WinRateRingCard label="暂无数据" value="0%" subValue="0场" />
+          )}
+        </div>
+      )}
+
+      <div className="rounded-xl border border-white/10 p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">战斗秒伤排行</h2>
+            <p className="mt-1 text-sm text-white/50">
+              当前目标：{selectedMob?.target_name ?? "-"} / 职业：
+              {getClassName(selectedClass)}
+            </p>
+
+            <div className="mt-3 inline-flex items-baseline gap-2 rounded-lg border border-[#d9a73a]/30 bg-[#d9a73a]/10 px-3 py-2">
+              <span className="text-sm text-white/50">当前页平均秒伤</span>
+              <span className="text-xl font-black text-[#d9a73a]">
+                {rankLoading ? "..." : Math.round(selectedClassAvgDps).toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {ACTOR_CLASSES.map((actorClass) => {
+              const active = selectedClass === actorClass;
+              return (
+                <button
+                  key={actorClass}
+                  type="button"
+                  onClick={() => setSelectedClass(actorClass)}
+                  className={[
+                    "rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
+                    active
+                      ? "border-[#d9a73a] bg-[#d9a73a]/15 text-[#d9a73a]"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
+                  ].join(" ")}
+                >
+                  {getClassName(actorClass)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {rankErrorMessage ? (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {rankErrorMessage}
+          </div>
+        ) : rankLoading ? (
+          <div className="py-8 text-center text-sm text-white/50">排行加载中...</div>
+        ) : battleRanks.length > 0 ? (
+          <>
+            <div className="overflow-hidden rounded-lg border border-white/10">
+              <table className="w-full border-collapse text-sm">
+                <thead className="bg-white/5 text-white/60">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">排名</th>
+                    <th className="px-4 py-3 text-left font-medium">玩家</th>
+                    <th className="px-4 py-3 text-left font-medium">职业</th>
+                    <th className="px-4 py-3 text-right font-medium">总伤害</th>
+                    <th className="px-4 py-3 text-right font-medium">战斗时长</th>
+                    <th className="px-4 py-3 text-right font-medium">秒伤</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {battleRanks.map((item, index) => (
+                    <tr
+                      key={item.recordId}
+                      className="border-t border-white/10 hover:bg-white/[0.03]"
+                    >
+                      <td className="px-4 py-3 text-white/70">
+                        #{(page - 1) * PAGE_SIZE + index + 1}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-white">{item.actorName}</td>
+                      <td className="px-4 py-3 text-white/60">{getClassName(item.actorClass)}</td>
+                      <td className="px-4 py-3 text-right text-white/80">
+                        {Math.round(item.totalDamage).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right text-white/60">
+                        {item.fightSeconds.toFixed(1)} 秒
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
+                        {Math.round(item.dps).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-white/60">
+              <div>
+                共 {totalRankCount.toLocaleString()} 条，当前第 {page} / {totalPages} 页
               </div>
-              <CardTitle className="text-xl">{title}</CardTitle>
-              <CardDescription className="leading-6">{description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>视图定位</CardTitle>
-            <CardDescription>主工作区负责入口与总览，浮窗负责细节与实时数据。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="bg-muted/50 rounded-xl border p-4">
-              悬浮水表窗口仍然保持当前的自定义标题栏、日志按钮、历史视图和玩家详情联动。
-            </div>
-            <div className="bg-muted/50 rounded-xl border p-4">
-              主窗口页更适合放置启动入口、总览指标和后续的副本/角色分析摘要。
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1 || rankLoading}
+                  onClick={() => setPage((old) => Math.max(1, old - 1))}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  上一页
+                </button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>已接通链路</CardTitle>
-            <CardDescription>当前这部分适合作为水表功能的主控入口。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="bg-muted/50 rounded-xl border p-4">抓包、分发、聚合和实时推送已可用。</div>
-            <div className="bg-muted/50 rounded-xl border p-4">玩家详情和日志窗口支持跟随浮窗。</div>
-            <div className="bg-muted/50 rounded-xl border p-4">历史记录已支持按目标保存和查看。</div>
-          </CardContent>
-        </Card>
+                <button
+                  type="button"
+                  disabled={page >= totalPages || rankLoading}
+                  onClick={() => setPage((old) => Math.min(totalPages, old + 1))}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="py-8 text-center text-sm text-white/50">当前目标 + 职业暂无数据</div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
