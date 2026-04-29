@@ -6,7 +6,7 @@ pub const DEFAULT_DPS_SNAPSHOT_INTERVAL_MS: u64 = 500;
 pub const DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS: u64 = 1500;
 pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 4 * 1024;
 pub const DEFAULT_ENABLE_RESYNC_ON_STALL: bool = true;
-pub const DEFAULT_RESYNC_DELAY_MS: u64 = 5_000;
+pub const DEFAULT_RESYNC_DELAY_MS: u64 = 500;
 pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,7 +58,7 @@ impl DpsMeterConfig {
         self.max_packet_size_threshold = normalize_max_packet_size_threshold(
             self.max_packet_size_threshold,
         );
-        self.resync_delay_ms = self.resync_delay_ms.clamp(1_000, 30_000);
+        self.resync_delay_ms = self.resync_delay_ms.clamp(100, 30_000);
         self
     }
 }

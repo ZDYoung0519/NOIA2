@@ -19,7 +19,7 @@ export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   memorySnapshotIntervalMs: 1000,
   maxPacketSizeThreshold: 4096,
   enableResyncOnStall: true,
-  resyncDelayMs: 5000,
+  resyncDelayMs: 500,
   bossOnly: true,
   myMuzhuangOnly: true,
   outputDebugLog: false,
@@ -46,7 +46,7 @@ function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfi
     enableResyncOnStall:
       input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
     resyncDelayMs: Number.isFinite(resyncDelayMs)
-      ? Math.min(30000, Math.max(1000, resyncDelayMs))
+      ? Math.min(30000, Math.max(100, resyncDelayMs))
       : DEFAULT_DPS_METER_CONFIG.resyncDelayMs,
     outputDebugLog: input?.outputDebugLog ?? DEFAULT_DPS_METER_CONFIG.outputDebugLog,
   };
