@@ -98,12 +98,16 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
-    const { error } = await supabase.from("aion2_dps").upsert(toUploadData, {
-      onConflict: "record_id",
-      ignoreDuplicates: false,
-    });
+    for (const payload of toUploadData) {
+      const { error } = await supabase.rpc("insert_aion2_dps_and_update_rank", {
+        p_payload: payload,
+        p_keep_limit: 500,
+      });
 
-    if (error) throw error;
+      if (error) {
+        throw error;
+      }
+    }
 
     console.log(`Uploaded ${toUploadData.length} DPS records successfully.`);
   } catch (err) {

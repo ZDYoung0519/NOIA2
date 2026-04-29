@@ -11,6 +11,7 @@ import Splash from "./pages/Splash";
 
 import HomePage from "./pages/home";
 import DpsViewPage from "./pages/dps_view";
+import HistoryBattleQueryPage from "./pages/history_battle_query";
 import CharacterPage from "./pages/character";
 import CharacterViewPage from "./pages/character_view";
 import SettingsViewPage from "./pages/settings_view";
@@ -60,6 +61,7 @@ function App() {
       >
         <Route path="/" element={<HomePage />} />
         <Route path="/dps-view" element={<DpsViewPage />} />
+        <Route path="/history-battle-query" element={<HistoryBattleQueryPage />} />
         <Route path="/character/search" element={<CharacterPage />} />
         <Route path="/character/view" element={<CharacterViewPage />} />
         <Route path="/settings-view" element={<SettingsViewPage />} />

@@ -1,18 +1,26 @@
+import type { ReactNode } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  History,
+  Home,
+  LineChart,
+  MoreVertical,
+  RotateCcw,
+  Search,
+  Settings,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
-
 import { Input } from "@/components/ui/input";
-
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { cn } from "@/lib/utils";
 import { AuthModal } from "./auth-modal";
-
-import { useNavigate } from "react-router-dom";
-import { Home, LineChart, Settings, ShieldCheck, type LucideIcon } from "lucide-react";
-import { ArrowLeft, ArrowRight, RotateCcw, Search, Bell, MoreVertical } from "lucide-react";
 
 type WindowFrameProps = {
   titleBar: ReactNode;
@@ -29,9 +37,10 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "主页", path: "/", icon: Home },
+  { label: "首页", path: "/", icon: Home },
   { label: "角色评分", path: "/character/search", icon: ShieldCheck },
   { label: "伤害统计", path: "/dps-view", icon: LineChart },
+  { label: "历史战斗查询", path: "/history-battle-query", icon: History },
 ];
 
 function SidebarNavItem({ path, label, icon: Icon }: NavItem) {
@@ -81,7 +90,6 @@ function WindowSidebar() {
         </div>
 
         <div className="mt-auto space-y-2 border-t pt-4">
-          {/* <SidebarNavItem path="/user" label="用户" icon={LogIn} /> */}
           <SidebarNavItem path="/settings-view" label="设置" icon={Settings} />
         </div>
       </div>
@@ -110,7 +118,6 @@ export function WindowFrame({
             <div
               className={cn("relative min-h-0 min-w-0 flex-1 overflow-hidden", contentClassName)}
             >
-              {/* 背景层（absolute，不占据文档流） */}
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
@@ -122,12 +129,9 @@ export function WindowFrame({
               <div className="from-background/50 to-background/50 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
               <div className="bg-background/65 pointer-events-none absolute inset-0" />
 
-              {/* ✅ 实际内容区：flex col，header 固定，children 滚动 */}
               <div className="relative z-10 flex h-full flex-col">
                 <header className="bg-background/50 sticky top-0 z-50 grid shrink-0 items-center gap-4 px-5 backdrop-blur-sm xl:grid-cols-[1.15fr_0.72fr_0.55fr]">
-                  {/* 左侧：导航按钮 + 搜索框 */}
                   <div className="flex items-center gap-3">
-                    {/* 后退 / 前进 / 刷新 */}
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -155,7 +159,6 @@ export function WindowFrame({
                       </Button>
                     </div>
 
-                    {/* 搜索框 */}
                     <div className="relative w-full max-w-[290px] pt-2 pb-2">
                       <Search className="text-muted-foreground absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
                       <Input
@@ -167,7 +170,6 @@ export function WindowFrame({
 
                   <div />
 
-                  {/* 右侧 */}
                   <div className="flex items-center justify-end gap-3">
                     <AuthModal />
                     <Button
@@ -187,7 +189,6 @@ export function WindowFrame({
                   </div>
                 </header>
 
-                {/* ✅ 只有这里滚动 */}
                 <div className="min-h-0 flex-1 overflow-auto">{children}</div>
               </div>
             </div>

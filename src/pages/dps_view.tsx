@@ -14,6 +14,12 @@ type TargetMobStat = {
   last_battle_at?: string | null;
 };
 
+type RankMobSourceRow = {
+  target_mob_code: number | string | null;
+  target_name: string | null;
+  battle_ended_at?: string | null;
+};
+
 type StatByClassMobRow = {
   record_id: string;
   main_actor_name: string | null;
@@ -112,6 +118,52 @@ function normalizeTargetMobStats(rows: TargetMobStat[]): TargetMobStat[] {
     battle_count: Number(row.battle_count ?? 0),
     last_battle_at: row.last_battle_at ?? null,
   }));
+}
+
+function buildTargetMobStatsFromRankRows(rows: RankMobSourceRow[]): TargetMobStat[] {
+  const grouped = new Map<string, TargetMobStat>();
+
+  for (const row of rows) {
+    if (row.target_mob_code == null) {
+      continue;
+    }
+
+    const mobCode = String(row.target_mob_code);
+    const existing = grouped.get(mobCode);
+    const battleEndedAt = row.battle_ended_at ?? null;
+
+    if (!existing) {
+      grouped.set(mobCode, {
+        mob_code: mobCode,
+        target_name: row.target_name ?? `Boss ${mobCode}`,
+        battle_count: 1,
+        last_battle_at: battleEndedAt,
+      });
+      continue;
+    }
+
+    existing.battle_count += 1;
+    if (battleEndedAt && (!existing.last_battle_at || battleEndedAt > existing.last_battle_at)) {
+      existing.last_battle_at = battleEndedAt;
+    }
+    if (!existing.target_name && row.target_name) {
+      existing.target_name = row.target_name;
+    }
+  }
+
+  return [...grouped.values()].sort((a, b) => {
+    const countDiff = b.battle_count - a.battle_count;
+    if (countDiff !== 0) {
+      return countDiff;
+    }
+
+    const aTime = a.last_battle_at ?? "";
+    const bTime = b.last_battle_at ?? "";
+    if (aTime === bTime) {
+      return a.mob_code.localeCompare(b.mob_code);
+    }
+    return bTime.localeCompare(aTime);
+  });
 }
 
 const BossCard = memo(function BossCard({
@@ -288,13 +340,20 @@ export default function DpsViewPage() {
         setLoading(true);
         setErrorMessage(null);
 
-        const { data, error } = await supabase.rpc("get_dps_target_mob_stats");
+        const { data, error } = await supabase
+          .from("aion2_dps_rank")
+          .select("target_mob_code,target_name")
+          .eq("is_boss", true)
+          .order("battle_ended_at", { ascending: false });
+        debugger;
         if (requestId !== targetStatsRequestIdRef.current) {
           return;
         }
         if (error) throw error;
 
-        const list = normalizeTargetMobStats((data ?? []) as TargetMobStat[]);
+        const list = normalizeTargetMobStats(
+          buildTargetMobStatsFromRankRows((data ?? []) as RankMobSourceRow[])
+        );
         setStats(list);
         setSelectedMob((current) => current ?? list[0] ?? null);
       } catch (error) {
@@ -336,21 +395,33 @@ export default function DpsViewPage() {
         setRankLoading(true);
         setRankErrorMessage(null);
 
-        const { data, error } = await supabase.rpc("get_stat_by_class_mob", {
-          p_mob_code: mobCode,
-          p_actor_class: selectedClass,
-          p_limit: PAGE_SIZE,
-          p_offset: (page - 1) * PAGE_SIZE,
-        });
+        let query = supabase
+          .from("aion2_dps_rank")
+          .select(
+            "record_id,main_actor_name,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage",
+            { count: "exact" }
+          )
+          .eq("target_mob_code", mobCode)
+          .order("main_actor_dps", { ascending: false })
+          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+
+        if (selectedClass !== "ALL") {
+          query = query.eq("main_actor_class", selectedClass);
+        }
+
+        const { data, error, count } = await query;
 
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
         }
         if (error) throw error;
 
-        const rows = (data ?? []) as StatByClassMobRow[];
+        const rows = ((data ?? []) as Omit<StatByClassMobRow, "total_count">[]).map((row) => ({
+          ...row,
+          total_count: Number(count ?? 0),
+        }));
         setBattleRanks(buildBattleRanks(rows));
-        setTotalRankCount(Number(rows[0]?.total_count ?? 0));
+        setTotalRankCount(Number(count ?? 0));
       } catch (error) {
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
