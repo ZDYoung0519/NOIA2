@@ -46,7 +46,7 @@ function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfi
     enableResyncOnStall:
       input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
     resyncDelayMs: Number.isFinite(resyncDelayMs)
-      ? Math.min(30000, Math.max(100, resyncDelayMs))
+      ? Math.min(1000, Math.max(200, resyncDelayMs))
       : DEFAULT_DPS_METER_CONFIG.resyncDelayMs,
     outputDebugLog: input?.outputDebugLog ?? DEFAULT_DPS_METER_CONFIG.outputDebugLog,
   };

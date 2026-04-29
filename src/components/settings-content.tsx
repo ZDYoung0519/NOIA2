@@ -590,8 +590,9 @@ export function SettingsContent() {
                     <div className="flex w-44 items-center gap-2">
                       <Input
                         type="number"
-                        min={100}
-                        step={500}
+                        min={200}
+                        max={1000}
+                        step={100}
                         value={settings.dpsMeter.resyncDelayMs}
                         onChange={(event) => {
                           const nextValue = Number(event.currentTarget.value || 500);

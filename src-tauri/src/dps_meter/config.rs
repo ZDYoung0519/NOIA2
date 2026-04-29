@@ -58,7 +58,7 @@ impl DpsMeterConfig {
         self.max_packet_size_threshold = normalize_max_packet_size_threshold(
             self.max_packet_size_threshold,
         );
-        self.resync_delay_ms = self.resync_delay_ms.clamp(100, 30_000);
+        self.resync_delay_ms = self.resync_delay_ms.clamp(200, 1_000);
         self
     }
 }
