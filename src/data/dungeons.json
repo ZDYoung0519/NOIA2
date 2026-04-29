@@ -1,31 +1,66 @@
 [
   {
     "dungeon_id": "00001",
-    "dungeon_name_zh": "青息之島",
-    "dungeon_name_en": "Azure Breath Island",
-    "difficulty": "困难",
+    "name": {
+      "zh-CN": "青息之岛",
+      "zh-TW": "青息之島",
+      "en": "Azure Breath Island",
+      "ko": "Azure Breath Island"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困難",
+      "en": "Hard",
+      "ko": "Hard"
+    },
     "boss_ids": [2300243, 2300244, 2300245]
   },
   {
     "dungeon_id": "00001",
-    "dungeon_name_zh": "青息之島",
-    "dungeon_name_en": "Azure Breath Island",
-    "difficulty": "普通",
+    "name": {
+      "zh-CN": "青息之岛",
+      "zh-TW": "青息之島",
+      "en": "Azure Breath Island",
+      "ko": "Azure Breath Island"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
     "boss_ids": [2300219, 2300230, 2300200]
   },
   {
     "dungeon_id": "00002",
-    "dungeon_name_zh": "幻影回廊",
-    "dungeon_name_en": "Phantoms Hall",
-    "difficulty": "困难",
+    "name": {
+      "zh-CN": "幻影回廊",
+      "zh-TW": "幻影迴廊",
+      "en": "Phantoms Hall",
+      "ko": "Phantoms Hall"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困難",
+      "en": "Hard",
+      "ko": "Hard"
+    },
     "boss_ids": [2311402, 2311401, 2311403]
   },
-
   {
     "dungeon_id": "00003",
-    "dungeon_name_zh": "沉沒的生命神殿",
-    "dungeon_name_en": "Sunken Temple",
-    "difficulty": "4阶段",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "4阶段",
+      "zh-TW": "4階段",
+      "en": "Phase 4",
+      "ko": "Phase 4"
+    },
     "boss_ids": [2300032, 2300031, 2300030]
   }
 ]
