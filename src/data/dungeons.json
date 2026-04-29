@@ -7,12 +7,20 @@
     "boss_ids": [2300243, 2300244, 2300245]
   },
   {
+    "dungeon_id": "00001",
+    "dungeon_name_zh": "青息之島",
+    "dungeon_name_en": "Azure Breath Island",
+    "difficulty": "普通",
+    "boss_ids": [2300219, 2300230, 2300200]
+  },
+  {
     "dungeon_id": "00002",
     "dungeon_name_zh": "幻影回廊",
     "dungeon_name_en": "Phantoms Hall",
     "difficulty": "困难",
     "boss_ids": [2311402, 2311401, 2311403]
   },
+
   {
     "dungeon_id": "00003",
     "dungeon_name_zh": "沉沒的生命神殿",
