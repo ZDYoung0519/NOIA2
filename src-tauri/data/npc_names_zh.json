@@ -44637,5 +44637,26 @@
     "npcType": "",
     "npcSubType": "",
     "mainCategory": "monster"
+  },
+  "2300219": {
+    "name": "賢明的巴溫努特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300230": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300200": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
   }
 }

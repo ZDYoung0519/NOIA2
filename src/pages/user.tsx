@@ -80,7 +80,7 @@ export default function UserPage() {
     ? membership?.premium_until
       ? `${daysLeft ?? 0} 天`
       : "永久"
-    : "未激活";
+    : "普通用户";
 
   useEffect(() => {
     setNickname(user?.user_metadata?.full_name ?? "");
@@ -304,7 +304,7 @@ export default function UserPage() {
                   ? "状态加载中"
                   : isPremium
                     ? `有效期至 ${formatDate(membership?.premium_until)}`
-                    : "当前未激活"}
+                    : "普通用户"}
               </span>
             </div>
 
@@ -313,7 +313,7 @@ export default function UserPage() {
                 value={keyCode}
                 onChange={(event) => setKeyCode(event.target.value.toUpperCase())}
                 onKeyDown={handleActivateKeyDown}
-                placeholder={isPremium ? "输入激活码可继续续期" : "输入激活码"}
+                placeholder={isPremium ? "输入激活码以续费" : "输入激活码"}
                 disabled={activating}
                 autoComplete="off"
                 className="font-mono tracking-wide uppercase"
