@@ -18,10 +18,8 @@ function RingContent({
   value,
   subValue,
   valueClassName,
-  help,
 }: BaseRingCardProps & {
   valueClassName?: string;
-  help?: boolean;
 }) {
   return (
     <div className="relative z-10 flex flex-col items-center text-center leading-none">
@@ -32,22 +30,18 @@ function RingContent({
 
       {subValue ? (
         <span className="mt-1 text-[12px] font-semibold text-[#b8c2c7]">{subValue}</span>
-      ) : help ? (
-        <span className="mt-2 flex h-4 w-4 items-center justify-center rounded-full border border-[#9f791e] text-[11px] font-bold text-[#b88926]">
-          ?
-        </span>
       ) : null}
     </div>
   );
 }
 
-export function KdaRingCard({ label, value, showHelp = true, className }: KdaRingCardProps) {
+export function KdaRingCard({ label, value, className }: KdaRingCardProps) {
   return (
     <div className={[ringBaseClass, className].join(" ")}>
       <div className={[diamondBaseClass, "bg-[#d9a73a]"].join(" ")} />
 
       <div className="relative flex h-[106px] w-[106px] items-center justify-center rounded-full border-2 border-[#d89b13] bg-[#101314] shadow-[0_0_18px_rgba(216,155,19,0.18)]">
-        <RingContent label={label} value={value} valueClassName="text-[#d9a73a]" help={showHelp} />
+        <RingContent label={label} value={value} valueClassName="text-[#d9a73a]" />
       </div>
     </div>
   );
