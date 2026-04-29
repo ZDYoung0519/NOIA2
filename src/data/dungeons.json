@@ -40,12 +40,28 @@
       "ko": "Phantoms Hall"
     },
     "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2311402, 2311401, 2311403]
+  },
+  {
+    "dungeon_id": "00002",
+    "name": {
+      "zh-CN": "幻影回廊",
+      "zh-TW": "幻影迴廊",
+      "en": "Phantoms Hall",
+      "ko": "Phantoms Hall"
+    },
+    "difficulty": {
       "zh-CN": "困难",
-      "zh-TW": "困難",
+      "zh-TW": "困难",
       "en": "Hard",
       "ko": "Hard"
     },
-    "boss_ids": [2311402, 2311401, 2311403]
+    "boss_ids": [2321402, 2321401, 2321403]
   },
   {
     "dungeon_id": "00003",
