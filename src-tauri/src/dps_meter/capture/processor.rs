@@ -243,9 +243,10 @@ impl StreamProcessor {
         // if self.parse_summon_packet(packet){
         //     return true;
         // }
+        self.parse_4036(packet);
         self.parse_summon_ownership_packet(packet);
         self.parse_summon_packet(packet);
-        self.parse_4036(packet);
+        self.parse_remain_hp_packet(packet);
         self.parse_3336(packet); // main actor
         self.parse_4436_optimized(packet); // otehr
         false
@@ -692,6 +693,91 @@ impl StreamProcessor {
         }
 
         found_any
+    }
+
+    fn parse_remain_hp_packet(&mut self, packet: &[u8]) -> bool {
+        let mut idx = 0usize;
+        let mut found_any = false;
+
+        while idx < packet.len() {
+            let Some(pos) = find_bytes(packet, idx, &[0x00, 0x8D]) else {
+                break;
+            };
+
+            if self.parse_remain_hp_packet_at(packet, pos + 2) {
+                found_any = true;
+            }
+
+            idx = pos + 1;
+        }
+
+        found_any
+    }
+
+    fn parse_remain_hp_packet_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {
+        let mut offset = offset_after_opcode;
+
+        if packet.len() < offset {
+            return false;
+        }
+
+        let mob_id_info = read_varint(packet, offset);
+        if !mob_id_info.is_valid() || mob_id_info.value < 100 {
+            return false;
+        }
+        offset += mob_id_info.length;
+
+        let mob_id = mob_id_info.value as u32;
+        let skip_1 = read_varint(packet, offset);
+        if !skip_1.is_valid() {
+            return false;
+        }
+        offset += skip_1.length;
+
+        let skip_2 = read_varint(packet, offset);
+        if !skip_2.is_valid() {
+            return false;
+        }
+        offset += skip_2.length;
+
+        let skip_3 = read_varint(packet, offset);
+        if !skip_3.is_valid() {
+            return false;
+        }
+        offset += skip_3.length;
+
+        if offset + 4 > packet.len() {
+            return false;
+        }
+
+        let mob_hp = parse_u32_le(packet, offset);
+        let is_first_hp_detection = !self.data_storage.mob_id_hp_snapshot().contains_key(&mob_id);
+        self.data_storage.append_mob_hp(mob_id, mob_hp);
+        if is_first_hp_detection {
+            if let Some((current_hp, max_hp)) =
+                self.data_storage.mob_id_hp_snapshot().get(&mob_id).copied()
+            {
+                let mob_id_code_map = self.data_storage.mob_id_code_snapshot();
+                let mob_code_name_map = self.data_storage.mob_code_name_snapshot();
+
+                if let Some(mob_code) = mob_id_code_map.get(&mob_id).copied() {
+                    let mob_name = mob_code_name_map
+                        .get(&mob_code)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown Boss".to_string());
+                    self.logger.info(format!(
+                        "[{}] first remain hp mob_id={} mob_code={} name={} current_hp={} max_hp={}",
+                        self.port, mob_id, mob_code, mob_name, current_hp, max_hp
+                    ));
+                } else {
+                    self.logger.info(format!(
+                        "[{}] first remain hp mob_id={} current_hp={} max_hp={}",
+                        self.port, mob_id, current_hp, max_hp
+                    ));
+                }
+            }
+        }
+        true
     }
 
     fn parse_summon_spawn_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {

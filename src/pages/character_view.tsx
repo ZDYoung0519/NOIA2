@@ -576,6 +576,7 @@ export default function CharacterViewPage() {
 
       const data = await fetchFengwo(characterName, serverName);
       const character = await formatFengwoResponse(data);
+
       // 角色评分
       const combatPower = data?.queryResult?.data?.profile?.combatPower;
       const fengwoScore = data?.rating?.scores?.score;

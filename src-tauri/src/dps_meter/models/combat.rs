@@ -59,6 +59,8 @@ pub struct TargetInfo {
     pub target_mob_code: Option<u32>,
     pub target_name: Option<String>,
     pub is_boss: bool,
+    pub current_hp: Option<u32>,
+    pub max_hp: Option<u32>,
     pub target_start_time: HashMap<u32, f64>,
     pub target_last_time: HashMap<u32, f64>,
 }

@@ -20,6 +20,7 @@ const DpsPanel = function DpsPanel({
   otherPlayerColor,
   barOpacity,
   maskNicknames,
+  percentDisplayMode = "damageShare",
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
@@ -31,6 +32,7 @@ const DpsPanel = function DpsPanel({
   otherPlayerColor: string;
   barOpacity?: number;
   maskNicknames?: boolean;
+  percentDisplayMode?: "contribution" | "damageShare";
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
   onPlayerHoverEnd?: (playerId: number) => void;
@@ -56,6 +58,7 @@ const DpsPanel = function DpsPanel({
     (sum, entry) => sum + entry.totalDamageValue,
     0
   );
+  const targetMaxHp = targetInfo.maxHp ?? 0;
   const targetLastTimes = Object.values(targetInfo.targetLastTime || {});
   const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
 
@@ -84,7 +87,14 @@ const DpsPanel = function DpsPanel({
           thisTargetLastTime - (playerStartTime ?? thisTargetLastTime)
         );
         const dpsValue = player.totalDamageValue / fightDurationSeconds;
-        const damagePercent = totalDamage > 0 ? (player.totalDamageValue / totalDamage) * 100 : 0;
+        const damagePercent =
+          percentDisplayMode === "contribution"
+            ? targetMaxHp > 0
+              ? (player.totalDamageValue / targetMaxHp) * 100
+              : 0
+            : totalDamage > 0
+              ? (player.totalDamageValue / totalDamage) * 100
+              : 0;
 
         return (
           <div

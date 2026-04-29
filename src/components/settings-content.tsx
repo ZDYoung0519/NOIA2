@@ -248,6 +248,8 @@ export function SettingsContent() {
           targetMobCode: 2400032,
           targetName: "Training Dummy",
           isBoss: false,
+          currentHp: 540000,
+          maxHp: 1200000,
           targetStartTime: {
             1001: 0,
             1002: 0,
@@ -720,6 +722,36 @@ export function SettingsContent() {
                   }
                 />
                 <SettingsRow
+                  label={t("settings.dps.percentDisplayMode")}
+                  description={t("settings.dps.percentDisplayModeDescription")}
+                  control={
+                    <Select
+                      value={dpsAppearance.percentDisplayMode}
+                      onValueChange={(value: "contribution" | "damageShare") => {
+                        void saveSettings({
+                          appearance: {
+                            dpsWindow: {
+                              percentDisplayMode: value,
+                            },
+                          },
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-52">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="damageShare">
+                          {t("settings.dps.percentDisplayModeDamageShare")}
+                        </SelectItem>
+                        <SelectItem value="contribution">
+                          {t("settings.dps.percentDisplayModeContribution")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  }
+                />
+                <SettingsRow
                   label={t("settings.dps.panelColor")}
                   control={
                     <input
@@ -822,6 +854,7 @@ export function SettingsContent() {
                       otherPlayerColor={dpsAppearance.otherPlayerColor}
                       barOpacity={100}
                       maskNicknames={dpsAppearance.maskNicknames}
+                      percentDisplayMode={dpsAppearance.percentDisplayMode}
                       onPlayerClicked={() => {}}
                     />
                   </div>

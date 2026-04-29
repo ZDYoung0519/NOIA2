@@ -111,6 +111,7 @@ fn build_target_infos(
     summon_owner_map: &HashMap<u32, u32>,
 ) -> HashMap<u32, TargetInfo> {
     let mob_id_code_map = data_storage.mob_id_code_snapshot();
+    let mob_id_hp_map: HashMap<u32, (u32, u32)> = data_storage.mob_id_hp_snapshot();
     let mob_code_name_map = data_storage.mob_code_name_snapshot();
     let boss_code_list = data_storage.boss_code_list_snapshot();
     let start_time_by_target = merge_time_map_min(
@@ -130,6 +131,10 @@ fn build_target_infos(
             let is_boss = mob_code
                 .map(|code| boss_code_list.contains(&code))
                 .unwrap_or(false);
+            let (current_hp, max_hp) = mob_id_hp_map
+                .get(target_id)
+                .map(|(current_hp, max_hp)| (Some(*current_hp), Some(*max_hp)))
+                .unwrap_or((None, None));
 
             (
                 *target_id,
@@ -138,6 +143,8 @@ fn build_target_infos(
                     target_mob_code: mob_code,
                     target_name,
                     is_boss,
+                    current_hp,
+                    max_hp,
                     target_start_time: start_time_by_target
                         .get(target_id)
                         .cloned()

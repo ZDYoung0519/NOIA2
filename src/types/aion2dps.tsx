@@ -30,6 +30,8 @@ export type TargetInfo = {
   targetMobCode?: number | null;
   targetName?: string | null;
   isBoss: boolean;
+  currentHp?: number | null;
+  maxHp?: number | null;
   targetStartTime: Record<string, number>;
   targetLastTime: Record<string, number>;
 };

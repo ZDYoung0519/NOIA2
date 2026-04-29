@@ -36,6 +36,7 @@ export type DpsWindowAppearance = {
   maskNicknames: boolean;
   mainPlayerColor: string;
   otherPlayerColor: string;
+  percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
 };
 
@@ -81,6 +82,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       maskNicknames: false,
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
+      percentDisplayMode: "contribution",
       showDetailOnHover: false,
     },
   },
@@ -188,6 +190,12 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
           input?.appearance?.dpsWindow?.otherPlayerColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.otherPlayerColor
         ),
+        percentDisplayMode:
+          input?.appearance?.dpsWindow?.percentDisplayMode === "contribution"
+            ? "contribution"
+            : input?.appearance?.dpsWindow?.percentDisplayMode === "damageShare"
+              ? "damageShare"
+              : DEFAULT_APP_SETTINGS.appearance.dpsWindow.percentDisplayMode,
       },
     },
   };

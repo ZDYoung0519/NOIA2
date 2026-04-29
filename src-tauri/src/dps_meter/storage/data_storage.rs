@@ -94,6 +94,7 @@ struct DataStorageInner {
     actor_id_class_map: BoundedMap<u32, String>,
     actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
     mob_id_code_map: BoundedMap<u32, u32>,
+    mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
     summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
     start_time_by_target: HashMap<u32, HashMap<u32, f64>>,
@@ -115,6 +116,7 @@ impl Default for DataStorageInner {
             actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
+            mob_id_hp_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             summon_owner_map: BoundedMap::new(SUMMON_METADATA_CAPACITY),
             start_time: None,
             start_time_by_target: HashMap::new(),
@@ -166,6 +168,7 @@ impl DataStorage {
         let actor_id_class_map = inner.actor_id_class_map.clone();
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
         let mob_id_code_map = inner.mob_id_code_map.clone();
+        let mob_id_hp_map = inner.mob_id_hp_map.clone();
         let summon_owner_map = inner.summon_owner_map.clone();
         let dot_skill_list = inner.dot_skill_list.clone();
 
@@ -177,6 +180,7 @@ impl DataStorage {
         inner.actor_id_class_map = actor_id_class_map;
         inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
         inner.mob_id_code_map = mob_id_code_map;
+        inner.mob_id_hp_map = mob_id_hp_map;
         inner.summon_owner_map = summon_owner_map;
         inner.dot_skill_list = dot_skill_list;
     }
@@ -322,6 +326,17 @@ impl DataStorage {
         inner.mob_id_code_map.insert(target_id, mob_code);
     }
 
+    pub fn append_mob_hp(&self, target_id: u32, current_hp: u32) {
+        let mut inner = self.inner.write().unwrap();
+        let entry = inner
+            .mob_id_hp_map
+            .get_mut_or_insert_with(target_id, || (current_hp, current_hp));
+        entry.0 = current_hp;
+        if current_hp > entry.1 {
+            entry.1 = current_hp;
+        }
+    }
+
     pub fn append_summon(&self, owner_id: u32, summon_id: u32) {
         let mut inner = self.inner.write().unwrap();
         if inner.actor_id_name_map.contains_key(&summon_id) {
@@ -400,6 +415,10 @@ impl DataStorage {
 
     pub fn mob_id_code_snapshot(&self) -> HashMap<u32, u32> {
         self.inner.read().unwrap().mob_id_code_map.as_hash_map()
+    }
+
+    pub fn mob_id_hp_snapshot(&self) -> HashMap<u32, (u32, u32)> {
+        self.inner.read().unwrap().mob_id_hp_map.as_hash_map()
     }
 
     pub fn mob_code_name_snapshot(&self) -> HashMap<u32, String> {

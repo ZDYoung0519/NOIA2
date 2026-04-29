@@ -16,8 +16,8 @@
   {
     "dungeon_id": "00003",
     "dungeon_name_zh": "沉沒的生命神殿",
-    "dungeon_name_en": "SunkenTemple",
-    "difficulty": "4",
+    "dungeon_name_en": "Sunken Temple",
+    "difficulty": "4阶段",
     "boss_ids": [2300032, 2300031, 2300030]
   }
 ]
