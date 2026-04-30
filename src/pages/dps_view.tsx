@@ -376,26 +376,40 @@ export default function DpsViewPage() {
       const requestId = ++battleRanksRequestIdRef.current;
 
       try {
-        setRankLoading(true);
         setRankErrorMessage(null);
-
-        const { data, error } = await supabase.rpc("get_rank_stat_by_class_mob", {
-          p_mob_code: mobCode,
-          p_actor_class: selectedClass,
-          p_limit: PAGE_SIZE,
-          p_offset: (page - 1) * PAGE_SIZE,
-        });
-
+        const from = (page - 1) * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        let query = supabase
+          .from("aion2_dps_rank")
+          .select(
+            `
+            record_id,
+            main_actor_name,
+            main_actor_class,
+            main_actor_server_id,
+            main_actor_damage,
+            main_actor_battle_duration,
+            main_actor_dps,
+            party_total_damage
+            `,
+            { count: "exact" }
+          )
+          .eq("target_mob_code", mobCode)
+          .order("main_actor_dps", { ascending: false, nullsFirst: false })
+          .range(from, to);
+        if (selectedClass !== "ALL") {
+          query = query.eq("main_actor_class", selectedClass);
+        }
+        const { data, error, count } = await query;
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
         }
         if (error) {
           throw error;
         }
-
         const rows = (data ?? []) as StatByClassMobRow[];
         setBattleRanks(buildBattleRanks(rows));
-        setTotalRankCount(Number(rows[0]?.total_count ?? 0));
+        setTotalRankCount(count ?? 0);
       } catch (error) {
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
