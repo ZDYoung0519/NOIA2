@@ -32,3 +32,4 @@ reconstructed_src/
 
 # supabase
 .env
+scripts/
