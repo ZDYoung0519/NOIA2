@@ -40,9 +40,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "首页", path: "/", icon: Home },
   { label: "角色查询", path: "/character/search", icon: ShieldCheck },
   // { label: "角色评分排行", path: "/character/search", icon: ShieldCheck },
-
-  { label: "战斗历史", path: "/history-battle-query", icon: History },
-  { label: "战斗伤害排行", path: "/dps-view", icon: LineChart },
+  // { label: "战斗历史", path: "/history-battle-query", icon: History },
+  { label: "伤害排行", path: "/dps-view", icon: LineChart },
 ];
 
 function SidebarNavItem({ path, label, icon: Icon }: NavItem) {
