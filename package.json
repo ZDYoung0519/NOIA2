@@ -8,8 +8,6 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "release:version": "node scripts/release-version.mjs",
-    "migrate:noia2dps": "node scripts/migrate-noia2dps-to-aion2-dps.mjs",
-    "export:aion2dps:max-party-damage": "node scripts/export-aion2-dps-max-party-total-damage.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build --bundles nsis",

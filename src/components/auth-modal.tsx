@@ -298,8 +298,8 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
                 {view === "forgot_password"
                   ? t("auth.forgottenPassword.emailLabel")
                   : view === "sign_up"
-                      ? t("auth.signUp.emailLabel")
-                      : t("auth.signIn.emailLabel")}
+                    ? t("auth.signUp.emailLabel")
+                    : t("auth.signIn.emailLabel")}
               </div>
               <Input
                 type="email"
@@ -310,8 +310,8 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
                   view === "forgot_password"
                     ? t("auth.forgottenPassword.emailPlaceholder")
                     : view === "sign_up"
-                        ? t("auth.signUp.emailPlaceholder")
-                        : t("auth.signIn.emailPlaceholder")
+                      ? t("auth.signUp.emailPlaceholder")
+                      : t("auth.signIn.emailPlaceholder")
                 }
               />
             </div>
@@ -342,7 +342,9 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
             <>
               {view === "update_password" ? (
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">{t("auth.updatePassword.passwordLabel")}</div>
+                  <div className="text-sm font-medium">
+                    {t("auth.updatePassword.passwordLabel")}
+                  </div>
                   <Input
                     type="password"
                     autoComplete="new-password"
@@ -382,17 +384,17 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
               ? view === "sign_up"
                 ? t("auth.signUp.loadingButton")
                 : view === "forgot_password"
-                    ? t("auth.forgottenPassword.loadingButton")
-                    : view === "update_password"
-                      ? t("auth.updatePassword.loadingButton")
-                      : t("auth.signIn.loadingButton")
+                  ? t("auth.forgottenPassword.loadingButton")
+                  : view === "update_password"
+                    ? t("auth.updatePassword.loadingButton")
+                    : t("auth.signIn.loadingButton")
               : view === "sign_up"
                 ? t("auth.signUp.button")
                 : view === "forgot_password"
-                    ? t("auth.forgottenPassword.button")
-                    : view === "update_password"
-                      ? t("auth.updatePassword.button")
-                      : t("auth.signIn.button")}
+                  ? t("auth.forgottenPassword.button")
+                  : view === "update_password"
+                    ? t("auth.updatePassword.button")
+                    : t("auth.signIn.button")}
           </Button>
 
           <div className="flex items-center justify-between gap-3 text-sm">
@@ -443,7 +445,7 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
 export function AuthModal() {
   const { user, signOut, isPremium, membershipLoading, membership } = useUser();
   const { t, i18n } = useAppTranslation();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(true);
   const [authView, setAuthView] = useState<AuthView>("sign_in");
 
   useEffect(() => {
@@ -542,11 +544,7 @@ export function AuthModal() {
         </TooltipProvider>
       )}
 
-      <AuthDialog
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        initialView={authView}
-      />
+      <AuthDialog open={showAuthModal} onOpenChange={setShowAuthModal} initialView={authView} />
     </>
   );
 }
