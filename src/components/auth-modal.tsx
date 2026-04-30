@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -443,10 +443,12 @@ function AuthDialog({ open, onOpenChange, initialView }: AuthDialogProps) {
 }
 
 export function AuthModal() {
-  const { user, signOut, isPremium, membershipLoading, membership } = useUser();
+  const { user, loading, signOut, isPremium, membershipLoading, membership } = useUser();
   const { t, i18n } = useAppTranslation();
-  const [showAuthModal, setShowAuthModal] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authView, setAuthView] = useState<AuthView>("sign_in");
+  const hasResolvedInitialAuthRef = useRef(false);
+  const previousUserRef = useRef<typeof user>(null);
 
   useEffect(() => {
     const openRecovery = () => {
@@ -459,6 +461,25 @@ export function AuthModal() {
       window.removeEventListener(AUTH_OPEN_RECOVERY_EVENT, openRecovery);
     };
   }, []);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    const previousUser = previousUserRef.current;
+
+    if (user) {
+      setShowAuthModal(false);
+      hasResolvedInitialAuthRef.current = true;
+    } else if (!hasResolvedInitialAuthRef.current || previousUser) {
+      setAuthView("sign_in");
+      setShowAuthModal(true);
+      hasResolvedInitialAuthRef.current = true;
+    }
+
+    previousUserRef.current = user;
+  }, [loading, user]);
 
   const userEmail = user?.email ?? "";
   const userName =
