@@ -77,7 +77,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             TrayIconBuilder::with_id("main-tray")
                 .menu(&menu)
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("Tauri App Template")
+                .tooltip("NOIA2 永恒诺亚")
                 .show_menu_on_left_click(false)
                 .on_tray_icon_event(|tray, event| match event {
                     TrayIconEvent::Click {
