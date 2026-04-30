@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Bell,
-  History,
   Home,
   LineChart,
   MoreVertical,
