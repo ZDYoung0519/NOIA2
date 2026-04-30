@@ -25,6 +25,7 @@ import Splash from "./Splash";
 import { CharacterProps } from "@/types/character";
 import { DaevanionGrid } from "@/components/aion2/daevanion-board";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/supabase";
 
 function CharacterBanner({
   profile,
@@ -546,6 +547,103 @@ function StatDetailPage({ statEntriesMap }: { statEntriesMap: Record<string, Sta
   );
 }
 
+type HistoryBattleRow = {
+  record_id: string;
+  battle_ended_at: string | null;
+  target_name: string | null;
+  target_mob_code: number | null;
+  main_actor_name: string | null;
+  main_actor_server_id: string | null;
+  main_actor_class: string | null;
+  main_actor_damage: number | null;
+  main_actor_battle_duration: number | null;
+  main_actor_dps: number | null;
+  party_total_damage: number | null;
+};
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+// function DpsDetailDialog({data} :{ data: any}){
+//   return (    <Dialog open={open} onOpenChange={handleOpenChange}>
+//         <DialogContent className="sm:max-w-md">
+//           <DialogHeader>
+//             <DialogTitle>{dialogTitle}</DialogTitle>
+//             <DialogDescription>{dialogDescription}</DialogDescription>
+//           </DialogHeader>)
+// }
+
+function DpsRowPage({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
+  // const [showDetail, setShowDetail] =
+
+  return (
+    <Card className="">
+      <table className="bg-background/35 w-full border-collapse border-white/10 p-0 text-sm text-white backdrop-blur-sm">
+        <thead className="bg-white/5 text-white/60">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">战斗时间</th>
+            <th className="px-4 py-3 text-left font-medium">目标</th>
+            <th className="px-4 py-3 text-left font-medium">职业</th>
+            <th className="px-4 py-3 text-right font-medium">个人伤害</th>
+            <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
+            <th className="px-4 py-3 text-right font-medium">战斗时长</th>
+            <th className="px-4 py-3 text-right font-medium">个人秒伤</th>
+            <th className="px-4 py-3 text-right font-medium">伤害详情</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dpsRows.map((row) => (
+            <tr key={row.record_id} className="border-t border-white/10 hover:bg-white/[0.03]">
+              <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
+              <td className="px-4 py-3">
+                <div className="font-medium text-white">
+                  {row.target_name ?? `Boss ${row.target_mob_code ?? "-"}`}
+                </div>
+                <div className="mt-1 text-xs text-white/40">
+                  MobCode: {row.target_mob_code ?? "-"}
+                </div>
+              </td>
+              <td className="px-4 py-3 text-white/65">{row.main_actor_class}</td>
+              <td className="px-4 py-3 text-right text-white/85">
+                {Math.round(Number(row.main_actor_damage ?? 0)).toLocaleString()}
+              </td>
+              <td className="px-4 py-3 text-right text-white/85">
+                {Math.round(Number(row.party_total_damage ?? 0)).toLocaleString()}
+              </td>
+              <td className="px-4 py-3 text-right text-white/65">
+                {Number(row.main_actor_battle_duration ?? 0).toFixed(1)} 秒
+              </td>
+              <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
+                {Math.round(Number(row.main_actor_dps ?? 0)).toLocaleString()}
+              </td>
+              <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
+                <button>查看</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
 export default function CharacterViewPage() {
   const [loading, setLoading] = useState(true);
   const [characterData, setCharacterData] = useState<CharacterProps>();
@@ -558,6 +656,9 @@ export default function CharacterViewPage() {
     combatPower: 0,
     fengwoScore: 0,
   });
+
+  const [characterDpsRows, setCharacterDpsRows] = useState<HistoryBattleRow[]>([]);
+
   const [activeTab, setActiveTab] = useState<string>("equip");
   const [searchParams] = useSearchParams();
   const characterName = searchParams.get("characterName") || "";
@@ -574,12 +675,11 @@ export default function CharacterViewPage() {
       const serverName = getServerShortName(Number(serverId));
       setLoading(true);
 
-      const data = await fetchFengwo(characterName, serverName);
-      const character = await formatFengwoResponse(data);
-
-      // 角色评分
-      const combatPower = data?.queryResult?.data?.profile?.combatPower;
-      const fengwoScore = data?.rating?.scores?.score;
+      // 查询蜂窝接口，并且获取评分
+      const data1 = await fetchFengwo(characterName, serverName);
+      const character = await formatFengwoResponse(data1);
+      const combatPower = data1?.queryResult?.data?.profile?.combatPower;
+      const fengwoScore = data1?.rating?.scores?.score;
       const itemLevel = character.data.statList?.find((item) => item?.type === "ItemLevel")?.value;
       setCharacterScores({
         itemLevel: itemLevel,
@@ -588,6 +688,21 @@ export default function CharacterViewPage() {
       });
 
       setCharacterData(character);
+
+      // 查询角色战斗历史
+      const { data } = await supabase
+        .from("aion2_dps")
+        .select(
+          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage"
+        )
+        .eq("main_actor_name", characterName.trim())
+        .eq("main_actor_server_id", serverId.trim())
+        .gt("main_actor_battle_duration", 0)
+        .gt("main_actor_damage", 1000000)
+        .order("battle_ended_at", { ascending: false })
+        .limit(200);
+
+      setCharacterDpsRows((data ?? []) as HistoryBattleRow[]);
     } catch (e) {
       console.error(e);
     } finally {
@@ -636,9 +751,15 @@ export default function CharacterViewPage() {
               <TabsTrigger value="title-skin" className="text-lg">
                 称号外观
               </TabsTrigger>
+
               <TabsTrigger value="petwing" className="text-lg">
                 排名
               </TabsTrigger>
+
+              <TabsTrigger value="dps-history" className="text-lg">
+                战斗历史
+              </TabsTrigger>
+
               <TabsTrigger value="stat-detail" className="text-lg">
                 综合分析
               </TabsTrigger>
@@ -660,6 +781,10 @@ export default function CharacterViewPage() {
               <TitleSkinPage title={characterData.data.title} />
             </TabsContent>
 
+            <TabsContent value="dps-history">
+              <DpsRowPage dpsRows={characterDpsRows} />
+            </TabsContent>
+
             <TabsContent value="stat-detail">
               <StatDetailPage statEntriesMap={statEntriesMap} />
             </TabsContent>
@@ -667,7 +792,6 @@ export default function CharacterViewPage() {
         </div>
         <div className="w-full space-y-2 md:w-1/4">
           {renderStatInfo({ statList: characterData.data.statList })}
-
           {renderDetailedStatInfo({
             statEntriesMap: statEntriesMap,
             tStats: tStats,

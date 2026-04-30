@@ -8,12 +8,12 @@
       "ko": "Azure Breath Island"
     },
     "difficulty": {
-      "zh-CN": "困难",
-      "zh-TW": "困難",
-      "en": "Hard",
-      "ko": "Hard"
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
     },
-    "boss_ids": [2300243, 2300244, 2300245]
+    "boss_ids": [2300219, 2300230, 2300200]
   },
   {
     "dungeon_id": "00002",
@@ -24,12 +24,12 @@
       "ko": "Azure Breath Island"
     },
     "difficulty": {
-      "zh-CN": "普通",
-      "zh-TW": "普通",
-      "en": "Normal",
-      "ko": "Normal"
+      "zh-CN": "困难",
+      "zh-TW": "困難",
+      "en": "Hard",
+      "ko": "Hard"
     },
-    "boss_ids": [2300219, 2300230, 2300200]
+    "boss_ids": [2300243, 2300244, 2300245]
   },
   {
     "dungeon_id": "00003",
@@ -64,7 +64,7 @@
     "boss_ids": [2321402, 2321401, 2321403]
   },
   {
-    "dungeon_id": "00005",
+    "dungeon_id": "10004",
     "name": {
       "zh-CN": "沉没的生命神殿",
       "zh-TW": "沉沒的生命神殿",
@@ -78,5 +78,37 @@
       "ko": "Phase 4"
     },
     "boss_ids": [2300032, 2300031, 2300030]
+  },
+  {
+    "dungeon_id": "20001",
+    "name": {
+      "zh-CN": "深淵重鑄",
+      "zh-TW": "深淵重鑄",
+      "en": "Reforged Abyss ",
+      "ko": "Reforged Abyss"
+    },
+    "difficulty": {
+      "zh-CN": "盧德萊",
+      "zh-TW": "盧德萊",
+      "en": "Ludra",
+      "ko": "Ludra"
+    },
+    "boss_ids": [2301008, 2301006, 2301007, 2301014]
+  },
+  {
+    "dungeon_id": "20002",
+    "name": {
+      "zh-CN": "侵蚀",
+      "zh-TW": "侵蚀",
+      "en": "侵蚀",
+      "ko": "侵蚀"
+    },
+    "difficulty": {
+      "zh-CN": "净化所",
+      "zh-TW": "净化所",
+      "en": "净化所",
+      "ko": "净化所"
+    },
+    "boss_ids": [2301209, 2301207, 2301208]
   }
 ]

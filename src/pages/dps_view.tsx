@@ -59,7 +59,7 @@ type DungeonCard = DungeonDefinition & {
   bosses: DungeonBossCard[];
 };
 
-type DpsViewMode = "all" | "dungeon";
+type DungeonCategory = "all" | "expedition" | "transcendence" | "sanctuary";
 
 const PAGE_SIZE = 20;
 const IS_DEV = import.meta.env.DEV;
@@ -88,8 +88,28 @@ const ACTOR_CLASS_NAME_MAP: Record<string, string> = {
   CHANTER: "护法星",
 };
 
+const DUNGEON_CATEGORY_LABELS: Record<DungeonCategory, string> = {
+  all: "全部副本",
+  expedition: "远征",
+  transcendence: "超越",
+  sanctuary: "圣域",
+};
+
 function getClassName(actorClass: string) {
   return ACTOR_CLASS_NAME_MAP[actorClass] ?? actorClass;
+}
+
+function getDungeonCategory(dungeonId: string): Exclude<DungeonCategory, "all"> | null {
+  if (dungeonId.startsWith("0")) {
+    return "expedition";
+  }
+  if (dungeonId.startsWith("1")) {
+    return "transcendence";
+  }
+  if (dungeonId.startsWith("2")) {
+    return "sanctuary";
+  }
+  return null;
 }
 
 function buildBattleRanks(rows: StatByClassMobRow[]): BattleRankItem[] {
@@ -209,58 +229,6 @@ const BossCard = memo(function BossCard({
   );
 });
 
-const AllView = memo(function AllView({
-  loading,
-  bossSearch,
-  onBossSearchChange,
-  totalCount,
-  filteredStats,
-  selectedMobCode,
-  onSelectMob,
-}: {
-  loading: boolean;
-  bossSearch: string;
-  onBossSearchChange: (value: string) => void;
-  totalCount: number;
-  filteredStats: TargetMobStat[];
-  selectedMobCode: string | null;
-  onSelectMob: (item: TargetMobStat) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-center md:justify-start">
-        <Input
-          value={bossSearch}
-          onChange={(event) => onBossSearchChange(event.target.value)}
-          placeholder="搜索 Boss 名称"
-          className="h-10 w-full max-w-sm border-white/10 bg-white/5 text-white placeholder:text-white/35"
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 md:justify-start">
-        <KdaRingCard label="全部战斗" value={loading ? "..." : String(totalCount)} />
-
-        {loading ? (
-          <WinRateRingCard label="加载中" value="..." subValue="请稍候" />
-        ) : filteredStats.length > 0 ? (
-          filteredStats.map((item) => (
-            <BossCard
-              key={item.mob_code}
-              mobCode={item.mob_code}
-              label={item.target_name}
-              count={Number(item.battle_count)}
-              active={selectedMobCode === item.mob_code}
-              onSelect={() => onSelectMob(item)}
-            />
-          ))
-        ) : (
-          <WinRateRingCard label="暂无数据" value="0场" />
-        )}
-      </div>
-    </div>
-  );
-});
-
 const DungeonView = memo(function DungeonView({
   loading,
   dungeonCards,
@@ -282,8 +250,16 @@ const DungeonView = memo(function DungeonView({
     );
   }
 
+  if (dungeonCards.length === 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 md:justify-start">
+        <WinRateRingCard label="暂无数据" value="0场" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       {dungeonCards.map((dungeon) => (
         <div key={dungeon.dungeon_id} className="rounded-xl border border-white/10 p-4">
           <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
@@ -320,7 +296,7 @@ export default function DpsViewPage() {
   const [stats, setStats] = useState<TargetMobStat[]>([]);
   const [selectedMob, setSelectedMob] = useState<TargetMobStat | null>(null);
   const [bossSearch, setBossSearch] = useState("");
-  const [viewMode, setViewMode] = useState<DpsViewMode>("all");
+  const [dungeonCategory, setDungeonCategory] = useState<DungeonCategory>("expedition");
   const [selectedClass, setSelectedClass] = useState("ALL");
   const [battleRanks, setBattleRanks] = useState<BattleRankItem[]>([]);
   const [page, setPage] = useState(1);
@@ -342,20 +318,22 @@ export default function DpsViewPage() {
 
         const { data, error } = await supabase
           .from("aion2_dps_rank")
-          .select("target_mob_code,target_name")
+          .select("target_mob_code,target_name,battle_ended_at")
           .eq("is_boss", true)
           .order("battle_ended_at", { ascending: false });
-        debugger;
+
         if (requestId !== targetStatsRequestIdRef.current) {
           return;
         }
-        if (error) throw error;
+
+        if (error) {
+          throw error;
+        }
 
         const list = normalizeTargetMobStats(
           buildTargetMobStatsFromRankRows((data ?? []) as RankMobSourceRow[])
         );
         setStats(list);
-        setSelectedMob((current) => current ?? list[0] ?? null);
       } catch (error) {
         if (requestId !== targetStatsRequestIdRef.current) {
           return;
@@ -395,33 +373,24 @@ export default function DpsViewPage() {
         setRankLoading(true);
         setRankErrorMessage(null);
 
-        let query = supabase
-          .from("aion2_dps_rank")
-          .select(
-            "record_id,main_actor_name,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage",
-            { count: "exact" }
-          )
-          .eq("target_mob_code", mobCode)
-          .order("main_actor_dps", { ascending: false })
-          .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-
-        if (selectedClass !== "ALL") {
-          query = query.eq("main_actor_class", selectedClass);
-        }
-
-        const { data, error, count } = await query;
+        const { data, error } = await supabase.rpc("get_stat_by_class_mob", {
+          p_mob_code: mobCode,
+          p_actor_class: selectedClass,
+          p_limit: PAGE_SIZE,
+          p_offset: (page - 1) * PAGE_SIZE,
+          p_min_boss_hp_ratio: 0,
+        });
 
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
         }
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        const rows = ((data ?? []) as Omit<StatByClassMobRow, "total_count">[]).map((row) => ({
-          ...row,
-          total_count: Number(count ?? 0),
-        }));
+        const rows = (data ?? []) as StatByClassMobRow[];
         setBattleRanks(buildBattleRanks(rows));
-        setTotalRankCount(Number(count ?? 0));
+        setTotalRankCount(Number(rows[0]?.total_count ?? 0));
       } catch (error) {
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
@@ -439,19 +408,6 @@ export default function DpsViewPage() {
 
     void loadBattleRanks();
   }, [page, selectedClass, selectedMob]);
-
-  const totalCount = useMemo(
-    () => stats.reduce((sum, item) => sum + Number(item.battle_count), 0),
-    [stats]
-  );
-
-  const filteredStats = useMemo(() => {
-    const keyword = bossSearch.trim().toLowerCase();
-    if (!keyword) {
-      return stats;
-    }
-    return stats.filter((item) => item.target_name.toLowerCase().includes(keyword));
-  }, [bossSearch, stats]);
 
   const statsByMobCode = useMemo(
     () => new Map(stats.map((item) => [item.mob_code, item])),
@@ -474,6 +430,29 @@ export default function DpsViewPage() {
     }));
   }, [statsByMobCode]);
 
+  const filteredDungeonCards = useMemo(() => {
+    const keyword = bossSearch.trim().toLowerCase();
+
+    return dungeonCards
+      .filter((dungeon) => {
+        if (dungeonCategory === "all") {
+          return true;
+        }
+        return getDungeonCategory(dungeon.dungeon_id) === dungeonCategory;
+      })
+      .map((dungeon) => {
+        if (!keyword) {
+          return dungeon;
+        }
+
+        return {
+          ...dungeon,
+          bosses: dungeon.bosses.filter((boss) => boss.label.toLowerCase().includes(keyword)),
+        };
+      })
+      .filter((dungeon) => dungeon.bosses.length > 0 || !keyword);
+  }, [bossSearch, dungeonCards, dungeonCategory]);
+
   const selectedClassAvgDps = useMemo(() => {
     const totalDamage = battleRanks.reduce((sum, item) => sum + item.totalDamage, 0);
     const totalFightSeconds = battleRanks.reduce((sum, item) => sum + item.fightSeconds, 0);
@@ -485,74 +464,77 @@ export default function DpsViewPage() {
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
 
   useEffect(() => {
-    if (viewMode !== "all") {
-      return;
-    }
+    const visibleMobCodes = new Set(
+      filteredDungeonCards.flatMap((dungeon) => dungeon.bosses.map((boss) => boss.mobCode))
+    );
 
-    if (filteredStats.length === 0) {
+    if (visibleMobCodes.size === 0) {
       setSelectedMob(null);
       return;
     }
 
     if (!selectedMob) {
-      setSelectedMob(filteredStats[0]);
+      const nextMobCode = filteredDungeonCards[0]?.bosses[0]?.mobCode;
+      if (nextMobCode) {
+        const nextStat = statsByMobCode.get(nextMobCode);
+        setSelectedMob(nextStat ?? null);
+      }
       return;
     }
 
-    const stillVisible = filteredStats.some((item) => item.mob_code === selectedMob.mob_code);
-    if (!stillVisible) {
-      setSelectedMob(filteredStats[0]);
+    if (!visibleMobCodes.has(selectedMob.mob_code)) {
+      const nextMobCode = filteredDungeonCards[0]?.bosses[0]?.mobCode;
+      if (nextMobCode) {
+        const nextStat = statsByMobCode.get(nextMobCode);
+        setSelectedMob(nextStat ?? null);
+      } else {
+        setSelectedMob(null);
+      }
     }
-  }, [filteredStats, selectedMob, viewMode]);
+  }, [filteredDungeonCards, selectedMob, statsByMobCode]);
 
   return (
     <TooltipProvider delayDuration={100}>
       <section className="w-full space-y-6 px-6 py-4 text-white">
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setViewMode("all")}
-            className={[
-              "rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
-              viewMode === "all"
-                ? "border-[#d9a73a] bg-[#d9a73a]/15 text-[#d9a73a]"
-                : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
-            ].join(" ")}
-          >
-            全部视图
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("dungeon")}
-            className={[
-              "rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
-              viewMode === "dungeon"
-                ? "border-[#d9a73a] bg-[#d9a73a]/15 text-[#d9a73a]"
-                : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
-            ].join(" ")}
-          >
-            副本视图
-          </button>
+        <div className="space-y-4">
+          <div className="flex justify-center md:justify-start">
+            <Input
+              value={bossSearch}
+              onChange={(event) => setBossSearch(event.target.value)}
+              placeholder="搜索 Boss 名称"
+              className="h-10 w-full max-w-sm border-white/10 bg-white/5 text-white placeholder:text-white/35"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {(["expedition", "transcendence", "sanctuary", "all"] as DungeonCategory[]).map(
+              (category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setDungeonCategory(category)}
+                  className={[
+                    "rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
+                    dungeonCategory === category
+                      ? "border-[#d9a73a] bg-[#d9a73a]/15 text-[#d9a73a]"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
+                  ].join(" ")}
+                >
+                  {DUNGEON_CATEGORY_LABELS[category]}
+                </button>
+              )
+            )}
+          </div>
         </div>
 
         {errorMessage ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {errorMessage}
           </div>
-        ) : viewMode === "all" ? (
-          <AllView
-            loading={loading}
-            bossSearch={bossSearch}
-            onBossSearchChange={setBossSearch}
-            totalCount={totalCount}
-            filteredStats={filteredStats}
-            selectedMobCode={selectedMobCode}
-            onSelectMob={setSelectedMob}
-          />
         ) : (
           <DungeonView
             loading={loading}
-            dungeonCards={dungeonCards}
+            dungeonCards={filteredDungeonCards}
             language={currentLanguage}
             selectedMobCode={selectedMobCode}
             onSelectMob={setSelectedMob}
@@ -673,7 +655,7 @@ export default function DpsViewPage() {
               </div>
             </>
           ) : (
-            <div className="py-8 text-center text-sm text-white/50">当前目标和职业暂无数据</div>
+            <div className="py-8 text-center text-sm text-white/50">当前目标和职业暂无数据。</div>
           )}
         </div>
       </section>

@@ -1,3 +1,15 @@
+create or replace function public.get_aion2_dps_max_party_total_damage(
+  p_mob_code bigint
+)
+returns bigint
+language sql
+stable
+as $helper$
+  select max(party_total_damage)
+  from public.aion2_dps
+  where target_mob_code = p_mob_code;
+$helper$;
+
 create or replace function public.insert_aion2_dps_and_update_rank(
   p_payload jsonb,
   p_keep_limit integer default 500
@@ -12,15 +24,20 @@ declare
   v_main_actor_server_id text;
   v_main_actor_class text;
   v_target_mob_code bigint;
+  v_target_max_hp bigint;
   v_keep_limit integer;
   v_trimmed_count integer := 0;
+  v_party_total_damage bigint := 0;
+  v_boss_max_party_total_damage bigint;
 begin
   v_record_id := nullif(trim(p_payload->>'record_id'), '');
   v_main_actor_name := coalesce(nullif(trim(p_payload->>'main_actor_name'), ''), '');
   v_main_actor_server_id := coalesce(trim(p_payload->>'main_actor_server_id'), '');
   v_main_actor_class := coalesce(trim(p_payload->>'main_actor_class'), '');
   v_target_mob_code := nullif(p_payload->>'target_mob_code', '')::bigint;
+  v_target_max_hp := nullif(p_payload->>'target_max_hp', '')::bigint;
   v_keep_limit := greatest(1, least(coalesce(p_keep_limit, 500), 5000));
+  v_party_total_damage := coalesce((p_payload->>'party_total_damage')::bigint, 0);
 
   if v_record_id is null then
     raise exception 'record_id is required';
@@ -116,6 +133,33 @@ begin
 
   get diagnostics v_trimmed_count = row_count;
 
+  v_boss_max_party_total_damage := public.get_aion2_dps_max_party_total_damage(v_target_mob_code);
+
+  if v_target_mob_code = 2400032 then
+    if coalesce((p_payload->>'team_battle_duration')::double precision, 0) < 60 then
+      raise exception
+        'team_battle_duration (%) must be at least 60 seconds for mob_code %',
+        coalesce((p_payload->>'team_battle_duration')::double precision, 0),
+        v_target_mob_code;
+    end if;
+  elsif coalesce(v_target_max_hp, 0) > 0 then
+    if v_party_total_damage < (v_target_max_hp * 0.9) then
+      raise exception
+        'party_total_damage (%) must be at least 90%% of target_max_hp (%) for mob_code %',
+        v_party_total_damage,
+        v_target_max_hp,
+        v_target_mob_code;
+    end if;
+  elsif coalesce(v_boss_max_party_total_damage, 0) > 0 then
+    if v_party_total_damage < (v_boss_max_party_total_damage * 0.8) then
+      raise exception
+        'party_total_damage (%) must be at least 90%% of max party_total_damage (%) for mob_code %',
+        v_party_total_damage,
+        v_boss_max_party_total_damage,
+        v_target_mob_code;
+    end if;
+  end if;
+
   insert into public.aion2_dps_rank (
     record_id,
     battle_ended_at,
@@ -180,7 +224,8 @@ begin
   return jsonb_build_object(
     'success', true,
     'record_id', v_record_id,
-    'trimmed_count', v_trimmed_count
+    'trimmed_count', v_trimmed_count,
+    'boss_max_party_total_damage', v_boss_max_party_total_damage
   );
 end;
 $$;
