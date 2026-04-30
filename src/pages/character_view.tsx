@@ -6,8 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/custom-tooltip";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fetchFengwo, formatFengwoResponse } from "@/lib/aion2/fetchFengwo";
 import { getServerShortName } from "@/lib/aion2/servers";
+import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
+import { DpsDetailContent } from "@/components/dps/dps-detail-content";
 
 import { renderEquipmentInfo } from "@/components/aion2/slot-equip";
 import { renderArcanaSlot } from "@/components/aion2/slot-arcana";
@@ -26,6 +29,8 @@ import { CharacterProps } from "@/types/character";
 import { DaevanionGrid } from "@/components/aion2/daevanion-board";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/supabase";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import { DpsDetailPayload, HistoryTargetRecord } from "@/types/aion2dps";
 
 function CharacterBanner({
   profile,
@@ -581,66 +586,209 @@ function formatDateTime(value: string | null) {
   });
 }
 
-// function DpsDetailDialog({data} :{ data: any}){
-//   return (    <Dialog open={open} onOpenChange={handleOpenChange}>
-//         <DialogContent className="sm:max-w-md">
-//           <DialogHeader>
-//             <DialogTitle>{dialogTitle}</DialogTitle>
-//             <DialogDescription>{dialogDescription}</DialogDescription>
-//           </DialogHeader>)
-// }
+function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
+  const { settings } = useAppSettings();
+  const [selectedRow, setSelectedRow] = useState<HistoryBattleRow | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<HistoryTargetRecord | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
 
-function DpsRowPage({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
-  // const [showDetail, setShowDetail] =
+  const dpsAppearance = settings.appearance.dpsWindow;
+  const selectedTargetInfo = selectedRecord
+    ? selectedRecord.combatInfos.targetInfos[String(selectedRecord.targetId)]
+    : undefined;
+  const selectedDetailPayload = useMemo<DpsDetailPayload | null>(() => {
+    if (!selectedRecord || selectedPlayerId === null) {
+      return null;
+    }
+
+    const playerStats = selectedRecord.thisTargetAllPlayerStats?.[String(selectedPlayerId)] ?? null;
+    if (!playerStats) {
+      return null;
+    }
+
+    return {
+      mode: "history",
+      actorId: selectedPlayerId,
+      targetId: selectedRecord.targetId,
+      combatInfos: selectedRecord.combatInfos,
+      playerStats,
+      playerSkillStats:
+        selectedRecord.thisTargetAllPlayerSkillStats?.[String(selectedPlayerId)] ?? {},
+      playerSkillRecords:
+        selectedRecord.thisTargetAllPlayerSkillRecords?.[String(selectedPlayerId)] ?? [],
+      playerDpsCurve: [],
+    };
+  }, [selectedPlayerId, selectedRecord]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDetail = async () => {
+      if (!selectedRow) {
+        setSelectedRecord(null);
+        setDetailLoading(false);
+        setSelectedPlayerId(null);
+        return;
+      }
+
+      setDetailLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("aion2_dps")
+          .select("data")
+          .eq("record_id", selectedRow.record_id)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        if (!cancelled) {
+          const nextRecord = (data?.data as HistoryTargetRecord | null) ?? null;
+          setSelectedRecord(nextRecord);
+          const nextPlayerIds = Object.keys(nextRecord?.thisTargetAllPlayerStats ?? {});
+          setSelectedPlayerId(nextPlayerIds.length > 0 ? Number(nextPlayerIds[0]) : null);
+        }
+      } catch (error) {
+        console.error("failed to load dps detail:", error);
+        if (!cancelled) {
+          setSelectedRecord(null);
+          setSelectedPlayerId(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setDetailLoading(false);
+        }
+      }
+    };
+
+    void loadDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRow]);
 
   return (
-    <Card className="">
-      <table className="bg-background/35 w-full border-collapse border-white/10 p-0 text-sm text-white backdrop-blur-sm">
-        <thead className="bg-white/5 text-white/60">
-          <tr>
-            <th className="px-4 py-3 text-left font-medium">战斗时间</th>
-            <th className="px-4 py-3 text-left font-medium">目标</th>
-            <th className="px-4 py-3 text-left font-medium">职业</th>
-            <th className="px-4 py-3 text-right font-medium">个人伤害</th>
-            <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
-            <th className="px-4 py-3 text-right font-medium">战斗时长</th>
-            <th className="px-4 py-3 text-right font-medium">个人秒伤</th>
-            <th className="px-4 py-3 text-right font-medium">伤害详情</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dpsRows.map((row) => (
-            <tr key={row.record_id} className="border-t border-white/10 hover:bg-white/[0.03]">
-              <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
-              <td className="px-4 py-3">
-                <div className="font-medium text-white">
-                  {row.target_name ?? `Boss ${row.target_mob_code ?? "-"}`}
-                </div>
-                <div className="mt-1 text-xs text-white/40">
-                  MobCode: {row.target_mob_code ?? "-"}
-                </div>
-              </td>
-              <td className="px-4 py-3 text-white/65">{row.main_actor_class}</td>
-              <td className="px-4 py-3 text-right text-white/85">
-                {Math.round(Number(row.main_actor_damage ?? 0)).toLocaleString()}
-              </td>
-              <td className="px-4 py-3 text-right text-white/85">
-                {Math.round(Number(row.party_total_damage ?? 0)).toLocaleString()}
-              </td>
-              <td className="px-4 py-3 text-right text-white/65">
-                {Number(row.main_actor_battle_duration ?? 0).toFixed(1)} 秒
-              </td>
-              <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
-                {Math.round(Number(row.main_actor_dps ?? 0)).toLocaleString()}
-              </td>
-              <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
-                <button>查看</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
+    <>
+      <Card className="">
+        <div className="max-h-[1000px] overflow-y-auto">
+          <table className="bg-background/35 w-full border-collapse border-white/10 p-0 text-sm text-white backdrop-blur-sm">
+            <thead className="bg-white/5 text-white/60">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">战斗时间</th>
+                <th className="px-4 py-3 text-left font-medium">目标</th>
+                <th className="px-4 py-3 text-left font-medium">职业</th>
+                <th className="px-4 py-3 text-right font-medium">个人伤害</th>
+                <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
+                <th className="px-4 py-3 text-right font-medium">战斗时长</th>
+                <th className="px-4 py-3 text-right font-medium">个人秒伤</th>
+                <th className="px-4 py-3 text-right font-medium">伤害详情</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dpsRows.map((row) => (
+                <tr key={row.record_id} className="border-t border-white/10 hover:bg-white/[0.03]">
+                  <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-white">
+                      {row.target_name ?? `Boss ${row.target_mob_code ?? "-"}`}
+                    </div>
+                    <div className="mt-1 text-xs text-white/40">
+                      MobCode: {row.target_mob_code ?? "-"}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-white/65">{row.main_actor_class}</td>
+                  <td className="px-4 py-3 text-right text-white/85">
+                    {Math.round(Number(row.main_actor_damage ?? 0)).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right text-white/85">
+                    {Math.round(Number(row.party_total_damage ?? 0)).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right text-white/65">
+                    {Number(row.main_actor_battle_duration ?? 0).toFixed(1)} 秒
+                  </td>
+                  <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
+                    {Math.round(Number(row.main_actor_dps ?? 0)).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      className="rounded-md border border-white/10 px-3 py-1 text-sm text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={() => setSelectedRow(row)}
+                    >
+                      查看
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Dialog open={selectedRow !== null} onOpenChange={(open) => !open && setSelectedRow(null)}>
+        <DialogContent className="bg-background/95 flex h-[80vh] w-[95vw] max-w-none flex-col overflow-hidden border-white/10 p-0 text-white sm:max-w-[1400px]">
+          {/* ================= Header ================= */}
+          <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
+            <DialogTitle className="text-lg font-semibold">
+              {selectedRow?.target_name ?? `Boss ${selectedRow?.target_mob_code ?? "-"}`} 伤害详情
+            </DialogTitle>
+            <p className="text-sm text-white/40">点击左侧玩家查看技能明细</p>
+          </DialogHeader>
+
+          {/* ================= 主体 ================= */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* ================= 左侧：DPS排行 ================= */}
+            <div className="flex w-[420px] flex-col border-r border-white/10">
+              <div className="shrink-0 px-4 py-3 text-sm font-medium text-white/70">
+                玩家伤害排行
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-3 pb-4">
+                {detailLoading ? (
+                  <div className="px-4 py-8 text-center text-sm text-white/60">正在加载...</div>
+                ) : selectedRecord && selectedTargetInfo ? (
+                  <MemoizedDpsPanel
+                    targetInfo={selectedTargetInfo}
+                    thisTargetPlayerStats={selectedRecord.thisTargetAllPlayerStats}
+                    combatInfos={selectedRecord.combatInfos}
+                    mainPlayerColor={dpsAppearance.mainPlayerColor}
+                    otherPlayerColor={dpsAppearance.otherPlayerColor}
+                    barOpacity={100}
+                    maskNicknames={dpsAppearance.maskNicknames}
+                    percentDisplayMode={dpsAppearance.percentDisplayMode}
+                    onPlayerClicked={setSelectedPlayerId}
+                    onPlayerHovered={() => {}}
+                    onPlayerHoverEnd={() => {}}
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            {/* ================= 右侧：技能详情 ================= */}
+            <div className="flex flex-1 flex-col">
+              <div className="shrink-0 border-b border-white/10 px-6 py-3 text-sm font-medium text-white/70">
+                技能伤害明细
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                {selectedDetailPayload ? (
+                  <div className="">
+                    <DpsDetailContent payload={selectedDetailPayload} />
+                  </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-white/50">
+                    {detailLoading ? "正在加载 DPS 明细..." : "请在左侧选择一个玩家查看技能详情"}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -782,7 +930,7 @@ export default function CharacterViewPage() {
             </TabsContent>
 
             <TabsContent value="dps-history">
-              <DpsRowPage dpsRows={characterDpsRows} />
+              <DpsHistoryDialogTable dpsRows={characterDpsRows} />
             </TabsContent>
 
             <TabsContent value="stat-detail">

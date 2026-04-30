@@ -76,7 +76,7 @@ const DpsPanel = function DpsPanel({
           : t("dps.list.unknownServer");
 
         const actorClassIcon = actorClass
-          ? `images/class/${actorClass.toLowerCase()}.webp`
+          ? `/images/class/${actorClass.toLowerCase()}.webp`
           : "/images/aion2.png";
 
         const isMainPlayer = mainActorId === player.playerId;

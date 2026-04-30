@@ -6,6 +6,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/lib/supabase/supabase";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getLocalizedText, type LocalizedText } from "@/lib/i18n-data";
+import { Link } from "react-router-dom";
+
+import { getServerShortName } from "@/lib/aion2/servers";
 
 type TargetMobStat = {
   mob_code: string;
@@ -24,6 +27,7 @@ type StatByClassMobRow = {
   record_id: string;
   main_actor_name: string | null;
   main_actor_class: string | null;
+  main_actor_server_id: number;
   main_actor_damage: number | null;
   main_actor_battle_duration: number | null;
   main_actor_dps: number | null;
@@ -35,6 +39,7 @@ type BattleRankItem = {
   recordId: string;
   actorName: string;
   actorClass: string;
+  actorServerId: number;
   totalDamage: number;
   partyTotalDamage: number;
   fightSeconds: number;
@@ -118,6 +123,7 @@ function buildBattleRanks(rows: StatByClassMobRow[]): BattleRankItem[] {
       recordId: row.record_id,
       actorName: row.main_actor_name ?? "-",
       actorClass: row.main_actor_class ?? "-",
+      actorServerId: row.main_actor_server_id ?? 0,
       totalDamage: Number(row.main_actor_damage ?? 0),
       partyTotalDamage: Number(row.party_total_damage ?? 0),
       fightSeconds: Number(row.main_actor_battle_duration ?? 0),
@@ -373,12 +379,11 @@ export default function DpsViewPage() {
         setRankLoading(true);
         setRankErrorMessage(null);
 
-        const { data, error } = await supabase.rpc("get_stat_by_class_mob", {
+        const { data, error } = await supabase.rpc("get_rank_stat_by_class_mob", {
           p_mob_code: mobCode,
           p_actor_class: selectedClass,
           p_limit: PAGE_SIZE,
           p_offset: (page - 1) * PAGE_SIZE,
-          p_min_boss_hp_ratio: 0,
         });
 
         if (requestId !== battleRanksRequestIdRef.current) {
@@ -609,7 +614,20 @@ export default function DpsViewPage() {
                         <td className="px-4 py-3 text-white/70">
                           #{(page - 1) * PAGE_SIZE + index + 1}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-white">{item.actorName}</td>
+                        <td className="px-4 py-3 font-semibold text-white">
+                          <Link
+                            to={`/character/view?serverId=${item.actorServerId}&characterName=${item.actorName}`}
+                            className="text-white/90 transition hover:text-white hover:underline"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            {item.actorName}
+                            <span className="ml-1 text-white/50">
+                              [{getServerShortName(Number(item.actorServerId))}]
+                            </span>
+                          </Link>
+                        </td>
                         <td className="px-4 py-3 text-white/60">{getClassName(item.actorClass)}</td>
                         <td className="px-4 py-3 text-right text-white/80">
                           {Math.round(item.totalDamage).toLocaleString()}
