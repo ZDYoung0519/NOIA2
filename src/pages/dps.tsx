@@ -390,7 +390,7 @@ export default function DpsPage() {
           if (!mounted) {
             return;
           }
-          setPingHistory(event.payload as number[]);
+          setPingHistory(event.payload as [number, number][]);
           setView("ping");
         });
 
