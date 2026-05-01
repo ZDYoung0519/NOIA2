@@ -29,7 +29,8 @@ dist-ssr
 generate_key.sh
 src-python/
 reconstructed_src/
+scripts/
 
 # supabase
 .env
-scripts/
+
