@@ -143,9 +143,7 @@ function buildBattleRanks(rows: StatByClassMobRow[], sortMode: RankSortMode): Ba
       teamDps: Number(row.team_dps ?? 0),
     }))
     .filter((item) => item.totalDamage > 0 && item.fightSeconds > 0)
-    .sort((a, b) =>
-      sortMode === "team" ? b.teamDps - a.teamDps || b.dps - a.dps : b.dps - a.dps
-    );
+    .sort((a, b) => (sortMode === "team" ? b.teamDps - a.teamDps || b.dps - a.dps : b.dps - a.dps));
 }
 
 function formatDateTime(value: string | null) {
@@ -338,9 +336,7 @@ function DpsRankDetailDialog({
 
         <div className="flex flex-1 overflow-hidden">
           <div className="flex w-[420px] flex-col border-r border-white/10">
-            <div className="shrink-0 px-4 py-3 text-sm font-medium text-white/70">
-              玩家伤害排行
-            </div>
+            <div className="shrink-0 px-4 py-3 text-sm font-medium text-white/70">玩家伤害排行</div>
 
             <div className="flex-1 overflow-y-auto px-3 pb-4">
               {detailLoading ? (
@@ -569,8 +565,10 @@ export default function DpsViewPage() {
 
       try {
         setRankErrorMessage(null);
+
         const from = (page - 1) * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
+        const to = from + PAGE_SIZE; // 多取 1 条，用来判断是否还有下一页
+
         let query = supabase
           .from("aion2_dps_rank")
           .select(
@@ -585,8 +583,7 @@ export default function DpsViewPage() {
             main_actor_dps,
             party_total_damage,
             team_dps
-            `,
-            { count: "exact" }
+          `
           )
           .eq("target_mob_code", mobCode)
           .order(rankSortMode === "team" ? "team_dps" : "main_actor_dps", {
@@ -594,23 +591,38 @@ export default function DpsViewPage() {
             nullsFirst: false,
           })
           .range(from, to);
+
         if (selectedClass !== "ALL") {
           query = query.eq("main_actor_class", selectedClass);
         }
-        const { data, error, count } = await query;
+
+        const { data, error } = await query;
+
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
         }
+
         if (error) {
           throw error;
         }
-        const rows = (data ?? []) as StatByClassMobRow[];
+
+        const rawRows = (data ?? []) as StatByClassMobRow[];
+        const hasNextPage = rawRows.length > PAGE_SIZE;
+        const rows = rawRows.slice(0, PAGE_SIZE);
+
         setBattleRanks(buildBattleRanks(rows, rankSortMode));
-        setTotalRankCount(count ?? 0);
+
+        // 如果你原来用 totalRankCount 控制分页，
+        // 这里改成“估算当前已知数量”，避免 count: exact。
+        setTotalRankCount(hasNextPage ? page * PAGE_SIZE + 1 : from + rows.length);
+
+        // 如果你愿意新增 state，更推荐直接用这个控制“下一页”按钮
+        // setHasNextRankPage(hasNextPage);
       } catch (error) {
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
         }
+
         console.error("Failed to load battle ranks:", error);
         setBattleRanks([]);
         setTotalRankCount(0);
@@ -621,7 +633,6 @@ export default function DpsViewPage() {
         }
       }
     }
-
     void loadBattleRanks();
   }, [page, rankSortMode, selectedClass, selectedMob]);
 
@@ -784,7 +795,8 @@ export default function DpsViewPage() {
             <div>
               <h2 className="text-lg font-bold text-white">战斗秒伤排行</h2>
               <p className="mt-1 text-sm text-white/50">
-                当前目标：{selectedMob?.target_name ?? "-"} / 职业：{getActorClassName(selectedClass)}
+                当前目标：{selectedMob?.target_name ?? "-"} / 职业：
+                {getActorClassName(selectedClass)}
               </p>
 
               <div className="mt-3 inline-flex items-baseline gap-2 rounded-lg border border-[#d9a73a]/30 bg-[#d9a73a]/10 px-3 py-2">
