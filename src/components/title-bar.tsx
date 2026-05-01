@@ -64,29 +64,27 @@ export function TitleBar({
     await appWindow.close();
   };
 
-  useEffect(() => {
-    if (!showClose) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!showClose) {
+  //     return;
+  //   }
 
-    const appWindow = getCurrentWebviewWindow();
-    if (appWindow.label === "main") {
-      return;
-    }
+  //   const appWindow = getCurrentWebviewWindow();
+  //   if (appWindow.label === "main") {
+  //     return;
+  //   }
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-
-      void handleClose();
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showClose]);
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.key !== "Escape") {
+  //       return;
+  //     }
+  //     void handleClose();
+  //   };
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [showClose]);
 
   const handleDragRegionDoubleClick = () => {
     if (onDoubleClick) {

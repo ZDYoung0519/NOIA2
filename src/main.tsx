@@ -19,8 +19,11 @@ import UserPage from "./pages/user";
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { ThemeProvider } from "./components/theme-provider";
 
 const DpsPage = lazy(() => import("./pages/dps"));
+const DpsPingPage = lazy(() => import("./pages/dps_ping"));
+const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
 const DpsLogPage = lazy(() => import("./pages/dps_log"));
 const AboutPage = lazy(() => import("./pages/about"));
@@ -46,6 +49,8 @@ function App() {
     <Routes>
       <Route element={<Outlet />}>
         <Route path="/dps" element={<DpsPage />} />
+        <Route path="/dps_ping" element={<DpsPingPage />} />
+        <Route path="/dps_settings" element={<DpsSettingPage />} />
         <Route path="/dps_detail" element={<DpsDetailPage />} />
         <Route path="/dps_log" element={<DpsLogPage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -76,12 +81,14 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AppSettingsProvider>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthDeepLinkHandler />
-          <App />
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="tauri-ui-theme">
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthDeepLinkHandler />
+            <App />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </AppSettingsProvider>
   </React.StrictMode>
 );

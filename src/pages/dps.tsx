@@ -3,18 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { Play, RotateCcw, Square, Trash2, Settings } from "lucide-react";
+
 import {
-  Cpu,
-  Database,
-  History,
-  Play,
-  RotateCcw,
-  ScrollText,
-  Square,
-  Trash2,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { TitleBar } from "@/components/title-bar";
@@ -25,13 +21,12 @@ import { useAppTranslation } from "@/hooks/use-app-translation";
 
 import { createWindow } from "@/lib/window";
 import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
-import { maskNickname } from "@/lib/name-mask";
+
 import { cn } from "@/lib/utils";
 import {
   CombatSnapshot,
   DpsDetailPayload,
   HistoryTargetRecord,
-  MemorySnapshot,
   SkillStats,
 } from "@/types/aion2dps";
 import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
@@ -169,7 +164,7 @@ function TitleIconButton({
       title={title}
       onClick={() => void onClick()}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-md border text-slate-300 transition",
+        "flex h-5.5 w-5.5 items-center justify-center rounded-lg border text-slate-300 transition",
         "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
         active &&
           tone === "accent" &&
@@ -291,95 +286,6 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
   );
 });
 
-type FooterData = {
-  fightingTime: string;
-  cpu: string;
-  ram: string;
-  ping: string;
-  packetTotalKb: string;
-  packetTooltipLines: string[];
-  packetPortLines: Array<{ key: string; value: string; isCombatPort: boolean }>;
-  combatPort: string | null;
-  mainActorName: string;
-  pingActive: boolean;
-  pingTone: string;
-};
-
-type BottomStatusBarProps = {
-  footerData: FooterData;
-  view: "dps" | "history";
-  isRunning: boolean;
-  targetFightingTime: number;
-  historyRecordsLength: number;
-  maskNicknames: boolean;
-};
-
-const MemoizedBottomStatusBar = memo(function BottomStatusBar({
-  footerData,
-  view,
-  isRunning,
-  targetFightingTime,
-  maskNicknames,
-}: BottomStatusBarProps) {
-  return (
-    <div className="flex items-center justify-between gap-2 border-t border-white/10 px-2 py-1 text-[11px] text-slate-300">
-      <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-        <div className="flex items-center gap-1">
-          <div
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              view === "history"
-                ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
-                : !isRunning
-                  ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                  : targetFightingTime > 0
-                    ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                    : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-            )}
-          />
-          <span className="text-xs text-slate-400 select-none">{footerData.fightingTime}</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Cpu className="h-3.5 w-3.5 text-slate-500" />
-          <span className="text-xs text-slate-200 select-none">{footerData.cpu}</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Database className="h-3.5 w-3.5 text-slate-500" />
-          <span className="text-xs text-slate-200 select-none">{footerData.ram}</span>
-        </div>
-
-        {/* <div className="flex items-center gap-1">
-          <Package className="h-3.5 w-3.5 text-slate-500" />
-          <button
-            type="button"
-            className="cursor-help text-xs text-slate-200 select-none"
-          >
-            {footerData.packetTotalKb}
-          </button>
-        </div> */}
-
-        {footerData.pingActive ? (
-          <div className={cn("flex items-center gap-1", footerData.pingTone)}>
-            <Wifi className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium select-none">{footerData.ping}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 text-white/60">
-            <WifiOff className="h-3.5 w-3.5" />
-            <span className="text-xs select-none">--</span>
-          </div>
-        )}
-      </div>
-
-      <div className="max-w-24 truncate text-xs text-slate-300 select-none">
-        {maskNickname(footerData.mainActorName, maskNicknames)}
-      </div>
-    </div>
-  );
-});
-
 export default function DpsPage() {
   const { settings } = useAppSettings();
   const { t } = useAppTranslation();
@@ -387,7 +293,7 @@ export default function DpsPage() {
   const [view, setView] = useState<"dps" | "history">("dps");
   const [isRunning, setIsRunning] = useState(false);
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
-  const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
+
   const [currentTarget, setCurrentTarget] = useState<number | null>(null);
   const [pinnedPlayerId, setPinnedPlayerId] = useState<number | null>(null);
   const [hoverPlayerId, setHoverPlayerId] = useState<number | null>(null);
@@ -401,7 +307,7 @@ export default function DpsPage() {
   const lastMemorySignatureRef = useRef<string | null>(null);
   const unlistenSnapshotRef = useRef<null | (() => void)>(null);
   const unlistenStatusRef = useRef<null | (() => void)>(null);
-  const unlistenMemoryRef = useRef<null | (() => void)>(null);
+
   const unlistenMainActorDetectedRef = useRef<null | (() => void)>(null);
   const unlistenResetRequestRef = useRef<null | (() => void)>(null);
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
@@ -448,30 +354,6 @@ export default function DpsPage() {
           );
         });
 
-        // 收听 dps-memory, 更新内存占用
-        unlistenMemoryRef.current = await listen<MemorySnapshot>("dps-memory", (event) => {
-          if (!mounted) {
-            return;
-          }
-
-          const nextMemory = event.payload;
-          const nextSignature = JSON.stringify({
-            cpuPercent: nextMemory.cpuPercent,
-            rssMb: nextMemory.rssMb,
-            capPort: nextMemory.capPort,
-            pingMs: nextMemory.pingMs,
-            mainActorName: nextMemory.mainActorName,
-            packetSizes: nextMemory.packetSizes,
-          });
-
-          if (lastMemorySignatureRef.current === nextSignature) {
-            return;
-          }
-
-          lastMemorySignatureRef.current = nextSignature;
-          setMemorySnapshot(nextMemory);
-        });
-
         // dps-meter的状态，运行/停止
         unlistenStatusRef.current = await listen<boolean>("dps-meter-status", (event) => {
           if (!mounted) {
@@ -484,7 +366,7 @@ export default function DpsPage() {
             lastSnapshotDamageRef.current = null;
             lastMemorySignatureRef.current = null;
             setSnapshot(null);
-            setMemorySnapshot(null);
+
             setCurrentTarget(null);
             setPinnedPlayerId(null);
             setHoverPlayerId(null);
@@ -581,10 +463,7 @@ export default function DpsPage() {
         void unlistenStatusRef.current();
         unlistenStatusRef.current = null;
       }
-      if (unlistenMemoryRef.current) {
-        void unlistenMemoryRef.current();
-        unlistenMemoryRef.current = null;
-      }
+
       if (unlistenMainActorDetectedRef.current) {
         void unlistenMainActorDetectedRef.current();
         unlistenMainActorDetectedRef.current = null;
@@ -639,7 +518,7 @@ export default function DpsPage() {
         return;
       }
 
-      const FOOTER_HEIGHT = 26;
+      const FOOTER_HEIGHT = 0;
       const contentHeight = (element.scrollHeight + FOOTER_HEIGHT) * dpsAppearance.scaleFactor;
       const targetHeight = Math.max(
         MIN_HEIGHT,
@@ -733,10 +612,6 @@ export default function DpsPage() {
     view,
     selectedHistoryId,
     historyRecords.length,
-    memorySnapshot?.cpuPercent,
-    memorySnapshot?.rssMb,
-    memorySnapshot?.pingMs,
-    memorySnapshot?.mainActorName,
   ]);
 
   const resolvedTargetId = useMemo(() => {
@@ -819,85 +694,25 @@ export default function DpsPage() {
     return Math.max(0, lastTime - startTime);
   }, [displayTargetInfo]);
 
-  const targetName = displayTargetInfo?.targetName || (t("dps_panel.targ") as string);
+  const timerStatus = useMemo(() => {
+    if (!targetFightingTime || targetFightingTime <= 0) {
+      return "00:00";
+    }
+
+    const totalSeconds = Math.floor(targetFightingTime);
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    const mm = String(minutes).padStart(2, "0");
+    const ss = String(seconds).padStart(2, "0");
+
+    return `${mm}:${ss}`;
+  }, [targetFightingTime]);
+
+  const targetName =
+    displayTargetInfo?.targetName || displayTargetInfo?.id || (t("无目标") as string);
   const dpsBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
-
-  const footerData = useMemo(() => {
-    const formatDuration = (seconds: number) => {
-      if (seconds <= 0) {
-        return isRunning ? "等待中" : "未启动";
-      }
-      if (seconds < 60) {
-        return `${seconds.toFixed(0)}s`;
-      }
-
-      const minutes = Math.floor(seconds / 60);
-      const remaining = seconds % 60;
-      return `${minutes}m ${remaining.toFixed(0)}s`;
-    };
-
-    const formatMemory = (mb?: number | null) => {
-      if (typeof mb !== "number" || !Number.isFinite(mb)) {
-        return "--";
-      }
-      return `${mb.toFixed(1)}M`;
-    };
-
-    const formatPercent = (value?: number | null) => {
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        return "--";
-      }
-      return `${value.toFixed(1)}%`;
-    };
-
-    const pingValue =
-      typeof memorySnapshot?.pingMs === "number" && Number.isFinite(memorySnapshot.pingMs)
-        ? `${Math.round(memorySnapshot.pingMs)} ms`
-        : "--";
-
-    const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
-    const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
-    const portPacketEntries = packetEntries.filter(([key]) => /^\d+-\d+$/.test(key));
-    const otherPacketEntries = packetEntries.filter(([key]) => !/^\d+-\d+$/.test(key));
-    const combatPort = memorySnapshot?.capPort ?? null;
-    const packetTooltipLines =
-      packetEntries.length > 0
-        ? [
-            `Total: ${(totalPacketSize / 1000).toFixed(2)}k`,
-            combatPort ? `Combat port: ${combatPort}` : "Combat port: --",
-            ...otherPacketEntries.map(
-              ([key, value]) => `${key}: ${(Number(value) / 1000).toFixed(2)}k`
-            ),
-          ]
-        : ["No buffers"];
-    const packetPortLines = portPacketEntries.map(([key, value]) => ({
-      key,
-      value: `${(Number(value) / 1000).toFixed(2)}k`,
-      isCombatPort: key === combatPort,
-    }));
-
-    return {
-      fightingTime: formatDuration(targetFightingTime),
-      cpu: formatPercent(memorySnapshot?.cpuPercent),
-      ram: formatMemory(memorySnapshot?.rssMb),
-      ping: pingValue,
-      packetTotalKb: totalPacketSize > 0 ? `${(totalPacketSize / 1000).toFixed(1)}k` : "0k",
-      packetTooltipLines,
-      packetPortLines,
-      combatPort,
-      mainActorName: memorySnapshot?.mainActorName ?? "--",
-      pingActive:
-        typeof memorySnapshot?.pingMs === "number" && Number.isFinite(memorySnapshot.pingMs),
-      pingTone:
-        typeof memorySnapshot?.pingMs !== "number" || !Number.isFinite(memorySnapshot.pingMs)
-          ? "text-white/60"
-          : memorySnapshot.pingMs < 60
-            ? "text-emerald-300"
-            : memorySnapshot.pingMs < 120
-              ? "text-yellow-300"
-              : "text-rose-300",
-    };
-  }, [isRunning, memorySnapshot, targetFightingTime]);
 
   const buildDetailPayload = useCallback(
     (playerId: number): DpsDetailPayload | null => {
@@ -1028,41 +843,6 @@ export default function DpsPage() {
     }, 10_000);
   }, [cancelDetailCloseTimer, closeDetailWindowNow, hoverPlayerId, pinnedPlayerId]);
 
-  const ensureLogWindow = useCallback(async () => {
-    await createWindow("dps_log", {
-      title: "DPS Log",
-      url: "/dps_log",
-      width: 560,
-      height: 320,
-      decorations: false,
-      transparent: true,
-      resizable: true,
-      shadow: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-    });
-
-    await waitForWindowReady("dps_log");
-
-    await invoke("ensure_tracked_window", {
-      options: {
-        parentLabel: "dps",
-        childLabel: "dps_log",
-        url: "/dps_log",
-        title: "DPS Log",
-        width: 560,
-        height: 320,
-        gap: 8,
-        decorations: false,
-        transparent: true,
-        resizable: true,
-        shadow: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-      },
-    });
-  }, []);
-
   const handleStartDpsMeter = useCallback(async () => {
     try {
       await invoke("start_dps_meter");
@@ -1093,7 +873,7 @@ export default function DpsPage() {
       lastSnapshotDamageRef.current = null;
       lastMemorySignatureRef.current = null;
       setSnapshot(null);
-      setMemorySnapshot(null);
+
       setCurrentTarget(null);
       setPinnedPlayerId(null);
       setHoverPlayerId(null);
@@ -1242,20 +1022,40 @@ export default function DpsPage() {
     void closeDetailWindowNow();
   }, [cancelDetailCloseTimer, closeDetailWindowNow, resolvedTargetId, selectedHistoryId, view]);
 
-  // const handleOpenSettings = useCallback(async () => {
-  //   await createWindow("settings", {
-  //     title: t("settings.title"),
-  //     url: "/settings",
-  //     width: 760,
-  //     height: 560,
-  //     minWidth: 680,
-  //     minHeight: 10,
-  //     resizable: true,
-  //     transparent: true,
-  //     decorations: false,
-  //   });
+  const handleOpenSettings = useCallback(async () => {
+    await createWindow("dps_settings", {
+      title: "DPS Settings",
+      url: "/dps_settings",
+      width: 560,
+      height: 1080,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+    });
 
-  // }, [t]);
+    await waitForWindowReady("dps_settings");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps",
+        childLabel: "dps_settings",
+        url: "/dps_settings",
+        title: "DPS Log",
+        width: 560,
+        height: 1080,
+        gap: 8,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+      },
+    });
+  }, [t]);
 
   const handleOpenHistory = useCallback(() => {
     if (view === "history") {
@@ -1269,6 +1069,41 @@ export default function DpsPage() {
     setView("history");
   }, [view]);
 
+  const handleOpenLog = useCallback(async () => {
+    await createWindow("dps_log", {
+      title: "DPS Log",
+      url: "/dps_log",
+      width: 560,
+      height: 320,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+    });
+
+    await waitForWindowReady("dps_log");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps",
+        childLabel: "dps_log",
+        url: "/dps_log",
+        title: "DPS Log",
+        width: 560,
+        height: 320,
+        gap: 8,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+      },
+    });
+  }, []);
+
   const handleClearHistory = useCallback(async () => {
     Aion2DpsHistory.clear();
     setHistoryRecords([]);
@@ -1280,12 +1115,8 @@ export default function DpsPage() {
     await closeDetailWindowNow();
   }, [closeDetailWindowNow]);
 
-  const handleOpenLog = useCallback(async () => {
-    await ensureLogWindow();
-  }, [ensureLogWindow]);
-
   const rightActions = (
-    <div className="flex items-center gap-1 pr-1">
+    <div className="flex items-center gap-1 pr-0">
       {isRunning ? (
         <TitleIconButton
           active
@@ -1293,7 +1124,7 @@ export default function DpsPage() {
           title={t("dps.actions.stop")}
           tone="danger"
         >
-          <Square className="h-3.5 w-3.5" />
+          <Square className="h-3 w-3" />
         </TitleIconButton>
       ) : (
         <TitleIconButton
@@ -1302,36 +1133,41 @@ export default function DpsPage() {
           title={t("dps.actions.start")}
           tone="accent"
         >
-          <Play className="h-3.5 w-3.5" />
+          <Play className="h-3 w-3" />
         </TitleIconButton>
       )}
 
       <TitleIconButton active onClick={handleReset} title={t("dps.actions.reset")}>
-        <RotateCcw className="h-3.5 w-3.5" />
-      </TitleIconButton>
-      {/* <Tooltip>
-        <TooltipTrigger asChild>
-          <div>
-            <TitleIconButton onClick={handleOpenSettings} title={t("dps.actions.settings")}>
-              <Settings2 className="h-3.5 w-3.5" />
-            </TitleIconButton>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{t("dps.actions.settings")}</TooltipContent>
-      </Tooltip> */}
-
-      <TitleIconButton active onClick={handleOpenLog} title={t("dps.actions.log")}>
-        <ScrollText className="h-3.5 w-3.5" />
+        <RotateCcw className="h-3 w-3" />
       </TitleIconButton>
 
-      <TitleIconButton active onClick={handleOpenHistory} title={t("dps.actions.history")}>
-        <History className="h-3.5 w-3.5" />
-      </TitleIconButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            onClick={() => {}}
+            title={t("dps.actions.settings")}
+            className="flex h-5.5 w-5.5 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenSettings}>
+            设置
+          </DropdownMenuItem>
+          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenHistory}>
+            历史
+          </DropdownMenuItem>
+          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenLog}>
+            日志
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 
   const leftActions = (
-    <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
+    <div className="flex min-w-0 items-center gap-3" data-tauri-drag-region>
       <button
         onClick={() => setView("dps")}
         className="flex h-6 w-6 cursor-pointer items-center justify-center p-0 hover:scale-110 hover:brightness-110 data-[tauri-drag-region]:pointer-events-none"
@@ -1350,11 +1186,11 @@ export default function DpsPage() {
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1"
+            className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1"
             data-tauri-drag-region
           >
             <span
-              className="max-w-25 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
+              className="max-w-20 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
               data-tauri-drag-region
             >
               {targetName}
@@ -1366,8 +1202,75 @@ export default function DpsPage() {
           <div>TargetId: {displayTargetInfo?.id}</div>
         </TooltipContent>
       </Tooltip>
+
+      <div className="flex items-center gap-1">
+        <div
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            view === "history"
+              ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
+              : !isRunning
+                ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                : targetFightingTime > 0
+                  ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                  : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+          )}
+        />
+        <span className="text-xs text-slate-400 select-none">{timerStatus}</span>
+      </div>
     </div>
   );
+
+  const ensurePingWindow = useCallback(async () => {
+    await createWindow("dps_ping", {
+      title: "DPS Ping",
+      url: "/dps_ping",
+      width: 5,
+      height: 5,
+      decorations: false,
+      transparent: true,
+      resizable: false,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+    });
+
+    await waitForWindowReady("dps_ping");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps",
+        childLabel: "dps_ping",
+        url: "/dps_ping",
+        title: "DPS Ping",
+        position: "bottom",
+        width: 5,
+        height: 5,
+        gap: 0,
+        decorations: false,
+        transparent: false,
+        resizable: false,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      },
+    });
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        await ensurePingWindow();
+      } catch (err) {
+        console.error("ensurePingWindow failed:", err);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [ensurePingWindow]);
 
   return (
     <WindowFrame
@@ -1430,7 +1333,7 @@ export default function DpsPage() {
               )}
 
               {view === "dps" && (
-                <div className="p-1">
+                <div className="min-h-12 p-3">
                   {dpsPanelData ? (
                     <MemoizedDpsPanel
                       targetInfo={dpsPanelData.targetInfo || undefined}
@@ -1441,28 +1344,18 @@ export default function DpsPage() {
                       barOpacity={100}
                       maskNicknames={dpsAppearance.maskNicknames}
                       percentDisplayMode={dpsAppearance.percentDisplayMode}
+                      classIconStyle={dpsAppearance.classIconStyle}
                       onPlayerClicked={handlePlayerClick}
                       onPlayerHovered={handlePlayerHover}
                       onPlayerHoverEnd={handlePlayerHoverEnd}
                     />
                   ) : (
-                    <div className="flex h-10 max-h-10 items-center justify-center rounded-xl px-4 text-center">
+                    <div className="flex items-center justify-center rounded-xl px-4 text-center">
                       <div className="text-sm font-medium text-slate-100">无数据</div>
                     </div>
                   )}
                 </div>
               )}
-            </div>
-
-            <div className="mt-auto">
-              <MemoizedBottomStatusBar
-                footerData={footerData}
-                view={view}
-                isRunning={isRunning}
-                targetFightingTime={targetFightingTime}
-                historyRecordsLength={historyRecords.length}
-                maskNicknames={dpsAppearance.maskNicknames}
-              />
             </div>
           </div>
         </section>

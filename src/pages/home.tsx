@@ -6,7 +6,7 @@ import CharacterCardCarousel from "@/components/character-card-carousel";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
 
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { createWindow } from "@/lib/window";
+import { createDpsWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
 
 export default function HomePage() {
@@ -14,25 +14,8 @@ export default function HomePage() {
   const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
   const { t } = useAppTranslation();
 
-  const handleOpenDps = async () => {
-    await createWindow("dps", {
-      title: "DPS Meter",
-      url: "/dps",
-      width: 250,
-      height: 50,
-      resizable: true,
-      maximizable: false,
-      minimizable: false,
-      decorations: false,
-      transparent: true,
-      shadow: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-    });
-  };
-
   const quickActions = [
-    { label: t("home.actions.openDps"), icon: Plus, onClick: handleOpenDps },
+    { label: t("home.actions.openDps"), icon: Plus, onClick: createDpsWindow },
     { label: t("home.actions.characterRating"), icon: ArrowUp, onClick: () => {} },
     { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => {} },
     { label: t("home.actions.comingSoon"), icon: FileText, onClick: () => {} },
@@ -45,9 +28,7 @@ export default function HomePage() {
           <div className="min-w-0">
             <CharacterCardCarousel onActiveCharacterChange={setMainCharacter} />
           </div>
-
           <RecentTeammatesCard mainCharacter={mainCharacter} />
-
           <div className="min-w-0 pt-1">
             <h3 className="text-foreground mb-6 text-[18px] font-semibold md:text-[20px]">
               {t("home.quickActions")}

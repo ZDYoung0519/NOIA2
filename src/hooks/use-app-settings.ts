@@ -29,6 +29,7 @@ export type MainWindowAppearance = {
 };
 
 export type DpsWindowAppearance = {
+  autoOpenDpsWin: boolean;
   backgroundColor: string;
   backgroundOpacity: number;
   autoResizeHeight: boolean;
@@ -36,6 +37,7 @@ export type DpsWindowAppearance = {
   maskNicknames: boolean;
   mainPlayerColor: string;
   otherPlayerColor: string;
+  classIconStyle: "default" | "colored";
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
 };
@@ -75,6 +77,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       backgroundOpacity: 92,
     },
     dpsWindow: {
+      autoOpenDpsWin: true,
       backgroundColor: "#000000",
       backgroundOpacity: 75,
       autoResizeHeight: true,
@@ -82,6 +85,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       maskNicknames: false,
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
+      classIconStyle: "default",
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
     },
@@ -190,12 +194,20 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
           input?.appearance?.dpsWindow?.otherPlayerColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.otherPlayerColor
         ),
+
         percentDisplayMode:
           input?.appearance?.dpsWindow?.percentDisplayMode === "contribution"
             ? "contribution"
             : input?.appearance?.dpsWindow?.percentDisplayMode === "damageShare"
               ? "damageShare"
               : DEFAULT_APP_SETTINGS.appearance.dpsWindow.percentDisplayMode,
+
+        classIconStyle:
+          input?.appearance?.dpsWindow?.classIconStyle === "default"
+            ? "default"
+            : input?.appearance?.dpsWindow?.classIconStyle === "colored"
+              ? "colored"
+              : DEFAULT_APP_SETTINGS.appearance.dpsWindow.classIconStyle,
       },
     },
   };

@@ -21,6 +21,7 @@ const DpsPanel = function DpsPanel({
   barOpacity,
   maskNicknames,
   percentDisplayMode = "damageShare",
+  classIconStyle = "default",
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
@@ -33,6 +34,7 @@ const DpsPanel = function DpsPanel({
   barOpacity?: number;
   maskNicknames?: boolean;
   percentDisplayMode?: "contribution" | "damageShare";
+  classIconStyle?: "default" | "colored";
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
   onPlayerHoverEnd?: (playerId: number) => void;
@@ -76,7 +78,9 @@ const DpsPanel = function DpsPanel({
           : t("dps.list.unknownServer");
 
         const actorClassIcon = actorClass
-          ? `/images/class/${actorClass.toLowerCase()}.webp`
+          ? classIconStyle === "default"
+            ? `/images/class/${actorClass.toLowerCase()}.webp`
+            : `/images/class/${actorClass.toLowerCase()}.png`
           : "/images/aion2.png";
 
         const isMainPlayer = mainActorId === player.playerId;
@@ -114,8 +118,8 @@ const DpsPanel = function DpsPanel({
             />
 
             <div className="relative z-10 flex w-full items-center justify-between px-1 py-1.5">
-              <div className="flex min-w-0 flex-1 items-center gap-2">
-                <div className="relative h-7 w-7 flex-shrink-0">
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                <div className="relative h-6 w-6 flex-shrink-0">
                   <img
                     src={actorClassIcon}
                     alt={actorClass || "class"}
@@ -128,13 +132,12 @@ const DpsPanel = function DpsPanel({
                 </div>
 
                 <span className="truncate text-sm font-medium">{displayPlayerName}</span>
-
                 <span className="flex-shrink-0 font-mono text-xs text-gray-500">
                   [{playerServerName}]
                 </span>
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-1">
                 <div className="text-right">
                   <span className="font-mono text-sm text-gray-200 tabular-nums">
                     {(player.totalDamageValue / 10000).toFixed(1)}

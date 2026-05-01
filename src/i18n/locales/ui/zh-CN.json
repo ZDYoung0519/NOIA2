@@ -106,7 +106,7 @@
     "dps": {
       "title": "水表设置",
       "description": "配置后端DPS快照频率、调试日志记录和战斗过滤规则。",
-      "runtimeGroup": "运行时",
+      "runtimeGroup": "运行时配置",
       "windowAppearanceGroup": "窗口外观",
       "previewGroup": "DPS 预览",
       "previewWindowTitle": "DPS 窗口预览",

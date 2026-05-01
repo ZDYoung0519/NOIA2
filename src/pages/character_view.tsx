@@ -11,6 +11,7 @@ import { fetchFengwo, formatFengwoResponse } from "@/lib/aion2/fetchFengwo";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { DpsDetailContent } from "@/components/dps/dps-detail-content";
+import { ActorNameCell, getActorClassName } from "@/components/dps/dps-table-cells";
 
 import { renderEquipmentInfo } from "@/components/aion2/slot-equip";
 import { renderArcanaSlot } from "@/components/aion2/slot-arcana";
@@ -564,6 +565,7 @@ type HistoryBattleRow = {
   main_actor_battle_duration: number | null;
   main_actor_dps: number | null;
   party_total_damage: number | null;
+  team_dps: number | null;
 };
 
 function formatDateTime(value: string | null) {
@@ -679,11 +681,13 @@ function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
               <tr>
                 <th className="px-4 py-3 text-left font-medium">战斗时间</th>
                 <th className="px-4 py-3 text-left font-medium">目标</th>
+                <th className="px-4 py-3 text-left font-medium">玩家</th>
                 <th className="px-4 py-3 text-left font-medium">职业</th>
                 <th className="px-4 py-3 text-right font-medium">个人伤害</th>
                 <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
                 <th className="px-4 py-3 text-right font-medium">战斗时长</th>
                 <th className="px-4 py-3 text-right font-medium">个人秒伤</th>
+                <th className="px-4 py-3 text-right font-medium">队伍秒伤</th>
                 <th className="px-4 py-3 text-right font-medium">伤害详情</th>
               </tr>
             </thead>
@@ -699,7 +703,20 @@ function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
                       MobCode: {row.target_mob_code ?? "-"}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-white/65">{row.main_actor_class}</td>
+                  <td className="px-4 py-3">
+                    <ActorNameCell
+                      actorName={row.main_actor_name ?? "-"}
+                      actorClass={row.main_actor_class}
+                      serverLabel={
+                        row.main_actor_server_id
+                          ? getServerShortName(Number(row.main_actor_server_id))
+                          : undefined
+                      }
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-white/65">
+                    {getActorClassName(row.main_actor_class)}
+                  </td>
                   <td className="px-4 py-3 text-right text-white/85">
                     {Math.round(Number(row.main_actor_damage ?? 0)).toLocaleString()}
                   </td>
@@ -711,6 +728,9 @@ function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
                     {Math.round(Number(row.main_actor_dps ?? 0)).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right font-bold text-[#37b6a9]">
+                    {Math.round(Number(row.team_dps ?? 0)).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
@@ -841,7 +861,7 @@ export default function CharacterViewPage() {
       const { data } = await supabase
         .from("aion2_dps")
         .select(
-          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage"
+          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
         )
         .eq("main_actor_name", characterName.trim())
         .eq("main_actor_server_id", serverId.trim())

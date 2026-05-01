@@ -270,3 +270,20 @@ export async function createWindow(
     createWindowLoading[label] = false;
   }
 }
+
+export const createDpsWindow = async () => {
+  await createWindow("dps", {
+    title: "DPS Meter",
+    url: "/dps",
+    width: 250,
+    height: 50,
+    resizable: true,
+    maximizable: false,
+    minimizable: false,
+    decorations: false,
+    transparent: true,
+    shadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+  });
+};

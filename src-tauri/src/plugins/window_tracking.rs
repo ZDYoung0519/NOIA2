@@ -10,6 +10,19 @@ use tauri::{
 
 pub struct TrackedWindowPairs(pub Mutex<HashSet<String>>);
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TrackedWindowPosition {
+    Right,
+    Bottom,
+}
+
+impl Default for TrackedWindowPosition {
+    fn default() -> Self {
+        Self::Right
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrackedWindowOptions {
@@ -20,6 +33,7 @@ pub struct TrackedWindowOptions {
     pub width: Option<f64>,
     pub height: Option<f64>,
     pub gap: Option<f64>,
+    pub position: Option<TrackedWindowPosition>,
     pub decorations: Option<bool>,
     pub transparent: Option<bool>,
     pub resizable: Option<bool>,
@@ -50,18 +64,53 @@ fn position_child_next_to_parent<R: Runtime>(
         .map_err(|e| e.to_string())
 }
 
+fn position_child_bottom_to_parent<R: Runtime>(
+    parent_window: &WebviewWindow<R>,
+    child_window: &WebviewWindow<R>,
+    gap: f64,
+) -> Result<(), String> {
+    let parent_position = parent_window.outer_position().map_err(|e| e.to_string())?;
+    let parent_size = parent_window.outer_size().map_err(|e| e.to_string())?;
+
+    let gap = gap as i32;
+
+    child_window
+        .set_position(PhysicalPosition::new(
+            parent_position.x,
+            parent_position.y + gap + parent_size.height as i32 as i32,
+        ))
+        .map_err(|e| e.to_string())
+}
+
+fn position_child_by_position<R: Runtime>(
+    parent_window: &WebviewWindow<R>,
+    child_window: &WebviewWindow<R>,
+    gap: f64,
+    position: &TrackedWindowPosition,
+) -> Result<(), String> {
+    match position {
+        TrackedWindowPosition::Right => {
+            position_child_next_to_parent(parent_window, child_window, gap)
+        }
+        TrackedWindowPosition::Bottom => {
+            position_child_bottom_to_parent(parent_window, child_window, gap)
+        }
+    }
+}
+
 fn schedule_position_sync<R: Runtime>(
     app: &AppHandle<R>,
     parent_label: &str,
     child_label: &str,
     gap: f64,
+    position: TrackedWindowPosition,
 ) {
     let app = app.clone();
     let parent_label = parent_label.to_string();
     let child_label = child_label.to_string();
 
     std::thread::spawn(move || {
-        for delay_ms in [30u64, 80, 160] {
+        for delay_ms in [30u64, 80, 160, 300, 600, 1000] {
             std::thread::sleep(std::time::Duration::from_millis(delay_ms));
             let Some(parent) = app.get_webview_window(&parent_label) else {
                 return;
@@ -69,7 +118,7 @@ fn schedule_position_sync<R: Runtime>(
             let Some(child) = app.get_webview_window(&child_label) else {
                 return;
             };
-            let _ = position_child_next_to_parent(&parent, &child, gap);
+            let _ = position_child_by_position(&parent, &child, gap, &position);
         }
     });
 }
@@ -79,6 +128,7 @@ fn register_tracking_if_needed<R: Runtime>(
     parent_label: &str,
     child_label: &str,
     gap: f64,
+    position: TrackedWindowPosition,
 ) -> Result<(), String> {
     let key = pair_key(parent_label, child_label);
     let tracked_pairs_state = app.state::<TrackedWindowPairs>();
@@ -104,6 +154,8 @@ fn register_tracking_if_needed<R: Runtime>(
     let app_for_move = app.clone();
     let parent_for_move = parent_label.to_string();
     let child_for_move = child_label.to_string();
+    let position_for_move = position.clone();
+
     parent_window.on_window_event(move |event| match event {
         WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
             let Some(parent) = app_for_move.get_webview_window(&parent_for_move) else {
@@ -112,7 +164,7 @@ fn register_tracking_if_needed<R: Runtime>(
             let Some(child) = app_for_move.get_webview_window(&child_for_move) else {
                 return;
             };
-            let _ = position_child_next_to_parent(&parent, &child, gap);
+            let _ = position_child_by_position(&parent, &child, gap, &position_for_move);
         }
         WindowEvent::Destroyed => {
             if let Some(child) = app_for_move.get_webview_window(&child_for_move) {
@@ -145,6 +197,8 @@ pub fn ensure_tracked_window<R: Runtime>(
     let height = options.height.unwrap_or(620.0);
     let focus = options.focus.unwrap_or(true);
     let focusable = options.focusable.unwrap_or(true);
+    let position = options.position.clone().unwrap_or_default();
+
     let parent_window = app
         .get_webview_window(&options.parent_label)
         .ok_or_else(|| format!("parent window '{}' not found", options.parent_label))?;
@@ -156,9 +210,25 @@ pub fn ensure_tracked_window<R: Runtime>(
         if focus {
             let _ = existing_window.set_focus();
         }
-        position_child_next_to_parent(&parent_window, &existing_window, gap)?;
-        register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
-        schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);
+
+        position_child_by_position(&parent_window, &existing_window, gap, &position)?;
+
+        register_tracking_if_needed(
+            &app,
+            &options.parent_label,
+            &options.child_label,
+            gap,
+            position.clone(),
+        )?;
+
+        schedule_position_sync(
+            &app,
+            &options.parent_label,
+            &options.child_label,
+            gap,
+            position,
+        );
+
         return Ok(());
     }
 
@@ -186,9 +256,24 @@ pub fn ensure_tracked_window<R: Runtime>(
     if focus {
         child_window.set_focus().map_err(|e| e.to_string())?;
     }
-    position_child_next_to_parent(&parent_window, &child_window, gap)?;
-    register_tracking_if_needed(&app, &options.parent_label, &options.child_label, gap)?;
-    schedule_position_sync(&app, &options.parent_label, &options.child_label, gap);
+
+    position_child_by_position(&parent_window, &child_window, gap, &position)?;
+
+    register_tracking_if_needed(
+        &app,
+        &options.parent_label,
+        &options.child_label,
+        gap,
+        position.clone(),
+    )?;
+
+    schedule_position_sync(
+        &app,
+        &options.parent_label,
+        &options.child_label,
+        gap,
+        position,
+    );
 
     Ok(())
 }

@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -27,6 +26,7 @@ type WindowFrameProps = {
   className?: string;
   contentClassName?: string;
   showSidebar?: boolean;
+  showTopbar?: boolean;
 };
 
 type NavItem = {
@@ -103,33 +103,32 @@ export function WindowFrame({
   className,
   contentClassName,
   showSidebar = false,
+  showTopbar = false,
 }: WindowFrameProps) {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="tauri-ui-theme">
-      <div className={cn("flex h-screen w-screen flex-col overflow-hidden", className)}>
-        {titleBar}
-        <main className="min-h-0 flex-1">
-          <div className="flex h-full min-h-0">
-            {showSidebar && <WindowSidebar />}
+    <div className={cn("flex h-screen w-screen flex-col overflow-hidden", className)}>
+      {titleBar}
+      <main className="min-h-0 flex-1">
+        <div className="flex h-full min-h-0">
+          {showSidebar && <WindowSidebar />}
 
+          <div className={cn("relative min-h-0 min-w-0 flex-1 overflow-hidden", contentClassName)}>
             <div
-              className={cn("relative min-h-0 min-w-0 flex-1 overflow-hidden", contentClassName)}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{
-                  backgroundImage: `url("/images/aion2/background.png")`,
-                  filter: "brightness(0.8) contrast(1.2)",
-                }}
-              />
-              <div className="via-background/70 to-background/100 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
-              <div className="from-background/50 to-background/50 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
-              <div className="bg-background/65 pointer-events-none absolute inset-0" />
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url("/images/aion2/background.png")`,
+                filter: "brightness(0.8) contrast(1.2)",
+              }}
+            />
+            <div className="via-background/70 to-background/100 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
+            <div className="from-background/50 to-background/50 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
+            <div className="bg-background/65 pointer-events-none absolute inset-0" />
 
-              <div className="relative z-10 flex h-full flex-col">
+            <div className="relative z-10 flex h-full flex-col">
+              {showTopbar && (
                 <header className="bg-background/50 sticky top-0 z-50 grid shrink-0 items-center gap-4 px-5 backdrop-blur-sm xl:grid-cols-[1.15fr_0.72fr_0.55fr]">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
@@ -188,13 +187,13 @@ export function WindowFrame({
                     </Button>
                   </div>
                 </header>
+              )}
 
-                <div className="min-h-0 flex-1 overflow-auto">{children}</div>
-              </div>
+              <div className="min-h-0 flex-1 overflow-auto">{children}</div>
             </div>
           </div>
-        </main>
-      </div>
-    </ThemeProvider>
+        </div>
+      </main>
+    </div>
   );
 }

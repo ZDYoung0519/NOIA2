@@ -1,6 +1,6 @@
 interface BaseRingCardProps {
   label: string;
-  value: string;
+  value?: string;
   subValue?: string;
   className?: string;
 }
@@ -18,15 +18,29 @@ function RingContent({
   value,
   subValue,
   valueClassName,
+  compact = false,
 }: BaseRingCardProps & {
   valueClassName?: string;
+  compact?: boolean;
 }) {
   return (
     <div className="relative z-10 flex flex-col items-center text-center leading-none">
-      <span className="text-[15px] font-bold text-white drop-shadow">{label}</span>
-      <span className={["mt-2 text-[26px] font-black tracking-tight", valueClassName].join(" ")}>
-        {value}
+      <span
+        className={[
+          "max-w-[82px] text-balance font-bold text-white drop-shadow",
+          compact ? "text-[16px] leading-tight" : "text-[15px]",
+        ].join(" ")}
+      >
+        {label}
       </span>
+
+      {value ? (
+        <span
+          className={["mt-2 text-[26px] font-black tracking-tight", valueClassName].join(" ")}
+        >
+          {value}
+        </span>
+      ) : null}
 
       {subValue ? (
         <span className="mt-1 text-[12px] font-semibold text-[#b8c2c7]">{subValue}</span>
@@ -57,7 +71,13 @@ export function WinRateRingCard({ label, value, subValue, className }: BaseRingC
         <div className="absolute bottom-[14px] h-[34px] w-[84px] rounded-[50%] border-t border-[#3fc8c0]/60 opacity-70" />
         <div className="absolute bottom-[9px] h-[28px] w-[78px] rounded-[50%] border-t border-[#3fc8c0]/35 opacity-70" />
 
-        <RingContent label={label} value={value} subValue={subValue} valueClassName="text-white" />
+        <RingContent
+          label={label}
+          value={value}
+          subValue={subValue}
+          valueClassName="text-white"
+          compact={!value}
+        />
       </div>
     </div>
   );

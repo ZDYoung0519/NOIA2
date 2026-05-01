@@ -2,18 +2,22 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import dungeons from "@/data/dungeons.json";
 import { KdaRingCard, WinRateRingCard } from "@/components/ring-card";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/lib/supabase/supabase";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getLocalizedText, type LocalizedText } from "@/lib/i18n-data";
-import { Link } from "react-router-dom";
+import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
+import { DpsDetailContent } from "@/components/dps/dps-detail-content";
+import { ActorNameCell, getActorClassName } from "@/components/dps/dps-table-cells";
+import { useAppSettings } from "@/hooks/use-app-settings";
+import type { DpsDetailPayload, HistoryTargetRecord } from "@/types/aion2dps";
 
 import { getServerShortName } from "@/lib/aion2/servers";
 
 type TargetMobStat = {
   mob_code: string;
   target_name: string;
-  battle_count: number;
   last_battle_at?: string | null;
 };
 
@@ -25,6 +29,7 @@ type RankMobSourceRow = {
 
 type StatByClassMobRow = {
   record_id: string;
+  battle_ended_at: string | null;
   main_actor_name: string | null;
   main_actor_class: string | null;
   main_actor_server_id: number;
@@ -32,11 +37,13 @@ type StatByClassMobRow = {
   main_actor_battle_duration: number | null;
   main_actor_dps: number | null;
   party_total_damage: number | null;
+  team_dps: number | null;
   total_count: number;
 };
 
 type BattleRankItem = {
   recordId: string;
+  battleEndedAt: string | null;
   actorName: string;
   actorClass: string;
   actorServerId: number;
@@ -44,6 +51,7 @@ type BattleRankItem = {
   partyTotalDamage: number;
   fightSeconds: number;
   dps: number;
+  teamDps: number;
 };
 
 type DungeonDefinition = {
@@ -56,18 +64,37 @@ type DungeonDefinition = {
 type DungeonBossCard = {
   mobCode: string;
   stat?: TargetMobStat;
-  battleCount: number;
   label: string;
 };
 
 type DungeonCard = DungeonDefinition & {
   bosses: DungeonBossCard[];
+  hideHeaderCard?: boolean;
 };
 
 type DungeonCategory = "all" | "expedition" | "transcendence" | "sanctuary";
+type RankSortMode = "personal" | "team";
 
 const PAGE_SIZE = 20;
+const RANK_NAME_PAGE_SIZE = 1000;
 const IS_DEV = import.meta.env.DEV;
+
+const ALL_RANK_DUNGEON_CARD: DungeonDefinition = {
+  dungeon_id: "rank-all",
+  name: {
+    "zh-CN": "全部 Boss",
+    "zh-TW": "全部 Boss",
+    en: "All Bosses",
+    ko: "All Bosses",
+  },
+  difficulty: {
+    "zh-CN": "Rank",
+    "zh-TW": "Rank",
+    en: "Rank",
+    ko: "Rank",
+  },
+  boss_ids: [],
+};
 
 const ACTOR_CLASSES = [
   "ALL",
@@ -81,28 +108,12 @@ const ACTOR_CLASSES = [
   "CHANTER",
 ];
 
-const ACTOR_CLASS_NAME_MAP: Record<string, string> = {
-  ALL: "全部",
-  GLADIATOR: "剑星",
-  TEMPLAR: "守护星",
-  ASSASSIN: "杀星",
-  RANGER: "弓星",
-  SORCERER: "魔道星",
-  ELEMENTALIST: "精灵星",
-  CLERIC: "治愈星",
-  CHANTER: "护法星",
-};
-
 const DUNGEON_CATEGORY_LABELS: Record<DungeonCategory, string> = {
   all: "全部副本",
   expedition: "远征",
   transcendence: "超越",
   sanctuary: "圣域",
 };
-
-function getClassName(actorClass: string) {
-  return ACTOR_CLASS_NAME_MAP[actorClass] ?? actorClass;
-}
 
 function getDungeonCategory(dungeonId: string): Exclude<DungeonCategory, "all"> | null {
   if (dungeonId.startsWith("0")) {
@@ -117,10 +128,11 @@ function getDungeonCategory(dungeonId: string): Exclude<DungeonCategory, "all"> 
   return null;
 }
 
-function buildBattleRanks(rows: StatByClassMobRow[]): BattleRankItem[] {
+function buildBattleRanks(rows: StatByClassMobRow[], sortMode: RankSortMode): BattleRankItem[] {
   return rows
     .map((row) => ({
       recordId: row.record_id,
+      battleEndedAt: row.battle_ended_at ?? null,
       actorName: row.main_actor_name ?? "-",
       actorClass: row.main_actor_class ?? "-",
       actorServerId: row.main_actor_server_id ?? 0,
@@ -128,9 +140,32 @@ function buildBattleRanks(rows: StatByClassMobRow[]): BattleRankItem[] {
       partyTotalDamage: Number(row.party_total_damage ?? 0),
       fightSeconds: Number(row.main_actor_battle_duration ?? 0),
       dps: Number(row.main_actor_dps ?? 0),
+      teamDps: Number(row.team_dps ?? 0),
     }))
     .filter((item) => item.totalDamage > 0 && item.fightSeconds > 0)
-    .sort((a, b) => b.dps - a.dps);
+    .sort((a, b) =>
+      sortMode === "team" ? b.teamDps - a.teamDps || b.dps - a.dps : b.dps - a.dps
+    );
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function getBossDisplayName(stat: TargetMobStat | undefined, mobCode: string) {
@@ -141,7 +176,6 @@ function normalizeTargetMobStats(rows: TargetMobStat[]): TargetMobStat[] {
   return rows.map((row) => ({
     mob_code: String(row.mob_code),
     target_name: row.target_name ?? `Boss ${String(row.mob_code)}`,
-    battle_count: Number(row.battle_count ?? 0),
     last_battle_at: row.last_battle_at ?? null,
   }));
 }
@@ -155,53 +189,213 @@ function buildTargetMobStatsFromRankRows(rows: RankMobSourceRow[]): TargetMobSta
     }
 
     const mobCode = String(row.target_mob_code);
-    const existing = grouped.get(mobCode);
-    const battleEndedAt = row.battle_ended_at ?? null;
-
-    if (!existing) {
-      grouped.set(mobCode, {
-        mob_code: mobCode,
-        target_name: row.target_name ?? `Boss ${mobCode}`,
-        battle_count: 1,
-        last_battle_at: battleEndedAt,
-      });
+    if (grouped.has(mobCode)) {
       continue;
     }
 
-    existing.battle_count += 1;
-    if (battleEndedAt && (!existing.last_battle_at || battleEndedAt > existing.last_battle_at)) {
-      existing.last_battle_at = battleEndedAt;
+    grouped.set(mobCode, {
+      mob_code: mobCode,
+      target_name: row.target_name ?? `Boss ${mobCode}`,
+      last_battle_at: row.battle_ended_at ?? null,
+    });
+  }
+
+  return [...grouped.values()];
+}
+
+async function loadRankBossNames(): Promise<TargetMobStat[]> {
+  const rows: RankMobSourceRow[] = [];
+
+  for (let from = 0; ; from += RANK_NAME_PAGE_SIZE) {
+    const to = from + RANK_NAME_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from("aion2_dps_rank")
+      .select("target_mob_code,target_name,battle_ended_at")
+      .eq("is_boss", true)
+      .order("battle_ended_at", { ascending: false, nullsFirst: false })
+      .range(from, to);
+
+    if (error) {
+      throw error;
     }
-    if (!existing.target_name && row.target_name) {
-      existing.target_name = row.target_name;
+
+    const pageRows = (data ?? []) as RankMobSourceRow[];
+    rows.push(...pageRows);
+
+    if (pageRows.length < RANK_NAME_PAGE_SIZE) {
+      break;
     }
   }
 
-  return [...grouped.values()].sort((a, b) => {
-    const countDiff = b.battle_count - a.battle_count;
-    if (countDiff !== 0) {
-      return countDiff;
+  return buildTargetMobStatsFromRankRows(rows);
+}
+
+function DpsRankDetailDialog({
+  selectedRank,
+  selectedMob,
+  onOpenChange,
+}: {
+  selectedRank: BattleRankItem | null;
+  selectedMob: TargetMobStat | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { settings } = useAppSettings();
+  const [selectedRecord, setSelectedRecord] = useState<HistoryTargetRecord | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+
+  const dpsAppearance = settings.appearance.dpsWindow;
+  const selectedTargetInfo = selectedRecord
+    ? selectedRecord.combatInfos.targetInfos[String(selectedRecord.targetId)]
+    : undefined;
+
+  const selectedDetailPayload = useMemo<DpsDetailPayload | null>(() => {
+    if (!selectedRecord || selectedPlayerId === null) {
+      return null;
     }
 
-    const aTime = a.last_battle_at ?? "";
-    const bTime = b.last_battle_at ?? "";
-    if (aTime === bTime) {
-      return a.mob_code.localeCompare(b.mob_code);
+    const playerStats = selectedRecord.thisTargetAllPlayerStats?.[String(selectedPlayerId)] ?? null;
+    if (!playerStats) {
+      return null;
     }
-    return bTime.localeCompare(aTime);
-  });
+
+    return {
+      mode: "history",
+      actorId: selectedPlayerId,
+      targetId: selectedRecord.targetId,
+      combatInfos: selectedRecord.combatInfos,
+      playerStats,
+      playerSkillStats:
+        selectedRecord.thisTargetAllPlayerSkillStats?.[String(selectedPlayerId)] ?? {},
+      playerSkillRecords:
+        selectedRecord.thisTargetAllPlayerSkillRecords?.[String(selectedPlayerId)] ?? [],
+      playerDpsCurve: [],
+    };
+  }, [selectedPlayerId, selectedRecord]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDetail() {
+      if (!selectedRank) {
+        setSelectedRecord(null);
+        setSelectedPlayerId(null);
+        setDetailLoading(false);
+        return;
+      }
+
+      setDetailLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("aion2_dps")
+          .select("data")
+          .eq("record_id", selectedRank.recordId)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        if (!cancelled) {
+          const nextRecord = (data?.data as HistoryTargetRecord | null) ?? null;
+          setSelectedRecord(nextRecord);
+          const nextPlayerIds = Object.keys(nextRecord?.thisTargetAllPlayerStats ?? {});
+          setSelectedPlayerId(nextPlayerIds.length > 0 ? Number(nextPlayerIds[0]) : null);
+        }
+      } catch (error) {
+        console.error("failed to load dps rank detail:", error);
+        if (!cancelled) {
+          setSelectedRecord(null);
+          setSelectedPlayerId(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setDetailLoading(false);
+        }
+      }
+    }
+
+    void loadDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRank]);
+
+  return (
+    <Dialog open={selectedRank !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-background/95 flex h-[80vh] w-[95vw] max-w-none flex-col overflow-hidden border-white/10 p-0 text-white sm:max-w-[1400px]">
+        <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
+          <DialogTitle className="text-lg font-semibold">
+            {selectedMob?.target_name ?? "Boss"} 伤害详情
+          </DialogTitle>
+          <p className="text-sm text-white/40">
+            {selectedRank
+              ? `${selectedRank.actorName} [${getServerShortName(Number(selectedRank.actorServerId))}]`
+              : ""}
+          </p>
+        </DialogHeader>
+
+        <div className="flex flex-1 overflow-hidden">
+          <div className="flex w-[420px] flex-col border-r border-white/10">
+            <div className="shrink-0 px-4 py-3 text-sm font-medium text-white/70">
+              玩家伤害排行
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-3 pb-4">
+              {detailLoading ? (
+                <div className="px-4 py-8 text-center text-sm text-white/60">正在加载...</div>
+              ) : selectedRecord && selectedTargetInfo ? (
+                <MemoizedDpsPanel
+                  targetInfo={selectedTargetInfo}
+                  thisTargetPlayerStats={selectedRecord.thisTargetAllPlayerStats}
+                  combatInfos={selectedRecord.combatInfos}
+                  mainPlayerColor={dpsAppearance.mainPlayerColor}
+                  otherPlayerColor={dpsAppearance.otherPlayerColor}
+                  barOpacity={100}
+                  maskNicknames={dpsAppearance.maskNicknames}
+                  percentDisplayMode={dpsAppearance.percentDisplayMode}
+                  onPlayerClicked={setSelectedPlayerId}
+                  onPlayerHovered={() => {}}
+                  onPlayerHoverEnd={() => {}}
+                />
+              ) : (
+                <div className="px-4 py-8 text-center text-sm text-white/50">
+                  未找到这条排行对应的历史明细
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col">
+            <div className="shrink-0 border-b border-white/10 px-6 py-3 text-sm font-medium text-white/70">
+              技能伤害明细
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {selectedDetailPayload ? (
+                <DpsDetailContent payload={selectedDetailPayload} />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-white/50">
+                  {detailLoading ? "正在加载 DPS 明细..." : "请在左侧选择一个玩家查看技能详情"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 const BossCard = memo(function BossCard({
   mobCode,
   label,
-  count,
   active,
   onSelect,
 }: {
   mobCode: string;
   label: string;
-  count: number;
   active: boolean;
   onSelect: () => void;
 }) {
@@ -217,7 +411,7 @@ const BossCard = memo(function BossCard({
           : "hover:scale-105",
       ].join(" ")}
     >
-      <WinRateRingCard label={label} value={`${count}场`} />
+      <WinRateRingCard label={label} />
     </button>
   );
 
@@ -265,30 +459,32 @@ const DungeonView = memo(function DungeonView({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <div
+      className={[
+        "grid grid-cols-1 gap-0",
+        dungeonCards.some((dungeon) => dungeon.hideHeaderCard) ? "" : "xl:grid-cols-2",
+      ].join(" ")}
+    >
       {dungeonCards.map((dungeon) => (
-        <div key={dungeon.dungeon_id} className="rounded-xl border border-white/10 p-4">
-          <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
-            <KdaRingCard
-              label={getLocalizedText(dungeon.name, language)}
-              value={getLocalizedText(dungeon.difficulty, language)}
-            />
+        <div key={dungeon.dungeon_id} className="rounded-xl border border-white/10 p-0">
+          <div className="flex flex-wrap items-start">
+            {dungeon.hideHeaderCard ? null : (
+              <KdaRingCard
+                label={getLocalizedText(dungeon.name, language)}
+                value={getLocalizedText(dungeon.difficulty, language)}
+              />
+            )}
 
-            <div className="flex flex-1 flex-wrap items-center gap-x-8 gap-y-4">
-              {dungeon.bosses.map((boss) =>
-                boss.stat ? (
-                  <BossCard
-                    key={boss.mobCode}
-                    mobCode={boss.mobCode}
-                    label={boss.label}
-                    count={boss.battleCount}
-                    active={selectedMobCode === boss.mobCode}
-                    onSelect={() => onSelectMob(boss.stat!)}
-                  />
-                ) : (
-                  <WinRateRingCard key={boss.mobCode} label={boss.label} value="0场" />
-                )
-              )}
+            <div className="flex flex-1 flex-wrap items-center">
+              {dungeon.bosses.map((boss) => (
+                <BossCard
+                  key={boss.mobCode}
+                  mobCode={boss.mobCode}
+                  label={boss.label}
+                  active={selectedMobCode === boss.mobCode}
+                  onSelect={() => onSelectMob(boss.stat!)}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -304,11 +500,13 @@ export default function DpsViewPage() {
   const [bossSearch, setBossSearch] = useState("");
   const [dungeonCategory, setDungeonCategory] = useState<DungeonCategory>("expedition");
   const [selectedClass, setSelectedClass] = useState("ALL");
+  const [rankSortMode, setRankSortMode] = useState<RankSortMode>("personal");
   const [battleRanks, setBattleRanks] = useState<BattleRankItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalRankCount, setTotalRankCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [rankLoading, setRankLoading] = useState(false);
+  const [selectedRank, setSelectedRank] = useState<BattleRankItem | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rankErrorMessage, setRankErrorMessage] = useState<string | null>(null);
   const targetStatsRequestIdRef = useRef(0);
@@ -322,23 +520,17 @@ export default function DpsViewPage() {
         setLoading(true);
         setErrorMessage(null);
 
-        const { data, error } = await supabase
-          .from("aion2_dps_rank")
-          .select("target_mob_code,target_name,battle_ended_at")
-          .eq("is_boss", true)
-          .order("battle_ended_at", { ascending: false });
+        if (requestId !== targetStatsRequestIdRef.current) {
+          return;
+        }
+
+        const rankBossStats = await loadRankBossNames();
 
         if (requestId !== targetStatsRequestIdRef.current) {
           return;
         }
 
-        if (error) {
-          throw error;
-        }
-
-        const list = normalizeTargetMobStats(
-          buildTargetMobStatsFromRankRows((data ?? []) as RankMobSourceRow[])
-        );
+        const list = normalizeTargetMobStats(rankBossStats);
         setStats(list);
       } catch (error) {
         if (requestId !== targetStatsRequestIdRef.current) {
@@ -358,7 +550,7 @@ export default function DpsViewPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedMob, selectedClass]);
+  }, [rankSortMode, selectedMob, selectedClass]);
 
   useEffect(() => {
     if (!selectedMob?.mob_code || !selectedClass) {
@@ -384,18 +576,23 @@ export default function DpsViewPage() {
           .select(
             `
             record_id,
+            battle_ended_at,
             main_actor_name,
             main_actor_class,
             main_actor_server_id,
             main_actor_damage,
             main_actor_battle_duration,
             main_actor_dps,
-            party_total_damage
+            party_total_damage,
+            team_dps
             `,
             { count: "exact" }
           )
           .eq("target_mob_code", mobCode)
-          .order("main_actor_dps", { ascending: false, nullsFirst: false })
+          .order(rankSortMode === "team" ? "team_dps" : "main_actor_dps", {
+            ascending: false,
+            nullsFirst: false,
+          })
           .range(from, to);
         if (selectedClass !== "ALL") {
           query = query.eq("main_actor_class", selectedClass);
@@ -408,7 +605,7 @@ export default function DpsViewPage() {
           throw error;
         }
         const rows = (data ?? []) as StatByClassMobRow[];
-        setBattleRanks(buildBattleRanks(rows));
+        setBattleRanks(buildBattleRanks(rows, rankSortMode));
         setTotalRankCount(count ?? 0);
       } catch (error) {
         if (requestId !== battleRanksRequestIdRef.current) {
@@ -426,7 +623,7 @@ export default function DpsViewPage() {
     }
 
     void loadBattleRanks();
-  }, [page, selectedClass, selectedMob]);
+  }, [page, rankSortMode, selectedClass, selectedMob]);
 
   const statsByMobCode = useMemo(
     () => new Map(stats.map((item) => [item.mob_code, item])),
@@ -438,21 +635,38 @@ export default function DpsViewPage() {
       ...dungeon,
       bosses: dungeon.boss_ids.map((bossId) => {
         const mobCode = String(bossId);
-        const stat = statsByMobCode.get(mobCode);
+        const stat = statsByMobCode.get(mobCode) ?? {
+          mob_code: mobCode,
+          target_name: `Boss ${mobCode}`,
+          last_battle_at: null,
+        };
         return {
           mobCode,
           stat,
-          battleCount: Number(stat?.battle_count ?? 0),
           label: getBossDisplayName(stat, mobCode),
         };
       }),
     }));
   }, [statsByMobCode]);
 
+  const allRankDungeonCard = useMemo<DungeonCard>(
+    () => ({
+      ...ALL_RANK_DUNGEON_CARD,
+      hideHeaderCard: true,
+      bosses: stats.map((stat) => ({
+        mobCode: stat.mob_code,
+        stat,
+        label: getBossDisplayName(stat, stat.mob_code),
+      })),
+    }),
+    [stats]
+  );
+
   const filteredDungeonCards = useMemo(() => {
     const keyword = bossSearch.trim().toLowerCase();
+    const sourceCards = dungeonCategory === "all" ? [allRankDungeonCard] : dungeonCards;
 
-    return dungeonCards
+    return sourceCards
       .filter((dungeon) => {
         if (dungeonCategory === "all") {
           return true;
@@ -470,13 +684,18 @@ export default function DpsViewPage() {
         };
       })
       .filter((dungeon) => dungeon.bosses.length > 0 || !keyword);
-  }, [bossSearch, dungeonCards, dungeonCategory]);
+  }, [allRankDungeonCard, bossSearch, dungeonCards, dungeonCategory]);
 
-  const selectedClassAvgDps = useMemo(() => {
-    const totalDamage = battleRanks.reduce((sum, item) => sum + item.totalDamage, 0);
-    const totalFightSeconds = battleRanks.reduce((sum, item) => sum + item.fightSeconds, 0);
-    return totalFightSeconds > 0 ? totalDamage / totalFightSeconds : 0;
-  }, [battleRanks]);
+  const selectedPageAvgDps = useMemo(() => {
+    if (battleRanks.length === 0) {
+      return 0;
+    }
+    const totalDps = battleRanks.reduce(
+      (sum, item) => sum + (rankSortMode === "team" ? item.teamDps : item.dps),
+      0
+    );
+    return totalDps / battleRanks.length;
+  }, [battleRanks, rankSortMode]);
 
   const totalPages = Math.max(1, Math.ceil(totalRankCount / PAGE_SIZE));
   const selectedMobCode = selectedMob?.mob_code ?? null;
@@ -565,18 +784,38 @@ export default function DpsViewPage() {
             <div>
               <h2 className="text-lg font-bold text-white">战斗秒伤排行</h2>
               <p className="mt-1 text-sm text-white/50">
-                当前目标：{selectedMob?.target_name ?? "-"} / 职业：{getClassName(selectedClass)}
+                当前目标：{selectedMob?.target_name ?? "-"} / 职业：{getActorClassName(selectedClass)}
               </p>
 
               <div className="mt-3 inline-flex items-baseline gap-2 rounded-lg border border-[#d9a73a]/30 bg-[#d9a73a]/10 px-3 py-2">
-                <span className="text-sm text-white/50">当前页平均秒伤</span>
+                <span className="text-sm text-white/50">
+                  当前页平均{rankSortMode === "team" ? "队伍秒伤" : "个人秒伤"}
+                </span>
                 <span className="text-xl font-black text-[#d9a73a]">
-                  {rankLoading ? "..." : Math.round(selectedClassAvgDps).toLocaleString()}
+                  {rankLoading ? "..." : Math.round(selectedPageAvgDps).toLocaleString()}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              {(["personal", "team"] as RankSortMode[]).map((mode) => {
+                const active = rankSortMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setRankSortMode(mode)}
+                    className={[
+                      "rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
+                      active
+                        ? "border-[#d9a73a] bg-[#d9a73a]/15 text-[#d9a73a]"
+                        : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
+                    ].join(" ")}
+                  >
+                    {mode === "team" ? "按队伍秒伤" : "按个人秒伤"}
+                  </button>
+                );
+              })}
               {ACTOR_CLASSES.map((actorClass) => {
                 const active = selectedClass === actorClass;
                 return (
@@ -591,7 +830,7 @@ export default function DpsViewPage() {
                         : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white",
                     ].join(" ")}
                   >
-                    {getClassName(actorClass)}
+                    {getActorClassName(actorClass)}
                   </button>
                 );
               })}
@@ -611,12 +850,15 @@ export default function DpsViewPage() {
                   <thead className="bg-white/5 text-white/60">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">排名</th>
+                      <th className="px-4 py-3 text-left font-medium">战斗时间</th>
                       <th className="px-4 py-3 text-left font-medium">玩家</th>
                       <th className="px-4 py-3 text-left font-medium">职业</th>
                       <th className="px-4 py-3 text-right font-medium">个人伤害</th>
                       <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
                       <th className="px-4 py-3 text-right font-medium">战斗时长</th>
                       <th className="px-4 py-3 text-right font-medium">个人秒伤</th>
+                      <th className="px-4 py-3 text-right font-medium">队伍秒伤</th>
+                      <th className="px-4 py-3 text-right font-medium">伤害详情</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -628,21 +870,20 @@ export default function DpsViewPage() {
                         <td className="px-4 py-3 text-white/70">
                           #{(page - 1) * PAGE_SIZE + index + 1}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-white">
-                          <Link
-                            to={`/character/view?serverId=${item.actorServerId}&characterName=${item.actorName}`}
-                            className="text-white/90 transition hover:text-white hover:underline"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                            }}
-                          >
-                            {item.actorName}
-                            <span className="ml-1 text-white/50">
-                              [{getServerShortName(Number(item.actorServerId))}]
-                            </span>
-                          </Link>
+                        <td className="px-4 py-3 text-white/75">
+                          {formatDateTime(item.battleEndedAt)}
                         </td>
-                        <td className="px-4 py-3 text-white/60">{getClassName(item.actorClass)}</td>
+                        <td className="px-4 py-3 font-semibold text-white">
+                          <ActorNameCell
+                            actorName={item.actorName}
+                            actorClass={item.actorClass}
+                            serverLabel={getServerShortName(Number(item.actorServerId))}
+                            to={`/character/view?serverId=${item.actorServerId}&characterName=${item.actorName}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-white/60">
+                          {getActorClassName(item.actorClass)}
+                        </td>
                         <td className="px-4 py-3 text-right text-white/80">
                           {Math.round(item.totalDamage).toLocaleString()}
                         </td>
@@ -654,6 +895,18 @@ export default function DpsViewPage() {
                         </td>
                         <td className="px-4 py-3 text-right font-bold text-[#d9a73a]">
                           {Math.round(item.dps).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-[#37b6a9]">
+                          {Math.round(item.teamDps).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            className="rounded-md border border-white/10 px-3 py-1 text-sm text-white transition hover:bg-white/10"
+                            onClick={() => setSelectedRank(item)}
+                          >
+                            查看
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -690,6 +943,15 @@ export default function DpsViewPage() {
             <div className="py-8 text-center text-sm text-white/50">当前目标和职业暂无数据。</div>
           )}
         </div>
+        <DpsRankDetailDialog
+          selectedRank={selectedRank}
+          selectedMob={selectedMob}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedRank(null);
+            }
+          }}
+        />
       </section>
     </TooltipProvider>
   );

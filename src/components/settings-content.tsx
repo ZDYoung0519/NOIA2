@@ -173,6 +173,497 @@ function SupportList({
   );
 }
 
+export function DpsSettingsPanel({ className }: { className?: string }) {
+  const { t } = useAppTranslation();
+  const { settings, saveSettings } = useAppSettings();
+  const dpsAppearance = settings.appearance.dpsWindow;
+
+  const previewCombatInfos = useMemo<CombatInfos>(
+    () => ({
+      actorInfos: {
+        1001: {
+          id: 1001,
+          actorName: "MainPlayer",
+          actorClass: "ASSASSIN",
+          actorServerId: "1001",
+          actorSkillSpec: {},
+        },
+        1002: {
+          id: 1002,
+          actorName: "Supporter",
+          actorClass: "CLERIC",
+          actorServerId: "1002",
+          actorSkillSpec: {},
+        },
+        1003: {
+          id: 1003,
+          actorName: "Blaster",
+          actorClass: "RANGER",
+          actorServerId: "1003",
+          actorSkillSpec: {},
+        },
+      },
+      targetInfos: {
+        9001: {
+          id: 9001,
+          targetMobCode: 2400032,
+          targetName: "Training Dummy",
+          isBoss: false,
+          currentHp: 540000,
+          maxHp: 1200000,
+          targetStartTime: {
+            1001: 0,
+            1002: 0,
+            1003: 0,
+          },
+          targetLastTime: {
+            1001: 120,
+            1002: 120,
+            1003: 120,
+          },
+        },
+      },
+      mainActorId: 1001,
+      mainActorName: "MainPlayer",
+      lastTargetByMainActor: 9001,
+      lastTarget: 9001,
+      timeNow: 120,
+    }),
+    []
+  );
+
+  const previewTargetInfo = useMemo<TargetInfo | undefined>(
+    () => previewCombatInfos.targetInfos["9001"],
+    [previewCombatInfos]
+  );
+
+  const previewStats = useMemo<Record<number, SkillStats>>(
+    () => ({
+      1001: {
+        counts: 96,
+        total_damage: 420000,
+        minDamage: 1200,
+        maxDamage: 9800,
+        specialCounts: {},
+      },
+      1002: {
+        counts: 74,
+        total_damage: 258000,
+        minDamage: 800,
+        maxDamage: 6600,
+        specialCounts: {},
+      },
+      1003: {
+        counts: 68,
+        total_damage: 186000,
+        minDamage: 900,
+        maxDamage: 7200,
+        specialCounts: {},
+      },
+    }),
+    []
+  );
+
+  return (
+    <div className={cn("space-y-8", className)}>
+      <SettingsGroup title={t("settings.dps.windowAppearanceGroup")}>
+        <div className="space-y-3 px-5 py-5">
+          <div className="text-sm font-medium">{t("settings.dps.previewWindowTitle")}</div>
+          <div
+            className="max-w-100 overflow-auto rounded-xl border border-white/10 p-3"
+            style={{
+              backgroundColor: hexToRgba(
+                dpsAppearance.backgroundColor,
+                dpsAppearance.backgroundOpacity
+              ),
+            }}
+          >
+            <MemoizedDpsPanel
+              targetInfo={previewTargetInfo}
+              thisTargetPlayerStats={previewStats}
+              combatInfos={previewCombatInfos}
+              mainPlayerColor={dpsAppearance.mainPlayerColor}
+              otherPlayerColor={dpsAppearance.otherPlayerColor}
+              barOpacity={100}
+              maskNicknames={dpsAppearance.maskNicknames}
+              percentDisplayMode={dpsAppearance.percentDisplayMode}
+              classIconStyle={dpsAppearance.classIconStyle}
+              onPlayerClicked={() => {}}
+            />
+          </div>
+        </div>
+
+        <SettingsRow
+          label={t("职业图标样式")}
+          control={
+            <Select
+              value={dpsAppearance.classIconStyle}
+              onValueChange={(value: "default" | "colored") => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      classIconStyle: value,
+                    },
+                  },
+                });
+              }}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">default</SelectItem>
+                <SelectItem value="colored">colored</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.scaleFactor")}
+          control={
+            <div className="flex w-64 items-center gap-3">
+              <input
+                type="range"
+                min={0.5}
+                max={1.5}
+                step={0.1}
+                value={dpsAppearance.scaleFactor}
+                onChange={(event) => {
+                  void saveSettings({
+                    appearance: {
+                      dpsWindow: {
+                        scaleFactor: Number(event.currentTarget.value || 1),
+                      },
+                    },
+                  });
+                }}
+                className="w-full"
+              />
+              <span className="text-muted-foreground w-12 text-right text-xs">
+                {dpsAppearance.scaleFactor.toFixed(1)}
+              </span>
+            </div>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.panelColor")}
+          control={
+            <input
+              type="color"
+              value={dpsAppearance.backgroundColor}
+              onChange={(event) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      backgroundColor: event.currentTarget.value,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.panelOpacity")}
+          control={
+            <div className="flex w-64 items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={dpsAppearance.backgroundOpacity}
+                onChange={(event) => {
+                  void saveSettings({
+                    appearance: {
+                      dpsWindow: {
+                        backgroundOpacity: Number(event.currentTarget.value),
+                      },
+                    },
+                  });
+                }}
+                className="w-full"
+              />
+              <span className="text-muted-foreground w-10 text-right text-xs">
+                {dpsAppearance.backgroundOpacity}%
+              </span>
+            </div>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.mainPlayerBar")}
+          control={
+            <input
+              type="color"
+              value={dpsAppearance.mainPlayerColor}
+              onChange={(event) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      mainPlayerColor: event.currentTarget.value,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.otherPlayerBar")}
+          control={
+            <input
+              type="color"
+              value={dpsAppearance.otherPlayerColor}
+              onChange={(event) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      otherPlayerColor: event.currentTarget.value,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={"其他功能"}>
+        <SettingsRow
+          label={t("settings.dps.showDetailOnHover")}
+          control={
+            <Switch
+              checked={dpsAppearance.showDetailOnHover}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showDetailOnHover: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.autoResizeHeight")}
+          control={
+            <Switch
+              checked={dpsAppearance.autoResizeHeight}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      autoResizeHeight: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+
+        <SettingsRow
+          label={t("settings.dps.maskNicknames")}
+          control={
+            <Switch
+              checked={dpsAppearance.maskNicknames}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      maskNicknames: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.percentDisplayMode")}
+          description={t("settings.dps.percentDisplayModeDescription")}
+          control={
+            <Select
+              value={dpsAppearance.percentDisplayMode}
+              onValueChange={(value: "contribution" | "damageShare") => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      percentDisplayMode: value,
+                    },
+                  },
+                });
+              }}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="damageShare">
+                  {t("settings.dps.percentDisplayModeDamageShare")}
+                </SelectItem>
+                <SelectItem value="contribution">
+                  {t("settings.dps.percentDisplayModeContribution")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={t("settings.dps.runtimeGroup")}>
+        <SettingsRow
+          label={t("settings.dps.snapshotInterval")}
+          description={t("settings.dps.snapshotIntervalDescription")}
+          control={
+            <div className="flex w-44 items-center gap-2">
+              <Input
+                type="number"
+                min={50}
+                step={50}
+                value={settings.dpsMeter.dpsSnapshotIntervalMs}
+                onChange={(event) => {
+                  const nextValue = Number(event.currentTarget.value || 500);
+                  void saveSettings({
+                    dpsMeter: {
+                      dpsSnapshotIntervalMs: nextValue,
+                    },
+                  });
+                }}
+              />
+              <span className="text-muted-foreground text-xs">ms</span>
+            </div>
+          }
+        />
+
+        <SettingsRow
+          label={t("settings.dps.memorySnapshotInterval")}
+          description={t("settings.dps.memorySnapshotIntervalDescription")}
+          control={
+            <div className="flex w-44 items-center gap-2">
+              <Input
+                type="number"
+                min={100}
+                step={100}
+                value={settings.dpsMeter.memorySnapshotIntervalMs}
+                onChange={(event) => {
+                  const nextValue = Number(event.currentTarget.value || 1500);
+                  void saveSettings({
+                    dpsMeter: {
+                      memorySnapshotIntervalMs: nextValue,
+                    },
+                  });
+                }}
+              />
+              <span className="text-muted-foreground text-xs">ms</span>
+            </div>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.maxPacketSizeThreshold")}
+          description={t("settings.dps.maxPacketSizeThresholdDescription")}
+          control={
+            <Select
+              value={String(settings.dpsMeter.maxPacketSizeThreshold)}
+              onValueChange={(value) => {
+                void saveSettings({
+                  dpsMeter: {
+                    maxPacketSizeThreshold: Number(value),
+                  },
+                });
+              }}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MAX_PACKET_SIZE_THRESHOLD_OPTIONS.map((value) => (
+                  <SelectItem key={value} value={String(value)}>
+                    {value / 1024} KB
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.enableResyncOnStall")}
+          description={t("settings.dps.enableResyncOnStallDescription")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.enableResyncOnStall}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    enableResyncOnStall: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.resyncDelay")}
+          description={t("settings.dps.resyncDelayDescription")}
+          control={
+            <div className="flex w-44 items-center gap-2">
+              <Input
+                type="number"
+                min={200}
+                max={1000}
+                step={100}
+                value={settings.dpsMeter.resyncDelayMs}
+                onChange={(event) => {
+                  const nextValue = Number(event.currentTarget.value || 500);
+                  void saveSettings({
+                    dpsMeter: {
+                      resyncDelayMs: nextValue,
+                    },
+                  });
+                }}
+                disabled={!settings.dpsMeter.enableResyncOnStall}
+              />
+              <span className="text-muted-foreground text-xs">ms</span>
+            </div>
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.bossOnly")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.bossOnly}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    bossOnly: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.myMuzhuangOnly")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.myMuzhuangOnly}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    myMuzhuangOnly: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+      </SettingsGroup>
+    </div>
+  );
+}
+
 export function SettingsContent() {
   const [activeSection, setActiveSection] = useState<SettingSection>("general");
   const [appVersion, setAppVersion] = useState("");
