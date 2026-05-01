@@ -294,9 +294,12 @@ export default function DpsPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
 
+  const [mainPlayerName, setMainPlayerName] = useState<string>("");
+  // const [mainPlayerId, setMainPlayerId] = useState<number | null>(null);
   const [currentTarget, setCurrentTarget] = useState<number | null>(null);
   const [pinnedPlayerId, setPinnedPlayerId] = useState<number | null>(null);
   const [hoverPlayerId, setHoverPlayerId] = useState<number | null>(null);
+
   const [historyRecords, setHistoryRecords] = useState<HistoryTargetRecord[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
 
@@ -398,6 +401,9 @@ export default function DpsPage() {
           }
           const payload = event.payload;
           const serverId = payload.sid ? Number(payload.sid) : NaN;
+
+          setMainPlayerName(payload.actorName);
+          // setMainPlayerId(payload.actorId);
 
           if (payload.actorName && Number.isFinite(serverId)) {
             Aion2MainActorHistory.add({
@@ -666,6 +672,7 @@ export default function DpsPage() {
     if (!snapshot || resolvedTargetId === null) {
       return null;
     }
+
     return {
       targetId: resolvedTargetId,
       thisTargetPlayerStats: snapshot.byTargetPlayerStats?.[String(resolvedTargetId)] ?? null,
@@ -673,6 +680,15 @@ export default function DpsPage() {
       combatInfos: snapshot.combatInfos ?? null,
     };
   }, [displayTargetInfo, resolvedTargetId, selectedHistoryRecord, snapshot, view]);
+
+  const displayName = useMemo(() => {
+    const targetName =
+      displayTargetInfo?.targetName ||
+      displayTargetInfo?.id ||
+      mainPlayerName ||
+      (t("未检测") as string);
+    return targetName;
+  }, [displayTargetInfo, mainPlayerName]);
 
   const targetFightingTime = useMemo(() => {
     if (!displayTargetInfo) {
@@ -698,20 +714,14 @@ export default function DpsPage() {
     if (!targetFightingTime || targetFightingTime <= 0) {
       return "00:00";
     }
-
     const totalSeconds = Math.floor(targetFightingTime);
-
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-
     const mm = String(minutes).padStart(2, "0");
     const ss = String(seconds).padStart(2, "0");
-
     return `${mm}:${ss}`;
   }, [targetFightingTime]);
 
-  const targetName =
-    displayTargetInfo?.targetName || displayTargetInfo?.id || (t("无目标") as string);
   const dpsBackground = hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity);
 
   const buildDetailPayload = useCallback(
@@ -1193,17 +1203,20 @@ export default function DpsPage() {
               className="max-w-20 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
               data-tauri-drag-region
             >
-              {targetName}
+              {displayName}
             </span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
+          {/* <div>
+            {mainPlayerName} ({mainPlayerId})
+          </div> */}
           <div>MobCode: {displayTargetInfo?.targetMobCode}</div>
           <div>TargetId: {displayTargetInfo?.id}</div>
         </TooltipContent>
       </Tooltip>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" data-tauri-drag-region>
         <div
           className={cn(
             "h-1.5 w-1.5 rounded-full",
@@ -1215,8 +1228,11 @@ export default function DpsPage() {
                   ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
                   : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
           )}
+          data-tauri-drag-region
         />
-        <span className="text-xs text-slate-400 select-none">{timerStatus}</span>
+        <span className="text-xs text-slate-400 select-none" data-tauri-drag-region>
+          {timerStatus}
+        </span>
       </div>
     </div>
   );
@@ -1325,7 +1341,7 @@ export default function DpsPage() {
                       />
                     ) : (
                       <div className="flex h-10 max-h-10 items-center justify-center rounded-xl px-4 text-center">
-                        <div className="text-sm font-medium text-slate-100">无数据</div>
+                        <div className="text-sm font-medium text-slate-100">等待战斗中</div>
                       </div>
                     )}
                   </div>
@@ -1333,7 +1349,7 @@ export default function DpsPage() {
               )}
 
               {view === "dps" && (
-                <div className="min-h-12 p-3">
+                <div className="min-h-12 p-2">
                   {dpsPanelData ? (
                     <MemoizedDpsPanel
                       targetInfo={dpsPanelData.targetInfo || undefined}
@@ -1351,7 +1367,7 @@ export default function DpsPage() {
                     />
                   ) : (
                     <div className="flex items-center justify-center rounded-xl px-4 text-center">
-                      <div className="text-sm font-medium text-slate-100">无数据</div>
+                      <div className="text-sm font-medium text-slate-100">等待战斗中</div>
                     </div>
                   )}
                 </div>

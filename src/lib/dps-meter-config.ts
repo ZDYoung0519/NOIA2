@@ -17,7 +17,7 @@ export type DpsMeterConfig = {
 export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   dpsSnapshotIntervalMs: 250,
   memorySnapshotIntervalMs: 1000,
-  maxPacketSizeThreshold: 4096,
+  maxPacketSizeThreshold: 8192,
   enableResyncOnStall: true,
   resyncDelayMs: 500,
   bossOnly: true,
@@ -43,8 +43,7 @@ function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfi
     ...DEFAULT_DPS_METER_CONFIG,
     ...(input ?? {}),
     maxPacketSizeThreshold: normalizeMaxPacketSizeThreshold(input?.maxPacketSizeThreshold),
-    enableResyncOnStall:
-      input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
+    enableResyncOnStall: input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
     resyncDelayMs: Number.isFinite(resyncDelayMs)
       ? Math.min(1000, Math.max(200, resyncDelayMs))
       : DEFAULT_DPS_METER_CONFIG.resyncDelayMs,

@@ -3,6 +3,7 @@ import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { maskNickname } from "@/lib/name-mask";
+import { clamp } from "framer-motion";
 
 function getTotalDamage(stats: SkillStats | undefined) {
   if (!stats) {
@@ -99,7 +100,7 @@ const DpsPanel = function DpsPanel({
             : totalDamage > 0
               ? (player.totalDamageValue / totalDamage) * 100
               : 0;
-
+        const damagePercentDisplay = clamp(0, 100, damagePercent);
         return (
           <div
             key={player.playerId || index}
@@ -117,9 +118,9 @@ const DpsPanel = function DpsPanel({
               }}
             />
 
-            <div className="relative z-10 flex w-full items-center justify-between px-1 py-1.5">
+            <div className="relative z-10 flex w-full items-center justify-between px-0 py-1.5">
               <div className="flex min-w-0 flex-1 items-center gap-1">
-                <div className="relative h-6 w-6 flex-shrink-0">
+                <div className="relative h-7 w-7 flex-shrink-0">
                   <img
                     src={actorClassIcon}
                     alt={actorClass || "class"}
@@ -131,36 +132,28 @@ const DpsPanel = function DpsPanel({
                   />
                 </div>
 
-                <span className="truncate text-sm font-medium">{displayPlayerName}</span>
-                <span className="flex-shrink-0 font-mono text-xs text-gray-500">
-                  [{playerServerName}]
+                <span className="truncate font-mono font-sans text-sm">
+                  {displayPlayerName}[{playerServerName}]
                 </span>
               </div>
 
-              <div className="flex flex-shrink-0 items-center gap-1">
+              <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="text-right">
+                  <span className="font-mono text-sm text-gray-100 tabular-nums">
+                    {(player.totalDamageValue / 10000).toFixed(1)}w
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="font-mono text-sm font-medium text-green-400 tabular-nums">
+                    {Math.floor(dpsValue).toLocaleString()}/s
+                  </span>
+                </div>
+
                 <div className="text-right">
                   <span className="font-mono text-sm text-gray-200 tabular-nums">
-                    {(player.totalDamageValue / 10000).toFixed(1)}
+                    {damagePercentDisplay.toFixed(1)}%
                   </span>
-                  <span className="ml-0.5 text-xs text-gray-500">w</span>
-                </div>
-
-                <div className="text-right">
-                  <span
-                    className={`font-mono text-sm font-medium tabular-nums ${
-                      dpsValue > 0 ? "text-emerald-400" : "text-gray-400"
-                    }`}
-                  >
-                    {Math.floor(dpsValue).toLocaleString()}
-                  </span>
-                  <span className="ml-0.5 text-xs text-gray-500">/s</span>
-                </div>
-
-                <div className="text-right">
-                  <span className="font-mono text-sm text-gray-300 tabular-nums">
-                    {damagePercent.toFixed(0)}
-                  </span>
-                  <span className="ml-0.5 text-xs text-gray-500">%</span>
                 </div>
               </div>
             </div>

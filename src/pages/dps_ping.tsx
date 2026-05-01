@@ -68,10 +68,9 @@ export default function DpsPingPage() {
       return `${value.toFixed(1)}%`;
     };
 
+    const pingMs = memorySnapshot?.pingMs;
     const pingValue =
-      typeof memorySnapshot?.pingMs === "number" && Number.isFinite(memorySnapshot.pingMs)
-        ? `${Math.round(memorySnapshot.pingMs)} ms`
-        : "--";
+      typeof pingMs === "number" && Number.isFinite(pingMs) ? `${Math.round(pingMs)} ms` : "--";
 
     const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
     const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
@@ -109,7 +108,7 @@ export default function DpsPingPage() {
         typeof memorySnapshot?.pingMs !== "number" || !Number.isFinite(memorySnapshot.pingMs)
           ? "text-white/60"
           : memorySnapshot.pingMs < 60
-            ? "text-emerald-400"
+            ? "text-green-400"
             : memorySnapshot.pingMs < 120
               ? "text-yellow-400"
               : "text-rose-400",
@@ -162,7 +161,7 @@ export default function DpsPingPage() {
           {footerData.pingActive ? (
             <div className={cn("flex items-center gap-1", footerData.pingTone)}>
               <Wifi className="h-4 w-4" />
-              <span className="text-sm font-medium select-none">{footerData.ping}</span>
+              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ping}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 text-white/60">
@@ -176,7 +175,7 @@ export default function DpsPingPage() {
   });
 
   return (
-    <div className="flex h-20 w-20 flex-row justify-start gap-0">
+    <div className="flex h-20 w-25 flex-row justify-start gap-0">
       <MemoizedBottomStatusBar footerData={footerData} />
     </div>
   );
