@@ -3,6 +3,7 @@ import { MemorySnapshot } from "@/types/aion2dps";
 import { listen } from "@tauri-apps/api/event";
 import { Wifi, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { emit } from "@tauri-apps/api/event";
 
 export default function DpsPingPage() {
   const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
@@ -102,6 +103,7 @@ export default function DpsPingPage() {
       packetPortLines,
       combatPort,
       mainActorName: memorySnapshot?.mainActorName ?? "--",
+      pingHistory: memorySnapshot?.pingHistory || [],
       pingActive:
         typeof memorySnapshot?.pingMs === "number" && Number.isFinite(memorySnapshot.pingMs),
       pingTone:
@@ -126,6 +128,7 @@ export default function DpsPingPage() {
     mainActorName: string;
     pingActive: boolean;
     pingTone: string;
+    pingHistory: [number, number][];
   };
 
   type BottomStatusBarProps = {
@@ -136,6 +139,7 @@ export default function DpsPingPage() {
   const MemoizedBottomStatusBar = memo(function BottomStatusBar({
     footerData,
   }: BottomStatusBarProps) {
+    debugger;
     return (
       <div className="flex h-5 items-center justify-end gap-1 px-2 py-0 text-[11px] text-slate-300">
         {/* <div className="flex min-w-0 items-center justify-end gap-2 overflow-hidden">
@@ -157,12 +161,20 @@ export default function DpsPingPage() {
           </div>
         </div> */}
 
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 select-none">
           {footerData.pingActive ? (
-            <div className={cn("flex items-center gap-1", footerData.pingTone)}>
+            <button
+              className={cn(
+                "flex cursor-pointer items-center gap-1 hover:brightness-110",
+                footerData.pingTone
+              )}
+              onClick={async () => {
+                await emit("ping-history", footerData.pingHistory);
+              }}
+            >
               <Wifi className="h-4 w-4" />
               <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ping}</span>
-            </div>
+            </button>
           ) : (
             <div className="flex items-center gap-1 text-white/60">
               <WifiOff className="h-4 w-4" />

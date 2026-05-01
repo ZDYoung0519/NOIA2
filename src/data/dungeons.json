@@ -64,6 +64,118 @@
     "boss_ids": [2321402, 2321401, 2321403]
   },
   {
+    "dungeon_id": "00005",
+    "name": {
+      "zh-CN": "无之摇篮",
+      "zh-TW": "無之搖籃",
+      "en": "CradleNihility",
+      "ko": "CradleNihility"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2311302, 2311303, 2311301]
+  },
+  {
+    "dungeon_id": "00006",
+    "name": {
+      "zh-CN": "无之摇篮",
+      "zh-TW": "無之搖籃",
+      "en": "CradleNihility",
+      "ko": "CradleNihility"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2321302, 2321303, 2321301]
+  },
+  {
+    "dungeon_id": "00007",
+    "name": {
+      "zh-CN": "死亡德拉瑪塔巢穴",
+      "zh-TW": "死亡德拉瑪塔巢穴",
+      "en": "DeadDramataNest",
+      "ko": "DeadDramataNest"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2310508, 2310507, 2310509]
+  },
+  {
+    "dungeon_id": "00008",
+    "name": {
+      "zh-CN": "死亡德拉瑪塔巢穴",
+      "zh-TW": "死亡德拉瑪塔巢穴",
+      "en": "DeadDramataNest",
+      "ko": "DeadDramataNest"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2300154, 2300153, 2300155]
+  },
+  {
+    "dungeon_id": "10001",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "1阶段",
+      "zh-TW": "1階段",
+      "en": "Phase 1",
+      "ko": "Phase 1"
+    },
+    "boss_ids": [2301503, 2301502, 2301501]
+  },
+  {
+    "dungeon_id": "10002",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "2阶段",
+      "zh-TW": "2階段",
+      "en": "Phase 2",
+      "ko": "Phase 2"
+    },
+    "boss_ids": [2300002, 2300001, 2300000]
+  },
+  {
+    "dungeon_id": "10003",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "3阶段",
+      "zh-TW": "3階段",
+      "en": "Phase 3",
+      "ko": "Phase 3"
+    },
+    "boss_ids": [2300017, 2300016, 2300015]
+  },
+  {
     "dungeon_id": "10004",
     "name": {
       "zh-CN": "沉没的生命神殿",

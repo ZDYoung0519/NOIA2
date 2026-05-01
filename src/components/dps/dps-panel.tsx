@@ -3,7 +3,8 @@ import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { maskNickname } from "@/lib/name-mask";
-import { clamp } from "framer-motion";
+// import { clamp } from "framer-motion";
+import { clamp, motion } from "framer-motion";
 
 function getTotalDamage(stats: SkillStats | undefined) {
   if (!stats) {
@@ -102,9 +103,13 @@ const DpsPanel = function DpsPanel({
               : 0;
         const damagePercentDisplay = clamp(0, 100, damagePercent);
         return (
-          <div
+          <motion.div
             key={player.playerId || index}
-            className="group relative flex h-7 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
+            layout
+            transition={{
+              layout: { duration: 0.25, ease: "easeInOut" },
+            }}
+            className="group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
             onMouseEnter={() => onPlayerHovered?.(player.playerId)}
             onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
@@ -118,9 +123,9 @@ const DpsPanel = function DpsPanel({
               }}
             />
 
-            <div className="relative z-10 flex w-full items-center justify-between px-0 py-1.5">
-              <div className="flex min-w-0 flex-1 items-center gap-1">
-                <div className="relative h-7 w-7 flex-shrink-0">
+            <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
+              <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
+                <div className="relative h-6 w-6 flex-shrink-0">
                   <img
                     src={actorClassIcon}
                     alt={actorClass || "class"}
@@ -157,7 +162,7 @@ const DpsPanel = function DpsPanel({
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>

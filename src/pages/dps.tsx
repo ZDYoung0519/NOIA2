@@ -3,8 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Play, RotateCcw, Square, Trash2, Settings } from "lucide-react";
-
+import { Play, RotateCcw, Square, Trash2, Settings, X, History, Book } from "lucide-react";
+import { maskNickname } from "@/lib/name-mask";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ import {
   SkillStats,
 } from "@/types/aion2dps";
 import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
+import { PingCurve } from "@/components/ping-curve";
 
 const HISTORY_DAMAGE_THRESHOLD = 1_000_000;
 
@@ -164,7 +165,7 @@ function TitleIconButton({
       title={title}
       onClick={() => void onClick()}
       className={cn(
-        "flex h-5.5 w-5.5 items-center justify-center rounded-lg border text-slate-300 transition",
+        "flex h-6 w-6 items-center justify-center rounded-md border text-slate-300 transition",
         "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
         active &&
           tone === "accent" &&
@@ -188,7 +189,7 @@ export function WindowFrame({ titleBar, children, className, contentClassName }:
   return (
     <div
       className={cn(
-        "border-border flex h-screen w-screen flex-col overflow-hidden rounded-lg border",
+        "border-border flex h-screen w-screen flex-col overflow-hidden rounded-md border",
         className
       )}
     >
@@ -259,7 +260,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                   )}
                 >
                   <div className="flex items-center gap-1.5">
-                    <div className="truncate text-xs font-semibold">
+                    <div className="truncate text-sm font-semibold">
                       {recordTargetInfo?.targetName || `Target ${record.targetId}`}
                     </div>
                     {isBoss && (
@@ -278,7 +279,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
           </div>
         </div>
       ) : (
-        <div className="flex min-h-24 items-center justify-center px-3 text-center text-xs text-slate-500">
+        <div className="flex min-h-24 items-center justify-center px-3 text-center text-sm text-slate-500">
           No history
         </div>
       )}
@@ -290,7 +291,7 @@ export default function DpsPage() {
   const { settings } = useAppSettings();
   const { t } = useAppTranslation();
   const dpsAppearance = settings.appearance.dpsWindow;
-  const [view, setView] = useState<"dps" | "history">("dps");
+  const [view, setView] = useState<"dps" | "history" | "ping">("dps");
   const [isRunning, setIsRunning] = useState(false);
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
 
@@ -302,6 +303,7 @@ export default function DpsPage() {
 
   const [historyRecords, setHistoryRecords] = useState<HistoryTargetRecord[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const resizeTimerRef = useRef<number | null>(null);
@@ -313,6 +315,8 @@ export default function DpsPage() {
 
   const unlistenMainActorDetectedRef = useRef<null | (() => void)>(null);
   const unlistenResetRequestRef = useRef<null | (() => void)>(null);
+  const unlistenPingHistoryRef = useRef<null | (() => void)>(null);
+
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
   const pinnedPlayerIdRef = useRef<number | null>(null);
   const hoverPlayerIdRef = useRef<number | null>(null);
@@ -380,6 +384,14 @@ export default function DpsPage() {
               mainActorResetTimerRef.current = null;
             }
           }
+        });
+        // ping 历史
+        unlistenPingHistoryRef.current = await listen("ping-history", (event) => {
+          if (!mounted) {
+            return;
+          }
+          setPingHistory(event.payload as number[]);
+          setView("ping");
         });
 
         // 收听dps-reset-requested事件，重置当前状态（快捷键触发后会emit这个信号）
@@ -685,10 +697,10 @@ export default function DpsPage() {
     const targetName =
       displayTargetInfo?.targetName ||
       displayTargetInfo?.id ||
-      mainPlayerName ||
+      maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
       (t("未检测") as string);
     return targetName;
-  }, [displayTargetInfo, mainPlayerName]);
+  }, [displayTargetInfo, mainPlayerName, settings.appearance.dpsWindow.maskNicknames]);
 
   const targetFightingTime = useMemo(() => {
     if (!displayTargetInfo) {
@@ -1125,6 +1137,10 @@ export default function DpsPage() {
     await closeDetailWindowNow();
   }, [closeDetailWindowNow]);
 
+  // const handleClose = async () => {
+  //   const appWindow = getCurrentWebviewWindow();
+  //   await appWindow.close();
+  // };
   const rightActions = (
     <div className="flex items-center gap-1 pr-0">
       {isRunning ? (
@@ -1143,12 +1159,16 @@ export default function DpsPage() {
           title={t("dps.actions.start")}
           tone="accent"
         >
-          <Play className="h-3 w-3" />
+          <Play className="h-3.5 w-3.5" />
         </TitleIconButton>
       )}
 
       <TitleIconButton active onClick={handleReset} title={t("dps.actions.reset")}>
-        <RotateCcw className="h-3 w-3" />
+        <RotateCcw className="h-3.5 w-3.5" />
+      </TitleIconButton>
+
+      <TitleIconButton active onClick={handleOpenHistory} title={t("dps.actions.reset")}>
+        <History className="h-3.5 w-3.5" />
       </TitleIconButton>
 
       <DropdownMenu>
@@ -1156,28 +1176,32 @@ export default function DpsPage() {
           <button
             onClick={() => {}}
             title={t("dps.actions.settings")}
-            className="flex h-5.5 w-5.5 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+            className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
             <Settings className="h-3.5 w-3.5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenSettings}>
-            设置
+          <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenSettings}>
+            <Settings /> <span className="text-sm">设置</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenHistory}>
-            历史
-          </DropdownMenuItem>
-          <DropdownMenuItem className="px-2 py-0 text-sm" onClick={handleOpenLog}>
-            日志
+          {/* <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
+            <History /> <span className="text-sm">历史</span>
+          </DropdownMenuItem> */}
+          <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenLog}>
+            <Book /> <span className="text-sm">日志</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* <TitleIconButton active onClick={handleClose} title={t("dps.actions.reset")}>
+        <X className="h-3 w-3" />
+      </TitleIconButton> */}
     </div>
   );
 
   const leftActions = (
-    <div className="flex min-w-0 items-center gap-3" data-tauri-drag-region>
+    <div className="flex min-w-0 items-center gap-1" data-tauri-drag-region>
       <button
         onClick={() => setView("dps")}
         className="flex h-6 w-6 cursor-pointer items-center justify-center p-0 hover:scale-110 hover:brightness-110 data-[tauri-drag-region]:pointer-events-none"
@@ -1195,15 +1219,25 @@ export default function DpsPage() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <div
-            className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1"
-            data-tauri-drag-region
-          >
-            <span
-              className="max-w-20 truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase"
+          <div className="flex min-w-0 items-center gap-2 rounded-full px-1" data-tauri-drag-region>
+            <div
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                view === "history"
+                  ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
+                  : !isRunning
+                    ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                    : targetFightingTime > 0
+                      ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                      : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+              )}
               data-tauri-drag-region
-            >
+            />
+            <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
               {displayName}
+            </span>
+            <span className="text-xs font-semibold" data-tauri-drag-region>
+              {timerStatus}
             </span>
           </div>
         </TooltipTrigger>
@@ -1215,25 +1249,6 @@ export default function DpsPage() {
           <div>TargetId: {displayTargetInfo?.id}</div>
         </TooltipContent>
       </Tooltip>
-
-      <div className="flex items-center gap-1" data-tauri-drag-region>
-        <div
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            view === "history"
-              ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
-              : !isRunning
-                ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                : targetFightingTime > 0
-                  ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                  : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-          )}
-          data-tauri-drag-region
-        />
-        <span className="text-xs text-slate-400 select-none" data-tauri-drag-region>
-          {timerStatus}
-        </span>
-      </div>
     </div>
   );
 
@@ -1296,6 +1311,7 @@ export default function DpsPage() {
           showAppIcon={false}
           showMaximize={false}
           showMinimize={false}
+          showClose={true}
           leftActions={leftActions}
           rightActions={rightActions}
           className="border-white/10"
@@ -1349,7 +1365,7 @@ export default function DpsPage() {
               )}
 
               {view === "dps" && (
-                <div className="min-h-12 p-2">
+                <div className="min-h-12 p-2 pt-1">
                   {dpsPanelData ? (
                     <MemoizedDpsPanel
                       targetInfo={dpsPanelData.targetInfo || undefined}
@@ -1366,12 +1382,14 @@ export default function DpsPage() {
                       onPlayerHoverEnd={handlePlayerHoverEnd}
                     />
                   ) : (
-                    <div className="flex items-center justify-center rounded-xl px-4 text-center">
-                      <div className="text-sm font-medium text-slate-100">等待战斗中</div>
+                    <div className="flex h-full items-center justify-center rounded-xl px-4 text-center">
+                      <div className="h-full text-sm font-medium text-slate-100">等待战斗中</div>
                     </div>
                   )}
                 </div>
               )}
+
+              {view === "ping" && <PingCurve pingHistory={pingHistory}></PingCurve>}
             </div>
           </div>
         </section>
