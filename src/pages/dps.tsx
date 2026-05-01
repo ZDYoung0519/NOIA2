@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Play, RotateCcw, Square, Trash2, Settings, X, History, Book } from "lucide-react";
+import { Play, RotateCcw, Square, Trash2, Settings, History, Book } from "lucide-react";
 import { maskNickname } from "@/lib/name-mask";
 import {
   DropdownMenu,
