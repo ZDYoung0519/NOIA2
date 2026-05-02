@@ -74,7 +74,7 @@ export async function toggleWindow(label: string) {
   if (!window) {
     return;
   }
-  if ((await window.isVisible()) && !(await window.isMinimized()) && (await window.isFocused())) {
+  if ((await window.isVisible()) && !(await window.isMinimized())) {
     await window.hide();
   } else {
     await showWindow(label);

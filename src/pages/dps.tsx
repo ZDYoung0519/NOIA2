@@ -1301,7 +1301,7 @@ export default function DpsPage() {
       } catch (err) {
         console.error("ensurePingWindow failed:", err);
       }
-    }, 1000);
+    }, 10);
 
     return () => clearTimeout(timer);
   }, [ensurePingWindow]);

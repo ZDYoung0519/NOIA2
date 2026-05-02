@@ -337,6 +337,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
 
     const handleToggleDpsWindow = async () => {
       await toggleWindow("dps");
+      await toggleWindow("dps_ping");
     };
 
     const handleResetDps = async () => {
