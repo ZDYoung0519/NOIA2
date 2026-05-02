@@ -288,6 +288,7 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
               maskNicknames={dpsAppearance.maskNicknames}
               percentDisplayMode={dpsAppearance.percentDisplayMode}
               classIconStyle={dpsAppearance.classIconStyle}
+              showTargetHpBar={dpsAppearance.showTargetHpBar}
               onPlayerClicked={() => {}}
             />
           </div>
@@ -318,6 +319,24 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
             </Select>
           }
         />
+        <SettingsRow
+          label={t("显示boss血条")}
+          control={
+            <Switch
+              checked={dpsAppearance.showTargetHpBar}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showTargetHpBar: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+
         <SettingsRow
           label={t("settings.dps.scaleFactor")}
           control={
@@ -1346,6 +1365,7 @@ export function SettingsContent() {
                       barOpacity={100}
                       maskNicknames={dpsAppearance.maskNicknames}
                       percentDisplayMode={dpsAppearance.percentDisplayMode}
+                      showTargetHpBar={dpsAppearance.showTargetHpBar}
                       onPlayerClicked={() => {}}
                     />
                   </div>

@@ -89,7 +89,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       classIconStyle: "default",
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
-      showTargetHpBar: true,
+      showTargetHpBar: false,
     },
   },
 };

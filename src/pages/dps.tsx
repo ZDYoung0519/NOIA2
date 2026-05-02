@@ -1352,6 +1352,7 @@ export default function DpsPage() {
                         barOpacity={100}
                         maskNicknames={dpsAppearance.maskNicknames}
                         percentDisplayMode={dpsAppearance.percentDisplayMode}
+                        showTargetHpBar={dpsAppearance.showTargetHpBar}
                         onPlayerClicked={handlePlayerClick}
                         onPlayerHovered={handlePlayerHover}
                         onPlayerHoverEnd={handlePlayerHoverEnd}
@@ -1378,6 +1379,7 @@ export default function DpsPage() {
                       maskNicknames={dpsAppearance.maskNicknames}
                       percentDisplayMode={dpsAppearance.percentDisplayMode}
                       classIconStyle={dpsAppearance.classIconStyle}
+                      showTargetHpBar={dpsAppearance.showTargetHpBar}
                       onPlayerClicked={handlePlayerClick}
                       onPlayerHovered={handlePlayerHover}
                       onPlayerHoverEnd={handlePlayerHoverEnd}
