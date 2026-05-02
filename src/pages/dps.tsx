@@ -658,10 +658,8 @@ export default function DpsPage() {
       if (!selectedHistoryRecord || resolvedTargetId === null) {
         return null;
       }
-
       return selectedHistoryRecord.combatInfos?.targetInfos?.[String(resolvedTargetId)] ?? null;
     }
-
     if (!snapshot || resolvedTargetId === null) {
       return null;
     }

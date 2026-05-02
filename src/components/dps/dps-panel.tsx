@@ -63,11 +63,54 @@ const DpsPanel = function DpsPanel({
     0
   );
   const targetMaxHp = targetInfo.maxHp ?? 0;
+  const targetCurrentHp = targetInfo.currentHp ?? 0;
+
+  const targetHpPercent =
+    targetMaxHp > 0 ? clamp(0, 100, (targetCurrentHp / targetMaxHp) * 100) : 0;
+  const targetDamagePercent = 100 - targetHpPercent;
   const targetLastTimes = Object.values(targetInfo.targetLastTime || {});
   const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
+  // const normalizedOpacity = clamp(0, 1, (barOpacity ?? 100) / 100);
 
   return (
     <div className="space-y-0">
+      <div className="group relative flex h-8 items-center overflow-hidden rounded border border-red-500/40 bg-red-950/30">
+        <div
+          className="absolute top-0 bottom-0 left-0 bg-red-500/70 transition-all duration-500"
+          style={{
+            width: `${100 - targetDamagePercent}%`,
+          }}
+        />
+        {/* 内容 */}
+        <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
+          {/* 左侧图标和名称 */}
+          <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
+            <div className="relative h-7 w-7 flex-shrink-0">
+              <img
+                src="/images/aion2/bossIcon.png"
+                alt="boss"
+                className="h-full w-full rounded-md object-cover shadow-sm"
+              />
+            </div>
+            <span className="truncate font-mono font-sans text-sm">{targetInfo?.targetName}</span>
+          </div>
+
+          {/* 右侧血量 */}
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <div className="text-right">
+              <span className="font-mono text-sm text-gray-100 tabular-nums">
+                {(targetCurrentHp / 10000).toFixed(0)}w
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="font-mono text-sm font-bold text-red-200 tabular-nums">
+                {(100 - targetDamagePercent).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
         const playerName =
           actorInfos?.[player.playerId]?.actorName ||
@@ -109,7 +152,7 @@ const DpsPanel = function DpsPanel({
             transition={{
               layout: { duration: 0.25, ease: "easeInOut" },
             }}
-            className="group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
+            className="group relative flex h-8 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
             onMouseEnter={() => onPlayerHovered?.(player.playerId)}
             onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
@@ -125,7 +168,7 @@ const DpsPanel = function DpsPanel({
 
             <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
               <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
-                <div className="relative h-6 w-6 flex-shrink-0">
+                <div className="relative h-7 w-7 flex-shrink-0">
                   <img
                     src={actorClassIcon}
                     alt={actorClass || "class"}
