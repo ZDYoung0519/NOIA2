@@ -75,7 +75,7 @@ type DungeonCard = DungeonDefinition & {
 type DungeonCategory = "all" | "expedition" | "transcendence" | "sanctuary";
 type RankSortMode = "personal" | "team";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 const RANK_NAME_PAGE_SIZE = 1000;
 const IS_DEV = import.meta.env.DEV;
 
@@ -499,7 +499,8 @@ export default function DpsViewPage() {
   const [rankSortMode, setRankSortMode] = useState<RankSortMode>("personal");
   const [battleRanks, setBattleRanks] = useState<BattleRankItem[]>([]);
   const [page, setPage] = useState(1);
-  const [totalRankCount, setTotalRankCount] = useState(0);
+  // const [totalRankCount, setTotalRankCount] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [rankLoading, setRankLoading] = useState(false);
   const [selectedRank, setSelectedRank] = useState<BattleRankItem | null>(null);
@@ -556,7 +557,6 @@ export default function DpsViewPage() {
     const mobCode = Number(selectedMob.mob_code);
     if (!Number.isFinite(mobCode)) {
       setBattleRanks([]);
-      setTotalRankCount(0);
       return;
     }
 
@@ -607,14 +607,15 @@ export default function DpsViewPage() {
         }
 
         const rawRows = (data ?? []) as StatByClassMobRow[];
-        const hasNextPage = rawRows.length > PAGE_SIZE;
         const rows = rawRows.slice(0, PAGE_SIZE);
-
         setBattleRanks(buildBattleRanks(rows, rankSortMode));
+
+        const hasNextPage = rawRows.length > PAGE_SIZE;
+        setHasNextPage(hasNextPage);
 
         // 如果你原来用 totalRankCount 控制分页，
         // 这里改成“估算当前已知数量”，避免 count: exact。
-        setTotalRankCount(hasNextPage ? page * PAGE_SIZE + 1 : from + rows.length);
+        // setTotalRankCount(hasNextPage ? page * PAGE_SIZE + 1 : from + rows.length);
 
         // 如果你愿意新增 state，更推荐直接用这个控制“下一页”按钮
         // setHasNextRankPage(hasNextPage);
@@ -625,7 +626,6 @@ export default function DpsViewPage() {
 
         console.error("Failed to load battle ranks:", error);
         setBattleRanks([]);
-        setTotalRankCount(0);
         setRankErrorMessage(error instanceof Error ? error.message : "Failed to load battle ranks");
       } finally {
         if (requestId === battleRanksRequestIdRef.current) {
@@ -708,7 +708,6 @@ export default function DpsViewPage() {
     return totalDps / battleRanks.length;
   }, [battleRanks, rankSortMode]);
 
-  const totalPages = Math.max(1, Math.ceil(totalRankCount / PAGE_SIZE));
   const selectedMobCode = selectedMob?.mob_code ?? null;
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
 
@@ -927,10 +926,6 @@ export default function DpsViewPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-white/60">
-                <div>
-                  共 {totalRankCount.toLocaleString()} 条，当前第 {page} / {totalPages} 页
-                </div>
-
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -942,8 +937,8 @@ export default function DpsViewPage() {
                   </button>
                   <button
                     type="button"
-                    disabled={page >= totalPages || rankLoading}
-                    onClick={() => setPage((old) => Math.min(totalPages, old + 1))}
+                    disabled={!hasNextPage}
+                    onClick={() => setPage((old) => old + 1)}
                     className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-semibold text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     下一页

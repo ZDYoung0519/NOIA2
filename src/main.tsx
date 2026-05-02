@@ -21,6 +21,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { ThemeProvider } from "./components/theme-provider";
 
+import { useAppSettings } from "@/hooks/use-app-settings";
+
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsPingPage = lazy(() => import("./pages/dps_ping"));
 const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
@@ -44,6 +46,16 @@ function App() {
     };
     void initTrayMenu();
   }, [t]);
+
+  const { saveSettings } = useAppSettings();
+
+  useEffect(() => {
+    void saveSettings({
+      dpsMeter: {
+        maxPacketSizeThreshold: Number(8192),
+      },
+    });
+  }, []);
 
   return (
     <Routes>
