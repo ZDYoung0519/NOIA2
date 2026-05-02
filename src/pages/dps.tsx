@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
@@ -1256,8 +1257,8 @@ export default function DpsPage() {
     await createWindow("dps_ping", {
       title: "DPS Ping",
       url: "/dps_ping",
-      width: 5,
-      height: 5,
+      width: 100,
+      height: 20,
       decorations: false,
       transparent: true,
       resizable: false,
@@ -1276,12 +1277,12 @@ export default function DpsPage() {
         url: "/dps_ping",
         title: "DPS Ping",
         position: "bottom",
-        width: 5,
-        height: 5,
+        width: 100,
+        height: 20,
         gap: 0,
         decorations: false,
-        transparent: false,
-        resizable: false,
+        transparent: true,
+        resizable: true,
         shadow: false,
         alwaysOnTop: true,
         skipTaskbar: true,
@@ -1295,10 +1296,12 @@ export default function DpsPage() {
     const timer = setTimeout(async () => {
       try {
         await ensurePingWindow();
+        const appWindow = getCurrentWebviewWindow();
+        await appWindow.setIgnoreCursorEvents(false);
       } catch (err) {
         console.error("ensurePingWindow failed:", err);
       }
-    }, 100);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [ensurePingWindow]);

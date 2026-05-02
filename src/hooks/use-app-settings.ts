@@ -40,6 +40,7 @@ export type DpsWindowAppearance = {
   classIconStyle: "default" | "colored";
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
+  showTargetHpBar: boolean;
 };
 
 export type AppSettings = {
@@ -88,6 +89,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       classIconStyle: "default",
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
+      showTargetHpBar: true,
     },
   },
 };

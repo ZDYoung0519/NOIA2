@@ -205,6 +205,7 @@ pub fn ensure_tracked_window<R: Runtime>(
 
     if let Some(existing_window) = app.get_webview_window(&options.child_label) {
         let _ = existing_window.set_focusable(focusable);
+        let _ = existing_window.set_size(LogicalSize::new(width, height));
         let _ = existing_window.show();
         let _ = existing_window.unminimize();
         if focus {
