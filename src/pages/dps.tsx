@@ -797,7 +797,7 @@ export default function DpsPage() {
     await createWindow("dps_detail", {
       title: "DPS Detail",
       url: "/dps_detail",
-      width: 1080,
+      width: 1440,
       height: 420,
       decorations: false,
       transparent: true,
@@ -816,7 +816,7 @@ export default function DpsPage() {
         childLabel: "dps_detail",
         url: "/dps_detail",
         title: "DPS Detail",
-        width: 560,
+        width: 1440,
         height: 420,
         gap: 8,
         decorations: false,
