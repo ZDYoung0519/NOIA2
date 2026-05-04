@@ -15,7 +15,7 @@ export default function HomePage() {
   const { t } = useAppTranslation();
 
   const quickActions = [
-    { label: t("home.actions.openDps"), icon: Plus, onClick: createDpsWindow },
+    { label: t("home.actions.openDps"), icon: Plus, onClick: () => createDpsWindow(true) },
     { label: t("home.actions.characterRating"), icon: ArrowUp, onClick: () => {} },
     { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => {} },
     { label: t("home.actions.comingSoon"), icon: FileText, onClick: () => {} },

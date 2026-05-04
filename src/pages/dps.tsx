@@ -666,6 +666,14 @@ export default function DpsPage() {
     return snapshot.combatInfos?.targetInfos?.[String(resolvedTargetId)] ?? null;
   }, [resolvedTargetId, selectedHistoryRecord, snapshot, view]);
 
+  const StatusDescription = useMemo(() => {
+    if (!isRunning) {
+      return "未运行，请点击开始按钮开始！";
+    }
+    if (!mainPlayerName) return "未检测到角色，请传送奇斯克/重选角色";
+    return "等待数据中";
+  }, [isRunning, mainPlayerName]);
+
   const dpsPanelData = useMemo(() => {
     if (view === "history") {
       if (!selectedHistoryRecord || resolvedTargetId === null) {
@@ -697,7 +705,7 @@ export default function DpsPage() {
       displayTargetInfo?.targetName ||
       displayTargetInfo?.id ||
       maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
-      (t("未检测") as string);
+      (t("无目标") as string);
     return targetName;
   }, [displayTargetInfo, mainPlayerName, settings.appearance.dpsWindow.maskNicknames]);
 
@@ -1215,39 +1223,64 @@ export default function DpsPage() {
           }}
         />
       </button>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex min-w-0 items-center gap-2 rounded-full px-1" data-tauri-drag-region>
+      {view === "dps" && (
+        <div className="flex min-w-0 items-center gap-2 rounded-full px-1" data-tauri-drag-region>
+          <div
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              !isRunning
+                ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                : targetFightingTime > 0
+                  ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                  : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+            )}
+            data-tauri-drag-region
+          />
+          <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
+            {displayName}
+          </span>
+          <span className="text-xs font-semibold" data-tauri-drag-region>
+            {timerStatus}
+          </span>
+        </div>
+      )}
+      {view === "history" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
             <div
-              className={cn(
-                "h-1.5 w-1.5 rounded-full",
-                view === "history"
-                  ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
-                  : !isRunning
-                    ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                    : targetFightingTime > 0
-                      ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                      : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-              )}
+              className="flex min-w-0 items-center gap-2 rounded-full px-1"
               data-tauri-drag-region
-            />
-            <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
-              {displayName}
-            </span>
-            <span className="text-xs font-semibold" data-tauri-drag-region>
-              {timerStatus}
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          {/* <div>
+            >
+              <div
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  view === "history"
+                    ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
+                    : !isRunning
+                      ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                      : targetFightingTime > 0
+                        ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                        : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+                )}
+                data-tauri-drag-region
+              />
+              <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
+                {displayName}
+              </span>
+              <span className="text-xs font-semibold" data-tauri-drag-region>
+                {timerStatus}
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {/* <div>
             {mainPlayerName} ({mainPlayerId})
           </div> */}
-          <div>MobCode: {displayTargetInfo?.targetMobCode}</div>
-          <div>TargetId: {displayTargetInfo?.id}</div>
-        </TooltipContent>
-      </Tooltip>
+            <div>MobCode: {displayTargetInfo?.targetMobCode}</div>
+            <div>TargetId: {displayTargetInfo?.id}</div>
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 
@@ -1386,7 +1419,9 @@ export default function DpsPage() {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center rounded-xl px-4 text-center">
-                      <div className="h-full text-sm font-medium text-slate-100">等待战斗中</div>
+                      <div className="h-full text-xs text-slate-100 select-none">
+                        {StatusDescription}
+                      </div>
                     </div>
                   )}
                 </div>

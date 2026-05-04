@@ -29,6 +29,7 @@ declare
   v_trimmed_count integer := 0;
   v_party_total_damage bigint := 0;
   v_boss_max_party_total_damage bigint;
+  v_team_battle_duration double precision := 0;
 begin
   v_record_id := nullif(trim(p_payload->>'record_id'), '');
   v_main_actor_name := coalesce(nullif(trim(p_payload->>'main_actor_name'), ''), '');
@@ -38,6 +39,7 @@ begin
   v_target_max_hp := nullif(p_payload->>'target_max_hp', '')::bigint;
   v_keep_limit := greatest(1, least(coalesce(p_keep_limit, 500), 5000));
   v_party_total_damage := coalesce((p_payload->>'party_total_damage')::bigint, 0);
+  v_team_battle_duration := coalesce((p_payload->>'team_battle_duration')::double precision, 0);
 
   if v_record_id is null then
     raise exception 'record_id is required';
@@ -49,6 +51,37 @@ begin
 
   if v_target_mob_code is null then
     raise exception 'target_mob_code is required';
+  end if;
+
+  -- 校验提前：避免非法数据先写入 aion2_dps 后再回滚
+  if v_target_mob_code = 2400032 then
+    if v_team_battle_duration < 60 then
+      raise exception
+        'team_battle_duration (%) must be at least 60 seconds for mob_code %',
+        v_team_battle_duration,
+        v_target_mob_code;
+    end if;
+
+  elsif coalesce(v_target_max_hp, 0) > 0 then
+    if v_party_total_damage < (v_target_max_hp * 0.9) then
+      raise exception
+        'party_total_damage (%) must be at least 90%% of target_max_hp (%) for mob_code %',
+        v_party_total_damage,
+        v_target_max_hp,
+        v_target_mob_code;
+    end if;
+
+  else
+    v_boss_max_party_total_damage := public.get_aion2_dps_max_party_total_damage(v_target_mob_code);
+    if coalesce(v_boss_max_party_total_damage, 0) > 0 then
+      if v_party_total_damage < (v_boss_max_party_total_damage * 0.8) then
+        raise exception
+          'party_total_damage (%) must be at least 90%% of max party_total_damage (%) for mob_code %',
+          v_party_total_damage,
+          v_boss_max_party_total_damage,
+          v_target_mob_code;
+      end if;
+    end if;
   end if;
 
   insert into public.aion2_dps (
@@ -79,11 +112,11 @@ begin
     v_target_mob_code,
     nullif(p_payload->>'target_name', ''),
     coalesce((p_payload->>'is_boss')::boolean, false),
-    nullif(p_payload->>'target_max_hp', '')::bigint,
+    v_target_max_hp,
     coalesce(p_payload->'battle_start_time', '{}'::jsonb),
     coalesce(p_payload->'battle_last_time', '{}'::jsonb),
-    coalesce((p_payload->>'team_battle_duration')::double precision, 0),
-    coalesce((p_payload->>'party_total_damage')::bigint, 0),
+    v_team_battle_duration,
+    v_party_total_damage,
     coalesce((p_payload->>'team_dps')::double precision, 0),
     v_main_actor_name,
     v_main_actor_server_id,
@@ -93,26 +126,7 @@ begin
     coalesce((p_payload->>'main_actor_dps')::double precision, 0),
     coalesce(p_payload->'data', '{}'::jsonb)
   )
-  on conflict (record_id) do update
-  set
-    created_at = excluded.created_at,
-    battle_ended_at = excluded.battle_ended_at,
-    target_mob_code = excluded.target_mob_code,
-    target_name = excluded.target_name,
-    is_boss = excluded.is_boss,
-    target_max_hp = excluded.target_max_hp,
-    battle_start_time = excluded.battle_start_time,
-    battle_last_time = excluded.battle_last_time,
-    team_battle_duration = excluded.team_battle_duration,
-    party_total_damage = excluded.party_total_damage,
-    team_dps = excluded.team_dps,
-    main_actor_name = excluded.main_actor_name,
-    main_actor_server_id = excluded.main_actor_server_id,
-    main_actor_class = excluded.main_actor_class,
-    main_actor_damage = excluded.main_actor_damage,
-    main_actor_battle_duration = excluded.main_actor_battle_duration,
-    main_actor_dps = excluded.main_actor_dps,
-    data = excluded.data;
+  on conflict (record_id) do nothing;
 
   delete from public.aion2_dps
   where record_id in (
@@ -132,33 +146,6 @@ begin
   );
 
   get diagnostics v_trimmed_count = row_count;
-
-  v_boss_max_party_total_damage := public.get_aion2_dps_max_party_total_damage(v_target_mob_code);
-
-  if v_target_mob_code = 2400032 then
-    if coalesce((p_payload->>'team_battle_duration')::double precision, 0) < 60 then
-      raise exception
-        'team_battle_duration (%) must be at least 60 seconds for mob_code %',
-        coalesce((p_payload->>'team_battle_duration')::double precision, 0),
-        v_target_mob_code;
-    end if;
-  elsif coalesce(v_target_max_hp, 0) > 0 then
-    if v_party_total_damage < (v_target_max_hp * 0.9) then
-      raise exception
-        'party_total_damage (%) must be at least 90%% of target_max_hp (%) for mob_code %',
-        v_party_total_damage,
-        v_target_max_hp,
-        v_target_mob_code;
-    end if;
-  elsif coalesce(v_boss_max_party_total_damage, 0) > 0 then
-    if v_party_total_damage < (v_boss_max_party_total_damage * 0.8) then
-      raise exception
-        'party_total_damage (%) must be at least 90%% of max party_total_damage (%) for mob_code %',
-        v_party_total_damage,
-        v_boss_max_party_total_damage,
-        v_target_mob_code;
-    end if;
-  end if;
 
   insert into public.aion2_dps_rank (
     record_id,
@@ -183,9 +170,9 @@ begin
     v_target_mob_code,
     nullif(p_payload->>'target_name', ''),
     coalesce((p_payload->>'is_boss')::boolean, false),
-    nullif(p_payload->>'target_max_hp', '')::bigint,
-    coalesce((p_payload->>'team_battle_duration')::double precision, 0),
-    coalesce((p_payload->>'party_total_damage')::bigint, 0),
+    v_target_max_hp,
+    v_team_battle_duration,
+    v_party_total_damage,
     coalesce((p_payload->>'team_dps')::double precision, 0),
     v_main_actor_name,
     v_main_actor_server_id,
@@ -224,8 +211,7 @@ begin
   return jsonb_build_object(
     'success', true,
     'record_id', v_record_id,
-    'trimmed_count', v_trimmed_count,
-    'boss_max_party_total_damage', v_boss_max_party_total_damage
+    'trimmed_count', v_trimmed_count
   );
 end;
 $$;

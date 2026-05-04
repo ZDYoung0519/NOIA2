@@ -1,6 +1,7 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { emit, once } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 
 const createWindowLoading: Record<string, boolean> = {};
 const destroyTimers: Record<string, number> = {};
@@ -271,7 +272,7 @@ export async function createWindow(
   }
 }
 
-export const createDpsWindow = async () => {
+export const createDpsWindow = async (autoStart: boolean) => {
   await createWindow("dps", {
     title: "DPS Meter",
     url: "/dps",
@@ -286,4 +287,12 @@ export const createDpsWindow = async () => {
     alwaysOnTop: true,
     skipTaskbar: true,
   });
+
+  if (autoStart) {
+    try {
+      await invoke("start_dps_meter");
+    } catch (error) {
+      console.error("start dps meter failed:", error);
+    }
+  }
 };
