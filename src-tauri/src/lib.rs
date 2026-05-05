@@ -41,6 +41,7 @@ pub fn run() {
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
                 .build(),
         )
+        .plugin(plugins::aion2_focus::init())
         .plugin(plugins::system_tray::init())
         .plugin(plugins::window_tracking::init())
         .invoke_handler(tauri::generate_handler![
