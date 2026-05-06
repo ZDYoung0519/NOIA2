@@ -72,6 +72,10 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
         );
         const mainActorDps =
           mainActorBattleDuration > 0 ? mainActorDamage / mainActorBattleDuration : 0;
+        const uploadRecord = {
+          ...record,
+          thisTargetAllPlayerSkillRecords: {},
+        };
 
         return {
           record_id: record.id,
@@ -93,7 +97,7 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
           main_actor_damage: mainActorDamage,
           main_actor_battle_duration: mainActorBattleDuration,
           main_actor_dps: mainActorDps,
-          data: record,
+          data: uploadRecord,
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
