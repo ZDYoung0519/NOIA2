@@ -4,7 +4,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Play, RotateCcw, Square, Trash2, Settings, History, Book } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock3,
+  Play,
+  RotateCcw,
+  Square,
+  Trash2,
+  Settings,
+  History,
+  Book,
+  X,
+} from "lucide-react";
 import { maskNickname } from "@/lib/name-mask";
 import {
   DropdownMenu,
@@ -13,8 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { MemoizedDpsPanelSimple } from "@/components/dps/dps-panel-simple";
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
-import { TitleBar } from "@/components/title-bar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
@@ -145,40 +156,6 @@ const hexToRgba = (hex: string, alphaPercent: number) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-type TitleIconButtonProps = {
-  active?: boolean;
-  onClick: () => void | Promise<void>;
-  title: string;
-  children: React.ReactNode;
-  tone?: "default" | "danger" | "accent";
-};
-
-function TitleIconButton({
-  active = false,
-  onClick,
-  title,
-  children,
-  tone = "default",
-}: TitleIconButtonProps) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={() => void onClick()}
-      className={cn(
-        "flex h-6 w-6 items-center justify-center rounded-md border text-slate-300 transition",
-        "border-white/10 bg-white/5 hover:bg-white/10 hover:text-white",
-        active &&
-          tone === "accent" &&
-          "border-cyan-400/40 bg-cyan-500/15 text-cyan-200 hover:brightness-110",
-        tone === "danger" && "border-rose-400/40 bg-rose-500/15 text-rose-100 hover:brightness-110"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
 type WindowFrameProps = {
   titleBar: ReactNode;
   children: ReactNode;
@@ -188,12 +165,7 @@ type WindowFrameProps = {
 
 export function WindowFrame({ titleBar, children, className, contentClassName }: WindowFrameProps) {
   return (
-    <div
-      className={cn(
-        "border-border flex h-screen w-screen flex-col overflow-hidden rounded-md border",
-        className
-      )}
-    >
+    <div className={cn("flex h-screen w-screen flex-col overflow-hidden rounded-sm", className)}>
       {titleBar}
       <main className={contentClassName}>{children}</main>
     </div>
@@ -215,9 +187,9 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
 }: HistoryTargetListProps) {
   return (
     <aside className="w-30">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 px-1 py-1">
+      <div className="flex items-center justify-between gap-2 px-1 py-1">
         <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-          历史记录
+          History
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -226,10 +198,10 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
               onClick={onClear}
               disabled={historyRecords.length === 0}
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-md border transition",
+                "flex h-5 w-5 items-center justify-center rounded-md transition",
                 historyRecords.length === 0
-                  ? "cursor-not-allowed border-white/5 bg-white/[0.03] text-slate-600"
-                  : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                  ? "cursor-not-allowed bg-white/[0.03] text-slate-600"
+                  : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -254,7 +226,7 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                   type="button"
                   onClick={() => onSelect(record.id)}
                   className={cn(
-                    "w-full border px-1.5 py-0.5 text-left transition",
+                    "w-full px-1.5 py-0.5 text-left transition",
                     selectedHistoryId === record.id
                       ? "border-cyan-400/40 bg-cyan-500/12 text-cyan-50"
                       : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]"
@@ -305,6 +277,7 @@ export default function DpsPage() {
   const [historyRecords, setHistoryRecords] = useState<HistoryTargetRecord[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
+  const [isClickThrough, setIsClickThrough] = useState(false);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const resizeTimerRef = useRef<number | null>(null);
@@ -332,6 +305,28 @@ export default function DpsPage() {
   }, [pinnedPlayerId]);
 
   useEffect(() => {
+    let mounted = true;
+    let unlisten: null | (() => void) = null;
+
+    const setup = async () => {
+      unlisten = await listen<{ clickThrough: boolean }>("dps-click-through-changed", (event) => {
+        if (!mounted) {
+          return;
+        }
+
+        setIsClickThrough(Boolean(event.payload.clickThrough));
+      });
+    };
+
+    void setup();
+
+    return () => {
+      mounted = false;
+      unlisten?.();
+    };
+  }, []);
+
+  useEffect(() => {
     hoverPlayerIdRef.current = hoverPlayerId;
   }, [hoverPlayerId]);
 
@@ -345,7 +340,7 @@ export default function DpsPage() {
           setIsRunning(status);
         }
 
-        // 收听dps-snapshot事件，更新当前战斗快照
+        // Listen for dps-snapshot events and update the current combat snapshot
         unlistenSnapshotRef.current = await listen<CombatSnapshot>("dps-snapshot", (event) => {
           if (!mounted) {
             return;
@@ -362,7 +357,7 @@ export default function DpsPage() {
           );
         });
 
-        // dps-meter的状态，运行/停止
+        // dps-meter running state
         unlistenStatusRef.current = await listen<boolean>("dps-meter-status", (event) => {
           if (!mounted) {
             return;
@@ -386,7 +381,7 @@ export default function DpsPage() {
             }
           }
         });
-        // ping 历史
+        // ping history
         unlistenPingHistoryRef.current = await listen("ping-history", (event) => {
           if (!mounted) {
             return;
@@ -395,7 +390,7 @@ export default function DpsPage() {
           setView("ping");
         });
 
-        // 收听dps-reset-requested事件，重置当前状态（快捷键触发后会emit这个信号）
+        // Listen for reset requests from shortcuts
         unlistenResetRequestRef.current = await listen("dps-reset-requested", () => {
           if (!mounted) {
             return;
@@ -403,7 +398,7 @@ export default function DpsPage() {
           void latestResetHandlerRef.current?.();
         });
 
-        // 检测到主角色
+        // Main actor detected
         unlistenMainActorDetectedRef.current = await listen<{
           actorId: number;
           actorName: string;
@@ -431,21 +426,21 @@ export default function DpsPage() {
             window.clearTimeout(mainActorResetTimerRef.current);
           }
 
-          // 检测到主角色1000ms后清空状态
+          // Clear state 1000ms after detecting the main actor
           mainActorResetTimerRef.current = window.setTimeout(() => {
             mainActorResetTimerRef.current = null;
             void latestResetHandlerRef.current?.();
           }, 1_000);
         });
 
-        // 响应dps_detail窗口的请求，发送当前选中玩家的详情数据
+        // Respond to dps_detail requests with the selected player details
         const unlistenDetailRequest = await listen("dps-detail-request", async () => {
           if (detailPayloadRef.current) {
             await emit("dps-detail-update", detailPayloadRef.current);
           }
         });
 
-        // dps-detail窗口关闭时，清除选中状态
+        // Clear selected state when the dps-detail window closes
         const unlistenDetailClosed = await listen("dps-detail-window-closed", () => {
           if (!mounted) {
             return;
@@ -505,7 +500,7 @@ export default function DpsPage() {
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
 
-    // dps窗口关闭时，停止后台的dps-meter进程
+    // Stop the background dps-meter process when the dps window closes
     const unlisten = appWindow.onCloseRequested(async () => {
       try {
         await invoke("stop_dps_meter");
@@ -519,14 +514,14 @@ export default function DpsPage() {
     };
   }, []);
 
-  // resize 窗口
+  // Resize the window to match content
   const resizeWindow = useCallback(async () => {
     if (!contentRef.current || !dpsAppearance.autoResizeHeight) {
       return;
     }
 
     const appWindow = getCurrentWebviewWindow();
-    const TITLE_BAR_HEIGHT = 32;
+    const TITLE_BAR_HEIGHT = isClickThrough ? 0 : 28;
     const WINDOW_BORDER_HEIGHT = 2;
     const MIN_HEIGHT = 10;
     const MAX_HEIGHT = 1000;
@@ -565,11 +560,15 @@ export default function DpsPage() {
     } catch (error) {
       console.error("auto resize dps window failed:", error);
     }
-  }, [dpsAppearance.autoResizeHeight, dpsAppearance.scaleFactor]);
+  }, [dpsAppearance.autoResizeHeight, dpsAppearance.scaleFactor, isClickThrough]);
 
   useEffect(() => {
     latestResizeWindowRef.current = resizeWindow;
   }, [resizeWindow]);
+
+  useEffect(() => {
+    void resizeWindow();
+  }, [isClickThrough, resizeWindow]);
 
   useEffect(() => {
     const contentElement = contentRef.current;
@@ -668,10 +667,10 @@ export default function DpsPage() {
 
   const StatusDescription = useMemo(() => {
     if (!isRunning) {
-      return "未运行，请点击开始按钮开始！";
+      return "水表暂未启动.";
     }
-    if (!mainPlayerName) return "未检测到角色，请传送奇斯克/重选角色";
-    return "等待数据中";
+    if (!mainPlayerName) return "等待战斗数据.";
+    return "Waiting for data.";
   }, [isRunning, mainPlayerName]);
 
   const dpsPanelData = useMemo(() => {
@@ -700,12 +699,15 @@ export default function DpsPage() {
     };
   }, [displayTargetInfo, resolvedTargetId, selectedHistoryRecord, snapshot, view]);
 
+  const DpsPanelComponent =
+    dpsAppearance.panelStyle === "classicBars" ? MemoizedDpsPanel : MemoizedDpsPanelSimple;
+
   const displayName = useMemo(() => {
     const targetName =
       displayTargetInfo?.targetName ||
       displayTargetInfo?.id ||
       maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
-      (t("无目标") as string);
+      "No target";
     return targetName;
   }, [displayTargetInfo, mainPlayerName, settings.appearance.dpsWindow.maskNicknames]);
 
@@ -894,10 +896,10 @@ export default function DpsPage() {
         window.clearTimeout(mainActorResetTimerRef.current);
         mainActorResetTimerRef.current = null;
       }
-      // 构建历史记录
+      // Build history records
       const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
 
-      // 清空状态
+      // Clear current state
       await invoke("reset_dps_meter");
       lastSnapshotDamageRef.current = null;
       lastMemorySignatureRef.current = null;
@@ -917,15 +919,15 @@ export default function DpsPage() {
       });
 
       if (historyToPersist.length > 0) {
-        // 保存到本地
+        // Save locally
         persistHistoryRecords(historyToPersist);
-        // 上传到数据库
+        // Upload to database
         try {
-          console.log(`开始上传 ${historyToPersist.length} 条数据`);
+          console.log(`Uploading ${historyToPersist.length} DPS records`);
           await uploadDpsDataBatch(historyToPersist);
-          console.log(`✅ 上传成功！`);
+          console.log("DPS upload succeeded");
         } catch (err) {
-          console.error("❌ 上传失败:", err);
+          console.error("DPS upload failed:", err);
         }
       }
     } catch (error) {
@@ -1144,143 +1146,110 @@ export default function DpsPage() {
     await closeDetailWindowNow();
   }, [closeDetailWindowNow]);
 
-  // const handleClose = async () => {
-  //   const appWindow = getCurrentWebviewWindow();
-  //   await appWindow.close();
-  // };
-  const rightActions = (
-    <div className="flex items-center gap-1 pr-0">
-      {isRunning ? (
-        <TitleIconButton
-          active
-          onClick={handleStopDpsMeter}
-          title={t("dps.actions.stop")}
-          tone="danger"
-        >
-          <Square className="h-3 w-3" />
-        </TitleIconButton>
-      ) : (
-        <TitleIconButton
-          active
-          onClick={handleStartDpsMeter}
-          title={t("dps.actions.start")}
-          tone="accent"
-        >
-          <Play className="h-3.5 w-3.5" />
-        </TitleIconButton>
-      )}
+  const handleClose = useCallback(async () => {
+    await getCurrentWebviewWindow().close();
+  }, []);
 
-      <TitleIconButton active onClick={handleReset} title={t("dps.actions.reset")}>
-        <RotateCcw className="h-3.5 w-3.5" />
-      </TitleIconButton>
-
-      <TitleIconButton active onClick={handleOpenHistory} title={t("dps.actions.reset")}>
-        <History className="h-3.5 w-3.5" />
-      </TitleIconButton>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            onClick={() => {}}
-            title={t("dps.actions.settings")}
-            className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenSettings}>
-            <Settings /> <span className="text-sm">设置</span>
-          </DropdownMenuItem>
-          {/* <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
-            <History /> <span className="text-sm">历史</span>
-          </DropdownMenuItem> */}
-          <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenLog}>
-            <Book /> <span className="text-sm">日志</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* <TitleIconButton active onClick={handleClose} title={t("dps.actions.reset")}>
-        <X className="h-3 w-3" />
-      </TitleIconButton> */}
-    </div>
-  );
-
-  const leftActions = (
-    <div className="flex min-w-0 items-center gap-1" data-tauri-drag-region>
-      <button
-        onClick={() => setView("dps")}
-        className="flex h-6 w-6 cursor-pointer items-center justify-center p-0 hover:scale-110 hover:brightness-110 data-[tauri-drag-region]:pointer-events-none"
-        onContextMenu={(e) => e.preventDefault()}
-      >
-        <img
-          src="icon.png"
-          alt="icon"
-          className="h-6 w-6"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      </button>
-      {view === "dps" && (
-        <div className="flex min-w-0 items-center gap-2 rounded-full px-1" data-tauri-drag-region>
-          <div
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              !isRunning
-                ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                : targetFightingTime > 0
-                  ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                  : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-            )}
+  const titleBar = isClickThrough ? null : (
+    <div
+      className="flex h-7 items-center justify-between rounded-t-[5px] border border-white/10 px-2 text-slate-100 select-none"
+      style={{ backgroundColor: dpsBackground }}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2" data-tauri-drag-region>
+        <div className="flex h-full shrink-0 items-center gap-1.5" data-tauri-drag-region>
+          {view === "dps" ? (
+            <Clock3 className="h-3.5 w-3.5 text-slate-400" data-tauri-drag-region />
+          ) : (
+            <button
+              type="button"
+              title="Back"
+              onClick={(event) => {
+                event.currentTarget.blur();
+                setView("dps");
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline-none active:bg-white/5"
+            >
+              <ArrowLeft className="h-3 w-3" />
+            </button>
+          )}
+          <span
+            className="font-mono text-xs font-medium text-slate-100 tabular-nums"
             data-tauri-drag-region
-          />
-          <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
-            {displayName}
-          </span>
-          <span className="text-xs font-semibold" data-tauri-drag-region>
+          >
             {timerStatus}
           </span>
         </div>
-      )}
-      {view === "history" && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className="flex min-w-0 items-center gap-2 rounded-full px-1"
-              data-tauri-drag-region
+        <div className="flex min-w-0 items-center gap-1.5" data-tauri-drag-region>
+          <div
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              view === "history"
+                ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
+                : !isRunning
+                  ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                  : targetFightingTime > 0
+                    ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
+                    : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
+            )}
+            data-tauri-drag-region
+          />
+          <span className="truncate text-xs font-medium text-slate-300" data-tauri-drag-region>
+            {displayName}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              title={t("dps.actions.settings")}
+              onClick={(event) => event.currentTarget.blur()}
+              className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline-none active:bg-white/5"
             >
-              <div
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  view === "history"
-                    ? "bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.6)]"
-                    : !isRunning
-                      ? "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.6)]"
-                      : targetFightingTime > 0
-                        ? "bg-yellow-300 shadow-[0_0_6px_rgba(253,224,71,0.6)]"
-                        : "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]"
-                )}
-                data-tauri-drag-region
-              />
-              <span className="max-w-25 truncate text-sm font-semibold" data-tauri-drag-region>
-                {displayName}
-              </span>
-              <span className="text-xs font-semibold" data-tauri-drag-region>
-                {timerStatus}
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {/* <div>
-            {mainPlayerName} ({mainPlayerId})
-          </div> */}
-            <div>MobCode: {displayTargetInfo?.targetMobCode}</div>
-            <div>TargetId: {displayTargetInfo?.id}</div>
-          </TooltipContent>
-        </Tooltip>
-      )}
+              <Settings className="h-3 w-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-28">
+            <DropdownMenuItem
+              className="px-2 py-1 text-sm"
+              onClick={isRunning ? handleStopDpsMeter : handleStartDpsMeter}
+            >
+              {isRunning ? <Square /> : <Play />}
+              <span className="text-sm">{isRunning ? "停止" : "开始"}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleReset}>
+              <RotateCcw />
+              <span className="text-sm">重置</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
+              <History />
+              <span className="text-sm">历史</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenSettings}>
+              <Settings />
+              <span className="text-sm">设置</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenLog}>
+              <Book />
+              <span className="text-sm">日志</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button
+          type="button"
+          title="Close"
+          onClick={(event) => {
+            event.currentTarget.blur();
+            void handleClose();
+          }}
+          className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-rose-500/20 hover:text-rose-100 focus-visible:outline-none active:bg-white/5"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 
@@ -1288,7 +1257,7 @@ export default function DpsPage() {
     await createWindow("dps_ping", {
       title: "DPS Ping",
       url: "/dps_ping",
-      width: 100,
+      width: 150,
       height: 20,
       decorations: false,
       transparent: true,
@@ -1308,7 +1277,7 @@ export default function DpsPage() {
         url: "/dps_ping",
         title: "DPS Ping",
         position: "bottom",
-        width: 100,
+        width: 150,
         height: 20,
         gap: 0,
         decorations: false,
@@ -1329,40 +1298,29 @@ export default function DpsPage() {
         await ensurePingWindow();
         const appWindow = getCurrentWebviewWindow();
         await appWindow.setIgnoreCursorEvents(false);
+        setIsClickThrough(false);
       } catch (err) {
         console.error("ensurePingWindow failed:", err);
       }
-    }, 10);
+    }, 1);
 
     return () => clearTimeout(timer);
   }, [ensurePingWindow]);
 
   return (
     <WindowFrame
-      titleBar={
-        <TitleBar
-          title=""
-          showAppIcon={false}
-          showMaximize={false}
-          showMinimize={false}
-          showClose={true}
-          leftActions={leftActions}
-          rightActions={rightActions}
-          className="border-white/10"
-          style={{ backgroundColor: dpsBackground }}
-        />
-      }
-      className="border-white/10 text-slate-100"
+      titleBar={titleBar}
+      className="text-slate-100"
       contentClassName="flex flex-1 items-stretch"
     >
       <div
-        className="flex h-full w-full flex-col self-stretch bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)]"
+        className="flex h-full w-full flex-col self-stretch"
         style={{
-          backgroundColor: dpsBackground,
           zoom: dpsAppearance.scaleFactor,
+          backgroundColor: dpsBackground,
         }}
       >
-        <section className="flex h-full flex-col border border-white/10">
+        <section className="flex h-full flex-col">
           <div className="flex h-full flex-col p-0">
             <div ref={contentRef}>
               {view === "history" && (
@@ -1375,8 +1333,8 @@ export default function DpsPage() {
                   />
 
                   <div className="min-w-0 flex-1">
-                    {dpsPanelData ? (
-                      <MemoizedDpsPanel
+                    {dpsPanelData && (
+                      <DpsPanelComponent
                         targetInfo={dpsPanelData.targetInfo || undefined}
                         thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
                         combatInfos={dpsPanelData.combatInfos || undefined}
@@ -1390,19 +1348,15 @@ export default function DpsPage() {
                         onPlayerHovered={handlePlayerHover}
                         onPlayerHoverEnd={handlePlayerHoverEnd}
                       />
-                    ) : (
-                      <div className="flex h-10 max-h-10 items-center justify-center rounded-xl px-4 text-center">
-                        <div className="text-sm font-medium text-slate-100">等待战斗中</div>
-                      </div>
                     )}
                   </div>
                 </div>
               )}
 
               {view === "dps" && (
-                <div className="min-h-12 p-2 pt-1">
+                <div className="min-h-25 w-full p-0">
                   {dpsPanelData ? (
-                    <MemoizedDpsPanel
+                    <DpsPanelComponent
                       targetInfo={dpsPanelData.targetInfo || undefined}
                       thisTargetPlayerStats={dpsPanelData.thisTargetPlayerStats || undefined}
                       combatInfos={dpsPanelData.combatInfos || undefined}
@@ -1418,10 +1372,8 @@ export default function DpsPage() {
                       onPlayerHoverEnd={handlePlayerHoverEnd}
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center rounded-xl px-4 text-center">
-                      <div className="h-full text-xs text-slate-100 select-none">
-                        {StatusDescription}
-                      </div>
+                    <div className="flex h-full items-center justify-center rounded text-center">
+                      <div className="text-xs text-slate-100 select-none">{StatusDescription}</div>
                     </div>
                   )}
                 </div>

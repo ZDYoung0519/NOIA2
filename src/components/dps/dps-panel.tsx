@@ -75,7 +75,7 @@ const DpsPanel = function DpsPanel({
   // const normalizedOpacity = clamp(0, 1, (barOpacity ?? 100) / 100);
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 p-1">
       {showTargetHpBar && (
         <div className="group relative flex h-7 items-center overflow-hidden rounded border border-red-500/40 bg-red-950/30">
           <div

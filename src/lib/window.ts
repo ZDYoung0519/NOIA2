@@ -273,6 +273,12 @@ export async function createWindow(
 }
 
 export const createDpsWindow = async (autoStart: boolean) => {
+  try {
+    await invoke("set_dps_manual_hidden", { hidden: false });
+  } catch (error) {
+    console.error("clear dps manual hidden state failed:", error);
+  }
+
   await createWindow("dps", {
     title: "DPS Meter",
     url: "/dps",

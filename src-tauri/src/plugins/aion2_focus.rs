@@ -1,7 +1,9 @@
 use serde::Serialize;
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
+    Manager, Runtime, State,
 };
 
 const AION2_PROCESS_NAME: &str = "Aion2.exe";
@@ -14,9 +16,28 @@ struct Aion2FocusChangedPayload {
     process_name: Option<String>,
 }
 
+pub struct Aion2FocusState {
+    dps_manual_hidden: AtomicBool,
+}
+
+impl Default for Aion2FocusState {
+    fn default() -> Self {
+        Self {
+            dps_manual_hidden: AtomicBool::new(false),
+        }
+    }
+}
+
+#[tauri::command]
+pub fn set_dps_manual_hidden(state: State<'_, Aion2FocusState>, hidden: bool) {
+    state.dps_manual_hidden.store(hidden, Ordering::Relaxed);
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("aion2-focus")
         .setup(|app, _api| {
+            app.manage(Aion2FocusState::default());
+
             #[cfg(windows)]
             windows_impl::start(app.app_handle().clone());
 
@@ -57,7 +78,9 @@ mod windows_impl {
         },
     };
 
-    use super::{Aion2FocusChangedPayload, AION2_PROCESS_NAME, FOLLOW_FOCUS_WINDOW_LABELS};
+    use super::{
+        Aion2FocusChangedPayload, Aion2FocusState, AION2_PROCESS_NAME, FOLLOW_FOCUS_WINDOW_LABELS,
+    };
 
     static FOREGROUND_SENDER: OnceLock<Mutex<Option<Sender<isize>>>> = OnceLock::new();
 
@@ -97,9 +120,17 @@ mod windows_impl {
                     },
                 );
 
+                let dps_manual_hidden = app_for_processor
+                    .try_state::<Aion2FocusState>()
+                    .map(|state| state.dps_manual_hidden.load(std::sync::atomic::Ordering::Relaxed))
+                    .unwrap_or(false);
+
                 for label in FOLLOW_FOCUS_WINDOW_LABELS {
                     if let Some(window) = app_for_processor.get_webview_window(label) {
                         if focused {
+                            if dps_manual_hidden {
+                                continue;
+                            }
                             let _ = window.set_focusable(false);
                             let _ = window.show();
                             let _ = window.unminimize();

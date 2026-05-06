@@ -5,6 +5,7 @@ import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Lock, Unlock, Wifi, WifiOff } from "lucide-react";
 
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
 import { MemorySnapshot } from "@/types/aion2dps";
 
@@ -35,10 +36,13 @@ const PING_WINDOW_HEIGHT = 25;
 const MIN_WINDOW_WIDTH = 25;
 
 export default function DpsPingPage() {
+  const { settings } = useAppSettings();
+  const dpsAppearance = settings.appearance.dpsWindow;
   const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
   const [locked, setLocked] = useState(false);
   const lastMemorySignatureRef = useRef<string | null>(null);
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
+  const lastSyncedWidthRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
@@ -104,7 +108,11 @@ export default function DpsPingPage() {
       const parentLogicalWidth = Math.round(parentOuterSize.width / parentScaleFactor);
 
       const targetWidth = Math.max(MIN_WINDOW_WIDTH, parentLogicalWidth);
+      if (Math.abs(targetWidth - lastSyncedWidthRef.current) < 1) {
+        return;
+      }
 
+      lastSyncedWidthRef.current = targetWidth;
       await appWindow.setSize(new LogicalSize(targetWidth, PING_WINDOW_HEIGHT));
     } catch (error) {
       console.error("sync dps_ping size with parent failed:", error);
@@ -112,53 +120,32 @@ export default function DpsPingPage() {
   }, []);
 
   useEffect(() => {
-    let disposed = false;
-    let lastWidth = 0;
+    let mounted = true;
+    let unlisten: null | (() => void) = null;
 
-    const run = async () => {
+    const setup = async () => {
       try {
-        if (disposed) {
-          return;
-        }
-
         const parentWindow = await WebviewWindow.getByLabel(PARENT_WINDOW_LABEL);
-
-        if (!parentWindow) {
+        if (!parentWindow || !mounted) {
           return;
         }
 
-        const parentOuterSize = await parentWindow.outerSize();
-        const parentScaleFactor = await parentWindow.scaleFactor();
-
-        const nextWidth = Math.max(
-          MIN_WINDOW_WIDTH,
-          Math.round(parentOuterSize.width / parentScaleFactor)
-        );
-
-        if (Math.abs(nextWidth - lastWidth) < 1) {
-          return;
-        }
-
-        lastWidth = nextWidth;
-
-        const appWindow = getCurrentWebviewWindow();
-        await appWindow.setSize(new LogicalSize(nextWidth, PING_WINDOW_HEIGHT));
+        unlisten = await parentWindow.onResized(() => {
+          void syncSizeWithParent();
+        });
+        await syncSizeWithParent();
       } catch (error) {
-        console.error("auto resize dps_ping failed:", error);
+        console.error("setup dps_ping parent resize listener failed:", error);
       }
     };
 
-    void run();
-
-    const timer = window.setInterval(() => {
-      void run();
-    }, 100);
+    void setup();
 
     return () => {
-      disposed = true;
-      window.clearInterval(timer);
+      mounted = false;
+      unlisten?.();
     };
-  }, []);
+  }, [syncSizeWithParent]);
 
   useEffect(() => {
     void syncSizeWithParent();
@@ -244,6 +231,7 @@ export default function DpsPingPage() {
 
       // 锁定：穿透；解锁：恢复
       await parent.setIgnoreCursorEvents(nextLocked);
+      await emit("dps-click-through-changed", { clickThrough: nextLocked });
     } catch (err) {
       console.error("toggle lock failed:", err);
     }
@@ -252,31 +240,53 @@ export default function DpsPingPage() {
   const MemoizedBottomStatusBar = memo(function BottomStatusBar({
     footerData,
   }: BottomStatusBarProps) {
+    const hasMetric =
+      dpsAppearance.pingWindowShowLatency ||
+      dpsAppearance.pingWindowShowCpu ||
+      dpsAppearance.pingWindowShowMemory;
+
     return (
       <div className="flex h-[25px] w-full items-center justify-start gap-1 px-2 py-0 text-[11px] text-slate-300">
-        <div className="flex flex-row gap-2 select-none">
-          {footerData.pingActive ? (
-            <button
-              type="button"
-              className={cn(
-                "flex cursor-pointer items-center gap-1 hover:brightness-110",
-                footerData.pingTone
-              )}
-              onClick={async () => {
-                if (!locked) {
-                  await emit("ping-history", footerData.pingHistory);
-                }
-              }}
-            >
-              <Wifi className="h-4 w-4" />
-              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ping}</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-1 text-white/60">
-              <WifiOff className="h-4 w-4" />
-              <span className="text-sm select-none">--</span>
+        <div className="flex min-w-0 flex-row items-center gap-2 select-none">
+          {dpsAppearance.pingWindowShowLatency &&
+            (footerData.pingActive ? (
+              <button
+                type="button"
+                className={cn(
+                  "flex cursor-pointer items-center gap-1 hover:brightness-110",
+                  footerData.pingTone
+                )}
+                onClick={async () => {
+                  if (!locked) {
+                    await emit("ping-history", footerData.pingHistory);
+                  }
+                }}
+              >
+                <Wifi className="h-4 w-4" />
+                <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ping}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 text-white/60">
+                <WifiOff className="h-4 w-4" />
+                <span className="text-sm select-none">--</span>
+              </div>
+            ))}
+
+          {dpsAppearance.pingWindowShowCpu && (
+            <div className="flex items-center gap-1 text-slate-200">
+              <span className="text-[10px] font-semibold text-slate-400">CPU</span>
+              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.cpu}</span>
             </div>
           )}
+
+          {dpsAppearance.pingWindowShowMemory && (
+            <div className="flex items-center gap-1 text-slate-200">
+              <span className="text-[10px] font-semibold text-slate-400">MEM</span>
+              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ram}</span>
+            </div>
+          )}
+
+          {!hasMetric && <span className="text-sm text-white/60">--</span>}
         </div>
         <button
           type="button"

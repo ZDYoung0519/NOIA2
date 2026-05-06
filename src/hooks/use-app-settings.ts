@@ -9,7 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   DEFAULT_DPS_METER_CONFIG,
   DPS_METER_CONFIG_KEY,
@@ -17,7 +18,7 @@ import {
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
-import { toggleWindow } from "@/lib/window";
+import { showWindow, toggleWindow } from "@/lib/window";
 
 export const APP_SETTINGS_KEY = "app-settings";
 const LEGACY_SHORTCUT_KEY = "global-shortcut-show-main";
@@ -30,6 +31,7 @@ export type MainWindowAppearance = {
 
 export type DpsWindowAppearance = {
   autoOpenDpsWin: boolean;
+  panelStyle: "classicBars" | "hunterCompact";
   backgroundColor: string;
   backgroundOpacity: number;
   autoResizeHeight: boolean;
@@ -41,6 +43,9 @@ export type DpsWindowAppearance = {
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
   showTargetHpBar: boolean;
+  pingWindowShowLatency: boolean;
+  pingWindowShowCpu: boolean;
+  pingWindowShowMemory: boolean;
 };
 
 export type AppSettings = {
@@ -79,6 +84,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     },
     dpsWindow: {
       autoOpenDpsWin: true,
+      panelStyle: "classicBars",
       backgroundColor: "#000000",
       backgroundOpacity: 75,
       autoResizeHeight: true,
@@ -90,6 +96,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
       showTargetHpBar: false,
+      pingWindowShowLatency: true,
+      pingWindowShowCpu: false,
+      pingWindowShowMemory: false,
     },
   },
 };
@@ -196,6 +205,12 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
           input?.appearance?.dpsWindow?.otherPlayerColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.otherPlayerColor
         ),
+        panelStyle:
+          input?.appearance?.dpsWindow?.panelStyle === "classicBars"
+            ? "classicBars"
+            : input?.appearance?.dpsWindow?.panelStyle === "hunterCompact"
+              ? "hunterCompact"
+              : DEFAULT_APP_SETTINGS.appearance.dpsWindow.panelStyle,
 
         percentDisplayMode:
           input?.appearance?.dpsWindow?.percentDisplayMode === "contribution"
@@ -210,6 +225,15 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
             : input?.appearance?.dpsWindow?.classIconStyle === "colored"
               ? "colored"
               : DEFAULT_APP_SETTINGS.appearance.dpsWindow.classIconStyle,
+        pingWindowShowLatency:
+          input?.appearance?.dpsWindow?.pingWindowShowLatency ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.pingWindowShowLatency,
+        pingWindowShowCpu:
+          input?.appearance?.dpsWindow?.pingWindowShowCpu ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.pingWindowShowCpu,
+        pingWindowShowMemory:
+          input?.appearance?.dpsWindow?.pingWindowShowMemory ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.pingWindowShowMemory,
       },
     },
   };
@@ -336,8 +360,21 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     }
 
     const handleToggleDpsWindow = async () => {
-      await toggleWindow("dps");
-      await toggleWindow("dps_ping");
+      const dpsWindow = await WebviewWindow.getByLabel("dps");
+      const shouldHide =
+        dpsWindow !== null && (await dpsWindow.isVisible()) && !(await dpsWindow.isMinimized());
+
+      if (shouldHide) {
+        await invoke("set_dps_manual_hidden", { hidden: true });
+        await dpsWindow?.hide();
+        const pingWindow = await WebviewWindow.getByLabel("dps_ping");
+        await pingWindow?.hide();
+        return;
+      }
+
+      await invoke("set_dps_manual_hidden", { hidden: false });
+      await showWindow("dps", false);
+      await showWindow("dps_ping", false);
     };
 
     const handleResetDps = async () => {

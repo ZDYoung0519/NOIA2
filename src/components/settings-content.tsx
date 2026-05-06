@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
+import { MemoizedDpsPanelSimple } from "@/components/dps/dps-panel-simple";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ShortcutInput } from "@/components/shortcut-input";
 import { useTheme } from "@/components/theme-provider";
@@ -44,6 +45,44 @@ import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary
 import { cn } from "@/lib/utils";
 import { MAX_PACKET_SIZE_THRESHOLD_OPTIONS } from "@/lib/dps-meter-config";
 import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
+
+const DPS_PANEL_STYLE_OPTIONS = [
+  {
+    value: "hunterCompact",
+    label: "Hunter Compact",
+    description: "紧凑覆盖层风格，DPS 更醒目，适合悬浮水表。",
+  },
+  {
+    value: "classicBars",
+    label: "Classic Bars",
+    description: "旧版条形列表风格，信息更传统。",
+  },
+] as const;
+
+type DpsPanelStyle = (typeof DPS_PANEL_STYLE_OPTIONS)[number]["value"];
+
+function DpsPanelStyleSelect({
+  value,
+  onChange,
+}: {
+  value: DpsPanelStyle;
+  onChange: (value: DpsPanelStyle) => void;
+}) {
+  return (
+    <Select value={value} onValueChange={(nextValue: DpsPanelStyle) => onChange(nextValue)}>
+      <SelectTrigger className="w-52">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {DPS_PANEL_STYLE_OPTIONS.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 type SettingSection = "general" | "dps" | "support" | "about";
 type SupportListItem = {
@@ -278,24 +317,63 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
               ),
             }}
           >
-            <MemoizedDpsPanel
-              targetInfo={previewTargetInfo}
-              thisTargetPlayerStats={previewStats}
-              combatInfos={previewCombatInfos}
-              mainPlayerColor={dpsAppearance.mainPlayerColor}
-              otherPlayerColor={dpsAppearance.otherPlayerColor}
-              barOpacity={100}
-              maskNicknames={dpsAppearance.maskNicknames}
-              percentDisplayMode={dpsAppearance.percentDisplayMode}
-              classIconStyle={dpsAppearance.classIconStyle}
-              showTargetHpBar={dpsAppearance.showTargetHpBar}
-              onPlayerClicked={() => {}}
-            />
+            {dpsAppearance.panelStyle === "classicBars" ? (
+              <MemoizedDpsPanel
+                targetInfo={previewTargetInfo}
+                thisTargetPlayerStats={previewStats}
+                combatInfos={previewCombatInfos}
+                mainPlayerColor={dpsAppearance.mainPlayerColor}
+                otherPlayerColor={dpsAppearance.otherPlayerColor}
+                barOpacity={100}
+                maskNicknames={dpsAppearance.maskNicknames}
+                percentDisplayMode={dpsAppearance.percentDisplayMode}
+                classIconStyle={dpsAppearance.classIconStyle}
+                showTargetHpBar={dpsAppearance.showTargetHpBar}
+                onPlayerClicked={() => {}}
+              />
+            ) : (
+              <MemoizedDpsPanelSimple
+                targetInfo={previewTargetInfo}
+                thisTargetPlayerStats={previewStats}
+                combatInfos={previewCombatInfos}
+                mainPlayerColor={dpsAppearance.mainPlayerColor}
+                otherPlayerColor={dpsAppearance.otherPlayerColor}
+                barOpacity={100}
+                backgroundColor="transparent"
+                maskNicknames={dpsAppearance.maskNicknames}
+                percentDisplayMode={dpsAppearance.percentDisplayMode}
+                classIconStyle={dpsAppearance.classIconStyle}
+                showTargetHpBar={dpsAppearance.showTargetHpBar}
+                onPlayerClicked={() => {}}
+              />
+            )}
           </div>
         </div>
 
         <SettingsRow
-          label={t("职业图标样式")}
+          label="DPS 列表风格"
+          description={
+            DPS_PANEL_STYLE_OPTIONS.find((option) => option.value === dpsAppearance.panelStyle)
+              ?.description
+          }
+          control={
+            <DpsPanelStyleSelect
+              value={dpsAppearance.panelStyle}
+              onChange={(value) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      panelStyle: value,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+
+        <SettingsRow
+          label="职业图标样式"
           control={
             <Select
               value={dpsAppearance.classIconStyle}
@@ -320,7 +398,7 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
           }
         />
         <SettingsRow
-          label={t("显示boss血条")}
+          label="显示 Boss 血条"
           control={
             <Switch
               checked={dpsAppearance.showTargetHpBar}
@@ -532,6 +610,60 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
         />
       </SettingsGroup>
 
+      <SettingsGroup title="底部窗口显示">
+        <SettingsRow
+          label="显示延迟"
+          control={
+            <Switch
+              checked={dpsAppearance.pingWindowShowLatency}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      pingWindowShowLatency: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label="显示 CPU 占用"
+          control={
+            <Switch
+              checked={dpsAppearance.pingWindowShowCpu}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      pingWindowShowCpu: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label="显示内存占用"
+          control={
+            <Switch
+              checked={dpsAppearance.pingWindowShowMemory}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      pingWindowShowMemory: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+      </SettingsGroup>
+
       <SettingsGroup title={t("settings.dps.runtimeGroup")}>
         <SettingsRow
           label={t("settings.dps.snapshotInterval")}
@@ -692,7 +824,6 @@ export function SettingsContent() {
   const { theme, setTheme } = useTheme();
   const { settings, saveSettings } = useAppSettings();
   const { checkUpdate, checking, showNoUpdate } = useManualUpdateCheck();
-  const dpsAppearance = settings.appearance.dpsWindow;
   const showMainShortcut = settings.shortcuts.showMain;
   const showDpsShortcut = settings.shortcuts.showDps;
   const resetDpsShortcut = settings.shortcuts.resetDps;
@@ -726,93 +857,6 @@ export function SettingsContent() {
       window.removeEventListener("storage", handleStorage);
     };
   }, [refreshStorageSummary]);
-
-  const previewCombatInfos = useMemo<CombatInfos>(
-    () => ({
-      actorInfos: {
-        1001: {
-          id: 1001,
-          actorName: "MainPlayer",
-          actorClass: "ASSASSIN",
-          actorServerId: "1001",
-          actorSkillSpec: {},
-        },
-        1002: {
-          id: 1002,
-          actorName: "Supporter",
-          actorClass: "CLERIC",
-          actorServerId: "1002",
-          actorSkillSpec: {},
-        },
-        1003: {
-          id: 1003,
-          actorName: "Blaster",
-          actorClass: "RANGER",
-          actorServerId: "1003",
-          actorSkillSpec: {},
-        },
-      },
-      targetInfos: {
-        9001: {
-          id: 9001,
-          targetMobCode: 2400032,
-          targetName: "Training Dummy",
-          isBoss: false,
-          currentHp: 540000,
-          maxHp: 1200000,
-          targetStartTime: {
-            1001: 0,
-            1002: 0,
-            1003: 0,
-          },
-          targetLastTime: {
-            1001: 120,
-            1002: 120,
-            1003: 120,
-          },
-        },
-      },
-      mainActorId: 1001,
-      mainActorName: "MainPlayer",
-      lastTargetByMainActor: 9001,
-      lastTarget: 9001,
-      timeNow: 120,
-    }),
-    []
-  );
-
-  const previewTargetInfo = useMemo<TargetInfo | undefined>(
-    () => previewCombatInfos.targetInfos["9001"],
-    [previewCombatInfos]
-  );
-
-  const previewStats = useMemo<Record<number, SkillStats>>(
-    () => ({
-      1001: {
-        counts: 96,
-        total_damage: 420000,
-        minDamage: 1200,
-        maxDamage: 9800,
-        specialCounts: {},
-      },
-      1002: {
-        counts: 74,
-        total_damage: 258000,
-
-        minDamage: 800,
-        maxDamage: 6600,
-        specialCounts: {},
-      },
-      1003: {
-        counts: 68,
-        total_damage: 186000,
-        minDamage: 900,
-        maxDamage: 7200,
-        specialCounts: {},
-      },
-    }),
-    []
-  );
 
   const handleShortcutChange = async (newShortcut: string) => {
     if (newShortcut) {
@@ -1003,377 +1047,9 @@ export function SettingsContent() {
                 title={t("settings.dps.title")}
                 description={t("settings.dps.description")}
               />
-
-              <SettingsGroup title={t("settings.dps.runtimeGroup")}>
-                <SettingsRow
-                  label={t("settings.dps.snapshotInterval")}
-                  description={t("settings.dps.snapshotIntervalDescription")}
-                  control={
-                    <div className="flex w-44 items-center gap-2">
-                      <Input
-                        type="number"
-                        min={50}
-                        step={50}
-                        value={settings.dpsMeter.dpsSnapshotIntervalMs}
-                        onChange={(event) => {
-                          const nextValue = Number(event.currentTarget.value || 500);
-                          void saveSettings({
-                            dpsMeter: {
-                              dpsSnapshotIntervalMs: nextValue,
-                            },
-                          });
-                        }}
-                      />
-                      <span className="text-muted-foreground text-xs">ms</span>
-                    </div>
-                  }
-                />
-
-                <SettingsRow
-                  label={t("settings.dps.memorySnapshotInterval")}
-                  description={t("settings.dps.memorySnapshotIntervalDescription")}
-                  control={
-                    <div className="flex w-44 items-center gap-2">
-                      <Input
-                        type="number"
-                        min={100}
-                        step={100}
-                        value={settings.dpsMeter.memorySnapshotIntervalMs}
-                        onChange={(event) => {
-                          const nextValue = Number(event.currentTarget.value || 1500);
-                          void saveSettings({
-                            dpsMeter: {
-                              memorySnapshotIntervalMs: nextValue,
-                            },
-                          });
-                        }}
-                      />
-                      <span className="text-muted-foreground text-xs">ms</span>
-                    </div>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.maxPacketSizeThreshold")}
-                  description={t("settings.dps.maxPacketSizeThresholdDescription")}
-                  control={
-                    <Select
-                      value={String(settings.dpsMeter.maxPacketSizeThreshold)}
-                      onValueChange={(value) => {
-                        void saveSettings({
-                          dpsMeter: {
-                            maxPacketSizeThreshold: Number(value),
-                          },
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-44">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MAX_PACKET_SIZE_THRESHOLD_OPTIONS.map((value) => (
-                          <SelectItem key={value} value={String(value)}>
-                            {value / 1024} KB
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.enableResyncOnStall")}
-                  description={t("settings.dps.enableResyncOnStallDescription")}
-                  control={
-                    <Switch
-                      checked={settings.dpsMeter.enableResyncOnStall}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          dpsMeter: {
-                            enableResyncOnStall: checked,
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.resyncDelay")}
-                  description={t("settings.dps.resyncDelayDescription")}
-                  control={
-                    <div className="flex w-44 items-center gap-2">
-                      <Input
-                        type="number"
-                        min={200}
-                        max={1000}
-                        step={100}
-                        value={settings.dpsMeter.resyncDelayMs}
-                        onChange={(event) => {
-                          const nextValue = Number(event.currentTarget.value || 500);
-                          void saveSettings({
-                            dpsMeter: {
-                              resyncDelayMs: nextValue,
-                            },
-                          });
-                        }}
-                        disabled={!settings.dpsMeter.enableResyncOnStall}
-                      />
-                      <span className="text-muted-foreground text-xs">ms</span>
-                    </div>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.bossOnly")}
-                  control={
-                    <Switch
-                      checked={settings.dpsMeter.bossOnly}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          dpsMeter: {
-                            bossOnly: checked,
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.myMuzhuangOnly")}
-                  control={
-                    <Switch
-                      checked={settings.dpsMeter.myMuzhuangOnly}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          dpsMeter: {
-                            myMuzhuangOnly: checked,
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-              </SettingsGroup>
-
-              <SettingsGroup title={t("settings.dps.windowAppearanceGroup")}>
-                <SettingsRow
-                  label={t("settings.dps.showDetailOnHover")}
-                  control={
-                    <Switch
-                      checked={dpsAppearance.showDetailOnHover}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              showDetailOnHover: checked,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.autoResizeHeight")}
-                  control={
-                    <Switch
-                      checked={dpsAppearance.autoResizeHeight}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              autoResizeHeight: checked,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.scaleFactor")}
-                  control={
-                    <div className="flex w-64 items-center gap-3">
-                      <input
-                        type="range"
-                        min={0.5}
-                        max={1.5}
-                        step={0.1}
-                        value={dpsAppearance.scaleFactor}
-                        onChange={(event) => {
-                          void saveSettings({
-                            appearance: {
-                              dpsWindow: {
-                                scaleFactor: Number(event.currentTarget.value || 1),
-                              },
-                            },
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <span className="text-muted-foreground w-12 text-right text-xs">
-                        {dpsAppearance.scaleFactor.toFixed(1)}
-                      </span>
-                    </div>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.maskNicknames")}
-                  control={
-                    <Switch
-                      checked={dpsAppearance.maskNicknames}
-                      onCheckedChange={(checked) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              maskNicknames: checked,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.percentDisplayMode")}
-                  description={t("settings.dps.percentDisplayModeDescription")}
-                  control={
-                    <Select
-                      value={dpsAppearance.percentDisplayMode}
-                      onValueChange={(value: "contribution" | "damageShare") => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              percentDisplayMode: value,
-                            },
-                          },
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-52">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="damageShare">
-                          {t("settings.dps.percentDisplayModeDamageShare")}
-                        </SelectItem>
-                        <SelectItem value="contribution">
-                          {t("settings.dps.percentDisplayModeContribution")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.panelColor")}
-                  control={
-                    <input
-                      type="color"
-                      value={dpsAppearance.backgroundColor}
-                      onChange={(event) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              backgroundColor: event.currentTarget.value,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.panelOpacity")}
-                  control={
-                    <div className="flex w-64 items-center gap-3">
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={dpsAppearance.backgroundOpacity}
-                        onChange={(event) => {
-                          void saveSettings({
-                            appearance: {
-                              dpsWindow: {
-                                backgroundOpacity: Number(event.currentTarget.value),
-                              },
-                            },
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <span className="text-muted-foreground w-10 text-right text-xs">
-                        {dpsAppearance.backgroundOpacity}%
-                      </span>
-                    </div>
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.mainPlayerBar")}
-                  control={
-                    <input
-                      type="color"
-                      value={dpsAppearance.mainPlayerColor}
-                      onChange={(event) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              mainPlayerColor: event.currentTarget.value,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.dps.otherPlayerBar")}
-                  control={
-                    <input
-                      type="color"
-                      value={dpsAppearance.otherPlayerColor}
-                      onChange={(event) => {
-                        void saveSettings({
-                          appearance: {
-                            dpsWindow: {
-                              otherPlayerColor: event.currentTarget.value,
-                            },
-                          },
-                        });
-                      }}
-                    />
-                  }
-                />
-              </SettingsGroup>
-
-              <SettingsGroup title={t("settings.dps.previewGroup")}>
-                <div className="space-y-3 px-5 py-5">
-                  <div className="text-sm font-medium">{t("settings.dps.previewWindowTitle")}</div>
-                  <div
-                    className="max-w-100 overflow-auto rounded-xl border border-white/10 p-3"
-                    style={{
-                      backgroundColor: hexToRgba(
-                        dpsAppearance.backgroundColor,
-                        dpsAppearance.backgroundOpacity
-                      ),
-                    }}
-                  >
-                    <MemoizedDpsPanel
-                      targetInfo={previewTargetInfo}
-                      thisTargetPlayerStats={previewStats}
-                      combatInfos={previewCombatInfos}
-                      mainPlayerColor={dpsAppearance.mainPlayerColor}
-                      otherPlayerColor={dpsAppearance.otherPlayerColor}
-                      barOpacity={100}
-                      maskNicknames={dpsAppearance.maskNicknames}
-                      percentDisplayMode={dpsAppearance.percentDisplayMode}
-                      showTargetHpBar={dpsAppearance.showTargetHpBar}
-                      onPlayerClicked={() => {}}
-                    />
-                  </div>
-                </div>
-              </SettingsGroup>
+              <DpsSettingsPanel />
             </div>
           )}
-
           {activeSection === "support" && (
             <div className="space-y-8">
               <SettingsSectionHeader
