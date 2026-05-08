@@ -14,6 +14,7 @@ import { useAppSettings } from "@/hooks/use-app-settings";
 import type { DpsDetailPayload, HistoryTargetRecord } from "@/types/aion2dps";
 
 import { getServerShortName } from "@/lib/aion2/servers";
+import { getNpcDisplayName } from "@/lib/aion2/npc-names";
 
 type TargetMobStat = {
   mob_code: string;
@@ -142,7 +143,6 @@ function buildBattleRanks(rows: StatByClassMobRow[], sortMode: RankSortMode): Ba
       dps: Number(row.main_actor_dps ?? 0),
       teamDps: Number(row.team_dps ?? 0),
     }))
-    .filter((item) => item.totalDamage > 0 && item.fightSeconds > 0)
     .sort((a, b) => (sortMode === "team" ? b.teamDps - a.teamDps || b.dps - a.dps : b.dps - a.dps));
 }
 
@@ -491,7 +491,7 @@ const DungeonView = memo(function DungeonView({
 
 export default function DpsViewPage() {
   const { i18n } = useAppTranslation();
-  const [stats, setStats] = useState<TargetMobStat[]>([]);
+  const [rankBossStats, setRankBossStats] = useState<TargetMobStat[]>([]);
   const [selectedMob, setSelectedMob] = useState<TargetMobStat | null>(null);
   const [bossSearch, setBossSearch] = useState("");
   const [dungeonCategory, setDungeonCategory] = useState<DungeonCategory>("expedition");
@@ -528,7 +528,7 @@ export default function DpsViewPage() {
         }
 
         const list = normalizeTargetMobStats(rankBossStats);
-        setStats(list);
+        setRankBossStats(list);
       } catch (error) {
         if (requestId !== targetStatsRequestIdRef.current) {
           return;
@@ -564,6 +564,7 @@ export default function DpsViewPage() {
       const requestId = ++battleRanksRequestIdRef.current;
 
       try {
+        setRankLoading(true);
         setRankErrorMessage(null);
 
         const from = (page - 1) * PAGE_SIZE;
@@ -636,19 +637,14 @@ export default function DpsViewPage() {
     void loadBattleRanks();
   }, [page, rankSortMode, selectedClass, selectedMob]);
 
-  const statsByMobCode = useMemo(
-    () => new Map(stats.map((item) => [item.mob_code, item])),
-    [stats]
-  );
-
   const dungeonCards = useMemo<DungeonCard[]>(() => {
     return (dungeons as DungeonDefinition[]).map((dungeon) => ({
       ...dungeon,
       bosses: dungeon.boss_ids.map((bossId) => {
         const mobCode = String(bossId);
-        const stat = statsByMobCode.get(mobCode) ?? {
+        const stat = {
           mob_code: mobCode,
-          target_name: `Boss ${mobCode}`,
+          target_name: getNpcDisplayName(mobCode),
           last_battle_at: null,
         };
         return {
@@ -658,19 +654,19 @@ export default function DpsViewPage() {
         };
       }),
     }));
-  }, [statsByMobCode]);
+  }, []);
 
   const allRankDungeonCard = useMemo<DungeonCard>(
     () => ({
       ...ALL_RANK_DUNGEON_CARD,
       hideHeaderCard: true,
-      bosses: stats.map((stat) => ({
+      bosses: rankBossStats.map((stat) => ({
         mobCode: stat.mob_code,
         stat,
         label: getBossDisplayName(stat, stat.mob_code),
       })),
     }),
-    [stats]
+    [rankBossStats]
   );
 
   const filteredDungeonCards = useMemo(() => {
@@ -722,24 +718,22 @@ export default function DpsViewPage() {
     }
 
     if (!selectedMob) {
-      const nextMobCode = filteredDungeonCards[0]?.bosses[0]?.mobCode;
-      if (nextMobCode) {
-        const nextStat = statsByMobCode.get(nextMobCode);
-        setSelectedMob(nextStat ?? null);
+      const nextBoss = filteredDungeonCards[0]?.bosses[0];
+      if (nextBoss) {
+        setSelectedMob(nextBoss.stat ?? null);
       }
       return;
     }
 
     if (!visibleMobCodes.has(selectedMob.mob_code)) {
-      const nextMobCode = filteredDungeonCards[0]?.bosses[0]?.mobCode;
-      if (nextMobCode) {
-        const nextStat = statsByMobCode.get(nextMobCode);
-        setSelectedMob(nextStat ?? null);
+      const nextBoss = filteredDungeonCards[0]?.bosses[0];
+      if (nextBoss) {
+        setSelectedMob(nextBoss.stat ?? null);
       } else {
         setSelectedMob(null);
       }
     }
-  }, [filteredDungeonCards, selectedMob, statsByMobCode]);
+  }, [filteredDungeonCards, selectedMob]);
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -775,13 +769,13 @@ export default function DpsViewPage() {
           </div>
         </div>
 
-        {errorMessage ? (
+        {dungeonCategory === "all" && errorMessage ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {errorMessage}
           </div>
         ) : (
           <DungeonView
-            loading={loading}
+            loading={dungeonCategory === "all" && loading}
             dungeonCards={filteredDungeonCards}
             language={currentLanguage}
             selectedMobCode={selectedMobCode}

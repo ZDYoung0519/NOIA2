@@ -105,7 +105,7 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
     for (const payload of toUploadData) {
       const { error } = await supabase.rpc("insert_aion2_dps_and_update_rank", {
         p_payload: payload,
-        p_keep_limit: 500,
+        p_keep_limit: 50,
       });
 
       if (error) {
