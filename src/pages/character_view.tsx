@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/supabase";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { DpsDetailPayload, HistoryTargetRecord } from "@/types/aion2dps";
+import { getDungeonDisplayNameByMobCode } from "@/lib/aion2/npc-names";
 
 function CharacterBanner({
   profile,
@@ -568,6 +569,14 @@ type HistoryBattleRow = {
   team_dps: number | null;
 };
 
+type CharacterRankRow = HistoryBattleRow & {
+  boss_rank: number | null;
+};
+
+type DpsRecordRow = HistoryBattleRow & {
+  boss_rank?: number | null;
+};
+
 function formatDateTime(value: string | null) {
   if (!value) {
     return "-";
@@ -588,9 +597,9 @@ function formatDateTime(value: string | null) {
   });
 }
 
-function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
+function DpsRecordTable({ dpsRows, showRank = false }: { dpsRows: DpsRecordRow[]; showRank?: boolean }) {
   const { settings } = useAppSettings();
-  const [selectedRow, setSelectedRow] = useState<HistoryBattleRow | null>(null);
+  const [selectedRow, setSelectedRow] = useState<DpsRecordRow | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<HistoryTargetRecord | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
@@ -679,9 +688,9 @@ function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
           <table className="bg-background/35 w-full border-collapse border-white/10 p-0 text-sm text-white backdrop-blur-sm">
             <thead className="bg-white/5 text-white/60">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">战斗时间</th>
                 <th className="px-4 py-3 text-left font-medium">目标</th>
-                <th className="px-4 py-3 text-left font-medium">玩家</th>
+                <th className="px-4 py-3 text-left font-medium">战斗时间</th>
+                {showRank ? <th className="px-4 py-3 text-left font-medium">排名</th> : null}
                 <th className="px-4 py-3 text-left font-medium">职业</th>
                 <th className="px-4 py-3 text-right font-medium">个人伤害</th>
                 <th className="px-4 py-3 text-right font-medium">队伍总伤害</th>
@@ -694,28 +703,37 @@ function DpsHistoryDialogTable({ dpsRows }: { dpsRows: HistoryBattleRow[] }) {
             <tbody>
               {dpsRows.map((row) => (
                 <tr key={row.record_id} className="border-t border-white/10 hover:bg-white/[0.03]">
-                  <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
                   <td className="px-4 py-3">
                     <div className="font-medium text-white">
                       {row.target_name ?? `Boss ${row.target_mob_code ?? "-"}`}
                     </div>
                     <div className="mt-1 text-xs text-white/40">
-                      MobCode: {row.target_mob_code ?? "-"}
+                      {row.target_mob_code
+                        ? `${getDungeonDisplayNameByMobCode(row.target_mob_code)} · MobCode: ${row.target_mob_code}`
+                        : "未知副本"}
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
+                  {showRank ? (
+                    <td className="px-4 py-3 font-bold text-[#d9a73a]">
+                      {row.boss_rank ? `#${row.boss_rank}` : "-"}
+                    </td>
+                  ) : null}
                   <td className="px-4 py-3">
-                    <ActorNameCell
-                      actorName={row.main_actor_name ?? "-"}
-                      actorClass={row.main_actor_class}
-                      serverLabel={
-                        row.main_actor_server_id
-                          ? getServerShortName(Number(row.main_actor_server_id))
-                          : undefined
-                      }
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-white/65">
-                    {getActorClassName(row.main_actor_class)}
+                    <div className="flex flex-col gap-1">
+                      <ActorNameCell
+                        actorName={row.main_actor_name ?? "-"}
+                        actorClass={row.main_actor_class}
+                        serverLabel={
+                          row.main_actor_server_id
+                            ? getServerShortName(Number(row.main_actor_server_id))
+                            : undefined
+                        }
+                      />
+                      <span className="text-xs text-white/45">
+                        {getActorClassName(row.main_actor_class)}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right text-white/85">
                     {Math.round(Number(row.main_actor_damage ?? 0)).toLocaleString()}
@@ -826,6 +844,7 @@ export default function CharacterViewPage() {
   });
 
   const [characterDpsRows, setCharacterDpsRows] = useState<HistoryBattleRow[]>([]);
+  const [characterDpsRankRows, setCharacterDpsRankRows] = useState<CharacterRankRow[]>([]);
 
   const [activeTab, setActiveTab] = useState<string>("equip");
   const [searchParams] = useSearchParams();
@@ -858,7 +877,7 @@ export default function CharacterViewPage() {
       setCharacterData(character);
 
       // 查询角色战斗历史
-      const { data } = await supabase
+      const historyQuery = supabase
         .from("aion2_dps")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
@@ -870,7 +889,49 @@ export default function CharacterViewPage() {
         .order("battle_ended_at", { ascending: false })
         .limit(200);
 
-      setCharacterDpsRows((data ?? []) as HistoryBattleRow[]);
+      const rankQuery = supabase
+        .from("aion2_dps_rank")
+        .select(
+          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
+        )
+        .eq("main_actor_name", characterName.trim())
+        .eq("main_actor_server_id", serverId.trim())
+        .order("main_actor_dps", { ascending: false, nullsFirst: false })
+        .limit(200);
+
+      const [historyResult, rankResult] = await Promise.all([historyQuery, rankQuery]);
+
+      if (historyResult.error) {
+        throw historyResult.error;
+      }
+      if (rankResult.error) {
+        throw rankResult.error;
+      }
+
+      const rankRows = (rankResult.data ?? []) as HistoryBattleRow[];
+      const rankRowsWithRank = await Promise.all(
+        rankRows.map(async (row): Promise<CharacterRankRow> => {
+          if (row.target_mob_code == null) {
+            return { ...row, boss_rank: null };
+          }
+
+          const { count, error } = await supabase
+            .from("aion2_dps_rank")
+            .select("record_id", { count: "exact", head: true })
+            .eq("target_mob_code", row.target_mob_code)
+            .gt("main_actor_dps", Number(row.main_actor_dps ?? 0));
+
+          if (error) {
+            console.error("failed to load dps rank position:", error);
+            return { ...row, boss_rank: null };
+          }
+
+          return { ...row, boss_rank: (count ?? 0) + 1 };
+        })
+      );
+
+      setCharacterDpsRows((historyResult.data ?? []) as HistoryBattleRow[]);
+      setCharacterDpsRankRows(rankRowsWithRank);
     } catch (e) {
       console.error(e);
     } finally {
@@ -928,6 +989,10 @@ export default function CharacterViewPage() {
                 战斗历史
               </TabsTrigger>
 
+              <TabsTrigger value="dps-rank" className="text-lg">
+                伤害排行榜
+              </TabsTrigger>
+
               <TabsTrigger value="stat-detail" className="text-lg">
                 综合分析
               </TabsTrigger>
@@ -950,7 +1015,11 @@ export default function CharacterViewPage() {
             </TabsContent>
 
             <TabsContent value="dps-history">
-              <DpsHistoryDialogTable dpsRows={characterDpsRows} />
+              <DpsRecordTable dpsRows={characterDpsRows} />
+            </TabsContent>
+
+            <TabsContent value="dps-rank">
+              <DpsRecordTable dpsRows={characterDpsRankRows} showRank />
             </TabsContent>
 
             <TabsContent value="stat-detail">
