@@ -363,6 +363,10 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   }, [showMain]);
 
   useEffect(() => {
+    // if (getCurrentWebviewWindow().label !== "main") {
+    //   return;
+    // }
+
     const handleToggleDpsWindow = async () => {
       const dpsWindow = await WebviewWindow.getByLabel("dps");
 
