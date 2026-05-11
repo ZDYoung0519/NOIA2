@@ -76,8 +76,7 @@ export function TitleBar({
     <div
       style={style}
       className={cn(
-        "bg-background flex h-8 items-center justify-between select-none",
-
+        "text-card-foreground flex h-10 shrink-0 items-center justify-between bg-transparent select-none",
         className
       )}
     >
@@ -85,7 +84,7 @@ export function TitleBar({
       <div
         data-tauri-drag-region
         onDoubleClick={handleDragRegionDoubleClick}
-        className="flex grow items-center gap-2 pl-2"
+        className="flex min-w-0 grow items-center gap-2 px-3.5"
       >
         {showAppIcon && (
           <img
@@ -97,16 +96,18 @@ export function TitleBar({
             }}
           />
         )}
-        {title && <span className="text-sm font-medium text-slate-400">{title}</span>}
+        {title && (
+          <span className="text-muted-foreground truncate text-[13px] font-medium">{title}</span>
+        )}
         {leftActions}
       </div>
 
       {/* Right: Control buttons */}
-      <div className="flex items-center">
+      <div className="flex h-full shrink-0 items-center">
         {rightActions}
 
         {rightActions && (showMinimize || showMaximize || showClose) && (
-          <div className="bg-border/40 mx-1 h-4 w-px" />
+          <div className="bg-muted-foreground/15 mx-1 h-4 w-px" />
         )}
 
         {showMinimize && (
@@ -116,7 +117,7 @@ export function TitleBar({
             aria-label="Minimize"
             tabIndex={-1}
           >
-            <Minus className="h-4 w-4" />
+            <Minus />
           </button>
         )}
 
@@ -127,7 +128,7 @@ export function TitleBar({
             aria-label={isMaximized ? "Restore" : "Maximize"}
             tabIndex={-1}
           >
-            {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            {isMaximized ? <Minimize2 /> : <Maximize2 />}
           </button>
         )}
 
@@ -138,7 +139,7 @@ export function TitleBar({
             aria-label="Close"
             tabIndex={-1}
           >
-            <X className="h-4 w-4" />
+            <X />
           </button>
         )}
       </div>

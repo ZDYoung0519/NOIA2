@@ -10,6 +10,12 @@
       "source": "nodnarbnitram/claude-code-extensions",
       "sourceType": "github",
       "computedHash": "a333d119fa97f6a4c72d7f5a0e7c44c1c614254b8d67383f83ff23ac1af2afb0"
+    },
+    "web-design-engineer": {
+      "source": "ConardLi/garden-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-engineer/SKILL.md",
+      "computedHash": "bc496fd0cd6cff29cb1b6c7172e08c9a8b94e97fa166ca55715aedbb0fac8cad"
     }
   }
 }

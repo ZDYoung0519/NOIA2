@@ -70,6 +70,21 @@ async function calcCenterPosition(
   }
 }
 
+async function waitForWindowReady(label: string, timeoutMs = 1500) {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    const targetWindow = await WebviewWindow.getByLabel(label);
+    if (targetWindow) {
+      return targetWindow;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  throw new Error(`Window ${label} was not ready within ${timeoutMs}ms`);
+}
+
 export async function toggleWindow(label: string) {
   const window = await WebviewWindow.getByLabel(label);
   if (!window) {
@@ -294,6 +309,9 @@ export const createDpsWindow = async (autoStart: boolean) => {
     skipTaskbar: true,
   });
 
+  await waitForWindowReady("dps");
+  await createDpsPingWindow();
+
   if (autoStart) {
     try {
       await invoke("start_dps_meter");
@@ -301,4 +319,57 @@ export const createDpsWindow = async (autoStart: boolean) => {
       console.error("start dps meter failed:", error);
     }
   }
+};
+
+export const createDpsPingWindow = async () => {
+  await createWindow("dps_ping", {
+    title: "DPS Ping",
+    url: "/dps_ping",
+    width: 150,
+    height: 20,
+    decorations: false,
+    transparent: true,
+    resizable: false,
+    shadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    focus: false,
+  });
+
+  await waitForWindowReady("dps_ping");
+
+  await invoke("ensure_tracked_window", {
+    options: {
+      parentLabel: "dps",
+      childLabel: "dps_ping",
+      url: "/dps_ping",
+      title: "DPS Ping",
+      position: "bottom",
+      width: 250,
+      height: 20,
+      gap: 0,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    },
+  });
+};
+
+export const showDpsWindows = async () => {
+  await showWindow("dps", false);
+  await createDpsPingWindow();
+  await showWindow("dps_ping", false);
+};
+
+export const hideDpsWindows = async () => {
+  const dpsWindow = await WebviewWindow.getByLabel("dps");
+  await dpsWindow?.hide();
+
+  const pingWindow = await WebviewWindow.getByLabel("dps_ping");
+  await pingWindow?.hide();
 };

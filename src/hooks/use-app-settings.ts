@@ -18,7 +18,7 @@ import {
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
-import { showWindow, toggleWindow } from "@/lib/window";
+import { createDpsWindow, hideDpsWindows, showDpsWindows, toggleWindow } from "@/lib/window";
 
 export const APP_SETTINGS_KEY = "app-settings";
 const LEGACY_SHORTCUT_KEY = "global-shortcut-show-main";
@@ -35,6 +35,7 @@ export type DpsWindowAppearance = {
   backgroundColor: string;
   backgroundOpacity: number;
   autoResizeHeight: boolean;
+  autoReset: boolean;
   scaleFactor: number;
   maskNicknames: boolean;
   mainPlayerColor: string;
@@ -88,6 +89,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       backgroundColor: "#000000",
       backgroundOpacity: 75,
       autoResizeHeight: true,
+      autoReset: false,
       scaleFactor: 1,
       maskNicknames: false,
       mainPlayerColor: "rgba(34,197,94,0.42)",
@@ -190,6 +192,9 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
         autoResizeHeight:
           input?.appearance?.dpsWindow?.autoResizeHeight ??
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.autoResizeHeight,
+        autoReset:
+          input?.appearance?.dpsWindow?.autoReset ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.autoReset,
         scaleFactor: clampScaleFactor(
           input?.appearance?.dpsWindow?.scaleFactor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.scaleFactor
@@ -329,6 +334,8 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     void syncDpsMeterConfigToBackend(settings.dpsMeter);
   }, [settings.dpsMeter]);
 
+  const { showMain, showDps, resetDps } = settings.shortcuts;
+
   useEffect(() => {
     if (getCurrentWebviewWindow().label !== "main") {
       return;
@@ -339,8 +346,6 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     };
 
     const registerAllShortcuts = async () => {
-      const { showMain } = settings.shortcuts;
-
       if (showMain) {
         await registerShortcut(showMain, handleShowMainWindow);
       }
@@ -349,32 +354,32 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     void registerAllShortcuts();
 
     return () => {
-      const { showMain } = settings.shortcuts;
       void unregisterShortcut(showMain);
     };
-  }, [settings.shortcuts.showMain]);
+  }, [showMain]);
 
   useEffect(() => {
-    if (getCurrentWebviewWindow().label !== "dps") {
+    if (getCurrentWebviewWindow().label !== "main") {
       return;
     }
 
     const handleToggleDpsWindow = async () => {
       const dpsWindow = await WebviewWindow.getByLabel("dps");
-      const shouldHide =
-        dpsWindow !== null && (await dpsWindow.isVisible()) && !(await dpsWindow.isMinimized());
+      if (!dpsWindow) {
+        await createDpsWindow(true);
+        return;
+      }
+
+      const shouldHide = (await dpsWindow.isVisible()) && !(await dpsWindow.isMinimized());
 
       if (shouldHide) {
         await invoke("set_dps_manual_hidden", { hidden: true });
-        await dpsWindow?.hide();
-        const pingWindow = await WebviewWindow.getByLabel("dps_ping");
-        await pingWindow?.hide();
+        await hideDpsWindows();
         return;
       }
 
       await invoke("set_dps_manual_hidden", { hidden: false });
-      await showWindow("dps", false);
-      await showWindow("dps_ping", false);
+      await showDpsWindows();
     };
 
     const handleResetDps = async () => {
@@ -382,8 +387,6 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     };
 
     const registerDpsShortcuts = async () => {
-      const { showDps, resetDps } = settings.shortcuts;
-
       if (showDps) {
         await registerShortcut(showDps, handleToggleDpsWindow);
       }
@@ -395,11 +398,10 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     void registerDpsShortcuts();
 
     return () => {
-      const { showDps, resetDps } = settings.shortcuts;
       void unregisterShortcut(showDps);
       void unregisterShortcut(resetDps);
     };
-  }, [settings.shortcuts.showDps, settings.shortcuts.resetDps]);
+  }, [showDps, resetDps]);
 
   const mergeSettings = useCallback(
     (

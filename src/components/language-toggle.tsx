@@ -53,7 +53,7 @@ export function LanguageToggle() {
         title={t("language.current", { language: t(`language.${currentLanguage}`) })}
         tabIndex={-1}
       >
-        <Languages className="h-4 w-4" />
+        <Languages />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>

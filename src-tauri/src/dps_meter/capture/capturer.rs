@@ -248,7 +248,7 @@ impl PcapCapturer {
             capture_threads: Arc::new(Mutex::new(Vec::new())),
             target_device: Arc::new(RwLock::new(None)),
             target_port: Arc::new(RwLock::new(None)),
-            detection_interval: Duration::from_secs(10),
+            detection_interval: Duration::from_secs(20),
             detection_timeout: Duration::from_secs(1),
         }
     }

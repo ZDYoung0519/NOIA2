@@ -896,35 +896,46 @@ export default function DpsPage() {
         window.clearTimeout(mainActorResetTimerRef.current);
         mainActorResetTimerRef.current = null;
       }
+
       // Build history records
       const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
 
       // Clear current state
       await invoke("reset_dps_meter");
-      lastSnapshotDamageRef.current = null;
-      lastMemorySignatureRef.current = null;
-      setSnapshot(null);
 
-      setCurrentTarget(null);
-      setPinnedPlayerId(null);
-      setHoverPlayerId(null);
-      setView("dps");
-      detailPayloadRef.current = null;
-      void emit("dps-detail-clear");
+      if (settings.appearance.dpsWindow.autoReset) {
+        lastSnapshotDamageRef.current = null;
+        lastMemorySignatureRef.current = null;
+
+        setSnapshot(null);
+        setCurrentTarget(null);
+        setPinnedPlayerId(null);
+        setHoverPlayerId(null);
+        setView("dps");
+
+        detailPayloadRef.current = null;
+
+        void emit("dps-detail-clear");
+
+        lastWindowHeightRef.current = null;
+
+        window.requestAnimationFrame(() => {
+          void resizeWindow();
+        });
+      }
+
       await closeDetailWindowNow();
-
-      lastWindowHeightRef.current = null;
-      window.requestAnimationFrame(() => {
-        void resizeWindow();
-      });
 
       if (historyToPersist.length > 0) {
         // Save locally
         persistHistoryRecords(historyToPersist);
+
         // Upload to database
         try {
           console.log(`Uploading ${historyToPersist.length} DPS records`);
+
           await uploadDpsDataBatch(historyToPersist);
+
           console.log("DPS upload succeeded");
         } catch (err) {
           console.error("DPS upload failed:", err);
@@ -933,7 +944,7 @@ export default function DpsPage() {
     } catch (error) {
       console.error("reset dps meter failed:", error);
     }
-  }, [closeDetailWindowNow, resizeWindow, snapshot]);
+  }, [closeDetailWindowNow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]);
 
   useEffect(() => {
     latestResetHandlerRef.current = handleReset;
@@ -996,6 +1007,7 @@ export default function DpsPage() {
       hideDetailWindow,
       pinnedPlayerId,
       scheduleDetailWindowDestroy,
+      settings.appearance.dpsWindow.showDetailOnHover,
     ]
   );
 
@@ -1086,7 +1098,7 @@ export default function DpsPage() {
         skipTaskbar: true,
       },
     });
-  }, [t]);
+  }, []);
 
   const handleOpenHistory = useCallback(() => {
     if (view === "history") {
@@ -1200,6 +1212,15 @@ export default function DpsPage() {
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          title="history"
+          onClick={handleOpenHistory}
+          className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-rose-500/20 hover:text-rose-100 focus-visible:outline-none active:bg-white/5"
+        >
+          <History className="h-3 w-3" />
+        </button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -1253,59 +1274,19 @@ export default function DpsPage() {
     </div>
   );
 
-  const ensurePingWindow = useCallback(async () => {
-    await createWindow("dps_ping", {
-      title: "DPS Ping",
-      url: "/dps_ping",
-      width: 150,
-      height: 20,
-      decorations: false,
-      transparent: true,
-      resizable: false,
-      shadow: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      focus: false,
-    });
-
-    await waitForWindowReady("dps_ping");
-
-    await invoke("ensure_tracked_window", {
-      options: {
-        parentLabel: "dps",
-        childLabel: "dps_ping",
-        url: "/dps_ping",
-        title: "DPS Ping",
-        position: "bottom",
-        width: 150,
-        height: 20,
-        gap: 0,
-        decorations: false,
-        transparent: true,
-        resizable: true,
-        shadow: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        focus: false,
-        focusable: false,
-      },
-    });
-  }, []);
-
   useEffect(() => {
     const timer = setTimeout(async () => {
       try {
-        await ensurePingWindow();
         const appWindow = getCurrentWebviewWindow();
         await appWindow.setIgnoreCursorEvents(false);
         setIsClickThrough(false);
       } catch (err) {
-        console.error("ensurePingWindow failed:", err);
+        console.error("initialize dps window failed:", err);
       }
     }, 1);
 
     return () => clearTimeout(timer);
-  }, [ensurePingWindow]);
+  }, []);
 
   return (
     <WindowFrame

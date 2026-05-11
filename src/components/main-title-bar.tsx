@@ -47,11 +47,11 @@ export function MainTitleBar() {
 
           <button
             onClick={handleToggleTheme}
-            className="title-bar-btn mr-0.5"
+            className="title-bar-btn mr-1"
             aria-label={t("theme.toggle")}
             tabIndex={-1}
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? <Sun /> : <Moon />}
           </button>
         </>
       }

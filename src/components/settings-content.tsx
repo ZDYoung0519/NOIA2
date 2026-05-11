@@ -216,6 +216,44 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
   const { t } = useAppTranslation();
   const { settings, saveSettings } = useAppSettings();
   const dpsAppearance = settings.appearance.dpsWindow;
+  const showDpsShortcut = settings.shortcuts.showDps;
+  const resetDpsShortcut = settings.shortcuts.resetDps;
+
+  const handleShowDpsShortcutChange = async (newShortcut: string) => {
+    if (newShortcut) {
+      await saveSettings({
+        shortcuts: {
+          showDps: newShortcut,
+        },
+      });
+      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
+    } else {
+      await saveSettings({
+        shortcuts: {
+          showDps: "",
+        },
+      });
+      toast.info(t("settings.shortcut.cleared"));
+    }
+  };
+
+  const handleResetDpsShortcutChange = async (newShortcut: string) => {
+    if (newShortcut) {
+      await saveSettings({
+        shortcuts: {
+          resetDps: newShortcut,
+        },
+      });
+      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
+    } else {
+      await saveSettings({
+        shortcuts: {
+          resetDps: "",
+        },
+      });
+      toast.info(t("settings.shortcut.cleared"));
+    }
+  };
 
   const previewCombatInfos = useMemo<CombatInfos>(
     () => ({
@@ -305,6 +343,19 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
 
   return (
     <div className={cn("space-y-8", className)}>
+      <SettingsGroup title={t("settings.general.shortcutsGroup")}>
+        <SettingsRow
+          label={t("settings.shortcut.showDps")}
+          control={<ShortcutInput value={showDpsShortcut} onChange={handleShowDpsShortcutChange} />}
+        />
+        <SettingsRow
+          label={t("settings.shortcut.resetDps")}
+          control={
+            <ShortcutInput value={resetDpsShortcut} onChange={handleResetDpsShortcutChange} />
+          }
+        />
+      </SettingsGroup>
+
       <SettingsGroup title={t("settings.dps.windowAppearanceGroup")}>
         <div className="space-y-3 px-5 py-5">
           <div className="text-sm font-medium">{t("settings.dps.previewWindowTitle")}</div>
@@ -544,7 +595,8 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
           }
         />
         <SettingsRow
-          label={t("settings.dps.autoResizeHeight")}
+          label={t("settings.appearance.autoResizeHeight")}
+          description={t("settings.appearance.autoResizeHeightDescription")}
           control={
             <Switch
               checked={dpsAppearance.autoResizeHeight}
@@ -553,6 +605,25 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                   appearance: {
                     dpsWindow: {
                       autoResizeHeight: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+
+        <SettingsRow
+          label={t("settings.appearance.autoReset")}
+          description={t("settings.appearance.autoResetDescription")}
+          control={
+            <Switch
+              checked={dpsAppearance.autoReset}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      autoReset: checked,
                     },
                   },
                 });
@@ -825,8 +896,6 @@ export function SettingsContent() {
   const { settings, saveSettings } = useAppSettings();
   const { checkUpdate, checking, showNoUpdate } = useManualUpdateCheck();
   const showMainShortcut = settings.shortcuts.showMain;
-  const showDpsShortcut = settings.shortcuts.showDps;
-  const resetDpsShortcut = settings.shortcuts.resetDps;
 
   useEffect(() => {
     void getVersion().then(setAppVersion);
@@ -870,42 +939,6 @@ export function SettingsContent() {
       await saveSettings({
         shortcuts: {
           showMain: "",
-        },
-      });
-      toast.info(t("settings.shortcut.cleared"));
-    }
-  };
-
-  const handleShowDpsShortcutChange = async (newShortcut: string) => {
-    if (newShortcut) {
-      await saveSettings({
-        shortcuts: {
-          showDps: newShortcut,
-        },
-      });
-      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
-    } else {
-      await saveSettings({
-        shortcuts: {
-          showDps: "",
-        },
-      });
-      toast.info(t("settings.shortcut.cleared"));
-    }
-  };
-
-  const handleResetDpsShortcutChange = async (newShortcut: string) => {
-    if (newShortcut) {
-      await saveSettings({
-        shortcuts: {
-          resetDps: newShortcut,
-        },
-      });
-      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
-    } else {
-      await saveSettings({
-        shortcuts: {
-          resetDps: "",
         },
       });
       toast.info(t("settings.shortcut.cleared"));
@@ -1020,21 +1053,6 @@ export function SettingsContent() {
                   label={t("settings.shortcut.showMain")}
                   control={
                     <ShortcutInput value={showMainShortcut} onChange={handleShortcutChange} />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.shortcut.showDps")}
-                  control={
-                    <ShortcutInput value={showDpsShortcut} onChange={handleShowDpsShortcutChange} />
-                  }
-                />
-                <SettingsRow
-                  label={t("settings.shortcut.resetDps")}
-                  control={
-                    <ShortcutInput
-                      value={resetDpsShortcut}
-                      onChange={handleResetDpsShortcutChange}
-                    />
                   }
                 />
               </SettingsGroup>

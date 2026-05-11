@@ -92,11 +92,19 @@
 
 @layer utilities {
   .title-bar-btn {
-    @apply hover:bg-accent hover:text-accent-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors outline-none;
+    @apply text-muted-foreground hover:bg-background/55 hover:text-foreground flex size-7 cursor-pointer items-center justify-center rounded-lg transition-colors outline-none;
+  }
+
+  .title-bar-btn svg {
+    @apply size-4;
   }
 
   .title-bar-control {
-    @apply hover:bg-accent hover:text-accent-foreground flex h-8 w-9 cursor-pointer items-center justify-center text-slate-400 outline-none;
+    @apply text-muted-foreground hover:bg-background/55 hover:text-foreground flex h-10 w-11 cursor-pointer items-center justify-center transition-colors outline-none;
+  }
+
+  .title-bar-control svg {
+    @apply size-4;
   }
 
   .scrollbar-none {
@@ -106,6 +114,18 @@
     & {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+  }
+
+  .scrollbar-thumb-only {
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent) transparent;
+
+    &::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background-color: transparent;
     }
   }
 }

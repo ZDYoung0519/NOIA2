@@ -9,7 +9,7 @@ export function MainShell({ children }: { children: ReactNode }) {
       titleBar={<MainTitleBar />}
       showSidebar
       showTopbar
-      contentClassName="overflow-auto bg-background/90"
+      contentClassName="overflow-auto"
     >
       <UpdaterDialog />
       {children}

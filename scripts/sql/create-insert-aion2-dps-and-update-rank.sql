@@ -12,7 +12,9 @@ create table if not exists public.aion2_dps_ingest_queue (
   processed_at timestamptz null
 );
 
-create index if not exists idx_aion2_dps_ingest_queue_pending
+drop index if exists public.idx_aion2_dps_ingest_queue_pending;
+
+create index idx_aion2_dps_ingest_queue_pending
   on public.aion2_dps_ingest_queue (status, created_at, id)
   where status in ('pending', 'failed');
 
@@ -86,6 +88,7 @@ declare
   v_boss_max_party_total_damage bigint;
   v_team_battle_duration double precision := 0;
   v_payload jsonb;
+  v_ranked_player_count integer := 0;
 begin
   v_payload := public.sanitize_aion2_dps_payload(coalesce(p_payload, '{}'::jsonb));
 
@@ -223,23 +226,57 @@ begin
     main_actor_battle_duration,
     main_actor_dps
   )
-  values (
-    v_record_id,
-    nullif(v_payload->>'battle_ended_at', '')::timestamptz,
-    v_target_mob_code,
-    nullif(v_payload->>'target_name', ''),
-    coalesce((v_payload->>'is_boss')::boolean, false),
-    v_target_max_hp,
-    v_team_battle_duration,
-    v_party_total_damage,
-    coalesce((v_payload->>'team_dps')::double precision, 0),
-    v_main_actor_name,
-    v_main_actor_server_id,
-    v_main_actor_class,
-    coalesce((v_payload->>'main_actor_damage')::bigint, 0),
-    coalesce((v_payload->>'main_actor_battle_duration')::double precision, 0),
-    coalesce((v_payload->>'main_actor_dps')::double precision, 0)
+  with player_stats as (
+    select
+      stats.key as actor_id,
+      stats.value as stat,
+      actor.value as actor_info
+    from jsonb_each(coalesce(v_payload #> '{data,thisTargetAllPlayerStats}', '{}'::jsonb)) stats
+    left join jsonb_each(coalesce(v_payload #> '{data,combatInfos,actorInfos}', '{}'::jsonb)) actor
+      on actor.key = stats.key
+  ),
+  player_rows as (
+    select
+      v_record_id as record_id,
+      nullif(v_payload->>'battle_ended_at', '')::timestamptz as battle_ended_at,
+      v_target_mob_code as target_mob_code,
+      nullif(v_payload->>'target_name', '') as target_name,
+      coalesce((v_payload->>'is_boss')::boolean, false) as is_boss,
+      v_target_max_hp as target_max_hp,
+      v_team_battle_duration as team_battle_duration,
+      v_party_total_damage as party_total_damage,
+      coalesce((v_payload->>'team_dps')::double precision, 0) as team_dps,
+      coalesce(nullif(trim(actor_info->>'actorName'), ''), '') as main_actor_name,
+      coalesce(nullif(trim(actor_info->>'actorServerId'), ''), '') as main_actor_server_id,
+      coalesce(nullif(trim(actor_info->>'actorClass'), ''), '') as main_actor_class,
+      coalesce(nullif(stat->>'total_damage', '')::bigint, 0) as main_actor_damage,
+      greatest(
+        0,
+        coalesce(nullif(v_payload->'battle_last_time'->>actor_id, '')::double precision, 0)
+          - coalesce(nullif(v_payload->'battle_start_time'->>actor_id, '')::double precision, 0)
+      ) as main_actor_battle_duration
+    from player_stats
   )
+  select
+    record_id,
+    battle_ended_at,
+    target_mob_code,
+    target_name,
+    is_boss,
+    target_max_hp,
+    team_battle_duration,
+    party_total_damage,
+    team_dps,
+    main_actor_name,
+    main_actor_server_id,
+    main_actor_class,
+    main_actor_damage,
+    main_actor_battle_duration,
+    main_actor_damage / nullif(main_actor_battle_duration, 0) as main_actor_dps
+  from player_rows
+  where main_actor_name <> ''
+    and main_actor_damage > 0
+    and main_actor_battle_duration > 0
   on conflict (target_mob_code, main_actor_name, main_actor_server_id, main_actor_class)
   do update
   set
@@ -267,10 +304,13 @@ begin
         > coalesce(public.aion2_dps_rank.battle_ended_at, '-infinity'::timestamptz)
     );
 
+  get diagnostics v_ranked_player_count = row_count;
+
   return jsonb_build_object(
     'success', true,
     'record_id', v_record_id,
-    'trimmed_count', v_trimmed_count
+    'trimmed_count', v_trimmed_count,
+    'ranked_player_count', v_ranked_player_count
   );
 end;
 $$;
@@ -318,15 +358,10 @@ begin
   set
     payload = excluded.payload,
     keep_limit = excluded.keep_limit,
-    status = case
-      when public.aion2_dps_ingest_queue.status = 'done' then 'done'
-      else 'pending'
-    end,
+    status = 'pending',
+    attempts = 0,
     error = null,
-    processed_at = case
-      when public.aion2_dps_ingest_queue.status = 'done' then public.aion2_dps_ingest_queue.processed_at
-      else null
-    end;
+    processed_at = null;
 
   return jsonb_build_object(
     'success', true,
@@ -338,7 +373,7 @@ $$;
 
 create or replace function public.process_aion2_dps_ingest_queue_batch(
   p_batch_size integer default 50,
-  p_max_attempts integer default 5
+  p_max_attempts integer default 3
 )
 returns table (
   picked_count integer,
@@ -361,7 +396,7 @@ begin
     select id, payload, keep_limit, attempts
     from public.aion2_dps_ingest_queue
     where status in ('pending', 'failed')
-      and attempts < greatest(1, coalesce(p_max_attempts, 5))
+      and attempts < greatest(1, coalesce(p_max_attempts, 3))
     order by created_at asc, id asc
     limit v_batch_size
     for update skip locked
@@ -382,15 +417,10 @@ begin
 
       processed_count := processed_count + 1;
     exception when others then
-      if v_job.attempts + 1 >= greatest(1, coalesce(p_max_attempts, 5)) then
-        delete from public.aion2_dps_ingest_queue
-        where id = v_job.id;
-      else
-        update public.aion2_dps_ingest_queue
-        set status = 'failed',
-            error = sqlerrm
-        where id = v_job.id;
-      end if;
+      update public.aion2_dps_ingest_queue
+      set status = 'failed',
+          error = sqlerrm
+      where id = v_job.id;
 
       failed_count := failed_count + 1;
     end;
@@ -411,20 +441,24 @@ select cron.schedule(
   '* * * * *',
   $$
     select *
-    from public.process_aion2_dps_ingest_queue_batch(50, 5);
+    from public.process_aion2_dps_ingest_queue_batch(50, 3);
   $$
 );
 
 select cron.unschedule(jobname)
 from cron.job
-where jobname = 'cleanup-aion2-dps-ingest-queue';
+where jobname in (
+  'cleanup-aion2-dps-ingest-queue',
+  'cleanup-aion2-dps-ingest-queue-failed'
+);
 
 select cron.schedule(
-  'cleanup-aion2-dps-ingest-queue',
-  '0 * * * *',
+  'cleanup-aion2-dps-ingest-queue-failed',
+  '0 0 * * *',
   $$
     delete from public.aion2_dps_ingest_queue
-    where status in ('done', 'failed');
+    where status = 'failed'
+      and attempts >= 3;
   $$
 );
 
@@ -447,4 +481,4 @@ select cron.schedule(
 --
 -- Stop the job:
 -- select cron.unschedule('process-aion2-dps-ingest-queue');
--- select cron.unschedule('cleanup-aion2-dps-ingest-queue');
+-- select cron.unschedule('cleanup-aion2-dps-ingest-queue-failed');

@@ -75,6 +75,8 @@
       "dpsWindowTitle": "DPS Window Appearance",
       "dpsWindowDescription": "These settings directly affect the floating DPS window and the preview below uses mock data.",
       "autoResizeHeight": "Auto Resize Height",
+      "autoReset": "Auto Reset Dps Meter",
+      "autoResetDescription": "Automatically clear adn reset DPS data when main character is detetected.",
       "showDetailOnHover": "Show Dps Details on Hover",
       "autoResizeHeightDescription": "Automatically adjusts the DPS window height to its current content.",
       "showHeaderStats": "Show Header Stats",

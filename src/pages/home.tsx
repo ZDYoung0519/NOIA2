@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowUp, FileText, Plus } from "lucide-react";
 
 import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
@@ -13,12 +14,21 @@ export default function HomePage() {
   const [mainCharacter, setMainCharacter] = useState<MainActorRecord | null>(null);
   const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
   const { t } = useAppTranslation();
+  const navigate = useNavigate();
 
   const quickActions = [
     { label: t("home.actions.openDps"), icon: Plus, onClick: () => createDpsWindow(true) },
-    { label: t("home.actions.characterRating"), icon: ArrowUp, onClick: () => {} },
-    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => {} },
-    { label: t("home.actions.comingSoon"), icon: FileText, onClick: () => {} },
+    {
+      label: t("home.actions.characterRating"),
+      icon: ArrowUp,
+      onClick: () => navigate("/character/search"),
+    },
+    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => navigate("/dps-view") },
+    {
+      label: t("home.actions.comingSoon"),
+      icon: FileText,
+      onClick: () => navigate("/history-battle-query"),
+    },
   ];
 
   return (
