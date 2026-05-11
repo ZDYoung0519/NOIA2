@@ -10,7 +10,7 @@ import {
 } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   DEFAULT_DPS_METER_CONFIG,
   DPS_METER_CONFIG_KEY,
@@ -18,7 +18,7 @@ import {
   syncDpsMeterConfigToBackend,
 } from "@/lib/dps-meter-config";
 import { registerShortcut, unregisterShortcut } from "@/lib/shortcut";
-import { createDpsWindow, hideDpsWindows, showDpsWindows, toggleWindow } from "@/lib/window";
+import { hideDpsWindows, showDpsWindows, toggleWindow } from "@/lib/window";
 
 export const APP_SETTINGS_KEY = "app-settings";
 const LEGACY_SHORTCUT_KEY = "global-shortcut-show-main";
@@ -363,20 +363,12 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   }, [showMain]);
 
   useEffect(() => {
-    // if (getCurrentWebviewWindow().label !== "main") {
-    //   return;
-    // }
+    if (getCurrentWebviewWindow().label !== "dps") {
+      return;
+    }
 
     const handleToggleDpsWindow = async () => {
-      const dpsWindow = await WebviewWindow.getByLabel("dps");
-
-      if (!dpsWindow) {
-        await createDpsWindow(true);
-        await invoke("set_dps_manual_hidden", { hidden: false });
-        await showDpsWindows();
-        return;
-      }
-
+      const dpsWindow = getCurrentWebviewWindow();
       const shouldHide = (await dpsWindow.isVisible()) && !(await dpsWindow.isMinimized());
 
       if (shouldHide) {
