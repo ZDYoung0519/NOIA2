@@ -44,6 +44,7 @@ import {
 import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary";
 import { cn } from "@/lib/utils";
 import { MAX_PACKET_SIZE_THRESHOLD_OPTIONS } from "@/lib/dps-meter-config";
+import { unregisterAllShortcut } from "@/lib/shortcut";
 import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 
 const DPS_PANEL_STYLE_OPTIONS = [
@@ -974,6 +975,19 @@ export function SettingsContent() {
     void openUrl(href);
   }, []);
 
+  const handleClearStorage = useCallback(async () => {
+    try {
+      await unregisterAllShortcut();
+    } catch (error) {
+      console.error("Failed to unregister global shortcuts before clearing cache:", error);
+    }
+
+    localStorage.clear();
+    setClearStorageOpen(false);
+    refreshStorageSummary();
+    window.location.reload();
+  }, [refreshStorageSummary]);
+
   const menuItems = [
     {
       id: "general" as SettingSection,
@@ -1243,10 +1257,7 @@ export function SettingsContent() {
             <Button
               variant="destructive"
               onClick={() => {
-                localStorage.clear();
-                setClearStorageOpen(false);
-                refreshStorageSummary();
-                window.location.reload();
+                void handleClearStorage();
               }}
             >
               {t("settings.aboutPage.clearAndReload")}
