@@ -12,6 +12,13 @@ create table if not exists public.aion2_dps_ingest_queue (
   processed_at timestamptz null
 );
 
+-- A single battle record can produce multiple rank rows, one per teammate.
+-- record_id is therefore a lookup key, not a unique key, in aion2_dps_rank.
+drop index if exists public.idx_aion2_dps_rank_record_id;
+
+create index idx_aion2_dps_rank_record_id
+  on public.aion2_dps_rank (record_id);
+
 drop index if exists public.idx_aion2_dps_ingest_queue_pending;
 
 create index idx_aion2_dps_ingest_queue_pending
@@ -479,6 +486,15 @@ select cron.schedule(
 -- group by status
 -- order by status;
 --
+-- Retry jobs that failed before record_id was changed back to a non-unique rank lookup index:
+-- update public.aion2_dps_ingest_queue
+-- set status = 'pending',
+--     attempts = 0,
+--     error = null,
+--     processed_at = null
+-- where status = 'failed'
+--   and error like '%idx_aion2_dps_rank_record_id%';
+-- 
 -- Stop the job:
 -- select cron.unschedule('process-aion2-dps-ingest-queue');
 -- select cron.unschedule('cleanup-aion2-dps-ingest-queue-failed');
