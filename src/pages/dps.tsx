@@ -296,7 +296,7 @@ export default function DpsPage() {
   const hoverPlayerIdRef = useRef<number | null>(null);
   const detailHoverTokenRef = useRef(0);
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
-  const latestResetHandlerRef = useRef<(() => Promise<void>) | null>(null);
+  const latestResetHandlerRef = useRef<((clearCurrentData?: boolean) => void) | null>(null);
   const mainActorResetTimerRef = useRef<number | null>(null);
   const detailCloseTimerRef = useRef<number | null>(null);
 
@@ -395,7 +395,8 @@ export default function DpsPage() {
           if (!mounted) {
             return;
           }
-          void latestResetHandlerRef.current?.();
+          // shortcut will always clear data
+          void latestResetHandlerRef.current?.(true);
         });
 
         // Main actor detected
@@ -429,7 +430,7 @@ export default function DpsPage() {
           // Clear state 1000ms after detecting the main actor
           mainActorResetTimerRef.current = window.setTimeout(() => {
             mainActorResetTimerRef.current = null;
-            void latestResetHandlerRef.current?.();
+            void latestResetHandlerRef.current?.(false);
           }, 1_000);
         });
 
@@ -890,61 +891,68 @@ export default function DpsPage() {
     }
   }, []);
 
-  const handleReset = useCallback(async () => {
-    try {
-      if (mainActorResetTimerRef.current !== null) {
-        window.clearTimeout(mainActorResetTimerRef.current);
-        mainActorResetTimerRef.current = null;
-      }
-
-      // Build history records
-      const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
-
-      // Clear current state
-      await invoke("reset_dps_meter");
-
-      if (settings.appearance.dpsWindow.autoReset) {
-        lastSnapshotDamageRef.current = null;
-        lastMemorySignatureRef.current = null;
-
-        setSnapshot(null);
-        setCurrentTarget(null);
-        setPinnedPlayerId(null);
-        setHoverPlayerId(null);
-        setView("dps");
-
-        detailPayloadRef.current = null;
-
-        void emit("dps-detail-clear");
-
-        lastWindowHeightRef.current = null;
-
-        window.requestAnimationFrame(() => {
-          void resizeWindow();
-        });
-      }
-
-      await closeDetailWindowNow();
-
-      if (historyToPersist.length > 0) {
-        // Save locally
-        persistHistoryRecords(historyToPersist);
-
-        // Upload to database
-        try {
-          console.log(`Uploading ${historyToPersist.length} DPS records`);
-
-          await uploadDpsDataBatch(historyToPersist);
-
-          console.log("DPS upload succeeded");
-        } catch (err) {
-          console.error("DPS upload failed:", err);
+  const handleReset = useCallback(
+    async (clearCurrentData: boolean = false) => {
+      try {
+        if (mainActorResetTimerRef.current !== null) {
+          window.clearTimeout(mainActorResetTimerRef.current);
+          mainActorResetTimerRef.current = null;
         }
+
+        // Build history records
+        const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
+
+        // Clear current state
+        await invoke("reset_dps_meter");
+
+        const shouldReset = clearCurrentData
+          ? clearCurrentData
+          : settings.appearance.dpsWindow.autoReset;
+
+        if (shouldReset) {
+          lastSnapshotDamageRef.current = null;
+          lastMemorySignatureRef.current = null;
+
+          setSnapshot(null);
+          setCurrentTarget(null);
+          setPinnedPlayerId(null);
+          setHoverPlayerId(null);
+          setView("dps");
+
+          detailPayloadRef.current = null;
+
+          void emit("dps-detail-clear");
+
+          lastWindowHeightRef.current = null;
+
+          window.requestAnimationFrame(() => {
+            void resizeWindow();
+          });
+        }
+
+        await closeDetailWindowNow();
+
+        if (historyToPersist.length > 0) {
+          // Save locally
+          persistHistoryRecords(historyToPersist);
+
+          // Upload to database
+          try {
+            console.log(`Uploading ${historyToPersist.length} DPS records`);
+
+            await uploadDpsDataBatch(historyToPersist);
+
+            console.log("DPS upload succeeded");
+          } catch (err) {
+            console.error("DPS upload failed:", err);
+          }
+        }
+      } catch (error) {
+        console.error("reset dps meter failed:", error);
       }
-    } catch (error) {
-      console.error("reset dps meter failed:", error);
-    }
-  }, [closeDetailWindowNow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]);
+    },
+    [closeDetailWindowNow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]
+  );
 
   useEffect(() => {
     latestResetHandlerRef.current = handleReset;
@@ -1214,9 +1222,17 @@ export default function DpsPage() {
       <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
-          title="history"
-          onClick={handleOpenHistory}
-          className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-rose-500/20 hover:text-rose-100 focus-visible:outline-none active:bg-white/5"
+          title="History"
+          onClick={(event) => {
+            event.currentTarget.blur();
+            handleOpenHistory();
+          }}
+          className={cn(
+            "flex h-5 w-5 items-center justify-center rounded border border-white/10 transition focus-visible:outline-none active:bg-white/5",
+            view === "history"
+              ? "bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/20"
+              : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+          )}
         >
           <History className="h-3 w-3" />
         </button>
@@ -1240,14 +1256,14 @@ export default function DpsPage() {
               {isRunning ? <Square /> : <Play />}
               <span className="text-sm">{isRunning ? "停止" : "开始"}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleReset}>
+            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={() => handleReset(true)}>
               <RotateCcw />
               <span className="text-sm">重置</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
+            {/* <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
               <History />
               <span className="text-sm">历史</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenSettings}>
               <Settings />
               <span className="text-sm">设置</span>

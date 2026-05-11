@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
@@ -25,10 +25,6 @@ type FooterData = {
   pingActive: boolean;
   pingTone: string;
   pingHistory: [number, number][];
-};
-
-type BottomStatusBarProps = {
-  footerData: FooterData;
 };
 
 const PARENT_WINDOW_LABEL = "dps";
@@ -237,17 +233,26 @@ export default function DpsPingPage() {
     }
   };
 
-  const MemoizedBottomStatusBar = memo(function BottomStatusBar({
-    footerData,
-  }: BottomStatusBarProps) {
-    const hasMetric =
-      dpsAppearance.pingWindowShowLatency ||
-      dpsAppearance.pingWindowShowCpu ||
-      dpsAppearance.pingWindowShowMemory;
+  const isRightAligned = dpsAppearance.pingWindowAlignment === "right";
+  const hasMetric =
+    dpsAppearance.pingWindowShowLatency ||
+    dpsAppearance.pingWindowShowCpu ||
+    dpsAppearance.pingWindowShowMemory;
 
-    return (
-      <div className="flex h-[25px] w-full items-center justify-start gap-1 px-2 py-0 text-[11px] text-slate-300">
-        <div className="flex min-w-0 flex-row items-center gap-2 select-none">
+  return (
+    <div className="flex h-[25px] w-screen flex-row overflow-hidden">
+      <div
+        className={cn(
+          "flex h-[25px] w-full items-center gap-1 px-2 py-0 text-[11px] text-slate-300",
+          isRightAligned ? "flex-row-reverse justify-start" : "flex-row justify-start"
+        )}
+      >
+        <div
+          className={cn(
+            "flex min-w-0 items-center gap-2 select-none",
+            isRightAligned ? "flex-row-reverse" : "flex-row"
+          )}
+        >
           {dpsAppearance.pingWindowShowLatency &&
             (footerData.pingActive ? (
               <button
@@ -302,12 +307,6 @@ export default function DpsPingPage() {
           {locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
         </button>
       </div>
-    );
-  });
-
-  return (
-    <div className="flex h-[25px] w-screen flex-row justify-end overflow-hidden">
-      <MemoizedBottomStatusBar footerData={footerData} />
     </div>
   );
 }

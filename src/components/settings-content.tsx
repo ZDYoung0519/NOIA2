@@ -683,6 +683,31 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
 
       <SettingsGroup title="底部窗口显示">
         <SettingsRow
+          label="底部图标位置"
+          control={
+            <Select
+              value={dpsAppearance.pingWindowAlignment}
+              onValueChange={(value: "left" | "right") => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      pingWindowAlignment: value,
+                    },
+                  },
+                });
+              }}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">左对齐</SelectItem>
+                <SelectItem value="right">右对齐</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
+        <SettingsRow
           label="显示延迟"
           control={
             <Switch

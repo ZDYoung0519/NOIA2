@@ -362,7 +362,7 @@ export const createDpsPingWindow = async () => {
 
 export const showDpsWindows = async () => {
   await showWindow("dps", false);
-  await createDpsPingWindow();
+  // await createDpsPingWindow();
   await showWindow("dps_ping", false);
 };
 

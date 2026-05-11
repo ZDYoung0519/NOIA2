@@ -44,6 +44,7 @@ export type DpsWindowAppearance = {
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
   showTargetHpBar: boolean;
+  pingWindowAlignment: "left" | "right";
   pingWindowShowLatency: boolean;
   pingWindowShowCpu: boolean;
   pingWindowShowMemory: boolean;
@@ -98,6 +99,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
       showTargetHpBar: false,
+      pingWindowAlignment: "left",
       pingWindowShowLatency: true,
       pingWindowShowCpu: false,
       pingWindowShowMemory: false,
@@ -230,6 +232,8 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
             : input?.appearance?.dpsWindow?.classIconStyle === "colored"
               ? "colored"
               : DEFAULT_APP_SETTINGS.appearance.dpsWindow.classIconStyle,
+        pingWindowAlignment:
+          input?.appearance?.dpsWindow?.pingWindowAlignment === "right" ? "right" : "left",
         pingWindowShowLatency:
           input?.appearance?.dpsWindow?.pingWindowShowLatency ??
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.pingWindowShowLatency,
@@ -365,8 +369,11 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
 
     const handleToggleDpsWindow = async () => {
       const dpsWindow = await WebviewWindow.getByLabel("dps");
+
       if (!dpsWindow) {
         await createDpsWindow(true);
+        await invoke("set_dps_manual_hidden", { hidden: false });
+        await showDpsWindows();
         return;
       }
 
@@ -376,10 +383,10 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
         await invoke("set_dps_manual_hidden", { hidden: true });
         await hideDpsWindows();
         return;
+      } else {
+        await invoke("set_dps_manual_hidden", { hidden: false });
+        await showDpsWindows();
       }
-
-      await invoke("set_dps_manual_hidden", { hidden: false });
-      await showDpsWindows();
     };
 
     const handleResetDps = async () => {
