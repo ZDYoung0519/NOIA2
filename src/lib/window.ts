@@ -294,6 +294,14 @@ export const createDpsWindow = async (autoStart: boolean) => {
     console.error("clear dps manual hidden state failed:", error);
   }
 
+  if (autoStart) {
+    try {
+      await invoke("start_dps_meter");
+    } catch (error) {
+      console.error("start dps meter failed:", error);
+    }
+  }
+
   await createWindow("dps", {
     title: "DPS Meter",
     url: "/dps",
@@ -311,14 +319,6 @@ export const createDpsWindow = async (autoStart: boolean) => {
 
   await waitForWindowReady("dps");
   await createDpsPingWindow();
-
-  if (autoStart) {
-    try {
-      await invoke("start_dps_meter");
-    } catch (error) {
-      console.error("start dps meter failed:", error);
-    }
-  }
 };
 
 export const createDpsPingWindow = async () => {
