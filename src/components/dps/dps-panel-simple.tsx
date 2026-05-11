@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { clamp, motion } from "framer-motion";
 
+import { MemoizedBossHealthBar } from "@/components/dps/boss-health-bar";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getServerName } from "@/lib/aion2/servers";
 import { maskNickname } from "@/lib/name-mask";
@@ -238,10 +239,6 @@ const DpsPanel = function DpsPanel({
   const maxDamage = players[0]?.totalDamageValue || 0;
   const totalDamage = players.reduce((sum, player) => sum + player.totalDamageValue, 0);
   const targetMaxHp = targetInfo.maxHp ?? 0;
-  const targetCurrentHp = targetInfo.currentHp ?? 0;
-  const targetHpPercent =
-    targetMaxHp > 0 ? clamp(0, 100, (targetCurrentHp / targetMaxHp) * 100) : 0;
-  const targetDamagePercent = 100 - targetHpPercent;
   const opacity = Math.min(100, Math.max(0, barOpacity ?? 100)) / 100;
 
   return (
@@ -250,21 +247,7 @@ const DpsPanel = function DpsPanel({
       style={{ backgroundColor }}
     >
       {showTargetHpBar && targetMaxHp > 0 ? (
-        <div className="relative h-7 overflow-hidden border-b border-white/10 bg-red-950/25">
-          <div
-            className="absolute inset-y-0 left-0 bg-red-500/45 transition-[width] duration-500"
-            style={{ width: `${targetHpPercent}%` }}
-          />
-          <div className="relative z-10 flex h-full items-center justify-between gap-2 px-2">
-            <span className="truncate text-xs font-semibold text-red-50">
-              {targetInfo.targetName}
-            </span>
-            <div className="flex shrink-0 items-center gap-2 font-mono text-xs tabular-nums">
-              <span className="text-red-50">{formatCompactDamage(targetCurrentHp)}</span>
-              <span className="text-red-100/80">{targetDamagePercent.toFixed(1)}%</span>
-            </div>
-          </div>
-        </div>
+        <MemoizedBossHealthBar targetInfo={targetInfo} styleVariant="hunter" />
       ) : null}
 
       <div className="">

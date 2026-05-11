@@ -292,17 +292,9 @@ export default function DpsPage() {
   const unlistenPingHistoryRef = useRef<null | (() => void)>(null);
 
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
-  const pinnedPlayerIdRef = useRef<number | null>(null);
-  const hoverPlayerIdRef = useRef<number | null>(null);
-  const detailHoverTokenRef = useRef(0);
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
   const latestResetHandlerRef = useRef<((clearCurrentData?: boolean) => void) | null>(null);
   const mainActorResetTimerRef = useRef<number | null>(null);
-  const detailCloseTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    pinnedPlayerIdRef.current = pinnedPlayerId;
-  }, [pinnedPlayerId]);
 
   useEffect(() => {
     let mounted = true;
@@ -325,10 +317,6 @@ export default function DpsPage() {
       unlisten?.();
     };
   }, []);
-
-  useEffect(() => {
-    hoverPlayerIdRef.current = hoverPlayerId;
-  }, [hoverPlayerId]);
 
   useEffect(() => {
     let mounted = true;
@@ -486,10 +474,6 @@ export default function DpsPage() {
       if (unlistenResetRequestRef.current) {
         void unlistenResetRequestRef.current();
         unlistenResetRequestRef.current = null;
-      }
-      if (detailCloseTimerRef.current !== null) {
-        window.clearTimeout(detailCloseTimerRef.current);
-        detailCloseTimerRef.current = null;
       }
       if (mainActorResetTimerRef.current !== null) {
         window.clearTimeout(mainActorResetTimerRef.current);
@@ -842,38 +826,12 @@ export default function DpsPage() {
     });
   }, []);
 
-  const cancelDetailCloseTimer = useCallback(() => {
-    if (detailCloseTimerRef.current !== null) {
-      window.clearTimeout(detailCloseTimerRef.current);
-      detailCloseTimerRef.current = null;
-    }
-  }, []);
-
-  const hideDetailWindow = useCallback(async () => {
-    const detailWindow = await WebviewWindow.getByLabel("dps_detail");
-    if (detailWindow) {
-      await detailWindow.hide();
-    }
-  }, []);
-
-  const closeDetailWindowNow = useCallback(async () => {
-    cancelDetailCloseTimer();
+  const closeDetailWindow = useCallback(async () => {
     const detailWindow = await WebviewWindow.getByLabel("dps_detail");
     if (detailWindow) {
       await detailWindow.close();
     }
-  }, [cancelDetailCloseTimer]);
-
-  const scheduleDetailWindowDestroy = useCallback(() => {
-    cancelDetailCloseTimer();
-    detailCloseTimerRef.current = window.setTimeout(() => {
-      detailCloseTimerRef.current = null;
-      if (pinnedPlayerId !== null || hoverPlayerId !== null) {
-        return;
-      }
-      void closeDetailWindowNow();
-    }, 10_000);
-  }, [cancelDetailCloseTimer, closeDetailWindowNow, hoverPlayerId, pinnedPlayerId]);
+  }, []);
 
   const handleStartDpsMeter = useCallback(async () => {
     try {
@@ -930,7 +888,7 @@ export default function DpsPage() {
           });
         }
 
-        await closeDetailWindowNow();
+        await closeDetailWindow();
 
         if (historyToPersist.length > 0) {
           // Save locally
@@ -951,7 +909,7 @@ export default function DpsPage() {
         console.error("reset dps meter failed:", error);
       }
     },
-    [closeDetailWindowNow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]
+    [closeDetailWindow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]
   );
 
   useEffect(() => {
@@ -960,20 +918,18 @@ export default function DpsPage() {
 
   const handlePlayerClick = useCallback(
     async (playerId: number) => {
-      detailHoverTokenRef.current += 1;
       const nextPayload = buildDetailPayload(playerId);
       if (!nextPayload) {
         return;
       }
 
-      cancelDetailCloseTimer();
       setPinnedPlayerId(playerId);
       setHoverPlayerId(null);
       detailPayloadRef.current = nextPayload;
       await ensureDetailWindow();
       await emit("dps-detail-update", nextPayload);
     },
-    [buildDetailPayload, cancelDetailCloseTimer, ensureDetailWindow]
+    [buildDetailPayload, ensureDetailWindow]
   );
 
   const handlePlayerHover = useCallback(
@@ -991,30 +947,15 @@ export default function DpsPage() {
         return;
       }
 
-      cancelDetailCloseTimer();
-      const hoverToken = detailHoverTokenRef.current + 1;
-      detailHoverTokenRef.current = hoverToken;
       setHoverPlayerId(playerId);
       detailPayloadRef.current = nextPayload;
       await ensureDetailWindow();
-      if (
-        detailHoverTokenRef.current !== hoverToken ||
-        pinnedPlayerIdRef.current !== null ||
-        hoverPlayerIdRef.current !== playerId
-      ) {
-        await hideDetailWindow();
-        scheduleDetailWindowDestroy();
-        return;
-      }
       await emit("dps-detail-update", nextPayload);
     },
     [
       buildDetailPayload,
-      cancelDetailCloseTimer,
       ensureDetailWindow,
-      hideDetailWindow,
       pinnedPlayerId,
-      scheduleDetailWindowDestroy,
       settings.appearance.dpsWindow.showDetailOnHover,
     ]
   );
@@ -1024,13 +965,11 @@ export default function DpsPage() {
       return;
     }
 
-    detailHoverTokenRef.current += 1;
     setHoverPlayerId(null);
     detailPayloadRef.current = null;
     void emit("dps-detail-clear");
-    await hideDetailWindow();
-    scheduleDetailWindowDestroy();
-  }, [hideDetailWindow, pinnedPlayerId, scheduleDetailWindowDestroy]);
+    await closeDetailWindow();
+  }, [closeDetailWindow, pinnedPlayerId]);
 
   const activeDetailPlayerId = pinnedPlayerId ?? hoverPlayerId;
 
@@ -1065,13 +1004,12 @@ export default function DpsPage() {
   }, [activeDetailPlayerId, buildDetailPayload, selectedHistoryId, view]);
 
   useEffect(() => {
-    cancelDetailCloseTimer();
     setPinnedPlayerId(null);
     setHoverPlayerId(null);
     detailPayloadRef.current = null;
     void emit("dps-detail-clear");
-    void closeDetailWindowNow();
-  }, [cancelDetailCloseTimer, closeDetailWindowNow, resolvedTargetId, selectedHistoryId, view]);
+    void closeDetailWindow();
+  }, [closeDetailWindow, resolvedTargetId, selectedHistoryId, view]);
 
   const handleOpenSettings = useCallback(async () => {
     await createWindow("dps_settings", {
@@ -1163,8 +1101,8 @@ export default function DpsPage() {
     setHoverPlayerId(null);
     detailPayloadRef.current = null;
     void emit("dps-detail-clear");
-    await closeDetailWindowNow();
-  }, [closeDetailWindowNow]);
+    await closeDetailWindow();
+  }, [closeDetailWindow]);
 
   const handleClose = useCallback(async () => {
     await getCurrentWebviewWindow().close();
@@ -1248,29 +1186,38 @@ export default function DpsPage() {
               <Settings className="h-3 w-3" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-28">
+          <DropdownMenuContent align="end" className="min-w-20 p-0.5">
             <DropdownMenuItem
-              className="px-2 py-1 text-sm"
+              className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
               onClick={isRunning ? handleStopDpsMeter : handleStartDpsMeter}
             >
-              {isRunning ? <Square /> : <Play />}
-              <span className="text-sm">{isRunning ? "停止" : "开始"}</span>
+              {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+              <span className="text-xs">{isRunning ? "停止" : "开始"}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={() => handleReset(true)}>
-              <RotateCcw />
-              <span className="text-sm">重置</span>
+            <DropdownMenuItem
+              className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+              onClick={() => handleReset(true)}
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span className="text-xs">清空</span>
             </DropdownMenuItem>
             {/* <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenHistory}>
               <History />
-              <span className="text-sm">历史</span>
+              <span className="text-xs">历史</span>
             </DropdownMenuItem> */}
-            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenSettings}>
-              <Settings />
-              <span className="text-sm">设置</span>
+            <DropdownMenuItem
+              className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+              onClick={handleOpenSettings}
+            >
+              <Settings className="h-3 w-3" />
+              <span className="text-xs">设置</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-2 py-1 text-sm" onClick={handleOpenLog}>
-              <Book />
-              <span className="text-sm">日志</span>
+            <DropdownMenuItem
+              className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+              onClick={handleOpenLog}
+            >
+              <Book className="h-3 w-3" />
+              <span className="text-xs">日志</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

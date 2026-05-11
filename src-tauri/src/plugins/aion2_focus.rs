@@ -66,12 +66,10 @@ mod windows_impl {
                 PROCESS_QUERY_LIMITED_INFORMATION,
             },
             UI::{
-                Accessibility::{
-                    SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK,
-                },
+                Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK},
                 WindowsAndMessaging::{
                     DispatchMessageW, GetForegroundWindow, GetMessageW, GetWindowThreadProcessId,
-                    TranslateMessage, MSG, EVENT_SYSTEM_FOREGROUND, WINEVENT_OUTOFCONTEXT,
+                    TranslateMessage, EVENT_SYSTEM_FOREGROUND, MSG, WINEVENT_OUTOFCONTEXT,
                     WINEVENT_SKIPOWNPROCESS,
                 },
             },
@@ -122,7 +120,11 @@ mod windows_impl {
 
                 let dps_manual_hidden = app_for_processor
                     .try_state::<Aion2FocusState>()
-                    .map(|state| state.dps_manual_hidden.load(std::sync::atomic::Ordering::Relaxed))
+                    .map(|state| {
+                        state
+                            .dps_manual_hidden
+                            .load(std::sync::atomic::Ordering::Relaxed)
+                    })
                     .unwrap_or(false);
 
                 for label in FOLLOW_FOCUS_WINDOW_LABELS {
@@ -142,35 +144,33 @@ mod windows_impl {
             }
         });
 
-        std::thread::spawn(move || {
-            unsafe {
-                let hook = SetWinEventHook(
-                    EVENT_SYSTEM_FOREGROUND,
-                    EVENT_SYSTEM_FOREGROUND,
-                    None,
-                    Some(handle_foreground_event),
-                    0,
-                    0,
-                    WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
-                );
+        std::thread::spawn(move || unsafe {
+            let hook = SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                None,
+                Some(handle_foreground_event),
+                0,
+                0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
+            );
 
-                if hook.0.is_null() {
-                    clear_sender();
-                    return;
-                }
-
-                let initial_hwnd = GetForegroundWindow();
-                send_hwnd(initial_hwnd);
-
-                let mut message = MSG::default();
-                while GetMessageW(&mut message, None, 0, 0).into() {
-                    let _ = TranslateMessage(&message);
-                    DispatchMessageW(&message);
-                }
-
-                let _ = UnhookWinEvent(hook);
+            if hook.0.is_null() {
                 clear_sender();
+                return;
             }
+
+            let initial_hwnd = GetForegroundWindow();
+            send_hwnd(initial_hwnd);
+
+            let mut message = MSG::default();
+            while GetMessageW(&mut message, None, 0, 0).into() {
+                let _ = TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
+
+            let _ = UnhookWinEvent(hook);
+            clear_sender();
         });
     }
 

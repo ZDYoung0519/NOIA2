@@ -1,17 +1,30 @@
 import { memo } from "react";
-import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
-import { getServerShortName } from "@/lib/aion2/servers";
-import { useAppTranslation } from "@/hooks/use-app-translation";
-import { maskNickname } from "@/lib/name-mask";
-// import { clamp } from "framer-motion";
 import { clamp, motion } from "framer-motion";
 
-function getTotalDamage(stats: SkillStats | undefined) {
-  if (!stats) {
-    return 0;
-  }
+import { MemoizedBossHealthBar } from "@/components/dps/boss-health-bar";
+import { useAppTranslation } from "@/hooks/use-app-translation";
+import { getServerShortName } from "@/lib/aion2/servers";
+import { maskNickname } from "@/lib/name-mask";
+import type { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 
-  return stats.total_damage ?? 0;
+type DpsPanelProps = {
+  targetInfo: TargetInfo | undefined;
+  thisTargetPlayerStats: Record<number, SkillStats> | undefined;
+  combatInfos: CombatInfos | undefined;
+  mainPlayerColor: string;
+  otherPlayerColor: string;
+  barOpacity?: number;
+  maskNicknames?: boolean;
+  percentDisplayMode?: "contribution" | "damageShare";
+  showTargetHpBar?: boolean;
+  classIconStyle?: "default" | "colored";
+  onPlayerClicked: (playerId: number) => void;
+  onPlayerHovered?: (playerId: number) => void;
+  onPlayerHoverEnd?: (playerId: number) => void;
+};
+
+function getTotalDamage(stats: SkillStats | undefined) {
+  return stats?.total_damage ?? 0;
 }
 
 const DpsPanel = function DpsPanel({
@@ -28,100 +41,46 @@ const DpsPanel = function DpsPanel({
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
-}: {
-  targetInfo: TargetInfo | undefined;
-  thisTargetPlayerStats: Record<number, SkillStats> | undefined;
-  combatInfos: CombatInfos | undefined;
-  mainPlayerColor: string;
-  otherPlayerColor: string;
-  barOpacity?: number;
-  maskNicknames?: boolean;
-  percentDisplayMode?: "contribution" | "damageShare";
-  showTargetHpBar?: boolean;
-  classIconStyle?: "default" | "colored";
-  onPlayerClicked: (playerId: number) => void;
-  onPlayerHovered?: (playerId: number) => void;
-  onPlayerHoverEnd?: (playerId: number) => void;
-}) {
+}: DpsPanelProps) {
   const { t } = useAppTranslation();
 
-  if (!targetInfo || !thisTargetPlayerStats || !combatInfos) return null;
+  if (!targetInfo || !thisTargetPlayerStats || !combatInfos) {
+    return null;
+  }
 
   const actorInfos = combatInfos.actorInfos;
   const mainActorId = combatInfos.mainActorId;
 
-  const thisTargetPlayerStatsArray = Object.entries(thisTargetPlayerStats)
+  const players = Object.entries(thisTargetPlayerStats)
     .map(([playerId, stats]) => ({
       playerId: parseInt(playerId, 10),
       totalDamageValue: getTotalDamage(stats as SkillStats),
     }))
     .sort((a, b) => b.totalDamageValue - a.totalDamageValue);
 
-  if (thisTargetPlayerStatsArray.length === 0) return null;
+  if (players.length === 0) {
+    return null;
+  }
 
-  const maxDamage = thisTargetPlayerStatsArray[0]?.totalDamageValue || 0;
-  const totalDamage = thisTargetPlayerStatsArray.reduce(
-    (sum, entry) => sum + entry.totalDamageValue,
-    0
-  );
+  const maxDamage = players[0]?.totalDamageValue || 0;
+  const totalDamage = players.reduce((sum, entry) => sum + entry.totalDamageValue, 0);
   const targetMaxHp = targetInfo.maxHp ?? 0;
-  const targetCurrentHp = targetInfo.currentHp ?? 0;
-
-  const targetHpPercent =
-    targetMaxHp > 0 ? clamp(0, 100, (targetCurrentHp / targetMaxHp) * 100) : 0;
-  const targetDamagePercent = 100 - targetHpPercent;
   const targetLastTimes = Object.values(targetInfo.targetLastTime || {});
   const thisTargetLastTime = targetLastTimes.length > 0 ? Math.max(...targetLastTimes) : 0;
-  // const normalizedOpacity = clamp(0, 1, (barOpacity ?? 100) / 100);
 
   return (
     <div className="space-y-0 p-1">
-      {showTargetHpBar && (
-        <div className="group relative flex h-7 items-center overflow-hidden rounded border border-red-500/40 bg-red-950/30">
-          <div
-            className="absolute top-0 bottom-0 left-0 bg-red-500/60 transition-all duration-500"
-            style={{
-              width: `${100 - targetDamagePercent}%`,
-            }}
-          />
-          {/* 内容 */}
-          <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
-            {/* 左侧图标和名称 */}
-            <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
-              <div className="relative h-6 w-6 flex-shrink-0">
-                <img
-                  src="/images/aion2/bossIcon.png"
-                  alt="boss"
-                  className="h-full w-full rounded-md object-cover shadow-sm"
-                />
-              </div>
-              <span className="truncate font-mono font-sans text-sm">{targetInfo?.targetName}</span>
-            </div>
+      {showTargetHpBar && targetMaxHp > 0 ? (
+        <MemoizedBossHealthBar targetInfo={targetInfo} styleVariant="classic" />
+      ) : null}
 
-            {/* 右侧血量 */}
-            <div className="flex flex-shrink-0 items-center gap-2">
-              <div className="text-right">
-                <span className="font-mono text-sm text-gray-100 tabular-nums">
-                  {(targetCurrentHp / 10000).toFixed(0)}w
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="font-mono text-sm font-bold text-red-200 tabular-nums">
-                  {(100 - targetDamagePercent).toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {thisTargetPlayerStatsArray.slice(0, 8).map((player, index) => {
+      {players.slice(0, 8).map((player, index) => {
+        const actorInfo = actorInfos?.[player.playerId];
         const playerName =
-          actorInfos?.[player.playerId]?.actorName ||
-          `${t("dps.list.unknownPlayer")}(${player.playerId})`;
+          actorInfo?.actorName || `${t("dps.list.unknownPlayer")}(${player.playerId})`;
         const displayPlayerName = maskNickname(playerName, Boolean(maskNicknames));
-        const actorClass = actorInfos?.[player.playerId]?.actorClass;
-        const playerServerId = actorInfos?.[player.playerId]?.actorServerId;
+        const actorClass = actorInfo?.actorClass;
+        const playerServerId = actorInfo?.actorServerId;
         const playerServerName = playerServerId
           ? getServerShortName(Number(playerServerId))
           : t("dps.list.unknownServer");
@@ -149,6 +108,7 @@ const DpsPanel = function DpsPanel({
               ? (player.totalDamageValue / totalDamage) * 100
               : 0;
         const damagePercentDisplay = clamp(0, 100, damagePercent);
+
         return (
           <motion.div
             key={player.playerId || index}
@@ -177,14 +137,14 @@ const DpsPanel = function DpsPanel({
                     src={actorClassIcon}
                     alt={actorClass || "class"}
                     className="h-full w-full rounded-md object-cover shadow-sm"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
                     }}
-                    onContextMenu={(e) => e.preventDefault()}
+                    onContextMenu={(event) => event.preventDefault()}
                   />
                 </div>
 
-                <span className="truncate font-mono font-sans text-sm">
+                <span className="truncate font-mono text-sm">
                   {displayPlayerName}[{playerServerName}]
                 </span>
               </div>

@@ -55,9 +55,8 @@ impl DpsMeterConfig {
         }
         self.dps_snapshot_interval_ms = self.dps_snapshot_interval_ms.clamp(50, 10_000);
         self.memory_snapshot_interval_ms = self.memory_snapshot_interval_ms.clamp(100, 10_000);
-        self.max_packet_size_threshold = normalize_max_packet_size_threshold(
-            self.max_packet_size_threshold,
-        );
+        self.max_packet_size_threshold =
+            normalize_max_packet_size_threshold(self.max_packet_size_threshold);
         self.resync_delay_ms = self.resync_delay_ms.clamp(200, 1_000);
         self
     }

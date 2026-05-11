@@ -280,7 +280,6 @@ impl PcapCapturer {
             let mut last_detected_target = String::new();
 
             while running.load(Ordering::SeqCst) {
-
                 // 1. find magic devices
                 let devices = match npcap.find_all_devices() {
                     Ok(devices) => devices,

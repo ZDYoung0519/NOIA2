@@ -227,7 +227,7 @@ export default function DpsPingPage() {
 
       // 锁定：穿透；解锁：恢复
       await parent.setIgnoreCursorEvents(nextLocked);
-      // await emit("dps-click-through-changed", { clickThrough: nextLocked });
+      await emit("dps-click-through-changed", { clickThrough: nextLocked });
     } catch (err) {
       console.error("toggle lock failed:", err);
     }

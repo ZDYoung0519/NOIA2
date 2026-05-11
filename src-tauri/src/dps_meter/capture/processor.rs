@@ -3,11 +3,10 @@ use std::time::{Duration, Instant};
 
 use lz4_flex::block::decompress;
 
+use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::logging::DpsLogger;
-use crate::dps_meter::config::{SharedDpsMeterConfig};
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
-
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProcessingMode {
@@ -55,7 +54,7 @@ impl StreamProcessor {
         logger: Arc<DpsLogger>,
         port: String,
         mode: ProcessingMode,
-        config: SharedDpsMeterConfig
+        config: SharedDpsMeterConfig,
     ) -> Self {
         Self {
             data_storage,
@@ -138,9 +137,7 @@ impl StreamProcessor {
             if enable_resync_on_stall {
                 let now = Instant::now();
                 if let Some(stalled_since) = self.stalled_since {
-                    if now.duration_since(stalled_since)
-                        >= Duration::from_millis(resync_delay_ms)
-                    {
+                    if now.duration_since(stalled_since) >= Duration::from_millis(resync_delay_ms) {
                         self.logger.info(format!(
                             "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
                             self.port,
@@ -751,6 +748,10 @@ impl StreamProcessor {
         }
 
         let mob_hp = parse_u32_le(packet, offset);
+        if mob_hp > 1_000_000_000 {
+            return false;
+        }
+
         let is_first_hp_detection = !self.data_storage.mob_id_hp_snapshot().contains_key(&mob_id);
         self.data_storage.append_mob_hp(mob_id, mob_hp);
         if is_first_hp_detection {
@@ -1588,12 +1589,7 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
     if result.chars().count() < 2 && !has_han {
         return None;
     }
-    if result
-        .chars()
-        .count()
-        == 1
-        && result.chars().all(|ch| ch.is_ascii_alphabetic())
-    {
+    if result.chars().count() == 1 && result.chars().all(|ch| ch.is_ascii_alphabetic()) {
         return None;
     }
 
