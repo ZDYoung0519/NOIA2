@@ -43,6 +43,7 @@ export type DpsWindowAppearance = {
   classIconStyle: "default" | "colored";
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
+  detailWindowPosition: "follow" | "center";
   showTargetHpBar: boolean;
   pingWindowAlignment: "left" | "right";
   pingWindowShowLatency: boolean;
@@ -98,6 +99,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       classIconStyle: "default",
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
+      detailWindowPosition: "follow",
       showTargetHpBar: false,
       pingWindowAlignment: "left",
       pingWindowShowLatency: true,

@@ -90,6 +90,7 @@ export interface oneTargetAllPlayerStats {
 export interface HistoryTargetRecord extends oneTargetAllPlayerStats {
   id: string;
   targetId: number;
+  uploaded?: boolean;
 }
 
 export interface MainActorRecord {

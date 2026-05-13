@@ -164,7 +164,7 @@ impl DpsMeter {
                         let mut last_damage = last_emitted_total_damage.lock().unwrap();
                         let changed = last_damage
                             .map(|previous| previous != snapshot.total_damage)
-                            .unwrap_or(true);
+                            .unwrap_or(snapshot.total_damage > 0);
                         if changed {
                             *last_damage = Some(snapshot.total_damage);
                         }

@@ -11,7 +11,7 @@ import Splash from "./pages/Splash";
 
 import HomePage from "./pages/home";
 import DpsClassStatsPage from "./pages/dps_class_stats";
-import DpsViewPage from "./pages/dps_view";
+import DpsRankPage from "./pages/dps_rank";
 import HistoryBattleQueryPage from "./pages/history_battle_query";
 import CharacterPage from "./pages/character";
 import CharacterViewPage from "./pages/character_view";
@@ -78,7 +78,7 @@ function App() {
         }
       >
         <Route path="/" element={<HomePage />} />
-        <Route path="/dps-view" element={<DpsViewPage />} />
+        <Route path="/dps-rank" element={<DpsRankPage />} />
         <Route path="/dps-class-stats" element={<DpsClassStatsPage />} />
         <Route path="/history-battle-query" element={<HistoryBattleQueryPage />} />
         <Route path="/character/search" element={<CharacterPage />} />

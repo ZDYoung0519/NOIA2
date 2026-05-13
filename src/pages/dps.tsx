@@ -40,6 +40,7 @@ import {
   DpsDetailPayload,
   HistoryTargetRecord,
   SkillStats,
+  TargetInfo,
 } from "@/types/aion2dps";
 import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
 import { PingCurve } from "@/components/ping-curve";
@@ -119,8 +120,34 @@ const persistHistoryRecords = (records: HistoryTargetRecord[]) => {
     return;
   }
   records.forEach((record) => {
-    Aion2DpsHistory.add(record);
+    Aion2DpsHistory.add({ ...record, uploaded: false });
   });
+};
+
+const uploadPendingHistoryRecords = async () => {
+  const allRecords = Aion2DpsHistory.get();
+  console.log(
+    "[upload] called, allRecords:",
+    allRecords.length,
+    "unuploaded:",
+    allRecords.filter((r) => !r.uploaded).length
+  );
+  const pending = allRecords.filter((r) => !r.uploaded);
+  if (pending.length === 0) {
+    console.log("[upload] SKIP: no pending records");
+    return;
+  }
+
+  try {
+    console.log(`Uploading ${pending.length} pending DPS records`);
+    await uploadDpsDataBatch(pending);
+    pending.forEach((r) => {
+      Aion2DpsHistory.updateOne({ id: r.id, uploaded: true } as HistoryTargetRecord);
+    });
+    console.log("DPS upload succeeded");
+  } catch (err) {
+    console.error("DPS upload failed:", err);
+  }
 };
 
 const waitForWindowReady = async (label: string, timeoutMs = 1500) => {
@@ -233,6 +260,13 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                   )}
                 >
                   <div className="flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                        record.uploaded ? "bg-green-400" : "bg-amber-400"
+                      )}
+                      title={record.uploaded ? "已上传" : "未上传"}
+                    />
                     <div className="truncate text-sm font-semibold">
                       {recordTargetInfo?.targetName ||
                         `Mob ${recordTargetInfo?.targetMobCode}` ||
@@ -269,6 +303,9 @@ export default function DpsPage() {
   const [view, setView] = useState<"dps" | "history" | "ping">("dps");
   const [isRunning, setIsRunning] = useState(false);
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
+  const [snapshotCopy, setSnapshotCopy] = useState<CombatSnapshot | null>(null);
+
+  const effectiveSnapshot = useMemo(() => snapshot || snapshotCopy, [snapshot, snapshotCopy]);
 
   const [mainPlayerName, setMainPlayerName] = useState<string>("");
   // const [mainPlayerId, setMainPlayerId] = useState<number | null>(null);
@@ -286,6 +323,7 @@ export default function DpsPage() {
   const lastWindowHeightRef = useRef<number | null>(null);
   const lastSnapshotDamageRef = useRef<number | null>(null);
   const lastMemorySignatureRef = useRef<string | null>(null);
+  const snapshotRef = useRef<CombatSnapshot | null>(null);
   const unlistenSnapshotRef = useRef<null | (() => void)>(null);
   const unlistenStatusRef = useRef<null | (() => void)>(null);
 
@@ -295,8 +333,7 @@ export default function DpsPage() {
 
   const detailPayloadRef = useRef<DpsDetailPayload | null>(null);
   const latestResizeWindowRef = useRef<(() => Promise<void>) | null>(null);
-  const latestResetHandlerRef = useRef<((clearCurrentData?: boolean) => void) | null>(null);
-  const mainActorResetTimerRef = useRef<number | null>(null);
+  const latestResetHandlerRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -356,19 +393,17 @@ export default function DpsPage() {
           const running = Boolean(event.payload);
           setIsRunning(running);
           if (!running) {
+            void uploadPendingHistoryRecords();
             lastSnapshotDamageRef.current = null;
             lastMemorySignatureRef.current = null;
             setSnapshot(null);
+            setSnapshotCopy(null);
 
             setCurrentTarget(null);
             setPinnedPlayerId(null);
             setHoverPlayerId(null);
             detailPayloadRef.current = null;
             void emit("dps-detail-clear");
-            if (mainActorResetTimerRef.current !== null) {
-              window.clearTimeout(mainActorResetTimerRef.current);
-              mainActorResetTimerRef.current = null;
-            }
           }
         });
         // ping history
@@ -385,8 +420,11 @@ export default function DpsPage() {
           if (!mounted) {
             return;
           }
-          // shortcut will always clear data
-          void latestResetHandlerRef.current?.(true);
+          setSnapshotCopy(null);
+          void (async () => {
+            await latestResetHandlerRef.current?.();
+            await uploadPendingHistoryRecords();
+          })();
         });
 
         // Main actor detected
@@ -413,15 +451,12 @@ export default function DpsPage() {
             });
           }
 
-          if (mainActorResetTimerRef.current !== null) {
-            window.clearTimeout(mainActorResetTimerRef.current);
-          }
-
-          // Clear state 1000ms after detecting the main actor
-          mainActorResetTimerRef.current = window.setTimeout(() => {
-            mainActorResetTimerRef.current = null;
-            void latestResetHandlerRef.current?.(false);
-          }, 1_000);
+          // Save current snapshot copy for display, then autosave + upload
+          setSnapshotCopy(snapshotRef.current);
+          void (async () => {
+            await latestResetHandlerRef.current?.();
+            await uploadPendingHistoryRecords();
+          })();
         });
 
         // Respond to dps_detail requests with the selected player details
@@ -477,18 +512,21 @@ export default function DpsPage() {
         void unlistenResetRequestRef.current();
         unlistenResetRequestRef.current = null;
       }
-      if (mainActorResetTimerRef.current !== null) {
-        window.clearTimeout(mainActorResetTimerRef.current);
-        mainActorResetTimerRef.current = null;
-      }
     };
   }, []);
 
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
 
-    // Stop the background dps-meter process when the dps window closes
+    // Save and upload pending records before closing
     const unlisten = appWindow.onCloseRequested(async () => {
+      try {
+        setSnapshotCopy(null);
+        await latestResetHandlerRef.current?.();
+        await uploadPendingHistoryRecords();
+      } catch {
+        // ignore errors on close
+      }
       try {
         await invoke("stop_dps_meter");
       } catch (error) {
@@ -593,15 +631,55 @@ export default function DpsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!dpsAppearance.autoResizeHeight) {
-      return;
+  const selectedHistoryRecord = useMemo(
+    () => historyRecords.find((record) => record.id === selectedHistoryId) ?? null,
+    [historyRecords, selectedHistoryId]
+  );
+
+  const targetSelection = useMemo<{
+    targetId: number | null;
+    targetInfo: TargetInfo | null;
+    playerCount: number;
+  }>(() => {
+    if (view === "history") {
+      const targetId = selectedHistoryRecord?.targetId ?? null;
+      return {
+        targetId,
+        targetInfo:
+          targetId != null
+            ? (selectedHistoryRecord?.combatInfos?.targetInfos?.[String(targetId)] ?? null)
+            : null,
+        playerCount:
+          targetId != null
+            ? Object.keys(selectedHistoryRecord?.thisTargetAllPlayerStats ?? {}).length
+            : 0,
+      };
     }
 
+    const targetId =
+      currentTarget ??
+      effectiveSnapshot?.combatInfos?.lastTargetByMainActor ??
+      effectiveSnapshot?.combatInfos?.lastTarget ??
+      null;
+
+    return {
+      targetId,
+      targetInfo:
+        targetId != null && effectiveSnapshot
+          ? (effectiveSnapshot.combatInfos?.targetInfos?.[String(targetId)] ?? null)
+          : null,
+      playerCount:
+        targetId != null && effectiveSnapshot
+          ? Object.keys(effectiveSnapshot.byTargetPlayerStats?.[String(targetId)] ?? {}).length
+          : 0,
+    };
+  }, [view, selectedHistoryRecord, currentTarget, effectiveSnapshot]);
+
+  useEffect(() => {
+    if (!dpsAppearance.autoResizeHeight) return;
     if (resizeTimerRef.current !== null) {
       window.clearTimeout(resizeTimerRef.current);
     }
-
     resizeTimerRef.current = window.setTimeout(() => {
       resizeTimerRef.current = null;
       window.requestAnimationFrame(() => {
@@ -611,46 +689,19 @@ export default function DpsPage() {
   }, [
     dpsAppearance.autoResizeHeight,
     dpsAppearance.scaleFactor,
-    snapshot,
-    currentTarget,
-    isRunning,
+    targetSelection.playerCount,
     view,
-    selectedHistoryId,
-    historyRecords.length,
   ]);
 
-  const resolvedTargetId = useMemo(() => {
-    if (view === "history") {
-      const selectedRecord =
-        historyRecords.find((record) => record.id === selectedHistoryId) ?? null;
-      return selectedRecord?.targetId ?? null;
-    }
-
-    return (
-      currentTarget ??
-      snapshot?.combatInfos?.lastTargetByMainActor ??
-      snapshot?.combatInfos?.lastTarget ??
-      null
-    );
-  }, [currentTarget, historyRecords, selectedHistoryId, snapshot, view]);
-
-  const selectedHistoryRecord = useMemo(
-    () => historyRecords.find((record) => record.id === selectedHistoryId) ?? null,
-    [historyRecords, selectedHistoryId]
-  );
-
-  const displayTargetInfo = useMemo(() => {
-    if (view === "history") {
-      if (!selectedHistoryRecord || resolvedTargetId === null) {
-        return null;
-      }
-      return selectedHistoryRecord.combatInfos?.targetInfos?.[String(resolvedTargetId)] ?? null;
-    }
-    if (!snapshot || resolvedTargetId === null) {
-      return null;
-    }
-    return snapshot.combatInfos?.targetInfos?.[String(resolvedTargetId)] ?? null;
-  }, [resolvedTargetId, selectedHistoryRecord, snapshot, view]);
+  const displayName = useMemo(() => {
+    const targetName =
+      targetSelection.targetInfo?.targetName ||
+      targetSelection.targetInfo?.targetMobCode ||
+      targetSelection.targetInfo?.id ||
+      maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
+      "No target";
+    return targetName;
+  }, [targetSelection.targetInfo, mainPlayerName, settings.appearance.dpsWindow.maskNicknames]);
 
   const StatusDescription = useMemo(() => {
     if (!isRunning) {
@@ -662,50 +713,44 @@ export default function DpsPage() {
 
   const dpsPanelData = useMemo(() => {
     if (view === "history") {
-      if (!selectedHistoryRecord || resolvedTargetId === null) {
+      if (!selectedHistoryRecord || targetSelection.targetId === null) {
         return null;
       }
-
       return {
-        targetId: resolvedTargetId,
+        targetId: targetSelection.targetId,
         thisTargetPlayerStats: selectedHistoryRecord.thisTargetAllPlayerStats ?? null,
-        targetInfo: displayTargetInfo,
+        targetInfo: targetSelection.targetInfo,
         combatInfos: selectedHistoryRecord.combatInfos ?? null,
       };
     }
-
-    if (!snapshot || resolvedTargetId === null) {
+    if (!effectiveSnapshot || targetSelection.targetId === null) {
       return null;
     }
-
     return {
-      targetId: resolvedTargetId,
-      thisTargetPlayerStats: snapshot.byTargetPlayerStats?.[String(resolvedTargetId)] ?? null,
-      targetInfo: displayTargetInfo,
-      combatInfos: snapshot.combatInfos ?? null,
+      targetId: targetSelection.targetId,
+      thisTargetPlayerStats:
+        effectiveSnapshot.byTargetPlayerStats?.[String(targetSelection.targetId)] ?? null,
+      targetInfo: targetSelection.targetInfo,
+      combatInfos: effectiveSnapshot.combatInfos ?? null,
     };
-  }, [displayTargetInfo, resolvedTargetId, selectedHistoryRecord, snapshot, view]);
+  }, [
+    targetSelection.targetInfo,
+    targetSelection.targetId,
+    selectedHistoryRecord,
+    effectiveSnapshot,
+    view,
+  ]);
 
   const DpsPanelComponent =
     dpsAppearance.panelStyle === "classicBars" ? MemoizedDpsPanel : MemoizedDpsPanelSimple;
 
-  const displayName = useMemo(() => {
-    const targetName =
-      displayTargetInfo?.targetName ||
-      displayTargetInfo?.targetMobCode ||
-      displayTargetInfo?.id ||
-      maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
-      "No target";
-    return targetName;
-  }, [displayTargetInfo, mainPlayerName, settings.appearance.dpsWindow.maskNicknames]);
-
   const targetFightingTime = useMemo(() => {
-    if (!displayTargetInfo) {
+    if (!targetSelection.targetInfo) {
       return 0;
     }
 
-    const startTimes = Object.values(displayTargetInfo.targetStartTime || {});
-    const lastTimes = Object.values(displayTargetInfo.targetLastTime || {});
+    const startTimes = Object.values(targetSelection.targetInfo.targetStartTime || {});
+    const lastTimes = Object.values(targetSelection.targetInfo.targetLastTime || {});
     if (startTimes.length === 0 || lastTimes.length === 0) {
       return 0;
     }
@@ -717,7 +762,7 @@ export default function DpsPage() {
     }
 
     return Math.max(0, lastTime - startTime);
-  }, [displayTargetInfo]);
+  }, [targetSelection.targetInfo]);
 
   const timerStatus = useMemo(() => {
     if (!targetFightingTime || targetFightingTime <= 0) {
@@ -735,7 +780,7 @@ export default function DpsPage() {
 
   const buildDetailPayload = useCallback(
     (playerId: number): DpsDetailPayload | null => {
-      if (resolvedTargetId === null) {
+      if (targetSelection.targetId === null) {
         return null;
       }
 
@@ -753,7 +798,7 @@ export default function DpsPage() {
         return {
           mode: "history",
           actorId: playerId,
-          targetId: resolvedTargetId,
+          targetId: targetSelection.targetId,
           combatInfos: selectedHistoryRecord.combatInfos,
           playerStats,
           playerSkillStats:
@@ -764,12 +809,14 @@ export default function DpsPage() {
         };
       }
 
-      if (!snapshot) {
+      if (!effectiveSnapshot) {
         return null;
       }
 
       const playerStats =
-        snapshot.byTargetPlayerStats?.[String(resolvedTargetId)]?.[String(playerId)] ?? null;
+        effectiveSnapshot.byTargetPlayerStats?.[String(targetSelection.targetId)]?.[
+          String(playerId)
+        ] ?? null;
       if (!playerStats) {
         return null;
       }
@@ -777,18 +824,24 @@ export default function DpsPage() {
       return {
         mode: "live",
         actorId: playerId,
-        targetId: resolvedTargetId,
-        combatInfos: snapshot.combatInfos,
+        targetId: targetSelection.targetId,
+        combatInfos: effectiveSnapshot.combatInfos,
         playerStats,
         playerSkillStats:
-          snapshot.byTargetPlayerSkillStats?.[String(resolvedTargetId)]?.[String(playerId)] ?? {},
+          effectiveSnapshot.byTargetPlayerSkillStats?.[String(targetSelection.targetId)]?.[
+            String(playerId)
+          ] ?? {},
         playerSkillRecords:
-          snapshot.byTargetPlayerSkillRecords?.[String(resolvedTargetId)]?.[String(playerId)] ?? [],
+          effectiveSnapshot.byTargetPlayerSkillRecords?.[String(targetSelection.targetId)]?.[
+            String(playerId)
+          ] ?? [],
         playerDpsCurve:
-          snapshot.byTargetPlayerDpsCurve?.[String(resolvedTargetId)]?.[String(playerId)] ?? [],
+          effectiveSnapshot.byTargetPlayerDpsCurve?.[String(targetSelection.targetId)]?.[
+            String(playerId)
+          ] ?? [],
       };
     },
-    [resolvedTargetId, selectedHistoryRecord, snapshot, view]
+    [targetSelection.targetId, selectedHistoryRecord, effectiveSnapshot, view]
   );
 
   const ensureDetailWindow = useCallback(async () => {
@@ -804,30 +857,34 @@ export default function DpsPage() {
       alwaysOnTop: true,
       skipTaskbar: true,
       focus: false,
+      center: dpsAppearance.detailWindowPosition === "center",
     });
 
     await waitForWindowReady("dps_detail");
 
-    await invoke("ensure_tracked_window", {
-      options: {
-        parentLabel: "dps",
-        childLabel: "dps_detail",
-        url: "/dps_detail",
-        title: "DPS Detail",
-        width: 1440,
-        height: 420,
-        gap: 8,
-        decorations: false,
-        transparent: true,
-        resizable: true,
-        shadow: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        focus: false,
-        focusable: false,
-      },
-    });
-  }, []);
+    if (dpsAppearance.detailWindowPosition === "center") {
+    } else {
+      await invoke("ensure_tracked_window", {
+        options: {
+          parentLabel: "dps",
+          childLabel: "dps_detail",
+          url: "/dps_detail",
+          title: "DPS Detail",
+          width: 1440,
+          height: 420,
+          gap: 8,
+          decorations: false,
+          transparent: true,
+          resizable: true,
+          shadow: false,
+          alwaysOnTop: true,
+          skipTaskbar: true,
+          focus: false,
+          focusable: false,
+        },
+      });
+    }
+  }, [dpsAppearance.detailWindowPosition]);
 
   const closeDetailWindow = useCallback(async () => {
     const detailWindow = await WebviewWindow.getByLabel("dps_detail");
@@ -852,71 +909,65 @@ export default function DpsPage() {
     }
   }, []);
 
-  const handleReset = useCallback(
-    async (clearCurrentData: boolean = false) => {
-      try {
-        if (mainActorResetTimerRef.current !== null) {
-          window.clearTimeout(mainActorResetTimerRef.current);
-          mainActorResetTimerRef.current = null;
-        }
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+  }, [snapshot]);
 
-        // Build history records
-        const historyToPersist = snapshot ? buildHistoryRecordsFromSnapshot(snapshot) : [];
+  const handleReset = useCallback(async () => {
+    try {
+      await invoke("reset_dps_meter");
+      await closeDetailWindow();
 
-        // Clear current state
-        await invoke("reset_dps_meter");
-
-        const shouldReset = clearCurrentData
-          ? clearCurrentData
-          : settings.appearance.dpsWindow.autoReset;
-
-        if (shouldReset) {
-          lastSnapshotDamageRef.current = null;
-          lastMemorySignatureRef.current = null;
-
-          setSnapshot(null);
-          setCurrentTarget(null);
-          setPinnedPlayerId(null);
-          setHoverPlayerId(null);
-          setView("dps");
-
-          detailPayloadRef.current = null;
-
-          void emit("dps-detail-clear");
-
-          lastWindowHeightRef.current = null;
-
-          window.requestAnimationFrame(() => {
-            void resizeWindow();
-          });
-        }
-
-        await closeDetailWindow();
-
-        if (historyToPersist.length > 0) {
-          // Save locally
-          persistHistoryRecords(historyToPersist);
-
-          // Upload to database
-          try {
-            console.log(`Uploading ${historyToPersist.length} DPS records`);
-
-            await uploadDpsDataBatch(historyToPersist);
-
-            console.log("DPS upload succeeded");
-          } catch (err) {
-            console.error("DPS upload failed:", err);
-          }
-        }
-      } catch (error) {
-        console.error("reset dps meter failed:", error);
+      // Save current snapshot to history as unuploaded
+      const currentSnapshot = snapshotRef.current;
+      console.log(
+        "[handleReset] snapshotRef:",
+        !!currentSnapshot,
+        "totalDamage:",
+        currentSnapshot?.totalDamage
+      );
+      const historyToPersist = currentSnapshot
+        ? buildHistoryRecordsFromSnapshot(currentSnapshot)
+        : [];
+      console.log("[handleReset] historyToPersist:", historyToPersist.length);
+      if (historyToPersist.length > 0) {
+        persistHistoryRecords(historyToPersist);
+        const saved = Aion2DpsHistory.get();
+        console.log(
+          "[handleReset] saved to history, total records:",
+          saved.length,
+          "unuploaded:",
+          saved.filter((r) => !r.uploaded).length
+        );
+        setHistoryRecords(saved);
       }
-    },
-    [closeDetailWindow, resizeWindow, snapshot, settings.appearance.dpsWindow.autoReset]
-  );
+
+      // Clear UI
+      lastSnapshotDamageRef.current = null;
+      lastMemorySignatureRef.current = null;
+      detailPayloadRef.current = null;
+
+      setSnapshot(null);
+      setCurrentTarget(null);
+      setPinnedPlayerId(null);
+      setHoverPlayerId(null);
+      setView("dps");
+      void emit("dps-detail-clear");
+      lastWindowHeightRef.current = null;
+      window.requestAnimationFrame(() => {
+        void resizeWindow();
+      });
+    } catch (error) {
+      console.error("reset dps meter failed:", error);
+    }
+  }, [closeDetailWindow, resizeWindow]);
 
   useEffect(() => {
     latestResetHandlerRef.current = handleReset;
+    console.log(
+      "[ref] latestResetHandlerRef updated, isAsync:",
+      handleReset.constructor.name === "AsyncFunction"
+    );
   }, [handleReset]);
 
   const handlePlayerClick = useCallback(
@@ -1012,7 +1063,7 @@ export default function DpsPage() {
     detailPayloadRef.current = null;
     void emit("dps-detail-clear");
     void closeDetailWindow();
-  }, [closeDetailWindow, resolvedTargetId, selectedHistoryId, view]);
+  }, [closeDetailWindow, targetSelection.targetId, selectedHistoryId, view]);
 
   const handleOpenSettings = useCallback(async () => {
     await createWindow("dps_settings", {
@@ -1199,7 +1250,13 @@ export default function DpsPage() {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
-              onClick={() => handleReset(true)}
+              onClick={() => {
+                setSnapshotCopy(null); // 确认清空的snapshot备份
+                void (async () => {
+                  await handleReset(); // 清空snapshot并且创建和加入历史
+                  await uploadPendingHistoryRecords(); // 上传历史中没有上传的
+                })();
+              }}
             >
               <RotateCcw className="h-3 w-3" />
               <span className="text-xs">清空</span>

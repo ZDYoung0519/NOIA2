@@ -489,7 +489,7 @@ const DungeonView = memo(function DungeonView({
   );
 });
 
-export default function DpsViewPage() {
+export default function DpsRankPage() {
   const { i18n } = useAppTranslation();
   const [rankBossStats, setRankBossStats] = useState<TargetMobStat[]>([]);
   const [selectedMob, setSelectedMob] = useState<TargetMobStat | null>(null);

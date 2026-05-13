@@ -44,6 +44,7 @@ import {
 import { formatStorageSize, getLocalStorageSummary } from "@/lib/storage-summary";
 import { cn } from "@/lib/utils";
 import { MAX_PACKET_SIZE_THRESHOLD_OPTIONS } from "@/lib/dps-meter-config";
+import { ChangelogDialogButton } from "@/components/changelog-dialog";
 import { unregisterAllShortcut } from "@/lib/shortcut";
 import { CombatInfos, SkillStats, TargetInfo } from "@/types/aion2dps";
 
@@ -593,6 +594,31 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 });
               }}
             />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.detailWindowPosition")}
+          control={
+            <Select
+              value={dpsAppearance.detailWindowPosition}
+              onValueChange={(value: "follow" | "center") => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      detailWindowPosition: value,
+                    },
+                  },
+                });
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="follow">{t("settings.dps.detailWindowPositionFollow")}</SelectItem>
+                <SelectItem value="center">{t("settings.dps.detailWindowPositionCenter")}</SelectItem>
+              </SelectContent>
+            </Select>
           }
         />
         <SettingsRow
@@ -1184,6 +1210,7 @@ export function SettingsContent() {
                         />
                         {checking ? t("updater.checking") : t("updater.checkForUpdates")}
                       </Button>
+                      <ChangelogDialogButton />
                     </div>
                   }
                 />

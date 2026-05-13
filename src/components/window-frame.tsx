@@ -45,7 +45,7 @@ const SIDEBAR_STORAGE_KEY = "noia-main-sidebar-expanded";
 const NAV_ITEMS: NavItem[] = [
   { label: "首页", path: "/", icon: Home },
   { label: "角色查询", path: "/character/search", icon: ShieldCheck },
-  { label: "伤害排行", path: "/dps-view", icon: LineChart },
+  { label: "伤害排行", path: "/dps-rank", icon: LineChart },
   { label: "职业统计", path: "/dps-class-stats", icon: BarChart3 },
 ];
 

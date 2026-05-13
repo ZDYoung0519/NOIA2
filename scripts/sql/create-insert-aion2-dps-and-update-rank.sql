@@ -211,6 +211,9 @@ begin
           and main_actor_server_id = v_main_actor_server_id
       ) ranked
       where ranked.rn > v_keep_limit
+    )
+    and record_id not in (
+      select record_id from public.aion2_dps_rank
     );
 
     get diagnostics v_trimmed_count = row_count;

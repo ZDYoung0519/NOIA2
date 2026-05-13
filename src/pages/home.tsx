@@ -23,7 +23,7 @@ export default function HomePage() {
       icon: ArrowUp,
       onClick: () => navigate("/character/search"),
     },
-    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => navigate("/dps-view") },
+    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => navigate("/dps-rank") },
     {
       label: t("home.actions.comingSoon"),
       icon: FileText,
