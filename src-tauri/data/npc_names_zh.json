@@ -44652,22 +44652,85 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2300259": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300260": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300261": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300299": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300300": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300317": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300334": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300335": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300336": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2300353": {
-    "name": "新超越4-1",
+    "name": "羅塔爾",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
     "mainCategory": "monster"
   },
   "2300354": {
-    "name": "新超越4-2",
+    "name": "羅普斯提諾",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
     "mainCategory": "monster"
   },
   "2300355": {
-    "name": "新超越4-3",
+    "name": "克羅梅德深淵",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
