@@ -44652,8 +44652,22 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
-  "2300200": {
-    "name": "甦醒的艾圖拉頓",
+  "2300353": {
+    "name": "新超越4-1",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300354": {
+    "name": "新超越4-2",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300355": {
+    "name": "新超越4-3",
     "level": 0,
     "npcType": "",
     "npcSubType": "",

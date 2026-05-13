@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 
 import { Info, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/custom-tooltip";
 import { Button } from "@/components/ui/button";
@@ -830,6 +831,27 @@ function DpsRecordTable({ dpsRows, showRank = false }: { dpsRows: DpsRecordRow[]
   );
 }
 
+function DpsLoadingSkeleton() {
+  return (
+    <Card className="bg-background/35 overflow-hidden border-white/10">
+      <div className="space-y-1 p-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 py-3">
+            <Skeleton className="h-12 w-24 rounded-lg" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 export default function CharacterViewPage() {
   const [loading, setLoading] = useState(true);
   const [characterData, setCharacterData] = useState<CharacterProps>();
@@ -845,6 +867,10 @@ export default function CharacterViewPage() {
 
   const [characterDpsRows, setCharacterDpsRows] = useState<HistoryBattleRow[]>([]);
   const [characterDpsRankRows, setCharacterDpsRankRows] = useState<CharacterRankRow[]>([]);
+  const [dpsHistoryLoading, setDpsHistoryLoading] = useState(false);
+  const [dpsRankLoading, setDpsRankLoading] = useState(false);
+  const [dpsHistoryFetched, setDpsHistoryFetched] = useState(false);
+  const [dpsRankFetched, setDpsRankFetched] = useState(false);
 
   const [activeTab, setActiveTab] = useState<string>("equip");
   const [searchParams] = useSearchParams();
@@ -875,9 +901,26 @@ export default function CharacterViewPage() {
       });
 
       setCharacterData(character);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    setCharacterDpsRows([]);
+    setCharacterDpsRankRows([]);
+    setDpsHistoryFetched(false);
+    setDpsRankFetched(false);
+    setActiveTab("equip");
+    fetchData();
+  }, [characterName, serverId]);
 
-      // 查询角色战斗历史
-      const historyQuery = supabase
+  const fetchDpsHistory = async () => {
+    if (dpsHistoryFetched || dpsHistoryLoading) return;
+    setDpsHistoryLoading(true);
+    try {
+      const query = supabase
         .from("aion2_dps")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
@@ -889,7 +932,22 @@ export default function CharacterViewPage() {
         .order("battle_ended_at", { ascending: false })
         .limit(200);
 
-      const rankQuery = supabase
+      const { data, error } = await query;
+      if (error) throw error;
+      setCharacterDpsRows((data ?? []) as HistoryBattleRow[]);
+      setDpsHistoryFetched(true);
+    } catch (e) {
+      console.error("failed to load dps history:", e);
+    } finally {
+      setDpsHistoryLoading(false);
+    }
+  };
+
+  const fetchDpsRank = async () => {
+    if (dpsRankFetched || dpsRankLoading) return;
+    setDpsRankLoading(true);
+    try {
+      const query = supabase
         .from("aion2_dps_rank")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
@@ -899,16 +957,10 @@ export default function CharacterViewPage() {
         .order("main_actor_dps", { ascending: false, nullsFirst: false })
         .limit(200);
 
-      const [historyResult, rankResult] = await Promise.all([historyQuery, rankQuery]);
+      const { data, error } = await query;
+      if (error) throw error;
 
-      if (historyResult.error) {
-        throw historyResult.error;
-      }
-      if (rankResult.error) {
-        throw rankResult.error;
-      }
-
-      const rankRows = (rankResult.data ?? []) as HistoryBattleRow[];
+      const rankRows = (data ?? []) as HistoryBattleRow[];
       const rankRowsWithRank = await Promise.all(
         rankRows.map(async (row): Promise<CharacterRankRow> => {
           if (row.target_mob_code == null) {
@@ -930,17 +982,22 @@ export default function CharacterViewPage() {
         })
       );
 
-      setCharacterDpsRows((historyResult.data ?? []) as HistoryBattleRow[]);
       setCharacterDpsRankRows(rankRowsWithRank);
+      setDpsRankFetched(true);
     } catch (e) {
-      console.error(e);
+      console.error("failed to load dps rank:", e);
     } finally {
-      setLoading(false);
+      setDpsRankLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchData();
-  }, [characterName, serverId]);
+    if (activeTab === "dps-history") {
+      fetchDpsHistory();
+    } else if (activeTab === "dps-rank") {
+      fetchDpsRank();
+    }
+  }, [activeTab]);
 
   const [statEntriesMap] = useMemo(() => {
     if (!characterData) return [{} as Record<string, never>];
@@ -1015,11 +1072,19 @@ export default function CharacterViewPage() {
             </TabsContent>
 
             <TabsContent value="dps-history">
-              <DpsRecordTable dpsRows={characterDpsRows} />
+              {dpsHistoryLoading ? (
+                <DpsLoadingSkeleton />
+              ) : (
+                <DpsRecordTable dpsRows={characterDpsRows} />
+              )}
             </TabsContent>
 
             <TabsContent value="dps-rank">
-              <DpsRecordTable dpsRows={characterDpsRankRows} showRank />
+              {dpsRankLoading ? (
+                <DpsLoadingSkeleton />
+              ) : (
+                <DpsRecordTable dpsRows={characterDpsRankRows} showRank />
+              )}
             </TabsContent>
 
             <TabsContent value="stat-detail">

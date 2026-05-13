@@ -234,7 +234,9 @@ const MemoizedHistoryTargetList = memo(function HistoryTargetList({
                 >
                   <div className="flex items-center gap-1.5">
                     <div className="truncate text-sm font-semibold">
-                      {recordTargetInfo?.targetName || `Target ${record.targetId}`}
+                      {recordTargetInfo?.targetName ||
+                        `Mob ${recordTargetInfo?.targetMobCode}` ||
+                        `Target ${record.targetId}`}
                     </div>
                     {isBoss && (
                       <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-0.5 py-0.5 text-[8px] text-amber-200 uppercase">
@@ -1238,9 +1240,49 @@ export default function DpsPage() {
     </div>
   );
 
+  const ensurePingWindow = useCallback(async () => {
+    await createWindow("dps_ping", {
+      title: "DPS Ping",
+      url: "/dps_ping",
+      width: 150,
+      height: 20,
+      decorations: false,
+      transparent: true,
+      resizable: false,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+    });
+
+    await waitForWindowReady("dps_ping");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps",
+        childLabel: "dps_ping",
+        url: "/dps_ping",
+        title: "DPS Ping",
+        position: "bottom",
+        width: 150,
+        height: 20,
+        gap: 0,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      },
+    });
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(async () => {
       try {
+        await ensurePingWindow();
         const appWindow = getCurrentWebviewWindow();
         await appWindow.setIgnoreCursorEvents(false);
         setIsClickThrough(false);
@@ -1250,7 +1292,7 @@ export default function DpsPage() {
     }, 1);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [ensurePingWindow]);
 
   return (
     <WindowFrame
