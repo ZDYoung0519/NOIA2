@@ -322,11 +322,27 @@ impl DataStorage {
     }
 
     pub fn append_mob(&self, target_id: u32, mob_code: u32) {
+        // let config = self.config.read().unwrap().clone();
+        // let is_target_boss = self.boss_code_list.contains(&mob_code);
+        // if config.boss_only && !is_target_boss {
+        //     return;
+        // }
         let mut inner = self.inner.write().unwrap();
         inner.mob_id_code_map.insert(target_id, mob_code);
     }
 
     pub fn append_mob_hp(&self, target_id: u32, current_hp: u32) {
+        let config = self.config.read().unwrap().clone();
+        let inner = self.inner.read().unwrap();
+        let is_target_boss = inner
+            .mob_id_code_map
+            .get(&target_id)
+            .map(|mob_code| self.boss_code_list.contains(mob_code))
+            .unwrap_or(false);
+        drop(inner);
+        if config.boss_only && !is_target_boss {
+            return;
+        }
         let mut inner = self.inner.write().unwrap();
         let entry = inner
             .mob_id_hp_map
