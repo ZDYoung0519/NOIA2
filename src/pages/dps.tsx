@@ -690,6 +690,7 @@ export default function DpsPage() {
   const displayName = useMemo(() => {
     const targetName =
       displayTargetInfo?.targetName ||
+      displayTargetInfo?.targetMobCode ||
       displayTargetInfo?.id ||
       maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
       "No target";

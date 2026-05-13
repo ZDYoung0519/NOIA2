@@ -4,6 +4,7 @@ import { LayoutGroup, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   Bell,
   House as Home,
   MoreVertical,
@@ -45,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "首页", path: "/", icon: Home },
   { label: "角色查询", path: "/character/search", icon: ShieldCheck },
   { label: "伤害排行", path: "/dps-view", icon: LineChart },
+  { label: "职业统计", path: "/dps-class-stats", icon: BarChart3 },
 ];
 
 function SidebarNavItem({ path, label, icon: Icon, expanded }: NavItem & { expanded: boolean }) {

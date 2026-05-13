@@ -10,6 +10,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import Splash from "./pages/Splash";
 
 import HomePage from "./pages/home";
+import DpsClassStatsPage from "./pages/dps_class_stats";
 import DpsViewPage from "./pages/dps_view";
 import HistoryBattleQueryPage from "./pages/history_battle_query";
 import CharacterPage from "./pages/character";
@@ -78,6 +79,7 @@ function App() {
       >
         <Route path="/" element={<HomePage />} />
         <Route path="/dps-view" element={<DpsViewPage />} />
+        <Route path="/dps-class-stats" element={<DpsClassStatsPage />} />
         <Route path="/history-battle-query" element={<HistoryBattleQueryPage />} />
         <Route path="/character/search" element={<CharacterPage />} />
         <Route path="/character/view" element={<CharacterViewPage />} />

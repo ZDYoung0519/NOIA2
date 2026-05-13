@@ -69,3 +69,60 @@ as $$
   limit greatest(coalesce(p_limit, 20), 1)
   offset greatest(coalesce(p_offset, 0), 0);
 $$;
+
+create or replace function public.get_aion2_dps_rank_class_stats_by_boss(
+  p_target_mob_code bigint
+)
+returns table (
+  main_actor_class text,
+  sample_count bigint,
+  top_10_percent_count integer,
+  top_10_percent_avg_dps double precision,
+  median_dps double precision,
+  avg_dps double precision,
+  max_dps double precision
+)
+language sql
+stable
+as $$
+  with filtered as (
+    select
+      r.main_actor_class,
+      r.main_actor_dps
+    from public.aion2_dps_rank r
+    where r.target_mob_code = p_target_mob_code
+      and nullif(trim(r.main_actor_class), '') is not null
+      and coalesce(r.main_actor_dps, 0) > 0
+  ),
+  ranked as (
+    select
+      f.main_actor_class,
+      f.main_actor_dps,
+      count(*) over (partition by f.main_actor_class) as class_count,
+      row_number() over (
+        partition by f.main_actor_class
+        order by f.main_actor_dps desc
+      ) as dps_rank
+    from filtered f
+  )
+  select
+    r.main_actor_class,
+    count(*)::bigint as sample_count,
+    greatest(1, ceil(max(r.class_count)::numeric * 0.10)::integer) as top_10_percent_count,
+    avg(r.main_actor_dps) filter (
+      where r.dps_rank <= greatest(1, ceil(r.class_count::numeric * 0.10)::integer)
+    ) as top_10_percent_avg_dps,
+    percentile_cont(0.5) within group (order by r.main_actor_dps) as median_dps,
+    avg(r.main_actor_dps) as avg_dps,
+    max(r.main_actor_dps) as max_dps
+  from ranked r
+  group by r.main_actor_class
+  order by top_10_percent_avg_dps desc nulls last;
+$$;
+
+create index if not exists idx_aion2_dps_rank_mob_class_dps
+  on public.aion2_dps_rank (
+    target_mob_code,
+    main_actor_class,
+    main_actor_dps desc
+  );

@@ -44,6 +44,10 @@ export function getDungeonByMobCode(mobCode: number | string): DungeonEntry | un
   return dungeonByMobCode.get(String(mobCode));
 }
 
+export function getKnownBossMobCodes(): string[] {
+  return Array.from(dungeonByMobCode.keys());
+}
+
 export function getDungeonNameByMobCode(
   mobCode: number | string,
   language = "zh-CN"
@@ -54,6 +58,18 @@ export function getDungeonNameByMobCode(
   }
 
   return dungeon.name[language] ?? dungeon.name["zh-CN"] ?? dungeon.name.en;
+}
+
+export function getDungeonDifficultyByMobCode(
+  mobCode: number | string,
+  language = "zh-CN"
+): string | undefined {
+  const dungeon = getDungeonByMobCode(mobCode);
+  if (!dungeon) {
+    return undefined;
+  }
+
+  return dungeon.difficulty[language] ?? dungeon.difficulty["zh-CN"] ?? dungeon.difficulty.en;
 }
 
 export function getDungeonDisplayNameByMobCode(
