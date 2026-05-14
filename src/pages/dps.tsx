@@ -191,6 +191,7 @@ export default function DpsPage() {
   const dpsAppearance = settings.appearance.dpsWindow;
   const [view, setView] = useState<"dps" | "history" | "ping">("dps");
   const [isRunning, setIsRunning] = useState(false);
+
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
   const [snapshotCopy, setSnapshotCopy] = useState<CombatSnapshot | null>(null);
 
@@ -267,12 +268,10 @@ export default function DpsPage() {
           if (!mounted) {
             return;
           }
-
           const nextSnapshot = event.payload;
           if (lastSnapshotDamageRef.current === nextSnapshot.totalDamage) {
             return;
           }
-
           lastSnapshotDamageRef.current = nextSnapshot.totalDamage;
           setSnapshot((current) =>
             current?.totalDamage === nextSnapshot.totalDamage ? current : nextSnapshot
@@ -285,7 +284,6 @@ export default function DpsPage() {
           if (!mounted) {
             return;
           }
-
           const running = Boolean(event.payload);
           setIsRunning(running);
           if (!running) {
@@ -294,7 +292,6 @@ export default function DpsPage() {
             lastMemorySignatureRef.current = null;
             setSnapshot(null);
             setSnapshotCopy(null);
-
             setCurrentTarget(null);
             setPinnedPlayerId(null);
             setHoverPlayerId(null);
@@ -527,6 +524,27 @@ export default function DpsPage() {
     };
   }, []);
 
+  // const dpsData = useMemo<{}>(() => {
+  //   const targetId =
+  //     currentTarget ??
+  //     effectiveSnapshot?.combatInfos?.lastTargetByMainActor ??
+  //     effectiveSnapshot?.combatInfos?.lastTarget ??
+  //     null;
+  //   const targetInfo =
+  //     targetId != null && effectiveSnapshot
+  //       ? (effectiveSnapshot.combatInfos?.targetInfos?.[String(targetId)] ?? null)
+  //       : null;
+
+  //   const targetName =
+  //     targetSelection.targetInfo?.targetName ||
+  //     targetSelection.targetInfo?.targetMobCode ||
+  //     targetSelection.targetInfo?.id ||
+  //     maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
+  //     "No target";
+
+  //   return [targetId, targetInfo, targetName];
+  // });
+
   const targetSelection = useMemo<{
     targetId: number | null;
     targetInfo: TargetInfo | null;
@@ -547,6 +565,7 @@ export default function DpsPage() {
       };
     }
 
+    debugger;
     const targetId =
       currentTarget ??
       effectiveSnapshot?.combatInfos?.lastTargetByMainActor ??
@@ -564,13 +583,7 @@ export default function DpsPage() {
           ? Object.keys(effectiveSnapshot.byTargetPlayerStats?.[String(targetId)] ?? {}).length
           : 0,
     };
-  }, [
-    view,
-    selectedHistoryRecord,
-    currentTarget,
-    effectiveSnapshot?.combatInfos?.lastTargetByMainActor,
-    effectiveSnapshot?.combatInfos?.lastTarget,
-  ]);
+  }, [view, selectedHistoryRecord, currentTarget, effectiveSnapshot]);
 
   useEffect(() => {
     if (!dpsAppearance.autoResizeHeight) return;
@@ -645,6 +658,7 @@ export default function DpsPage() {
     if (!targetSelection.targetInfo) {
       return 0;
     }
+    debugger;
 
     const startTimes = Object.values(targetSelection.targetInfo.targetStartTime || {});
     const lastTimes = Object.values(targetSelection.targetInfo.targetLastTime || {});
@@ -659,7 +673,7 @@ export default function DpsPage() {
     }
 
     return Math.max(0, lastTime - startTime);
-  }, [targetSelection.targetInfo]);
+  }, [targetSelection]);
 
   const timerStatus = useMemo(() => {
     if (!targetFightingTime || targetFightingTime <= 0) {
