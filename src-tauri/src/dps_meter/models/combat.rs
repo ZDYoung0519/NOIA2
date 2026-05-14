@@ -30,17 +30,7 @@ impl Default for SkillStats {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SkillRecord {
-    pub time: f64,
-    pub skill_code: u32,
-    pub ori_skill_code: u32,
-    pub skill_spec: Vec<u32>,
-    pub damage: u64,
-    pub multi_hit_damage: u64,
-    pub special_counts: HashMap<String, u32>,
-    pub dot: bool,
-}
+
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -79,11 +69,30 @@ pub struct CombatInfos {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PlayerOverviewStat {
+    pub actor_id: u32,
+    pub actor_name: String,
+    pub actor_server_id: String,
+    pub actor_class: String,
+    pub counts: u32,
+    pub total_damage: u64,
+    pub min_damage: u64,
+    pub max_damage: u64,
+    #[serde(default)]
+    pub special_counts: HashMap<String, u32>,
+    pub dps: f64,
+    pub damage_share: f64,
+    pub damage_contribution: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CombatSnapshot {
     pub total_damage: u64,
     pub by_target_player_skill_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
     pub by_target_player_stats: HashMap<u32, HashMap<u32, SkillStats>>,
-    pub by_target_player_skill_records: HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
-    pub by_target_player_dps_curve: HashMap<u32, HashMap<u32, Vec<(f64, f64)>>>,
     pub combat_infos: CombatInfos,
+    pub last_target_info: Option<TargetInfo>,
+    #[serde(default)]
+    pub last_target_all_players_overview_stats: Vec<PlayerOverviewStat>,
 }

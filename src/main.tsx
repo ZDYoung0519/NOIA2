@@ -28,6 +28,7 @@ const DpsPage = lazy(() => import("./pages/dps"));
 const DpsPingPage = lazy(() => import("./pages/dps_ping"));
 const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
+
 const DpsLogPage = lazy(() => import("./pages/dps_log"));
 const AboutPage = lazy(() => import("./pages/about"));
 
@@ -62,6 +63,7 @@ function App() {
     <Routes>
       <Route element={<Outlet />}>
         <Route path="/dps" element={<DpsPage />} />
+
         <Route path="/dps_ping" element={<DpsPingPage />} />
         <Route path="/dps_settings" element={<DpsSettingPage />} />
         <Route path="/dps_detail" element={<DpsDetailPage />} />

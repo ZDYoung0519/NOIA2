@@ -18,6 +18,7 @@ export default function HomePage() {
 
   const quickActions = [
     { label: t("home.actions.openDps"), icon: Plus, onClick: () => createDpsWindow(true) },
+
     {
       label: t("home.actions.characterRating"),
       icon: ArrowUp,

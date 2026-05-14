@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { clamp, motion } from "framer-motion";
+import { clamp } from "framer-motion";
 
 import { MemoizedBossHealthBar } from "@/components/dps/boss-health-bar";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -110,21 +110,17 @@ const DpsPanel = function DpsPanel({
         const damagePercentDisplay = clamp(0, 100, damagePercent);
 
         return (
-          <motion.div
+          <div
             key={player.playerId || index}
-            layout
-            transition={{
-              layout: { duration: 0.25, ease: "easeInOut" },
-            }}
             className="group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border hover:border-cyan-500 hover:bg-white/5"
             onClick={() => onPlayerClicked(player.playerId)}
             onMouseEnter={() => onPlayerHovered?.(player.playerId)}
             onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
           >
             <div
-              className="absolute top-0 bottom-0 left-0 rounded transition-all duration-500 ease-out"
+              className="absolute top-0 bottom-0 left-0 w-full origin-left rounded transition-transform duration-500 ease-out"
               style={{
-                width: `${barPercent}%`,
+                transform: `scaleX(${barPercent / 100})`,
                 background: isMainPlayer ? mainPlayerColor : otherPlayerColor,
                 opacity: Math.min(100, Math.max(0, barOpacity ?? 100)) / 100,
               }}
@@ -169,7 +165,7 @@ const DpsPanel = function DpsPanel({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>

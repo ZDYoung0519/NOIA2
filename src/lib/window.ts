@@ -320,6 +320,39 @@ export const createDpsWindow = async (autoStart: boolean) => {
   await waitForWindowReady("dps");
 };
 
+export const createDpsNewWindow = async (autoStart: boolean) => {
+  try {
+    await invoke("set_dps_manual_hidden", { hidden: false });
+  } catch (error) {
+    console.error("clear dps manual hidden state failed:", error);
+  }
+
+  if (autoStart) {
+    try {
+      await invoke("start_dps_meter");
+    } catch (error) {
+      console.error("start dps meter failed:", error);
+    }
+  }
+
+  await createWindow("dps_new", {
+    title: "DPS Meter (新版)",
+    url: "/dps_new",
+    width: 250,
+    height: 50,
+    resizable: true,
+    maximizable: false,
+    minimizable: false,
+    decorations: true,
+    transparent: true,
+    shadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+  });
+
+  await waitForWindowReady("dps_new");
+};
+
 export const showDpsWindows = async () => {
   await showWindow("dps", false);
   await showWindow("dps_ping", false);

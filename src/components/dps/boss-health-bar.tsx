@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import type { TargetInfo } from "@/types/aion2dps";
@@ -75,11 +74,9 @@ function ClassicBossHealthBar({ targetInfo, className }: Omit<BossHealthBarProps
       )}
       aria-label={`${targetName} health ${healthPercent.toFixed(1)} percent`}
     >
-      <motion.div
-        className="absolute inset-y-0 left-0 bg-red-500/60"
-        initial={false}
-        animate={{ width: `${healthPercent}%` }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+      <div
+        className="absolute inset-y-0 left-0 w-full origin-left bg-red-500/60 transition-transform duration-500 ease-out"
+        style={{ transform: `scaleX(${healthPercent / 100})` }}
       />
 
       <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
@@ -94,14 +91,20 @@ function ClassicBossHealthBar({ targetInfo, className }: Omit<BossHealthBarProps
             />
           </div>
           <span className="truncate font-mono text-sm">{targetName}</span>
+          <span className="shrink-0 font-mono text-xs text-red-100/50 tabular-nums">
+            {fightDuration}
+          </span>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <span className="font-mono text-xs text-red-100/75 tabular-nums">{fightDuration}</span>
+        <div className="flex flex-shrink-0 items-center gap-1.5">
           <span className="font-mono text-sm text-gray-100 tabular-nums">
-            {(currentHealth / 10000).toFixed(0)}w
+            {formatHealth(currentHealth)}
           </span>
-          <span className="font-mono text-sm font-bold text-red-200 tabular-nums">
+          <span className="font-mono text-xs text-white/35">/</span>
+          <span className="font-mono text-sm text-white/60 tabular-nums">
+            {formatHealth(maxHealth)}
+          </span>
+          <span className="ml-1 font-mono text-sm font-bold text-red-200 tabular-nums">
             {healthPercent.toFixed(1)}%
           </span>
         </div>
@@ -173,11 +176,9 @@ function HunterBossHealthBar({ targetInfo, className }: Omit<BossHealthBarProps,
           </div>
 
           <div className="relative mt-1 h-2 overflow-hidden rounded-[3px] border border-white/22 bg-black/45 shadow-[inset_0_1px_2px_rgba(0,0,0,0.75)]">
-            <motion.div
-              className="absolute inset-y-px left-px max-w-[calc(100%-2px)] rounded-[2px] bg-gradient-to-r from-red-700 via-red-500 to-orange-300 shadow-[0_0_10px_rgba(248,113,113,0.45)]"
-              initial={false}
-              animate={{ width: `${healthPercent}%` }}
-              transition={{ type: "spring", stiffness: 170, damping: 24, mass: 0.7 }}
+            <div
+              className="absolute inset-y-px left-px w-[calc(100%-2px)] origin-left rounded-[2px] bg-gradient-to-r from-red-700 via-red-500 to-orange-300 shadow-[0_0_10px_rgba(248,113,113,0.45)] transition-transform duration-700 ease-out"
+              style={{ transform: `scaleX(${healthPercent / 100})` }}
             />
             <div className="absolute inset-x-0 top-0 h-px bg-white/35" />
             <div className="absolute inset-0 grid grid-cols-10">

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::dps_meter::models::combat::{
-    ActorInfo, CombatInfos, CombatSnapshot, SkillRecord, SkillStats, TargetInfo,
+    ActorInfo, CombatInfos, CombatSnapshot, PlayerOverviewStat, SkillStats, TargetInfo,
 };
 use crate::dps_meter::storage::data_storage::DataStorage;
 
@@ -42,10 +42,8 @@ fn build_combat_snapshot(
     }
 
     let raw_stats = data_storage.get_dps_stats_snapshot();
-    let skill_records = data_storage.get_skill_records_snapshot();
     let summon_owner_map = data_storage.summon_owner_snapshot();
     let merged_stats = merge_summon_stats(&raw_stats, &summon_owner_map);
-    let merged_records = merge_summon_skill_records(&skill_records, &summon_owner_map);
 
     let mut target_damage_dict = HashMap::new();
     for (target_id, target_stats) in &merged_stats {
@@ -69,7 +67,6 @@ fn build_combat_snapshot(
         .collect();
 
     let filtered_stats = filter_nested_map(&merged_stats, &kept_targets);
-    let filtered_records = filter_nested_map(&merged_records, &kept_targets);
     let total_damage = kept_targets
         .iter()
         .filter_map(|target_id| target_damage_dict.get(target_id))
@@ -85,14 +82,22 @@ fn build_combat_snapshot(
     let target_infos = build_target_infos(data_storage, &kept_targets, &summon_owner_map);
     let actor_infos = build_actor_infos(data_storage, &filtered_stats, &summon_owner_map);
     let aggregated_stats = aggregate_target_actor_stats(&filtered_stats);
-    let dps_curve = build_dps_curves(&filtered_records);
+
+    let last_target_id = data_storage
+        .last_target_by_main_actor()
+        .or_else(|| data_storage.last_target());
+    let (last_target_info, last_target_all_players_overview_stats) =
+        build_last_target_all_players_overview_stats(
+            last_target_id,
+            &aggregated_stats,
+            &target_infos,
+            &actor_infos,
+        );
 
     Some(CombatSnapshot {
         total_damage,
-        by_target_player_skill_stats: filtered_stats,
         by_target_player_stats: aggregated_stats,
-        by_target_player_skill_records: filtered_records,
-        by_target_player_dps_curve: dps_curve,
+        by_target_player_skill_stats: filtered_stats,
         combat_infos: CombatInfos {
             actor_infos,
             target_infos,
@@ -102,6 +107,8 @@ fn build_combat_snapshot(
             last_target: data_storage.last_target(),
             time_now: current_timestamp_seconds(),
         },
+        last_target_info,
+        last_target_all_players_overview_stats,
     })
 }
 
@@ -266,30 +273,6 @@ fn merge_summon_stats(
     merged
 }
 
-fn merge_summon_skill_records(
-    raw_records: &HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
-    summon_owner_map: &HashMap<u32, u32>,
-) -> HashMap<u32, HashMap<u32, Vec<SkillRecord>>> {
-    let mut merged = HashMap::new();
-
-    for (target_id, actor_map) in raw_records {
-        let target_entry = merged.entry(*target_id).or_insert_with(HashMap::new);
-
-        for (actor_id, records) in actor_map {
-            let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
-            let actor_entry = target_entry
-                .entry(resolved_actor_id)
-                .or_insert_with(Vec::new);
-            actor_entry.extend(records.iter().cloned());
-        }
-
-        for actor_records in target_entry.values_mut() {
-            actor_records.sort_by(|a, b| a.time.total_cmp(&b.time));
-        }
-    }
-
-    merged
-}
 
 fn merge_time_map_min(
     raw_times: &HashMap<u32, HashMap<u32, f64>>,
@@ -350,14 +333,12 @@ fn merge_actor_skill_specs(
     for (actor_id, skill_map) in raw_specs {
         let resolved_actor_id = resolve_owner_id(*actor_id, summon_owner_map);
         let actor_entry = merged.entry(resolved_actor_id).or_insert_with(HashMap::new);
-
         for (skill_code, slots) in skill_map {
             actor_entry
                 .entry(*skill_code)
                 .or_insert_with(|| slots.clone());
         }
     }
-
     merged
 }
 
@@ -400,54 +381,7 @@ fn aggregate_skill_level_stats(stats: &HashMap<u32, SkillStats>) -> SkillStats {
     result
 }
 
-fn build_dps_curves(
-    records: &HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
-) -> HashMap<u32, HashMap<u32, Vec<(f64, f64)>>> {
-    records
-        .iter()
-        .map(|(target_id, actor_records)| {
-            let curve_map = actor_records
-                .iter()
-                .map(|(actor_id, actor_record_list)| {
-                    (
-                        *actor_id,
-                        build_dps_curve_smooth(actor_record_list, 1.0, 0.5),
-                    )
-                })
-                .collect();
-            (*target_id, curve_map)
-        })
-        .collect()
-}
 
-fn build_dps_curve_smooth(records: &[SkillRecord], window: f64, step: f64) -> Vec<(f64, f64)> {
-    if records.is_empty() {
-        return Vec::new();
-    }
-
-    let start_time = records.first().map(|record| record.time).unwrap_or(0.0);
-    let end_time = records
-        .last()
-        .map(|record| record.time)
-        .unwrap_or(start_time);
-
-    let mut current_time = start_time;
-    let mut curve = Vec::new();
-
-    while current_time <= end_time {
-        let window_end = current_time + window;
-        let total_damage = records
-            .iter()
-            .filter(|record| record.time >= current_time && record.time < window_end)
-            .map(|record| record.damage)
-            .sum::<u64>();
-
-        curve.push((current_time, total_damage as f64 / window));
-        current_time += step;
-    }
-
-    curve
-}
 
 fn current_timestamp_seconds() -> f64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -457,3 +391,94 @@ fn current_timestamp_seconds() -> f64 {
         .map(|duration| duration.as_secs_f64())
         .unwrap_or_default()
 }
+
+fn build_last_target_all_players_overview_stats(
+    last_target_id: Option<u32>,
+    aggregated_stats: &HashMap<u32, HashMap<u32, SkillStats>>,
+    target_infos: &HashMap<u32, TargetInfo>,
+    actor_infos: &HashMap<u32, ActorInfo>,
+) -> (
+    Option<TargetInfo>,
+    Vec<PlayerOverviewStat>,
+) {
+    let target_id = match last_target_id {
+        Some(id) => id,
+        None => return (None, Vec::new()),
+    };
+
+    let target_info = match target_infos.get(&target_id) {
+        Some(info) => info.clone(),
+        None => return (None, Vec::new()),
+    };
+
+    let player_stats = match aggregated_stats.get(&target_id) {
+        Some(stats) => stats,
+        None => return (Some(target_info), Vec::new()),
+    };
+
+    let max_hp = target_info.max_hp.unwrap_or(0) as f64;
+    let max_last_time = target_info
+        .target_last_time
+        .values()
+        .cloned()
+        .fold(0.0_f64, f64::max);
+
+    let total_target_damage: u64 = player_stats
+        .values()
+        .map(|stats| stats.total_damage)
+        .sum();
+
+    let mut overview: Vec<PlayerOverviewStat> = player_stats
+        .iter()
+        .map(|(player_id, stats)| {
+            let battle_duration = {
+                let start_time = target_info
+                    .target_start_time
+                    .get(player_id)
+                    .copied()
+                    .unwrap_or(max_last_time);
+                (max_last_time - start_time).max(1.0)
+            };
+
+            let dps = stats.total_damage as f64 / battle_duration;
+            let damage_share = if total_target_damage > 0 {
+                stats.total_damage as f64 / total_target_damage as f64
+            } else {
+                0.0
+            };
+            let damage_contribution = if max_hp > 0.0 {
+                stats.total_damage as f64 / max_hp
+            } else {
+                0.0
+            };
+
+            let actor_info = actor_infos.get(player_id);
+            PlayerOverviewStat {
+                actor_id: *player_id,
+                actor_name: actor_info
+                    .and_then(|a| a.actor_name.clone())
+                    .unwrap_or_default(),
+                actor_server_id: actor_info
+                    .and_then(|a| a.actor_server_id.clone())
+                    .unwrap_or_default(),
+                actor_class: actor_info
+                    .and_then(|a| a.actor_class.clone())
+                    .unwrap_or_default(),
+                counts: stats.counts,
+                total_damage: stats.total_damage,
+                min_damage: if stats.min_damage == u64::MAX { 0 } else { stats.min_damage },
+                max_damage: stats.max_damage,
+                special_counts: stats.special_counts.clone(),
+                dps,
+                damage_share,
+                damage_contribution,
+            }
+        })
+        .collect();
+
+    overview.sort_by(|a, b| b.total_damage.cmp(&a.total_damage));
+
+    (Some(target_info), overview)
+}
+
+

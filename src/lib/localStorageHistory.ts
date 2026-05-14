@@ -72,6 +72,28 @@ export class GenericLocalHistory<T extends Record<string, any>> {
     this.persistWithQuotaGuard(newList);
   }
 
+  /** 批量新增 — 一次读写完成，避免多次 get/setItem 造成内存峰值 */
+  addMany(items: T[]): void {
+    if (items.length === 0) return;
+    const list = this.get();
+    const ids = new Set(items.map((item) => item[this.idField]));
+    const filtered = list.filter((i) => !ids.has(i[this.idField]));
+    const newList = [...items, ...filtered].slice(0, this.maxItems);
+    this.persistWithQuotaGuard(newList);
+  }
+
+  /** 批量更新多个主键的字段 — 一次 get + 一次 setItem */
+  updateMany(updates: Array<Partial<T> & Pick<T, keyof T>>): void {
+    if (updates.length === 0) return;
+    const list = this.get();
+    const updateMap = new Map(updates.map((u) => [u[this.idField], u]));
+    for (const item of list) {
+      const patch = updateMap.get(item[this.idField]);
+      if (patch) Object.assign(item, patch);
+    }
+    this.persistWithQuotaGuard(list);
+  }
+
   /** 根据主键删除 */
   remove(idValue: string | number): void {
     const list = this.get();

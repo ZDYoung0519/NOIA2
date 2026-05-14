@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { clamp, motion } from "framer-motion";
+import { clamp } from "framer-motion";
 
 import { MemoizedBossHealthBar } from "@/components/dps/boss-health-bar";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -291,11 +291,9 @@ const DpsPanel = function DpsPanel({
           const damagePercentDisplay = clamp(0, 100, damagePercent);
 
           return (
-            <motion.button
+            <button
               key={player.playerId || index}
               type="button"
-              layout
-              transition={{ layout: { duration: 0.22, ease: "easeInOut" } }}
               onClick={() => onPlayerClicked(player.playerId)}
               onMouseEnter={() => onPlayerHovered?.(player.playerId)}
               onMouseLeave={() => onPlayerHoverEnd?.(player.playerId)}
@@ -305,23 +303,23 @@ const DpsPanel = function DpsPanel({
               )}
             >
               <div
-                className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                className="absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500"
                 style={{
-                  width: `${barPercent}%`,
+                  transform: `scaleX(${barPercent / 100})`,
                   background: `linear-gradient(90deg, ${hexToRgba(playerColor, 0.22)} 0%, ${hexToRgba(playerColor, 0.12)} 78%, transparent 100%)`,
                 }}
               />
               <div
-                className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                className="absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500"
                 style={{
-                  width: `${barPercent}%`,
+                  transform: `scaleX(${barPercent / 100})`,
                   background: `linear-gradient(180deg, transparent 0%, ${hexToRgba(playerCompColor, 0.16)} 100%)`,
                 }}
               />
               <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/[0.04]" />
               <div
-                className="absolute bottom-0 left-0 h-[3px] overflow-hidden transition-[width] duration-500"
-                style={{ width: `${barPercent}%` }}
+                className="absolute bottom-0 left-0 h-[3px] w-full origin-left overflow-hidden transition-transform duration-500"
+                style={{ transform: `scaleX(${barPercent / 100})` }}
               >
                 <div
                   className="absolute inset-0 opacity-90"
@@ -389,7 +387,7 @@ const DpsPanel = function DpsPanel({
                   </span>
                 </div>
               </div>
-            </motion.button>
+            </button>
           );
         })}
       </div>

@@ -6,6 +6,21 @@ export type SkillStats = {
   special_counts?: Record<string, number>;
 };
 
+export type PlayerOverviewStat = {
+  actorId: number;
+  actorName: string;
+  actorServerId: string;
+  actorClass: string;
+  counts: number;
+  total_damage?: number;
+  min_damage?: number;
+  max_damage?: number;
+  special_counts?: Record<string, number>;
+  dps: number;
+  damageShare: number;
+  damageContribution: number;
+};
+
 export type SkillRecord = {
   time: number;
   skillCode: number;
@@ -50,9 +65,9 @@ export type CombatSnapshot = {
   totalDamage: number;
   byTargetPlayerStats: Record<string, Record<string, SkillStats>>;
   byTargetPlayerSkillStats: Record<string, Record<string, Record<string, SkillStats>>>;
-  byTargetPlayerSkillRecords: Record<string, Record<string, SkillRecord[]>>;
-  byTargetPlayerDpsCurve: Record<string, Record<string, Array<[number, number]>>>;
   combatInfos: CombatInfos;
+  lastTargetInfo?: TargetInfo | null;
+  lastTargetAllPlayersOverviewStats?: PlayerOverviewStat[];
 };
 
 export type MemorySnapshot = {
@@ -75,14 +90,11 @@ export type DpsDetailPayload = {
   combatInfos: CombatInfos;
   playerStats: SkillStats | null;
   playerSkillStats: Record<string, SkillStats>;
-  playerSkillRecords: SkillRecord[];
-  playerDpsCurve: Array<[number, number]>;
 };
 
 export interface oneTargetAllPlayerStats {
   thisTargetAllPlayerStats: Record<string, SkillStats>;
   thisTargetAllPlayerSkillStats: Record<string, Record<string, SkillStats>>;
-  thisTargetAllPlayerSkillRecords: Record<string, SkillRecord[]>;
   combatInfos: CombatInfos;
 }
 

@@ -74,7 +74,6 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
           mainActorBattleDuration > 0 ? mainActorDamage / mainActorBattleDuration : 0;
         const uploadRecord = {
           ...record,
-          thisTargetAllPlayerSkillRecords: {},
         };
 
         return {

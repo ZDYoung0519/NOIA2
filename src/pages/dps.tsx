@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useDeferredValue,
+  type ReactNode,
+} from "react";
 
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
@@ -10,7 +18,6 @@ import {
   Play,
   RotateCcw,
   Square,
-  Trash2,
   Settings,
   History,
   Book,
@@ -26,7 +33,7 @@ import {
 
 import { MemoizedDpsPanelSimple } from "@/components/dps/dps-panel-simple";
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MemoizedDpsHistory } from "@/components/dps-history";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -52,20 +59,7 @@ const getSkillStatsDamage = (stats?: SkillStats | null) => Number(stats?.total_d
 const getTargetTotalDamage = (playerStats?: Record<string, SkillStats> | null) =>
   Object.values(playerStats ?? {}).reduce((sum, stats) => sum + getSkillStatsDamage(stats), 0);
 
-const cloneJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-
-const getTargetLastTime = (record: HistoryTargetRecord) => {
-  const targetInfo = record.combatInfos.targetInfos?.[String(record.targetId)];
-  const lastTimes = Object.values(targetInfo?.targetLastTime ?? {});
-  return lastTimes.length > 0 ? Math.max(...lastTimes) : 0;
-};
-
-const formatLocalRecordTime = (timestampSeconds: number) => {
-  if (!timestampSeconds || !Number.isFinite(timestampSeconds)) {
-    return "--";
-  }
-  return new Date(timestampSeconds * 1000).toLocaleTimeString();
-};
+const cloneJson = <T,>(value: T): T => structuredClone(value) as T;
 
 const buildHistoryRecordsFromSnapshot = (snapshot: CombatSnapshot): HistoryTargetRecord[] => {
   const targetEntries = Object.entries(snapshot.byTargetPlayerStats ?? {});
@@ -90,9 +84,6 @@ const buildHistoryRecordsFromSnapshot = (snapshot: CombatSnapshot): HistoryTarge
         thisTargetAllPlayerSkillStats: cloneJson(
           snapshot.byTargetPlayerSkillStats?.[targetId] ?? {}
         ),
-        thisTargetAllPlayerSkillRecords: cloneJson(
-          snapshot.byTargetPlayerSkillRecords?.[targetId] ?? {}
-        ),
         combatInfos: cloneJson({
           ...snapshot.combatInfos,
           targetInfos: targetInfo
@@ -112,26 +103,22 @@ const buildHistoryRecordsFromSnapshot = (snapshot: CombatSnapshot): HistoryTarge
 
   return records
     .filter((record): record is HistoryTargetRecord => record !== null)
-    .sort((a, b) => getTargetLastTime(b) - getTargetLastTime(a));
+    .sort((a, b) => {
+      const ta = a.combatInfos.targetInfos?.[String(a.targetId)];
+      const tb = b.combatInfos.targetInfos?.[String(b.targetId)];
+      const la = Math.max(...Object.values(ta?.targetLastTime ?? {}), 0);
+      const lb = Math.max(...Object.values(tb?.targetLastTime ?? {}), 0);
+      return lb - la;
+    });
 };
 
 const persistHistoryRecords = (records: HistoryTargetRecord[]) => {
-  if (records.length === 0) {
-    return;
-  }
-  records.forEach((record) => {
-    Aion2DpsHistory.add({ ...record, uploaded: false });
-  });
+  if (records.length === 0) return;
+  Aion2DpsHistory.addMany(records.map((r) => ({ ...r, uploaded: false })));
 };
 
 const uploadPendingHistoryRecords = async () => {
   const allRecords = Aion2DpsHistory.get();
-  console.log(
-    "[upload] called, allRecords:",
-    allRecords.length,
-    "unuploaded:",
-    allRecords.filter((r) => !r.uploaded).length
-  );
   const pending = allRecords.filter((r) => !r.uploaded);
   if (pending.length === 0) {
     console.log("[upload] SKIP: no pending records");
@@ -139,11 +126,10 @@ const uploadPendingHistoryRecords = async () => {
   }
 
   try {
-    console.log(`Uploading ${pending.length} pending DPS records`);
     await uploadDpsDataBatch(pending);
-    pending.forEach((r) => {
-      Aion2DpsHistory.updateOne({ id: r.id, uploaded: true } as HistoryTargetRecord);
-    });
+    Aion2DpsHistory.updateMany(
+      pending.map((r) => ({ id: r.id, uploaded: true }) as HistoryTargetRecord)
+    );
     console.log("DPS upload succeeded");
   } catch (err) {
     console.error("DPS upload failed:", err);
@@ -199,103 +185,6 @@ export function WindowFrame({ titleBar, children, className, contentClassName }:
   );
 }
 
-type HistoryTargetListProps = {
-  historyRecords: HistoryTargetRecord[];
-  selectedHistoryId: string | null;
-  onSelect: (id: string) => void;
-  onClear: () => void;
-};
-
-const MemoizedHistoryTargetList = memo(function HistoryTargetList({
-  historyRecords,
-  selectedHistoryId,
-  onSelect,
-  onClear,
-}: HistoryTargetListProps) {
-  return (
-    <aside className="w-30">
-      <div className="flex items-center justify-between gap-2 px-1 py-1">
-        <div className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-          History
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={onClear}
-              disabled={historyRecords.length === 0}
-              className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-md transition",
-                historyRecords.length === 0
-                  ? "cursor-not-allowed bg-white/[0.03] text-slate-600"
-                  : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Clear history</TooltipContent>
-        </Tooltip>
-      </div>
-
-      {historyRecords.length > 0 ? (
-        <div className="max-h-[250px] overflow-y-auto p-0 [scrollbar-color:rgba(148,163,184,0.35)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-400/25 [&::-webkit-scrollbar-thumb]:hover:bg-slate-300/35 [&::-webkit-scrollbar-track]:bg-transparent">
-          <div className="space-y-0">
-            {historyRecords.map((record) => {
-              const recordTargetInfo = record.combatInfos.targetInfos?.[String(record.targetId)];
-              const recordDamage = getTargetTotalDamage(record.thisTargetAllPlayerStats);
-              const recordTime = getTargetLastTime(record);
-              const isBoss = record.combatInfos.targetInfos?.[String(record.targetId)]?.isBoss;
-
-              return (
-                <button
-                  key={record.id}
-                  type="button"
-                  onClick={() => onSelect(record.id)}
-                  className={cn(
-                    "w-full px-1.5 py-0.5 text-left transition",
-                    selectedHistoryId === record.id
-                      ? "border-cyan-400/40 bg-cyan-500/12 text-cyan-50"
-                      : "border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]"
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                        record.uploaded ? "bg-green-400" : "bg-amber-400"
-                      )}
-                      title={record.uploaded ? "已上传" : "未上传"}
-                    />
-                    <div className="truncate text-sm font-semibold">
-                      {recordTargetInfo?.targetName ||
-                        `Mob ${recordTargetInfo?.targetMobCode}` ||
-                        `Target ${record.targetId}`}
-                    </div>
-                    {isBoss && (
-                      <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-0.5 py-0.5 text-[8px] text-amber-200 uppercase">
-                        Boss
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
-                    <span className="truncate text-slate-400">{recordDamage.toLocaleString()}</span>
-                    <span>{formatLocalRecordTime(recordTime)}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="flex min-h-24 items-center justify-center px-3 text-center text-sm text-slate-500">
-          No history
-        </div>
-      )}
-    </aside>
-  );
-});
-
 export default function DpsPage() {
   const { settings } = useAppSettings();
   const { t } = useAppTranslation();
@@ -305,7 +194,11 @@ export default function DpsPage() {
   const [snapshot, setSnapshot] = useState<CombatSnapshot | null>(null);
   const [snapshotCopy, setSnapshotCopy] = useState<CombatSnapshot | null>(null);
 
-  const effectiveSnapshot = useMemo(() => snapshot || snapshotCopy, [snapshot, snapshotCopy]);
+  const deferredSnapshot = useDeferredValue(snapshot);
+  const effectiveSnapshot = useMemo(
+    () => deferredSnapshot || snapshotCopy,
+    [deferredSnapshot, snapshotCopy]
+  );
 
   const [mainPlayerName, setMainPlayerName] = useState<string>("");
   // const [mainPlayerId, setMainPlayerId] = useState<number | null>(null);
@@ -313,8 +206,10 @@ export default function DpsPage() {
   const [pinnedPlayerId, setPinnedPlayerId] = useState<number | null>(null);
   const [hoverPlayerId, setHoverPlayerId] = useState<number | null>(null);
 
-  const [historyRecords, setHistoryRecords] = useState<HistoryTargetRecord[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const [selectedHistoryRecord, setSelectedHistoryRecord] = useState<HistoryTargetRecord | null>(
+    null
+  );
   const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
   const [isClickThrough, setIsClickThrough] = useState(false);
 
@@ -382,6 +277,7 @@ export default function DpsPage() {
           setSnapshot((current) =>
             current?.totalDamage === nextSnapshot.totalDamage ? current : nextSnapshot
           );
+          setSnapshotCopy(null);
         });
 
         // dps-meter running state
@@ -631,11 +527,6 @@ export default function DpsPage() {
     };
   }, []);
 
-  const selectedHistoryRecord = useMemo(
-    () => historyRecords.find((record) => record.id === selectedHistoryId) ?? null,
-    [historyRecords, selectedHistoryId]
-  );
-
   const targetSelection = useMemo<{
     targetId: number | null;
     targetInfo: TargetInfo | null;
@@ -673,7 +564,13 @@ export default function DpsPage() {
           ? Object.keys(effectiveSnapshot.byTargetPlayerStats?.[String(targetId)] ?? {}).length
           : 0,
     };
-  }, [view, selectedHistoryRecord, currentTarget, effectiveSnapshot]);
+  }, [
+    view,
+    selectedHistoryRecord,
+    currentTarget,
+    effectiveSnapshot?.combatInfos?.lastTargetByMainActor,
+    effectiveSnapshot?.combatInfos?.lastTarget,
+  ]);
 
   useEffect(() => {
     if (!dpsAppearance.autoResizeHeight) return;
@@ -803,9 +700,6 @@ export default function DpsPage() {
           playerStats,
           playerSkillStats:
             selectedHistoryRecord.thisTargetAllPlayerSkillStats?.[String(playerId)] ?? {},
-          playerSkillRecords:
-            selectedHistoryRecord.thisTargetAllPlayerSkillRecords?.[String(playerId)] ?? [],
-          playerDpsCurve: [],
         };
       }
 
@@ -831,14 +725,6 @@ export default function DpsPage() {
           effectiveSnapshot.byTargetPlayerSkillStats?.[String(targetSelection.targetId)]?.[
             String(playerId)
           ] ?? {},
-        playerSkillRecords:
-          effectiveSnapshot.byTargetPlayerSkillRecords?.[String(targetSelection.targetId)]?.[
-            String(playerId)
-          ] ?? [],
-        playerDpsCurve:
-          effectiveSnapshot.byTargetPlayerDpsCurve?.[String(targetSelection.targetId)]?.[
-            String(playerId)
-          ] ?? [],
       };
     },
     [targetSelection.targetId, selectedHistoryRecord, effectiveSnapshot, view]
@@ -920,26 +806,11 @@ export default function DpsPage() {
 
       // Save current snapshot to history as unuploaded
       const currentSnapshot = snapshotRef.current;
-      console.log(
-        "[handleReset] snapshotRef:",
-        !!currentSnapshot,
-        "totalDamage:",
-        currentSnapshot?.totalDamage
-      );
       const historyToPersist = currentSnapshot
         ? buildHistoryRecordsFromSnapshot(currentSnapshot)
         : [];
-      console.log("[handleReset] historyToPersist:", historyToPersist.length);
       if (historyToPersist.length > 0) {
         persistHistoryRecords(historyToPersist);
-        const saved = Aion2DpsHistory.get();
-        console.log(
-          "[handleReset] saved to history, total records:",
-          saved.length,
-          "unuploaded:",
-          saved.filter((r) => !r.uploaded).length
-        );
-        setHistoryRecords(saved);
       }
 
       // Clear UI
@@ -1107,8 +978,8 @@ export default function DpsPage() {
     }
 
     const nextHistoryRecords = Aion2DpsHistory.get();
-    setHistoryRecords(nextHistoryRecords);
     setSelectedHistoryId(nextHistoryRecords[0]?.id ?? null);
+    setSelectedHistoryRecord(nextHistoryRecords[0] ?? null);
     setView("history");
   }, [view]);
 
@@ -1146,17 +1017,6 @@ export default function DpsPage() {
       },
     });
   }, []);
-
-  const handleClearHistory = useCallback(async () => {
-    Aion2DpsHistory.clear();
-    setHistoryRecords([]);
-    setSelectedHistoryId(null);
-    setPinnedPlayerId(null);
-    setHoverPlayerId(null);
-    detailPayloadRef.current = null;
-    void emit("dps-detail-clear");
-    await closeDetailWindow();
-  }, [closeDetailWindow]);
 
   const handleClose = useCallback(async () => {
     await getCurrentWebviewWindow().close();
@@ -1369,11 +1229,18 @@ export default function DpsPage() {
             <div ref={contentRef}>
               {view === "history" && (
                 <div className="flex min-h-10 gap-0">
-                  <MemoizedHistoryTargetList
-                    historyRecords={historyRecords}
+                  <MemoizedDpsHistory
                     selectedHistoryId={selectedHistoryId}
-                    onSelect={setSelectedHistoryId}
-                    onClear={() => void handleClearHistory()}
+                    onSelect={(id, record) => {
+                      setSelectedHistoryId(id);
+                      setSelectedHistoryRecord(record);
+                    }}
+                    onClear={() => {
+                      setSelectedHistoryId(null);
+                      setSelectedHistoryRecord(null);
+                      setPinnedPlayerId(null);
+                      setHoverPlayerId(null);
+                    }}
                   />
 
                   <div className="min-w-0 flex-1">

@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
-use crate::dps_meter::models::combat::{SkillRecord, SkillStats};
+use crate::dps_meter::models::combat::{ SkillStats};
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
 
@@ -88,7 +88,6 @@ where
 #[derive(Debug)]
 struct DataStorageInner {
     dps_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
-    by_target_player_skill_records: HashMap<u32, HashMap<u32, Vec<SkillRecord>>>,
     actor_id_name_map: BoundedMap<u32, String>,
     actor_id_server_map: BoundedMap<u32, String>,
     actor_id_class_map: BoundedMap<u32, String>,
@@ -110,7 +109,6 @@ impl Default for DataStorageInner {
     fn default() -> Self {
         Self {
             dps_stats: HashMap::new(),
-            by_target_player_skill_records: HashMap::new(),
             actor_id_name_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_server_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
@@ -232,12 +230,11 @@ impl DataStorage {
             inner.start_time = Some(timestamp);
         }
 
-        let skill_spec = inner
+        inner
             .actor_id_skill_spec_map
             .get_mut_or_insert_with(actor_id, HashMap::new)
             .entry(packet.skill_code)
-            .or_insert_with(|| infer_specialty_slots(packet.ori_skill_code))
-            .clone();
+            .or_insert_with(|| infer_specialty_slots(packet.ori_skill_code));
 
         inner
             .start_time_by_target
@@ -285,22 +282,6 @@ impl DataStorage {
                 .or_insert(0) += count;
         }
 
-        inner
-            .by_target_player_skill_records
-            .entry(packet.target_id)
-            .or_default()
-            .entry(actor_id)
-            .or_default()
-            .push(SkillRecord {
-                time: timestamp,
-                skill_code: packet.skill_code,
-                ori_skill_code: packet.ori_skill_code,
-                skill_spec,
-                damage: total_damage,
-                multi_hit_damage: packet.multi_hit_damage,
-                special_counts,
-                dot: packet.is_dot,
-            });
 
         if actor_id != packet.target_id {
             inner.last_target = Some(packet.target_id);
@@ -397,13 +378,6 @@ impl DataStorage {
         self.inner.read().unwrap().dps_stats.clone()
     }
 
-    pub fn get_skill_records_snapshot(&self) -> HashMap<u32, HashMap<u32, Vec<SkillRecord>>> {
-        self.inner
-            .read()
-            .unwrap()
-            .by_target_player_skill_records
-            .clone()
-    }
 
     pub fn actor_id_name_snapshot(&self) -> HashMap<u32, String> {
         self.inner.read().unwrap().actor_id_name_map.as_hash_map()

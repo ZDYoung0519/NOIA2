@@ -598,7 +598,13 @@ function formatDateTime(value: string | null) {
   });
 }
 
-function DpsRecordTable({ dpsRows, showRank = false }: { dpsRows: DpsRecordRow[]; showRank?: boolean }) {
+function DpsRecordTable({
+  dpsRows,
+  showRank = false,
+}: {
+  dpsRows: DpsRecordRow[];
+  showRank?: boolean;
+}) {
   const { settings } = useAppSettings();
   const [selectedRow, setSelectedRow] = useState<DpsRecordRow | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<HistoryTargetRecord | null>(null);
@@ -627,9 +633,6 @@ function DpsRecordTable({ dpsRows, showRank = false }: { dpsRows: DpsRecordRow[]
       playerStats,
       playerSkillStats:
         selectedRecord.thisTargetAllPlayerSkillStats?.[String(selectedPlayerId)] ?? {},
-      playerSkillRecords:
-        selectedRecord.thisTargetAllPlayerSkillRecords?.[String(selectedPlayerId)] ?? [],
-      playerDpsCurve: [],
     };
   }, [selectedPlayerId, selectedRecord]);
 

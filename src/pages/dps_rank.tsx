@@ -265,9 +265,6 @@ function DpsRankDetailDialog({
       playerStats,
       playerSkillStats:
         selectedRecord.thisTargetAllPlayerSkillStats?.[String(selectedPlayerId)] ?? {},
-      playerSkillRecords:
-        selectedRecord.thisTargetAllPlayerSkillRecords?.[String(selectedPlayerId)] ?? [],
-      playerDpsCurve: [],
     };
   }, [selectedPlayerId, selectedRecord]);
 
