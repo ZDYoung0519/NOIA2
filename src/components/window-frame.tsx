@@ -184,7 +184,7 @@ export function WindowFrame({
   return (
     <div
       className={cn(
-        "bg-background/85 text-card-foreground flex h-screen w-screen flex-col overflow-hidden",
+        "bg-background/95 text-card-foreground flex h-screen w-screen flex-col overflow-hidden",
         className
       )}
     >
