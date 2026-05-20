@@ -225,7 +225,6 @@ export function DaevanionTabs({
   const currentBoard = daevanionDetails.find((board) => String(board.boardId) === activeBoard);
   const currentEffects =
     currentBoard?.detail?.openStatEffectList?.filter((effect) => effect?.desc?.trim()) ?? [];
-  debugger;
   const allEffects = daevanionDetails.flatMap((board) =>
     (board.detail.openStatEffectList ?? [])
       .filter((effect) => effect?.desc?.trim())

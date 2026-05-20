@@ -54,6 +54,7 @@ pub fn run() {
             dps_meter::api::commands::get_dps_meter_status,
             dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter,
+            dps_meter::api::commands::check_npcap_available,
             plugins::aion2_focus::set_dps_manual_hidden,
             plugins::http::http_request,
             plugins::window_tracking::ensure_tracked_window,

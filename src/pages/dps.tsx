@@ -12,6 +12,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   ArrowLeft,
   Clock3,
@@ -213,6 +214,7 @@ export default function DpsPage() {
   );
   const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
   const [isClickThrough, setIsClickThrough] = useState(false);
+  const [npcapAvailable, setNpcapAvailable] = useState<boolean | null>(null);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const resizeTimerRef = useRef<number | null>(null);
@@ -409,6 +411,12 @@ export default function DpsPage() {
   }, []);
 
   useEffect(() => {
+    invoke<boolean>("check_npcap_available")
+      .then(setNpcapAvailable)
+      .catch(() => setNpcapAvailable(false));
+  }, []);
+
+  useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
 
     // Save and upload pending records before closing
@@ -565,7 +573,6 @@ export default function DpsPage() {
       };
     }
 
-    debugger;
     const targetId =
       currentTarget ??
       effectiveSnapshot?.combatInfos?.lastTargetByMainActor ??
@@ -615,11 +622,55 @@ export default function DpsPage() {
 
   const StatusDescription = useMemo(() => {
     if (!isRunning) {
-      return "水表暂未启动.";
+      return (
+        <span>
+          DPS 水表尚未启动，点击右上角
+          <Settings className="mx-0.5 inline h-3 w-3" />
+          图标 → 开始 启动监测
+        </span>
+      );
     }
-    if (!mainPlayerName) return "等待战斗数据.";
-    return "Waiting for data.";
-  }, [isRunning, mainPlayerName]);
+
+    const npcapIcon =
+      npcapAvailable === true ? (
+        <span className="text-emerald-400">✓</span>
+      ) : npcapAvailable === false ? (
+        <span className="text-rose-400">✗</span>
+      ) : (
+        <span className="text-slate-500">...</span>
+      );
+
+    const playerIcon = mainPlayerName ? (
+      <span className="text-emerald-400">✓</span>
+    ) : (
+      <span className="text-rose-400">✗</span>
+    );
+
+    if (!npcapAvailable || !mainPlayerName) {
+      return (
+        <span className="leading-relaxed">
+          {npcapIcon} 1. 请先安装{" "}
+          <a
+            onClick={(e) => {
+              e.preventDefault();
+              void openUrl("https://npcap.com/dist/npcap-1.87.exe");
+            }}
+            className="cursor-pointer underline hover:text-white"
+          >
+            Npcap
+          </a>
+          （默认勾选 WinPcap 选项3）
+          <br />
+          {playerIcon} 2. 启动本程序后，在游戏中传送奇斯克以识别角色
+          <br />
+          &nbsp;&nbsp;&nbsp;3. 进行打桩/副本测试
+        </span>
+      );
+    }
+    return (
+      <span>欢迎 {maskNickname(mainPlayerName, dpsAppearance.maskNicknames)}，等待战斗中</span>
+    );
+  }, [isRunning, mainPlayerName, npcapAvailable, dpsAppearance.maskNicknames]);
 
   const dpsPanelData = useMemo(() => {
     if (view === "history") {
@@ -658,7 +709,6 @@ export default function DpsPage() {
     if (!targetSelection.targetInfo) {
       return 0;
     }
-    debugger;
 
     const startTimes = Object.values(targetSelection.targetInfo.targetStartTime || {});
     const lastTimes = Object.values(targetSelection.targetInfo.targetLastTime || {});
@@ -1297,7 +1347,7 @@ export default function DpsPage() {
                       onPlayerHoverEnd={handlePlayerHoverEnd}
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center rounded text-center">
+                    <div className="flex min-h-25 items-center justify-center rounded text-center">
                       <div className="text-xs text-slate-100 select-none">{StatusDescription}</div>
                     </div>
                   )}

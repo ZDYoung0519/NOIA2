@@ -43,3 +43,14 @@ pub fn stop_dps_meter(meter: State<'_, DpsMeter>) -> Result<(), String> {
     meter.stop_dps_meter();
     Ok(())
 }
+
+#[tauri::command]
+pub fn check_npcap_available() -> Result<bool, String> {
+    match unsafe { libloading::Library::new("wpcap.dll") } {
+        Ok(lib) => {
+            drop(lib);
+            Ok(true)
+        }
+        Err(_) => Ok(false),
+    }
+}

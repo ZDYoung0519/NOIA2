@@ -72,8 +72,19 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
         );
         const mainActorDps =
           mainActorBattleDuration > 0 ? mainActorDamage / mainActorBattleDuration : 0;
+        const playerKeys = new Set(Object.keys(record.thisTargetAllPlayerStats ?? {}));
+
         const uploadRecord = {
           ...record,
+          combatInfos: {
+            ...record.combatInfos,
+            targetInfos: {
+              [targetIdKey]: targetInfo,
+            },
+            actorInfos: Object.fromEntries(
+              Object.entries(actorInfos ?? {}).filter(([key]) => playerKeys.has(key))
+            ),
+          },
         };
 
         return {
@@ -104,7 +115,7 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
     for (const payload of toUploadData) {
       const { error } = await supabase.rpc("insert_aion2_dps_and_update_rank", {
         p_payload: payload,
-        p_keep_limit: 50,
+        p_keep_limit: 20,
       });
 
       if (error) {

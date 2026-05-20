@@ -51,6 +51,7 @@ mod windows_impl {
     use std::{
         path::Path,
         sync::{
+            atomic::Ordering,
             mpsc::{self, Sender},
             Mutex, OnceLock,
         },
@@ -171,6 +172,42 @@ mod windows_impl {
 
             let _ = UnhookWinEvent(hook);
             clear_sender();
+        });
+
+        // Polling fallback: periodically verify window visibility matches actual foreground state
+        let app_for_poller = app.clone();
+        std::thread::spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+
+            let hwnd = unsafe { GetForegroundWindow() };
+            if hwnd.0.is_null() {
+                continue;
+            }
+            let process_name = process_name_for_hwnd(hwnd.0 as isize);
+            let focused = process_name
+                .as_deref()
+                .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
+                .unwrap_or(false);
+
+            let dps_manual_hidden = app_for_poller
+                .try_state::<Aion2FocusState>()
+                .map(|state| state.dps_manual_hidden.load(Ordering::Relaxed))
+                .unwrap_or(false);
+
+            let should_show = focused && !dps_manual_hidden;
+
+            for label in FOLLOW_FOCUS_WINDOW_LABELS {
+                if let Some(window) = app_for_poller.get_webview_window(label) {
+                    let current_visible = window.is_visible().unwrap_or(false);
+                    if should_show && !current_visible {
+                        let _ = window.set_focusable(false);
+                        let _ = window.show();
+                        let _ = window.unminimize();
+                    } else if !should_show && current_visible {
+                        let _ = window.hide();
+                    }
+                }
+            }
         });
     }
 

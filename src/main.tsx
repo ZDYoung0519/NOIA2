@@ -21,6 +21,7 @@ import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 
@@ -75,6 +76,7 @@ function App() {
       <Route
         element={
           <MainShell>
+            <Toaster />
             <Outlet />
           </MainShell>
         }

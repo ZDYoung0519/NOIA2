@@ -6,6 +6,7 @@ import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
 import CharacterCardCarousel from "@/components/character-card-carousel";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
 
+import { toast } from "sonner";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createDpsWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
@@ -17,7 +18,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const quickActions = [
-    { label: t("home.actions.openDps"), icon: Plus, onClick: () => createDpsWindow(true) },
+    { label: t("home.actions.openDps"), icon: Plus, onClick: () => { createDpsWindow(true); toast.info("水表已经启动，请切换至游戏窗口查看！"); } },
 
     {
       label: t("home.actions.characterRating"),
