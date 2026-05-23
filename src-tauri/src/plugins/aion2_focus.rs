@@ -18,12 +18,14 @@ struct Aion2FocusChangedPayload {
 
 pub struct Aion2FocusState {
     dps_manual_hidden: AtomicBool,
+    auto_hide_enabled: AtomicBool,
 }
 
 impl Default for Aion2FocusState {
     fn default() -> Self {
         Self {
             dps_manual_hidden: AtomicBool::new(false),
+            auto_hide_enabled: AtomicBool::new(true),
         }
     }
 }
@@ -31,6 +33,11 @@ impl Default for Aion2FocusState {
 #[tauri::command]
 pub fn set_dps_manual_hidden(state: State<'_, Aion2FocusState>, hidden: bool) {
     state.dps_manual_hidden.store(hidden, Ordering::Relaxed);
+}
+
+#[tauri::command]
+pub fn set_auto_hide_enabled(state: State<'_, Aion2FocusState>, enabled: bool) {
+    state.auto_hide_enabled.store(enabled, Ordering::Relaxed);
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -119,14 +126,19 @@ mod windows_impl {
                     },
                 );
 
-                let dps_manual_hidden = app_for_processor
+                let (dps_manual_hidden, auto_hide_enabled) = app_for_processor
                     .try_state::<Aion2FocusState>()
                     .map(|state| {
-                        state
-                            .dps_manual_hidden
-                            .load(std::sync::atomic::Ordering::Relaxed)
+                        (
+                            state.dps_manual_hidden.load(Ordering::Relaxed),
+                            state.auto_hide_enabled.load(Ordering::Relaxed),
+                        )
                     })
-                    .unwrap_or(false);
+                    .unwrap_or((false, true));
+
+                if !auto_hide_enabled {
+                    continue;
+                }
 
                 for label in FOLLOW_FOCUS_WINDOW_LABELS {
                     if let Some(window) = app_for_processor.get_webview_window(label) {
@@ -189,10 +201,19 @@ mod windows_impl {
                 .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
                 .unwrap_or(false);
 
-            let dps_manual_hidden = app_for_poller
+            let (dps_manual_hidden, auto_hide_enabled) = app_for_poller
                 .try_state::<Aion2FocusState>()
-                .map(|state| state.dps_manual_hidden.load(Ordering::Relaxed))
-                .unwrap_or(false);
+                .map(|state| {
+                    (
+                        state.dps_manual_hidden.load(Ordering::Relaxed),
+                        state.auto_hide_enabled.load(Ordering::Relaxed),
+                    )
+                })
+                .unwrap_or((false, true));
+
+            if !auto_hide_enabled {
+                continue;
+            }
 
             let should_show = focused && !dps_manual_hidden;
 

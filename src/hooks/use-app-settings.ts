@@ -30,6 +30,7 @@ export type MainWindowAppearance = {
 };
 
 export type DpsWindowAppearance = {
+  autoHide: boolean;
   autoOpenDpsWin: boolean;
   panelStyle: "classicBars" | "hunterCompact";
   backgroundColor: string;
@@ -86,6 +87,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       backgroundOpacity: 92,
     },
     dpsWindow: {
+      autoHide: true,
       autoOpenDpsWin: true,
       panelStyle: "classicBars",
       backgroundColor: "#000000",
@@ -185,6 +187,9 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
       dpsWindow: {
         ...DEFAULT_APP_SETTINGS.appearance.dpsWindow,
         ...(input?.appearance?.dpsWindow ?? {}),
+        autoHide:
+          input?.appearance?.dpsWindow?.autoHide ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.autoHide,
         backgroundColor: normalizeColorValue(
           input?.appearance?.dpsWindow?.backgroundColor,
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.backgroundColor
@@ -339,6 +344,12 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     void syncDpsMeterConfigToBackend(settings.dpsMeter);
   }, [settings.dpsMeter]);
+
+  useEffect(() => {
+    void invoke("set_auto_hide_enabled", {
+      enabled: settings.appearance.dpsWindow.autoHide,
+    });
+  }, [settings.appearance.dpsWindow.autoHide]);
 
   const { showMain, showDps, resetDps } = settings.shortcuts;
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Activity,
@@ -579,6 +580,25 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
       </SettingsGroup>
 
       <SettingsGroup title={"其他功能"}>
+        <SettingsRow
+          label={t("settings.dps.autoHide")}
+          description={t("settings.dps.autoHideDescription")}
+          control={
+            <Switch
+              checked={dpsAppearance.autoHide}
+              onCheckedChange={(checked) => {
+                void invoke("set_auto_hide_enabled", { enabled: checked });
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      autoHide: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
         <SettingsRow
           label={t("settings.dps.showDetailOnHover")}
           control={

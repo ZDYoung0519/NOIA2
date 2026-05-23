@@ -120,6 +120,8 @@
       "bossOnlyDescription": "只计算对被识别为 Boss 的目标的伤害。",
       "myMuzhuangOnly": "仅统计我的训练假人",
       "myMuzhuangOnlyDescription": "当目标是训练假人时，仅计算您自己的角色造成的伤害。",
+      "autoHide": "自动隐藏",
+      "autoHideDescription": "当游戏切换到后台时自动隐藏DPS窗口，切回游戏时自动显示。",
       "autoResizeHeight": "自动调整高度",
       "showDetailOnHover": "悬停打开技能列表",
       "detailWindowPosition": "技能详情窗口位置",

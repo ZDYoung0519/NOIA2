@@ -22,6 +22,7 @@ import {
   Settings,
   History,
   Book,
+  Pin,
   X,
 } from "lucide-react";
 import { maskNickname } from "@/lib/name-mask";
@@ -187,7 +188,7 @@ export function WindowFrame({ titleBar, children, className, contentClassName }:
 }
 
 export default function DpsPage() {
-  const { settings } = useAppSettings();
+  const { settings, saveSettings } = useAppSettings();
   const { t } = useAppTranslation();
   const dpsAppearance = settings.appearance.dpsWindow;
   const [view, setView] = useState<"dps" | "history" | "ping">("dps");
@@ -1136,6 +1137,27 @@ export default function DpsPage() {
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          title={dpsAppearance.autoHide ? "Pin" : "Unpin"}
+          onClick={(event) => {
+            event.currentTarget.blur();
+            const next = !dpsAppearance.autoHide;
+            void invoke("set_auto_hide_enabled", { enabled: next });
+            void saveSettings({
+              appearance: { dpsWindow: { autoHide: next } },
+            });
+          }}
+          className={cn(
+            "flex h-5 w-5 items-center justify-center rounded border transition focus-visible:outline-none active:bg-white/5",
+            dpsAppearance.autoHide
+              ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+              : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"
+          )}
+        >
+          <Pin className="h-3 w-3" />
+        </button>
+
         <button
           type="button"
           title="History"

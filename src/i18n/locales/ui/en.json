@@ -74,6 +74,8 @@
       "backgroundOpacityDescription": "Keeps room to make the main window more solid or more glass-like later.",
       "dpsWindowTitle": "DPS Window Appearance",
       "dpsWindowDescription": "These settings directly affect the floating DPS window and the preview below uses mock data.",
+      "autoHide": "Auto Hide",
+      "autoHideDescription": "Automatically hide DPS windows when the game is in the background and show them when the game is focused.",
       "autoResizeHeight": "Auto Resize Height",
       "autoReset": "Auto Reset Dps Meter",
       "autoResetDescription": "Automatically clear adn reset DPS data when main character is detetected.",
