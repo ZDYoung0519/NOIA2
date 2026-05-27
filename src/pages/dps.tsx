@@ -614,8 +614,8 @@ export default function DpsPage() {
   const displayName = useMemo(() => {
     const targetName =
       targetSelection.targetInfo?.targetName ||
-      targetSelection.targetInfo?.targetMobCode ||
-      targetSelection.targetInfo?.id ||
+      `Mob ${targetSelection.targetInfo?.targetMobCode}` ||
+      `Target ${targetSelection.targetInfo?.id}` ||
       maskNickname(mainPlayerName, settings.appearance.dpsWindow.maskNicknames) ||
       "No target";
     return targetName;

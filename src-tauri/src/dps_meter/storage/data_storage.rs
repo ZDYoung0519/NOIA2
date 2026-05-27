@@ -94,6 +94,7 @@ struct DataStorageInner {
     actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
     mob_id_code_map: BoundedMap<u32, u32>,
     mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
+    possible_boss_codes: HashSet<u32>,
     summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
     start_time_by_target: HashMap<u32, HashMap<u32, f64>>,
@@ -115,6 +116,7 @@ impl Default for DataStorageInner {
             actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             mob_id_hp_map: BoundedMap::new(MOB_METADATA_CAPACITY),
+            possible_boss_codes: HashSet::new(),
             summon_owner_map: BoundedMap::new(SUMMON_METADATA_CAPACITY),
             start_time: None,
             start_time_by_target: HashMap::new(),
@@ -204,7 +206,10 @@ impl DataStorage {
 
         let target_mob_code = inner.mob_id_code_map.get(&packet.target_id).copied();
         let is_target_boss = target_mob_code
-            .map(|mob_code| self.boss_code_list.contains(&mob_code))
+            .map(|mob_code| {
+                self.boss_code_list.contains(&mob_code)
+                    || inner.possible_boss_codes.contains(&mob_code)
+            })
             .unwrap_or(false);
 
         if config.boss_only && !is_target_boss {
@@ -313,17 +318,6 @@ impl DataStorage {
     }
 
     pub fn append_mob_hp(&self, target_id: u32, current_hp: u32) {
-        let config = self.config.read().unwrap().clone();
-        let inner = self.inner.read().unwrap();
-        let is_target_boss = inner
-            .mob_id_code_map
-            .get(&target_id)
-            .map(|mob_code| self.boss_code_list.contains(mob_code))
-            .unwrap_or(false);
-        drop(inner);
-        if config.boss_only && !is_target_boss {
-            return;
-        }
         let mut inner = self.inner.write().unwrap();
         let entry = inner
             .mob_id_hp_map
@@ -356,6 +350,22 @@ impl DataStorage {
             .unwrap()
             .mob_id_code_map
             .contains_key(&actor_id)
+    }
+
+    pub fn get_mob_code(&self, target_id: u32) -> Option<u32> {
+        self.inner.read().unwrap().mob_id_code_map.get(&target_id).copied()
+    }
+
+    pub fn add_possible_boss(&self, mob_code: u32) {
+        self.inner.write().unwrap().possible_boss_codes.insert(mob_code);
+    }
+
+    pub fn is_possible_boss(&self, mob_code: u32) -> bool {
+        self.inner.read().unwrap().possible_boss_codes.contains(&mob_code)
+    }
+
+    pub fn is_known_boss_code(&self, mob_code: u32) -> bool {
+        self.boss_code_list.contains(&mob_code)
     }
 
     pub fn set_main_actor(&self, actor_id: u32, actor_name: &str) {

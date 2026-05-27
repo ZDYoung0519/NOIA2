@@ -136,7 +136,10 @@ fn build_target_infos(
             let mob_code = mob_id_code_map.get(target_id).copied();
             let target_name = mob_code.and_then(|code| mob_code_name_map.get(&code).cloned());
             let is_boss = mob_code
-                .map(|code| boss_code_list.contains(&code))
+                .map(|code| {
+                    boss_code_list.contains(&code)
+                        || data_storage.is_possible_boss(code)
+                })
                 .unwrap_or(false);
             let (current_hp, max_hp) = mob_id_hp_map
                 .get(target_id)

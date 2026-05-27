@@ -752,6 +752,28 @@ impl StreamProcessor {
             return false;
         }
 
+        // Mark as possible boss if HP exceeds threshold
+        const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 1_000_000;
+        if mob_hp > POSSIBLE_BOSS_HP_THRESHOLD {
+            if let Some(mob_code) = self.data_storage.get_mob_code(mob_id) {
+                self.data_storage.add_possible_boss(mob_code);
+            }
+        }
+
+        // Skip non-boss targets hp changes when boss_only is enabled
+        {
+            let config = self.config.read().unwrap();
+            if config.boss_only {
+                let mob_code = self.data_storage.get_mob_code(mob_id);
+                let is_known = mob_code.is_some_and(|code| self.data_storage.is_known_boss_code(code));
+                let is_possible =
+                    mob_code.is_some_and(|code| self.data_storage.is_possible_boss(code));
+                if !is_known && !is_possible {
+                    return true;
+                }
+            }
+        }
+
         let is_first_hp_detection = !self.data_storage.mob_id_hp_snapshot().contains_key(&mob_id);
         self.data_storage.append_mob_hp(mob_id, mob_hp);
         if is_first_hp_detection {
