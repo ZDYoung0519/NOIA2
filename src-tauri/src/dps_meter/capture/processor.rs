@@ -753,7 +753,7 @@ impl StreamProcessor {
         }
 
         // Mark as possible boss if HP exceeds threshold
-        const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 1_000_000;
+        const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 10_000_000;
         if mob_hp > POSSIBLE_BOSS_HP_THRESHOLD {
             if let Some(mob_code) = self.data_storage.get_mob_code(mob_id) {
                 self.data_storage.add_possible_boss(mob_code);
