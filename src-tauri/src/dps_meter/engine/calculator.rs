@@ -136,10 +136,7 @@ fn build_target_infos(
             let mob_code = mob_id_code_map.get(target_id).copied();
             let target_name = mob_code.and_then(|code| mob_code_name_map.get(&code).cloned());
             let is_boss = mob_code
-                .map(|code| {
-                    boss_code_list.contains(&code)
-                        || data_storage.is_possible_boss(code)
-                })
+                .map(|code| boss_code_list.contains(&code) || data_storage.is_possible_boss(code))
                 .unwrap_or(false);
             let (current_hp, max_hp) = mob_id_hp_map
                 .get(target_id)
@@ -276,7 +273,6 @@ fn merge_summon_stats(
     merged
 }
 
-
 fn merge_time_map_min(
     raw_times: &HashMap<u32, HashMap<u32, f64>>,
     summon_owner_map: &HashMap<u32, u32>,
@@ -384,8 +380,6 @@ fn aggregate_skill_level_stats(stats: &HashMap<u32, SkillStats>) -> SkillStats {
     result
 }
 
-
-
 fn current_timestamp_seconds() -> f64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -400,10 +394,7 @@ fn build_last_target_all_players_overview_stats(
     aggregated_stats: &HashMap<u32, HashMap<u32, SkillStats>>,
     target_infos: &HashMap<u32, TargetInfo>,
     actor_infos: &HashMap<u32, ActorInfo>,
-) -> (
-    Option<TargetInfo>,
-    Vec<PlayerOverviewStat>,
-) {
+) -> (Option<TargetInfo>, Vec<PlayerOverviewStat>) {
     let target_id = match last_target_id {
         Some(id) => id,
         None => return (None, Vec::new()),
@@ -426,10 +417,7 @@ fn build_last_target_all_players_overview_stats(
         .cloned()
         .fold(0.0_f64, f64::max);
 
-    let total_target_damage: u64 = player_stats
-        .values()
-        .map(|stats| stats.total_damage)
-        .sum();
+    let total_target_damage: u64 = player_stats.values().map(|stats| stats.total_damage).sum();
 
     let mut overview: Vec<PlayerOverviewStat> = player_stats
         .iter()
@@ -469,7 +457,11 @@ fn build_last_target_all_players_overview_stats(
                     .unwrap_or_default(),
                 counts: stats.counts,
                 total_damage: stats.total_damage,
-                min_damage: if stats.min_damage == u64::MAX { 0 } else { stats.min_damage },
+                min_damage: if stats.min_damage == u64::MAX {
+                    0
+                } else {
+                    stats.min_damage
+                },
                 max_damage: stats.max_damage,
                 special_counts: stats.special_counts.clone(),
                 dps,
@@ -483,5 +475,3 @@ fn build_last_target_all_players_overview_stats(
 
     (Some(target_info), overview)
 }
-
-

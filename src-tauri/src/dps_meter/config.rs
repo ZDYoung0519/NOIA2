@@ -25,6 +25,8 @@ pub struct DpsMeterConfig {
     #[serde(default)]
     pub boss_only: bool,
     #[serde(default)]
+    pub show_possible_boss: bool,
+    #[serde(default)]
     pub my_muzhuang_only: bool,
     #[serde(default)]
     pub output_debug_log: bool,
@@ -39,6 +41,7 @@ impl Default for DpsMeterConfig {
             enable_resync_on_stall: DEFAULT_ENABLE_RESYNC_ON_STALL,
             resync_delay_ms: DEFAULT_RESYNC_DELAY_MS,
             boss_only: false,
+            show_possible_boss: false,
             my_muzhuang_only: false,
             output_debug_log: false,
         }

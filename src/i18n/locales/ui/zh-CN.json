@@ -118,6 +118,8 @@
       "memorySnapshotIntervalDescription": "后端向前端发送内存、CPU、ping 和缓冲区诊断信息的频率（以毫秒为单位）。",
       "bossOnly": "仅统计Boss",
       "bossOnlyDescription": "只计算对被识别为 Boss 的目标的伤害。",
+      "showPossibleBoss": "检测可能 Boss",
+      "showPossibleBossDescription": "开启后，血量很高的目标会被临时识别为可能 Boss。默认关闭。",
       "myMuzhuangOnly": "仅统计我的训练假人",
       "myMuzhuangOnlyDescription": "当目标是训练假人时，仅计算您自己的角色造成的伤害。",
       "autoHide": "自动隐藏",

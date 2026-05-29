@@ -159,6 +159,8 @@ declare
   v_boss_max_party_total_damage bigint;
   v_team_battle_duration double precision := 0;
   v_payload jsonb;
+  v_rank_candidate_count integer := 0;
+  v_detail_candidate_count integer := 0;
   v_ranked_player_count integer := 0;
 begin
   v_payload := public.sanitize_aion2_dps_payload(coalesce(p_payload, '{}'::jsonb));
@@ -204,7 +206,8 @@ begin
     2300334, 2300335, 2300336,
     2300353, 2300354, 2300355,
     2301006, 2301007, 2301014,
-    2301209, 2301207, 2301208
+    2301209, 2301207, 2301208,
+    2301055, 2301059, 2301060, 2301067
   ])) then
       raise exception
         'mobcode (%) not allowed',
@@ -241,7 +244,150 @@ begin
     end if;
   end if;
 
-  if v_target_mob_code <> 2400032 then
+  -- 写入任何数据前，先计算本次上传中哪些玩家刷新了排行榜。
+  -- aion2_dps 只作为“刷新纪录的战斗详情/历史记录”保存：
+  -- 如果本次上传里所有玩家的 DPS 都小于或等于已有排行榜 DPS，
+  -- 那么不保存这条战斗详情，只返回一次成功的空处理。
+  with player_stats as (
+    select
+      stats.key as actor_id,
+      stats.value as stat,
+      actor.value as actor_info
+    from jsonb_each(coalesce(v_payload #> '{data,thisTargetAllPlayerStats}', '{}'::jsonb)) stats
+    left join jsonb_each(coalesce(v_payload #> '{data,combatInfos,actorInfos}', '{}'::jsonb)) actor
+      on actor.key = stats.key
+  ),
+  player_rows as (
+    select
+      v_target_mob_code as target_mob_code,
+      coalesce(nullif(trim(actor_info->>'actorName'), ''), '') as main_actor_name,
+      coalesce(nullif(trim(actor_info->>'actorServerId'), ''), '') as main_actor_server_id,
+      coalesce(nullif(trim(actor_info->>'actorClass'), ''), '') as main_actor_class,
+      coalesce(nullif(stat->>'total_damage', '')::bigint, 0) as main_actor_damage,
+      greatest(
+        0,
+        coalesce(nullif(v_payload->'battle_last_time'->>actor_id, '')::double precision, 0)
+          - coalesce(nullif(v_payload->'battle_start_time'->>actor_id, '')::double precision, 0)
+      ) as main_actor_battle_duration
+    from player_stats
+  ),
+  rank_candidates as (
+    -- 玩家只有在“该 boss 还没有排行榜记录”或“本次 DPS 严格更高”时，
+    -- 才会成为排行榜候选。相同 DPS 不覆盖，避免用伤害量或时间打破平局，
+    -- 让“最高 DPS 记录”的语义保持简单明确。
+    select
+      p.*,
+      p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) as main_actor_dps
+    from player_rows p
+    left join public.aion2_dps_rank r
+      on r.main_actor_name = p.main_actor_name
+      and r.main_actor_server_id = p.main_actor_server_id
+      and r.target_mob_code = p.target_mob_code
+    where p.main_actor_name <> ''
+      and p.main_actor_damage > 0
+      and p.main_actor_battle_duration > 0
+      and (
+        r.id is null
+        or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > r.main_actor_dps
+      )
+      and (
+        -- 还必须能进入该 boss 对应职业排行榜前 1000，才算真正刷新榜单。
+        -- 当前职业榜不足 1000 人时，任意刷新个人最高 DPS 的玩家都可以进入。
+        (
+          select count(*)
+          from public.aion2_dps_rank boss_rank
+          where boss_rank.target_mob_code = p.target_mob_code
+            and boss_rank.main_actor_class = p.main_actor_class
+        ) < 1000
+        or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > (
+          select coalesce(min(top_rank.main_actor_dps), 0)
+          from (
+            select boss_rank.main_actor_dps
+            from public.aion2_dps_rank boss_rank
+            where boss_rank.target_mob_code = p.target_mob_code
+              and boss_rank.main_actor_class = p.main_actor_class
+            order by boss_rank.main_actor_dps desc
+            limit 1000
+          ) top_rank
+        )
+      )
+  )
+  select count(*)::integer
+  into v_rank_candidate_count
+  from rank_candidates;
+
+  -- 完整战斗详情只给更稀缺的高价值记录保存：
+  -- 玩家除了需要刷新自己的最高 DPS，还必须进入该 boss 对应职业榜前 50。
+  -- 如果只进入职业榜前 1000、但没有进入前 50，则只更新 aion2_dps_rank 轻量数据。
+  with player_stats as (
+    select
+      stats.key as actor_id,
+      stats.value as stat,
+      actor.value as actor_info
+    from jsonb_each(coalesce(v_payload #> '{data,thisTargetAllPlayerStats}', '{}'::jsonb)) stats
+    left join jsonb_each(coalesce(v_payload #> '{data,combatInfos,actorInfos}', '{}'::jsonb)) actor
+      on actor.key = stats.key
+  ),
+  player_rows as (
+    select
+      v_target_mob_code as target_mob_code,
+      coalesce(nullif(trim(actor_info->>'actorName'), ''), '') as main_actor_name,
+      coalesce(nullif(trim(actor_info->>'actorServerId'), ''), '') as main_actor_server_id,
+      coalesce(nullif(trim(actor_info->>'actorClass'), ''), '') as main_actor_class,
+      coalesce(nullif(stat->>'total_damage', '')::bigint, 0) as main_actor_damage,
+      greatest(
+        0,
+        coalesce(nullif(v_payload->'battle_last_time'->>actor_id, '')::double precision, 0)
+          - coalesce(nullif(v_payload->'battle_start_time'->>actor_id, '')::double precision, 0)
+      ) as main_actor_battle_duration
+    from player_stats
+  ),
+  detail_candidates as (
+    select
+      p.*,
+      p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) as main_actor_dps
+    from player_rows p
+    left join public.aion2_dps_rank r
+      on r.main_actor_name = p.main_actor_name
+      and r.main_actor_server_id = p.main_actor_server_id
+      and r.target_mob_code = p.target_mob_code
+    where p.main_actor_name <> ''
+      and p.main_actor_damage > 0
+      and p.main_actor_battle_duration > 0
+      and (
+        r.id is null
+        or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > r.main_actor_dps
+      )
+      and (
+        (
+          select count(*)
+          from public.aion2_dps_rank boss_rank
+          where boss_rank.target_mob_code = p.target_mob_code
+            and boss_rank.main_actor_class = p.main_actor_class
+        ) < 50
+        or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > (
+          select coalesce(min(top_rank.main_actor_dps), 0)
+          from (
+            select boss_rank.main_actor_dps
+            from public.aion2_dps_rank boss_rank
+            where boss_rank.target_mob_code = p.target_mob_code
+              and boss_rank.main_actor_class = p.main_actor_class
+            order by boss_rank.main_actor_dps desc
+            limit 50
+          ) top_rank
+        )
+      )
+  )
+  select count(*)::integer
+  into v_detail_candidate_count
+  from detail_candidates;
+
+  -- 只有至少一个玩家刷新排行榜时，才保存完整战斗详情。
+  -- 训练假人仍然可以更新排行榜，但不会保存到 aion2_dps 历史详情表。
+  -- 只有至少一个玩家进入该 boss 对应职业榜前 50 时，才保存完整战斗详情。
+  -- 职业榜 50 名之外但 1000 名以内的记录，只更新 aion2_dps_rank 轻量数据。
+  -- 训练假人仍然可以更新排行榜，但不会保存到 aion2_dps 历史详情表。
+  if v_target_mob_code <> 2400032 and v_detail_candidate_count > 0 then
     insert into public.aion2_dps (
       record_id,
       created_at,
@@ -309,106 +455,144 @@ begin
     get diagnostics v_trimmed_count = row_count;
   end if;
 
-  insert into public.aion2_dps_rank (
-    record_id,
-    battle_ended_at,
-    target_mob_code,
-    target_name,
-    is_boss,
-    target_max_hp,
-    team_battle_duration,
-    party_total_damage,
-    team_dps,
-    main_actor_name,
-    main_actor_server_id,
-    main_actor_class,
-    main_actor_damage,
-    main_actor_battle_duration,
-    main_actor_dps
-  )
-  with player_stats as (
-    select
-      stats.key as actor_id,
-      stats.value as stat,
-      actor.value as actor_info
-    from jsonb_each(coalesce(v_payload #> '{data,thisTargetAllPlayerStats}', '{}'::jsonb)) stats
-    left join jsonb_each(coalesce(v_payload #> '{data,combatInfos,actorInfos}', '{}'::jsonb)) actor
-      on actor.key = stats.key
-  ),
-  player_rows as (
-    select
-      v_record_id as record_id,
-      nullif(v_payload->>'battle_ended_at', '')::timestamptz as battle_ended_at,
-      v_target_mob_code as target_mob_code,
-      nullif(v_payload->>'target_name', '') as target_name,
-      coalesce((v_payload->>'is_boss')::boolean, false) as is_boss,
-      v_target_max_hp as target_max_hp,
-      v_team_battle_duration as team_battle_duration,
-      v_party_total_damage as party_total_damage,
-      coalesce((v_payload->>'team_dps')::double precision, 0) as team_dps,
-      coalesce(nullif(trim(actor_info->>'actorName'), ''), '') as main_actor_name,
-      coalesce(nullif(trim(actor_info->>'actorServerId'), ''), '') as main_actor_server_id,
-      coalesce(nullif(trim(actor_info->>'actorClass'), ''), '') as main_actor_class,
-      coalesce(nullif(stat->>'total_damage', '')::bigint, 0) as main_actor_damage,
-      greatest(
-        0,
-        coalesce(nullif(v_payload->'battle_last_time'->>actor_id, '')::double precision, 0)
-          - coalesce(nullif(v_payload->'battle_start_time'->>actor_id, '')::double precision, 0)
-      ) as main_actor_battle_duration
-    from player_stats
-  )
-  select
-    record_id,
-    battle_ended_at,
-    target_mob_code,
-    target_name,
-    is_boss,
-    target_max_hp,
-    team_battle_duration,
-    party_total_damage,
-    team_dps,
-    main_actor_name,
-    main_actor_server_id,
-    main_actor_class,
-    main_actor_damage,
-    main_actor_battle_duration,
-    main_actor_damage / nullif(main_actor_battle_duration, 0) as main_actor_dps
-  from player_rows
-  where main_actor_name <> ''
-    and main_actor_damage > 0
-    and main_actor_battle_duration > 0
-  on conflict (main_actor_name, main_actor_server_id, target_mob_code)
-  do update
-  set
-    record_id = excluded.record_id,
-    battle_ended_at = excluded.battle_ended_at,
-    target_name = excluded.target_name,
-    is_boss = excluded.is_boss,
-    target_max_hp = excluded.target_max_hp,
-    team_battle_duration = excluded.team_battle_duration,
-    party_total_damage = excluded.party_total_damage,
-    team_dps = excluded.team_dps,
-    main_actor_damage = excluded.main_actor_damage,
-    main_actor_battle_duration = excluded.main_actor_battle_duration,
-    main_actor_dps = excluded.main_actor_dps
-  where
-    excluded.main_actor_dps > public.aion2_dps_rank.main_actor_dps
-    or (
-      excluded.main_actor_dps = public.aion2_dps_rank.main_actor_dps
-      and excluded.main_actor_damage > public.aion2_dps_rank.main_actor_damage
+  -- 只更新真正刷新 DPS 的玩家排行榜记录。
+  -- aion2_dps_rank 保持每个“角色 + 服务器 + boss”只有一条最高 DPS 记录，
+  -- 没有刷新纪录的上传不会造成无意义的行更新和索引维护。
+  if v_rank_candidate_count > 0 then
+    insert into public.aion2_dps_rank (
+      record_id,
+      battle_ended_at,
+      target_mob_code,
+      target_name,
+      is_boss,
+      target_max_hp,
+      team_battle_duration,
+      party_total_damage,
+      team_dps,
+      main_actor_name,
+      main_actor_server_id,
+      main_actor_class,
+      main_actor_damage,
+      main_actor_battle_duration,
+      main_actor_dps
     )
-    or (
-      excluded.main_actor_dps = public.aion2_dps_rank.main_actor_dps
-      and excluded.main_actor_damage = public.aion2_dps_rank.main_actor_damage
-      and coalesce(excluded.battle_ended_at, '-infinity'::timestamptz)
-        > coalesce(public.aion2_dps_rank.battle_ended_at, '-infinity'::timestamptz)
-    );
+    with player_stats as (
+      select
+        stats.key as actor_id,
+        stats.value as stat,
+        actor.value as actor_info
+      from jsonb_each(coalesce(v_payload #> '{data,thisTargetAllPlayerStats}', '{}'::jsonb)) stats
+      left join jsonb_each(coalesce(v_payload #> '{data,combatInfos,actorInfos}', '{}'::jsonb)) actor
+        on actor.key = stats.key
+    ),
+    player_rows as (
+      select
+        v_record_id as record_id,
+        nullif(v_payload->>'battle_ended_at', '')::timestamptz as battle_ended_at,
+        v_target_mob_code as target_mob_code,
+        nullif(v_payload->>'target_name', '') as target_name,
+        coalesce((v_payload->>'is_boss')::boolean, false) as is_boss,
+        v_target_max_hp as target_max_hp,
+        v_team_battle_duration as team_battle_duration,
+        v_party_total_damage as party_total_damage,
+        coalesce((v_payload->>'team_dps')::double precision, 0) as team_dps,
+        coalesce(nullif(trim(actor_info->>'actorName'), ''), '') as main_actor_name,
+        coalesce(nullif(trim(actor_info->>'actorServerId'), ''), '') as main_actor_server_id,
+        coalesce(nullif(trim(actor_info->>'actorClass'), ''), '') as main_actor_class,
+        coalesce(nullif(stat->>'total_damage', '')::bigint, 0) as main_actor_damage,
+        greatest(
+          0,
+          coalesce(nullif(v_payload->'battle_last_time'->>actor_id, '')::double precision, 0)
+            - coalesce(nullif(v_payload->'battle_start_time'->>actor_id, '')::double precision, 0)
+        ) as main_actor_battle_duration
+      from player_stats
+    ),
+    rank_candidates as (
+      -- 在更新排行榜前重新计算一次候选玩家。
+      -- 这里重复使用严格 DPS 比较，是为了在并发队列消费时，
+      -- 避免较低 DPS 的记录覆盖刚刚写入的更高 DPS 记录。
+      select
+        p.*,
+        p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) as main_actor_dps
+      from player_rows p
+      left join public.aion2_dps_rank r
+        on r.main_actor_name = p.main_actor_name
+        and r.main_actor_server_id = p.main_actor_server_id
+        and r.target_mob_code = p.target_mob_code
+      where p.main_actor_name <> ''
+        and p.main_actor_damage > 0
+        and p.main_actor_battle_duration > 0
+        and (
+          r.id is null
+          or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > r.main_actor_dps
+        )
+        and (
+          -- 与保存 aion2_dps 前的候选判断保持一致：
+          -- 没有进入该 boss 对应职业前 1000 的记录，不写入/更新排行榜。
+          (
+            select count(*)
+            from public.aion2_dps_rank boss_rank
+            where boss_rank.target_mob_code = p.target_mob_code
+              and boss_rank.main_actor_class = p.main_actor_class
+          ) < 1000
+          or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > (
+            select coalesce(min(top_rank.main_actor_dps), 0)
+            from (
+              select boss_rank.main_actor_dps
+              from public.aion2_dps_rank boss_rank
+              where boss_rank.target_mob_code = p.target_mob_code
+                and boss_rank.main_actor_class = p.main_actor_class
+              order by boss_rank.main_actor_dps desc
+              limit 1000
+            ) top_rank
+          )
+        )
+    )
+    select
+      record_id,
+      battle_ended_at,
+      target_mob_code,
+      target_name,
+      is_boss,
+      target_max_hp,
+      team_battle_duration,
+      party_total_damage,
+      team_dps,
+      main_actor_name,
+      main_actor_server_id,
+      main_actor_class,
+      main_actor_damage,
+      main_actor_battle_duration,
+      main_actor_dps
+    from rank_candidates
+    on conflict (main_actor_name, main_actor_server_id, target_mob_code)
+    do update
+    set
+      record_id = excluded.record_id,
+      battle_ended_at = excluded.battle_ended_at,
+      target_name = excluded.target_name,
+      is_boss = excluded.is_boss,
+      target_max_hp = excluded.target_max_hp,
+      team_battle_duration = excluded.team_battle_duration,
+      party_total_damage = excluded.party_total_damage,
+      team_dps = excluded.team_dps,
+      main_actor_class = excluded.main_actor_class,
+      main_actor_damage = excluded.main_actor_damage,
+      main_actor_battle_duration = excluded.main_actor_battle_duration,
+      main_actor_dps = excluded.main_actor_dps
+    -- 只允许严格更高 DPS 覆盖。
+    -- DPS 相同即使伤害更高、战斗时间更新，也不会替换当前最高纪录。
+    where excluded.main_actor_dps > public.aion2_dps_rank.main_actor_dps;
 
-  get diagnostics v_ranked_player_count = row_count;
+    get diagnostics v_ranked_player_count = row_count;
+  end if;
 
   return jsonb_build_object(
     'success', true,
     'record_id', v_record_id,
+    'rank_candidate_count', v_rank_candidate_count,
+    'detail_candidate_count', v_detail_candidate_count,
+    'dps_record_saved', v_target_mob_code <> 2400032 and v_detail_candidate_count > 0,
     'trimmed_count', v_trimmed_count,
     'ranked_player_count', v_ranked_player_count
   );
@@ -473,7 +657,7 @@ $$;
 
 create or replace function public.process_aion2_dps_ingest_queue_batch(
   p_batch_size integer default 500,
-  p_max_attempts integer default 3
+  p_max_attempts integer default 1
 )
 returns table (
   picked_count integer,
@@ -496,7 +680,7 @@ begin
     select id, payload, keep_limit, attempts
     from public.aion2_dps_ingest_queue
     where status in ('pending', 'failed')
-      and attempts < greatest(1, coalesce(p_max_attempts, 3))
+      and attempts < greatest(1, coalesce(p_max_attempts, 1))
     order by created_at asc, id asc
     limit v_batch_size
     for update skip locked
@@ -530,6 +714,71 @@ begin
 end;
 $$;
 
+create index if not exists idx_aion2_dps_rank_class_top
+  on public.aion2_dps_rank (
+    target_mob_code,
+    main_actor_class,
+    main_actor_dps desc,
+    main_actor_damage desc,
+    battle_ended_at desc,
+    id desc
+  );
+
+create or replace function public.delete_aion2_dps_not_in_class_top_50_batch(
+  p_limit integer default 1000
+)
+returns table (
+  deleted_count integer
+)
+language plpgsql
+security definer
+as $$
+begin
+  -- aion2_dps 只保存完整战斗详情；轻量榜单数据仍然保留在 aion2_dps_rank。
+  -- 这里按“boss + 职业”计算前 50 名，只保留这些榜单行引用到的 record_id。
+  with ranked_records as (
+    select record_id
+    from (
+      select
+        record_id,
+        row_number() over (
+          partition by target_mob_code, main_actor_class
+          order by
+            main_actor_dps desc nulls last,
+            main_actor_damage desc nulls last,
+            battle_ended_at desc nulls last,
+            id desc
+        ) as rn
+      from public.aion2_dps_rank
+      where record_id is not null
+    ) ranked
+    where rn <= 50
+  ),
+  doomed as (
+    select d.record_id
+    from public.aion2_dps d
+    where not exists (
+      select 1
+      from ranked_records r
+      where r.record_id = d.record_id
+    )
+    order by d.created_at asc, d.record_id asc
+    limit greatest(1, least(coalesce(p_limit, 1000), 10000))
+  ),
+  deleted as (
+    delete from public.aion2_dps d
+    using doomed
+    where d.record_id = doomed.record_id
+    returning d.record_id
+  )
+  select count(*)::integer
+  into deleted_count
+  from deleted;
+
+  return next;
+end;
+$$;
+
 create extension if not exists pg_cron;
 
 select cron.unschedule(jobname)
@@ -541,7 +790,7 @@ select cron.schedule(
   '* * * * *',
   $$
     select *
-    from public.process_aion2_dps_ingest_queue_batch(500, 3);
+    from public.process_aion2_dps_ingest_queue_batch(50, 1);
   $$
 );
 
@@ -554,11 +803,27 @@ where jobname in (
 
 select cron.schedule(
   'cleanup-aion2-dps-ingest-queue-failed',
-  '0 0 * * *',
+  '*/15 * * * *',
   $$
     delete from public.aion2_dps_ingest_queue
     where status = 'failed'
-      and attempts >= 3;
+      and attempts >= 1;
+  $$
+);
+
+select cron.unschedule(jobname)
+from cron.job
+where jobname in (
+  'cleanup-aion2-dps-not-in-rank',
+  'cleanup-aion2-dps-not-in-class-top-50'
+);
+
+select cron.schedule(
+  'cleanup-aion2-dps-not-in-class-top-50',
+  '*/15 * * * *',
+  $$
+    select *
+    from public.delete_aion2_dps_not_in_class_top_50_batch(1000);
   $$
 );
 

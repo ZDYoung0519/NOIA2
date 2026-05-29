@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
-use crate::dps_meter::models::combat::{ SkillStats};
+use crate::dps_meter::models::combat::SkillStats;
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
 
@@ -198,7 +198,7 @@ impl DataStorage {
         }
 
         // let actor_id = packet.actor_id;
-        // 暂时不处理复制召唤链接，在前端获得dps snapshot后，聚合时会把复制召唤的伤害算到主人头上
+        // 如果是召唤物，把召唤物的伤害分配给他的owner
         let mut actor_id = packet.actor_id;
         if let Some(owner_id) = inner.summon_owner_map.get(&actor_id) {
             actor_id = *owner_id;
@@ -208,7 +208,7 @@ impl DataStorage {
         let is_target_boss = target_mob_code
             .map(|mob_code| {
                 self.boss_code_list.contains(&mob_code)
-                    || inner.possible_boss_codes.contains(&mob_code)
+                    || (config.show_possible_boss && inner.possible_boss_codes.contains(&mob_code))
             })
             .unwrap_or(false);
 
@@ -287,7 +287,6 @@ impl DataStorage {
                 .or_insert(0) += count;
         }
 
-
         if actor_id != packet.target_id {
             inner.last_target = Some(packet.target_id);
             if inner.main_actor_id == Some(actor_id) {
@@ -353,15 +352,34 @@ impl DataStorage {
     }
 
     pub fn get_mob_code(&self, target_id: u32) -> Option<u32> {
-        self.inner.read().unwrap().mob_id_code_map.get(&target_id).copied()
+        self.inner
+            .read()
+            .unwrap()
+            .mob_id_code_map
+            .get(&target_id)
+            .copied()
     }
 
     pub fn add_possible_boss(&self, mob_code: u32) {
-        self.inner.write().unwrap().possible_boss_codes.insert(mob_code);
+        if !self.config.read().unwrap().show_possible_boss {
+            return;
+        }
+        self.inner
+            .write()
+            .unwrap()
+            .possible_boss_codes
+            .insert(mob_code);
     }
 
     pub fn is_possible_boss(&self, mob_code: u32) -> bool {
-        self.inner.read().unwrap().possible_boss_codes.contains(&mob_code)
+        if !self.config.read().unwrap().show_possible_boss {
+            return false;
+        }
+        self.inner
+            .read()
+            .unwrap()
+            .possible_boss_codes
+            .contains(&mob_code)
     }
 
     pub fn is_known_boss_code(&self, mob_code: u32) -> bool {
@@ -387,7 +405,6 @@ impl DataStorage {
     pub fn get_dps_stats_snapshot(&self) -> HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>> {
         self.inner.read().unwrap().dps_stats.clone()
     }
-
 
     pub fn actor_id_name_snapshot(&self) -> HashMap<u32, String> {
         self.inner.read().unwrap().actor_id_name_map.as_hash_map()

@@ -25,7 +25,7 @@ create table if not exists public.aion2_dps_rank (
   updated_at timestamptz not null default now(),
 
   constraint aion2_dps_rank_unique_actor_per_boss
-    unique (target_mob_code, main_actor_name, main_actor_server_id, main_actor_class)
+    unique (main_actor_name, main_actor_server_id, target_mob_code)
 );
 
 create index if not exists idx_aion2_dps_rank_target_mob_code

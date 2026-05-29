@@ -1,5 +1,20 @@
 import { HistoryTargetRecord, SkillStats } from "@/types/aion2dps";
 import { supabase } from "@/lib/supabase/supabase";
+import { getKnownBossMobCodes } from "@/lib/aion2/npc-names";
+
+const EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES = ["2400032"];
+const ALLOWED_DPS_UPLOAD_MOB_CODES = new Set([
+  ...getKnownBossMobCodes(),
+  ...EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES,
+]);
+
+function isAllowedDpsUploadMobCode(mobCode: unknown) {
+  if (typeof mobCode !== "number" || !Number.isFinite(mobCode)) {
+    return false;
+  }
+
+  return ALLOWED_DPS_UPLOAD_MOB_CODES.has(String(mobCode));
+}
 
 function getSkillStatsTotalDamage(stats: SkillStats | undefined) {
   return Number(stats?.total_damage ?? 0);
@@ -34,6 +49,12 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
       .map((record) => {
         const targetIdKey = String(record.targetId);
         const targetInfo = record.combatInfos.targetInfos[targetIdKey];
+        const targetMobCode = targetInfo?.targetMobCode;
+
+        if (!isAllowedDpsUploadMobCode(targetMobCode)) {
+          return null;
+        }
+
         const actorInfos = record.combatInfos.actorInfos;
 
         const mainActorId = record.combatInfos.mainActorId;
@@ -92,7 +113,7 @@ export const uploadDpsDataBatch = async (records: HistoryTargetRecord[]) => {
           created_at: new Date().toISOString(),
           battle_ended_at:
             teamBattleLastTime > 0 ? new Date(teamBattleLastTime * 1000).toISOString() : null,
-          target_mob_code: targetInfo?.targetMobCode ?? null,
+          target_mob_code: targetMobCode,
           target_name: targetInfo?.targetName ?? null,
           is_boss: targetInfo?.isBoss ?? false,
           target_max_hp: targetInfo?.maxHp ?? null,

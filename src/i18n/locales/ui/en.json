@@ -129,6 +129,8 @@
       "resyncDelayDescription": "How long the parser can remain stalled at offset 0 before forcing a single-byte resync.",
       "bossOnly": "Boss Only",
       "bossOnlyDescription": "Only count damage against targets that are recognized as bosses.",
+      "showPossibleBoss": "Detect Possible Bosses",
+      "showPossibleBossDescription": "When enabled, targets with very high HP can be treated as possible bosses. Disabled by default.",
       "myMuzhuangOnly": "My Training Dummy Only",
       "myMuzhuangOnlyDescription": "When the target is a training dummy, only count damage dealt by your own character.",
       "autoResizeHeight": "Auto Resize Height",

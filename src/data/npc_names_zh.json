@@ -44735,5 +44735,33 @@
     "npcType": "",
     "npcSubType": "",
     "mainCategory": "monster"
+  },
+  "2301055": {
+    "name": "守護劍（左）",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301059": {
+    "name": "伊斯卡利爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301060": {
+    "name": "凱德利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301067": {
+    "name": "守護劍（右）",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
   }
 }

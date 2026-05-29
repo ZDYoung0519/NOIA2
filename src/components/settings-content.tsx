@@ -635,8 +635,12 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="follow">{t("settings.dps.detailWindowPositionFollow")}</SelectItem>
-                <SelectItem value="center">{t("settings.dps.detailWindowPositionCenter")}</SelectItem>
+                <SelectItem value="follow">
+                  {t("settings.dps.detailWindowPositionFollow")}
+                </SelectItem>
+                <SelectItem value="center">
+                  {t("settings.dps.detailWindowPositionCenter")}
+                </SelectItem>
               </SelectContent>
             </Select>
           }
@@ -932,6 +936,22 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 void saveSettings({
                   dpsMeter: {
                     bossOnly: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.showPossibleBoss")}
+          description={t("settings.dps.showPossibleBossDescription")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.showPossibleBoss}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    showPossibleBoss: checked,
                   },
                 });
               }}

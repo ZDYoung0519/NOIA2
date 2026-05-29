@@ -109,6 +109,8 @@
       "myMuzhuangOnlyDescription": "대상이 허수아비일 때 내 캐릭터가 준 피해만 집계합니다.",
       "outputDebugLog": "디버그 로그 출력",
       "outputDebugLogDescription": "추가 DPS 캡처 및 디스패처 디버그 로그를 백엔드 로그 파일에 기록합니다.",
+      "showPossibleBoss": "가능성 있는 보스 감지",
+      "showPossibleBossDescription": "활성화하면 HP가 매우 높은 대상을 임시 보스로 인식합니다. 기본값은 꺼짐입니다.",
       "runtimeGroup": "Runtime",
       "windowAppearanceGroup": "Window Appearance",
       "previewGroup": "DPS Preview",

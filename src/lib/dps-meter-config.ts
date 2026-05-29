@@ -10,6 +10,7 @@ export type DpsMeterConfig = {
   enableResyncOnStall: boolean;
   resyncDelayMs: number;
   bossOnly: boolean;
+  showPossibleBoss: boolean;
   myMuzhuangOnly: boolean;
   outputDebugLog: boolean;
 };
@@ -21,6 +22,7 @@ export const DEFAULT_DPS_METER_CONFIG: DpsMeterConfig = {
   enableResyncOnStall: true,
   resyncDelayMs: 500,
   bossOnly: true,
+  showPossibleBoss: false,
   myMuzhuangOnly: true,
   outputDebugLog: false,
 };
@@ -44,6 +46,7 @@ function normalizeDpsMeterConfig(input?: Partial<DpsMeterConfig>): DpsMeterConfi
     ...(input ?? {}),
     maxPacketSizeThreshold: normalizeMaxPacketSizeThreshold(input?.maxPacketSizeThreshold),
     enableResyncOnStall: input?.enableResyncOnStall ?? DEFAULT_DPS_METER_CONFIG.enableResyncOnStall,
+    showPossibleBoss: input?.showPossibleBoss ?? DEFAULT_DPS_METER_CONFIG.showPossibleBoss,
     resyncDelayMs: Number.isFinite(resyncDelayMs)
       ? Math.min(1000, Math.max(200, resyncDelayMs))
       : DEFAULT_DPS_METER_CONFIG.resyncDelayMs,

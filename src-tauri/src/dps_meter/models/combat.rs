@@ -30,8 +30,6 @@ impl Default for SkillStats {
     }
 }
 
-
-
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActorInfo {
