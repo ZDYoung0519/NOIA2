@@ -291,14 +291,14 @@ begin
         or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > r.main_actor_dps
       )
       and (
-        -- 还必须能进入该 boss 对应职业排行榜前 1000，才算真正刷新榜单。
-        -- 当前职业榜不足 1000 人时，任意刷新个人最高 DPS 的玩家都可以进入。
+        -- 还必须能进入该 boss 对应职业排行榜前 10000，才算真正刷新榜单。
+        -- 当前职业榜不足 10000 人时，任意刷新个人最高 DPS 的玩家都可以进入。
         (
           select count(*)
           from public.aion2_dps_rank boss_rank
           where boss_rank.target_mob_code = p.target_mob_code
             and boss_rank.main_actor_class = p.main_actor_class
-        ) < 1000
+        ) < 10000
         or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > (
           select coalesce(min(top_rank.main_actor_dps), 0)
           from (
@@ -307,7 +307,7 @@ begin
             where boss_rank.target_mob_code = p.target_mob_code
               and boss_rank.main_actor_class = p.main_actor_class
             order by boss_rank.main_actor_dps desc
-            limit 1000
+            limit 10000
           ) top_rank
         )
       )
@@ -318,7 +318,7 @@ begin
 
   -- 完整战斗详情只给更稀缺的高价值记录保存：
   -- 玩家除了需要刷新自己的最高 DPS，还必须进入该 boss 对应职业榜前 50。
-  -- 如果只进入职业榜前 1000、但没有进入前 50，则只更新 aion2_dps_rank 轻量数据。
+  -- 如果只进入职业榜前 10000、但没有进入前 50，则只更新 aion2_dps_rank 轻量数据。
   with player_stats as (
     select
       stats.key as actor_id,
@@ -534,7 +534,7 @@ begin
             from public.aion2_dps_rank boss_rank
             where boss_rank.target_mob_code = p.target_mob_code
               and boss_rank.main_actor_class = p.main_actor_class
-          ) < 1000
+          ) < 10000
           or p.main_actor_damage / nullif(p.main_actor_battle_duration, 0) > (
             select coalesce(min(top_rank.main_actor_dps), 0)
             from (
@@ -543,7 +543,7 @@ begin
               where boss_rank.target_mob_code = p.target_mob_code
                 and boss_rank.main_actor_class = p.main_actor_class
               order by boss_rank.main_actor_dps desc
-              limit 1000
+              limit 10000
             ) top_rank
           )
         )
@@ -725,7 +725,7 @@ create index if not exists idx_aion2_dps_rank_class_top
   );
 
 create or replace function public.delete_aion2_dps_not_in_class_top_50_batch(
-  p_limit integer default 1000
+  p_limit integer default 10000
 )
 returns table (
   deleted_count integer
@@ -823,7 +823,7 @@ select cron.schedule(
   '*/15 * * * *',
   $$
     select *
-    from public.delete_aion2_dps_not_in_class_top_50_batch(1000);
+    from public.delete_aion2_dps_not_in_class_top_50_batch(10000);
   $$
 );
 
