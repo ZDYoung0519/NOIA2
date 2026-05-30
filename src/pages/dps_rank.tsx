@@ -24,7 +24,6 @@ type TargetMobStat = {
 
 type RankMobSourceRow = {
   target_mob_code: number | string | null;
-  target_name: string | null;
   battle_ended_at?: string | null;
 };
 
@@ -166,14 +165,31 @@ function formatDateTime(value: string | null) {
   });
 }
 
-function getBossDisplayName(stat: TargetMobStat | undefined, mobCode: string) {
-  return stat?.target_name ?? `Boss ${mobCode}`;
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+function getBossDisplayName(_stat: TargetMobStat | undefined, mobCode: string) {
+  return getNpcDisplayName(mobCode);
 }
 
 function normalizeTargetMobStats(rows: TargetMobStat[]): TargetMobStat[] {
   return rows.map((row) => ({
     mob_code: String(row.mob_code),
-    target_name: row.target_name ?? `Boss ${String(row.mob_code)}`,
+    target_name: getNpcDisplayName(row.mob_code),
     last_battle_at: row.last_battle_at ?? null,
   }));
 }
@@ -193,7 +209,7 @@ function buildTargetMobStatsFromRankRows(rows: RankMobSourceRow[]): TargetMobSta
 
     grouped.set(mobCode, {
       mob_code: mobCode,
-      target_name: row.target_name ?? `Boss ${mobCode}`,
+      target_name: getNpcDisplayName(mobCode),
       last_battle_at: row.battle_ended_at ?? null,
     });
   }
@@ -207,8 +223,8 @@ async function loadRankBossNames(): Promise<TargetMobStat[]> {
   for (let from = 0; ; from += RANK_NAME_PAGE_SIZE) {
     const to = from + RANK_NAME_PAGE_SIZE - 1;
     const { data, error } = await supabase
-      .from("aion2_dps_rank")
-      .select("target_mob_code,target_name,battle_ended_at")
+      .from("dps_rank")
+      .select("target_mob_code,battle_ended_at")
       .eq("is_boss", true)
       .order("battle_ended_at", { ascending: false, nullsFirst: false })
       .range(from, to);
@@ -282,7 +298,7 @@ function DpsRankDetailDialog({
       setDetailLoading(true);
       try {
         const { data, error } = await supabase
-          .from("aion2_dps")
+          .from("dps_rank_records")
           .select("data")
           .eq("record_id", selectedRank.recordId)
           .maybeSingle();
@@ -565,36 +581,14 @@ export default function DpsRankPage() {
         setRankErrorMessage(null);
 
         const from = (page - 1) * PAGE_SIZE;
-        const to = from + PAGE_SIZE; // 多取 1 条，用来判断是否还有下一页
-
-        let query = supabase
-          .from("aion2_dps_rank")
-          .select(
-            `
-            record_id,
-            battle_ended_at,
-            main_actor_name,
-            main_actor_class,
-            main_actor_server_id,
-            main_actor_damage,
-            main_actor_battle_duration,
-            main_actor_dps,
-            party_total_damage,
-            team_dps
-          `
-          )
-          .eq("target_mob_code", mobCode)
-          .order(rankSortMode === "team" ? "team_dps" : "main_actor_dps", {
-            ascending: false,
-            nullsFirst: false,
-          })
-          .range(from, to);
-
-        if (selectedClass !== "ALL") {
-          query = query.eq("main_actor_class", selectedClass);
-        }
-
-        const { data, error } = await query;
+        const { data, error } = await supabase.rpc("get_stat_by_class_mob", {
+          p_mob_code: mobCode,
+          p_actor_class: selectedClass,
+          p_limit: PAGE_SIZE + 1,
+          p_offset: from,
+          p_min_boss_hp_ratio: 0,
+          p_sort_mode: rankSortMode,
+        });
 
         if (requestId !== battleRanksRequestIdRef.current) {
           return;
@@ -624,7 +618,7 @@ export default function DpsRankPage() {
 
         console.error("Failed to load battle ranks:", error);
         setBattleRanks([]);
-        setRankErrorMessage(error instanceof Error ? error.message : "Failed to load battle ranks");
+        setRankErrorMessage(getErrorMessage(error, "Failed to load battle ranks"));
       } finally {
         if (requestId === battleRanksRequestIdRef.current) {
           setRankLoading(false);

@@ -33,7 +33,11 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/supabase";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { DpsDetailPayload, HistoryTargetRecord } from "@/types/aion2dps";
-import { getDungeonDisplayNameByMobCode } from "@/lib/aion2/npc-names";
+import {
+  getDungeonDifficultyByMobCode,
+  getDungeonDisplayNameByMobCode,
+  getNpcDisplayName,
+} from "@/lib/aion2/npc-names";
 
 function CharacterBanner({
   profile,
@@ -597,6 +601,20 @@ function formatDateTime(value: string | null) {
   });
 }
 
+function getBossDisplayName(mobCode: number | null) {
+  return mobCode == null ? "未知 Boss" : getNpcDisplayName(mobCode);
+}
+
+function getDungeonDisplayLabel(mobCode: number | null) {
+  if (mobCode == null) {
+    return "未知副本";
+  }
+
+  return [getDungeonDisplayNameByMobCode(mobCode), getDungeonDifficultyByMobCode(mobCode)]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function DpsRecordTable({
   dpsRows,
   showRank = false,
@@ -649,7 +667,7 @@ function DpsRecordTable({
       setDetailLoading(true);
       try {
         const { data, error } = await supabase
-          .from("aion2_dps")
+          .from("dps_rank_records")
           .select("data")
           .eq("record_id", selectedRow.record_id)
           .maybeSingle();
@@ -708,12 +726,10 @@ function DpsRecordTable({
                 <tr key={row.record_id} className="border-t border-white/10 hover:bg-white/[0.03]">
                   <td className="px-4 py-3">
                     <div className="font-medium text-white">
-                      {row.target_name ?? `Boss ${row.target_mob_code ?? "-"}`}
+                      {getBossDisplayName(row.target_mob_code)}
                     </div>
                     <div className="mt-1 text-xs text-white/40">
-                      {row.target_mob_code
-                        ? `${getDungeonDisplayNameByMobCode(row.target_mob_code)} · MobCode: ${row.target_mob_code}`
-                        : "未知副本"}
+                      {getDungeonDisplayLabel(row.target_mob_code)}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-white/75">{formatDateTime(row.battle_ended_at)}</td>
@@ -774,7 +790,7 @@ function DpsRecordTable({
           {/* ================= Header ================= */}
           <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
             <DialogTitle className="text-lg font-semibold">
-              {selectedRow?.target_name ?? `Boss ${selectedRow?.target_mob_code ?? "-"}`} 伤害详情
+              {getBossDisplayName(selectedRow?.target_mob_code ?? null)} 伤害详情
             </DialogTitle>
             <p className="text-sm text-white/40">点击左侧玩家查看技能明细</p>
           </DialogHeader>
@@ -923,7 +939,7 @@ export default function CharacterViewPage() {
     setDpsHistoryLoading(true);
     try {
       const query = supabase
-        .from("aion2_dps")
+        .from("dps_rank_records")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
         )
@@ -950,7 +966,7 @@ export default function CharacterViewPage() {
     setDpsRankLoading(true);
     try {
       const query = supabase
-        .from("aion2_dps_rank")
+        .from("dps_rank")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
         )
@@ -970,7 +986,7 @@ export default function CharacterViewPage() {
           }
 
           const { count, error } = await supabase
-            .from("aion2_dps_rank")
+            .from("dps_rank")
             .select("record_id", { count: "exact", head: true })
             .eq("target_mob_code", row.target_mob_code)
             .gt("main_actor_dps", Number(row.main_actor_dps ?? 0));

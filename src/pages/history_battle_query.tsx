@@ -94,7 +94,7 @@ export default function HistoryBattleQueryPage() {
       setHasSearched(true);
 
       const { data, error } = await supabase
-        .from("aion2_dps")
+        .from("dps_rank_records")
         .select(
           "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage"
         )

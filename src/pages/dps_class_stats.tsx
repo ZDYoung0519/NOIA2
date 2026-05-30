@@ -314,7 +314,7 @@ export default function DpsClassStatsPage() {
               Boss 职业表现对比
             </h1>
             <p className="text-muted-foreground mt-2 text-sm leading-6">
-              基于 aion2_dps_rank 中每个玩家在对应 Boss 的最好成绩，按职业统计前 10%
+              基于 dps_rank 中每个玩家在对应 Boss 的最好成绩，按职业统计前 10%
               平均秒伤、中位数秒伤和总体平均秒伤。
             </p>
           </div>
@@ -487,7 +487,7 @@ export default function DpsClassStatsPage() {
               <BarChart3 className="text-muted-foreground mb-3" />
               <p className="font-semibold">暂无职业统计</p>
               <p className="text-muted-foreground mt-1 text-sm">
-                当前 Boss 还没有可用于统计的 aion2_dps_rank 记录。
+                当前 Boss 还没有可用于统计的 dps_rank 记录。
               </p>
             </div>
           )}

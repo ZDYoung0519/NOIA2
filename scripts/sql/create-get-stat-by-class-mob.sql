@@ -1,18 +1,26 @@
-create or replace function public.get_stat_by_class_mob(
+-- 删除旧签名，避免 PostgREST 在带默认参数的多个重载之间无法确定调用目标。
+drop function if exists public.get_stat_by_class_mob(bigint, text, integer, integer);
+drop function if exists public.get_stat_by_class_mob(bigint, text, integer, integer, double precision);
+
+create function public.get_stat_by_class_mob(
   p_mob_code bigint,
   p_actor_class text default 'ALL',
   p_limit integer default 20,
   p_offset integer default 0,
-  p_min_boss_hp_ratio double precision default 0
+  p_min_boss_hp_ratio double precision default 0,
+  p_sort_mode text default 'personal'
 )
 returns table (
   record_id text,
+  battle_ended_at timestamptz,
   main_actor_name text,
+  main_actor_server_id text,
   main_actor_class text,
   main_actor_damage bigint,
   main_actor_battle_duration double precision,
   main_actor_dps double precision,
   party_total_damage bigint,
+  team_dps double precision,
   total_count bigint
 )
 language sql
@@ -22,20 +30,23 @@ as $$
     select
       r.target_mob_code,
       max(coalesce(r.party_total_damage, 0)) as max_party_total_damage
-    from public.aion2_dps_rank r
+    from public.dps_rank r
     where r.target_mob_code = p_mob_code
     group by r.target_mob_code
   ),
   filtered as (
     select
       r.record_id,
+      r.battle_ended_at,
       r.main_actor_name,
+      r.main_actor_server_id,
       r.main_actor_class,
       r.main_actor_damage,
       r.main_actor_battle_duration,
       r.main_actor_dps,
-      r.party_total_damage
-    from public.aion2_dps_rank r
+      r.party_total_damage,
+      r.team_dps
+    from public.dps_rank r
     left join boss_max_damage b
       on b.target_mob_code = r.target_mob_code
     where r.target_mob_code = p_mob_code
@@ -54,15 +65,20 @@ as $$
   )
   select
     f.record_id,
+    f.battle_ended_at,
     f.main_actor_name,
+    f.main_actor_server_id,
     f.main_actor_class,
     f.main_actor_damage,
     f.main_actor_battle_duration,
     f.main_actor_dps,
     f.party_total_damage,
+    f.team_dps,
     count(*) over() as total_count
   from filtered f
   order by
+    case when p_sort_mode = 'team' then f.team_dps end desc nulls last,
+    case when p_sort_mode <> 'team' then f.main_actor_dps end desc nulls last,
     f.main_actor_dps desc nulls last,
     f.main_actor_damage desc nulls last,
     f.record_id desc
@@ -89,7 +105,7 @@ as $$
     select
       r.main_actor_class,
       r.main_actor_dps
-    from public.aion2_dps_rank r
+    from public.dps_rank r
     where r.target_mob_code = p_target_mob_code
       and nullif(trim(r.main_actor_class), '') is not null
       and coalesce(r.main_actor_dps, 0) > 0
@@ -121,8 +137,10 @@ as $$
 $$;
 
 create index if not exists idx_aion2_dps_rank_mob_class_dps
-  on public.aion2_dps_rank (
+  on public.dps_rank (
     target_mob_code,
     main_actor_class,
     main_actor_dps desc
   );
+
+notify pgrst, 'reload schema';
