@@ -10,6 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+
+const DPS_LIGHT_GUIDE_SUPPRESS_KEY = "DPS_LIGHT_GUIDE_SUPPRESS";
 
 const DPS_GUIDE_STEPS = [
   {
@@ -38,6 +41,7 @@ type DpsLightGuideDialogProps = {
 export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogProps) {
   const [guideStep, setGuideStep] = useState(0);
   const [npcapOk, setNpcapOk] = useState<boolean | null>(null);
+  const [suppressNextTime, setSuppressNextTime] = useState(false);
   const currentGuideStep = DPS_GUIDE_STEPS[guideStep];
 
   const checkNpcap = async () => {
@@ -49,9 +53,13 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      localStorage.setItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY, suppressNextTime ? "1" : "0");
+    }
     onOpenChange(nextOpen);
     if (nextOpen) {
       setGuideStep(0);
+      setSuppressNextTime(localStorage.getItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY) === "1");
       void checkNpcap();
     }
   };
@@ -150,14 +158,22 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
             <img
               src={currentGuideStep.image}
               alt={currentGuideStep.alt}
-              className="mx-auto max-h-[62vh] w-full rounded-md border border-white/10 object-contain"
+              className={`mx-auto w-full rounded-md border border-white/10 object-contain ${
+                guideStep === 0 ? "max-h-[52vh]" : "max-h-[62vh]"
+              }`}
             />
           )}
         </div>
 
         <DialogFooter className="items-center gap-2 sm:justify-between">
-          <div className="text-xs text-white/45">
-            {guideStep + 1} / {DPS_GUIDE_STEPS.length}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs text-white/60">
+              <Switch checked={suppressNextTime} onCheckedChange={setSuppressNextTime} />
+              <span>下次不再提示</span>
+            </label>
+            <div className="text-xs text-white/45">
+              {guideStep + 1} / {DPS_GUIDE_STEPS.length}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button

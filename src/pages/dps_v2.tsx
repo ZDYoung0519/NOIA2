@@ -56,25 +56,6 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
-function colorToRgba(color: string, alpha: number) {
-  const trimmed = color.trim();
-  if (trimmed.startsWith("#")) {
-    return hexToRgba(trimmed, alpha * 100);
-  }
-
-  const match = trimmed.match(/rgba?\(([^)]+)\)/i);
-  if (!match) {
-    return color;
-  }
-
-  const [r, g, b] = match[1].split(",").map((part) => Number(part.trim()));
-  if (![r, g, b].every((channel) => Number.isFinite(channel))) {
-    return color;
-  }
-
-  return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, alpha))})`;
-}
-
 function fmt(n: number) {
   return Math.floor(n).toLocaleString();
 }
@@ -346,7 +327,7 @@ export default function DpsV2Page() {
           mainActorName != null && player.actorName === mainActorName
             ? dpsAppearanceSetting.mainPlayerColor
             : dpsAppearanceSetting.otherPlayerColor;
-        const background = colorToRgba(playerColor, 1);
+        const background = playerColor;
         const iconSrc = player.actorClass
           ? dpsAppearanceSetting.classIconStyle === "default"
             ? `/images/class/${player.actorClass.toLowerCase()}.webp`
@@ -755,13 +736,17 @@ export default function DpsV2Page() {
 
       const unlistenDetailRequest = await listen("dps-detail-v2-request-selection", async () => {
         if (detailSelectionRef.current) {
+          const detailData =
+            detailSelectionRef.current.mode === "history"
+              ? buildHistoryDetailPayload(detailSelectionRef.current.playerId)
+              : buildLiveDetailPayload(
+                  snapshotRef.current,
+                  detailSelectionRef.current.targetId,
+                  detailSelectionRef.current.playerId
+                );
           await emit("dps-detail-v2-open", {
             selection: detailSelectionRef.current,
-            detailData: buildLiveDetailPayload(
-              snapshotRef.current,
-              detailSelectionRef.current.targetId,
-              detailSelectionRef.current.playerId
-            ),
+            detailData,
           } satisfies DpsDetailV2OpenPayload);
         }
       });
@@ -815,6 +800,7 @@ export default function DpsV2Page() {
       unlisteners.forEach((unlisten) => unlisten());
     };
   }, [
+    buildHistoryDetailPayload,
     dpsAppearanceSetting.autoResizeHeight,
     persistHistoryFromSnapshot,
     resizeWindow,

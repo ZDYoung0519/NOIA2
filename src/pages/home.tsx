@@ -12,6 +12,8 @@ import { useAppTranslation } from "@/hooks/use-app-translation";
 import { createDpsV2Window, createDpsWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
 
+const DPS_LIGHT_GUIDE_SUPPRESS_KEY = "DPS_LIGHT_GUIDE_SUPPRESS";
+
 export default function HomePage() {
   const [mainCharacter, setMainCharacter] = useState<MainActorRecord | null>(null);
   const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
@@ -19,11 +21,13 @@ export default function HomePage() {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
 
-  // const handleLightDps = async () => {
-  //   await createDpsNewWindow(true);
-  //   toast.info("轻量水表已经启动！");
-  //   setShowLightDialog(true);
-  // };
+  const handleCreateDpsV2Window = async () => {
+    await createDpsV2Window(true);
+    toast.info("水表v2已经启动！");
+    if (localStorage.getItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY) !== "1") {
+      setShowLightDialog(true);
+    }
+  };
 
   const quickActions = [
     // { label: "DPS水表(新版)", icon: Plus, onClick: handleLightDps },
@@ -31,8 +35,14 @@ export default function HomePage() {
       label: "DPS水表(V2)",
       icon: Plus,
       onClick: async () => {
-        await createDpsV2Window(true);
-        toast.info("DPS V2 已启动！");
+        await handleCreateDpsV2Window();
+      },
+    },
+    {
+      label: "使用指南",
+      icon: FileText,
+      onClick: () => {
+        setShowLightDialog(true);
       },
     },
     {
