@@ -40,7 +40,7 @@ import { MemoizedDpsHistory } from "@/components/dps-history";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 
-import { createWindow } from "@/lib/window";
+import { createWindow, ensureDpsPingWindow } from "@/lib/window";
 import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
 
 import { cn } from "@/lib/utils";
@@ -1243,49 +1243,10 @@ export default function DpsPage() {
     </div>
   );
 
-  const ensurePingWindow = useCallback(async () => {
-    await createWindow("dps_ping", {
-      title: "DPS Ping",
-      url: "/dps_ping",
-      width: 150,
-      height: 20,
-      decorations: false,
-      transparent: true,
-      resizable: false,
-      shadow: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      focus: false,
-    });
-
-    await waitForWindowReady("dps_ping");
-
-    await invoke("ensure_tracked_window", {
-      options: {
-        parentLabel: "dps",
-        childLabel: "dps_ping",
-        url: "/dps_ping",
-        title: "DPS Ping",
-        position: "bottom",
-        width: 150,
-        height: 20,
-        gap: 0,
-        decorations: false,
-        transparent: true,
-        resizable: true,
-        shadow: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        focus: false,
-        focusable: false,
-      },
-    });
-  }, []);
-
   useEffect(() => {
     const timer = setTimeout(async () => {
       try {
-        await ensurePingWindow();
+        await ensureDpsPingWindow("dps");
         const appWindow = getCurrentWebviewWindow();
         await appWindow.setIgnoreCursorEvents(false);
         setIsClickThrough(false);
@@ -1295,7 +1256,7 @@ export default function DpsPage() {
     }, 1);
 
     return () => clearTimeout(timer);
-  }, [ensurePingWindow]);
+  }, []);
 
   return (
     <WindowFrame

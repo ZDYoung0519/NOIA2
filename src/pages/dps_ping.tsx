@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
@@ -9,90 +9,69 @@ import { useAppSettings } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
 import { MemorySnapshot } from "@/types/aion2dps";
 
-type FooterData = {
-  cpu: string;
-  ram: string;
-  ping: string;
-  packetTotalKb: string;
-  packetTooltipLines: string[];
-  packetPortLines: Array<{
-    key: string;
-    value: string;
-    isCombatPort: boolean;
-  }>;
-  combatPort: string | null;
-  mainActorName: string;
-  pingActive: boolean;
-  pingTone: string;
-  pingHistory: [number, number][];
-};
-
-const PARENT_WINDOW_LABEL = "dps";
+const PARENT_WINDOW_LABELS = ["dps_new", "dps"] as const;
 const PING_WINDOW_HEIGHT = 25;
 const MIN_WINDOW_WIDTH = 25;
+const PING_BUTTON_BASE_CLASS = "flex cursor-pointer items-center gap-1 hover:brightness-110";
+
+const setText = (element: HTMLElement | null, value: string) => {
+  if (!element || element.textContent === value) {
+    return;
+  }
+
+  element.textContent = value;
+};
+
+const formatMemory = (mb?: number | null) => {
+  if (typeof mb !== "number" || !Number.isFinite(mb)) {
+    return "--";
+  }
+
+  return `${mb.toFixed(1)}M`;
+};
+
+const formatPercent = (value?: number | null) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "--";
+  }
+
+  return `${value.toFixed(1)}%`;
+};
+
+const getDpsParentWindow = async () => {
+  const windows = await Promise.all(
+    PARENT_WINDOW_LABELS.map(async (label) => WebviewWindow.getByLabel(label))
+  );
+  const existingWindows = windows.filter((window): window is WebviewWindow => Boolean(window));
+
+  for (const window of existingWindows) {
+    if ((await window.isVisible()) && !(await window.isMinimized())) {
+      return window;
+    }
+  }
+
+  return existingWindows[0] ?? null;
+};
 
 export default function DpsPingPage() {
   const { settings } = useAppSettings();
   const dpsAppearance = settings.appearance.dpsWindow;
-  const [memorySnapshot, setMemorySnapshot] = useState<MemorySnapshot | null>(null);
   const [locked, setLocked] = useState(false);
   const lastMemorySignatureRef = useRef<string | null>(null);
   const unlistenMemoryRef = useRef<null | (() => void)>(null);
   const lastSyncedWidthRef = useRef(0);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const setup = async () => {
-      try {
-        unlistenMemoryRef.current = await listen<MemorySnapshot>("dps-memory", (event) => {
-          if (!mounted) {
-            return;
-          }
-
-          const nextMemory = event.payload;
-
-          const nextSignature = JSON.stringify({
-            cpuPercent: nextMemory.cpuPercent,
-            rssMb: nextMemory.rssMb,
-            vmsMb: nextMemory.vmsMb,
-            memoryPercent: nextMemory.memoryPercent,
-            capDevice: nextMemory.capDevice,
-            capPort: nextMemory.capPort,
-            pingMs: nextMemory.pingMs,
-            mainActorName: nextMemory.mainActorName,
-            packetSizes: nextMemory.packetSizes,
-            pingHistory: nextMemory.pingHistory,
-          });
-
-          if (lastMemorySignatureRef.current === nextSignature) {
-            return;
-          }
-
-          lastMemorySignatureRef.current = nextSignature;
-          setMemorySnapshot(nextMemory);
-        });
-      } catch (error) {
-        console.error("setup dps ping listeners failed:", error);
-      }
-    };
-
-    void setup();
-
-    return () => {
-      mounted = false;
-
-      if (unlistenMemoryRef.current) {
-        void unlistenMemoryRef.current();
-        unlistenMemoryRef.current = null;
-      }
-    };
-  }, []);
+  const pingHistoryRef = useRef<[number, number][]>([]);
+  const pingButtonRef = useRef<HTMLButtonElement | null>(null);
+  const wifiIconRef = useRef<SVGSVGElement | null>(null);
+  const wifiOffIconRef = useRef<SVGSVGElement | null>(null);
+  const pingTextRef = useRef<HTMLSpanElement | null>(null);
+  const cpuTextRef = useRef<HTMLSpanElement | null>(null);
+  const memoryTextRef = useRef<HTMLSpanElement | null>(null);
 
   const syncSizeWithParent = useCallback(async () => {
     try {
       const appWindow = getCurrentWebviewWindow();
-      const parentWindow = await WebviewWindow.getByLabel(PARENT_WINDOW_LABEL);
+      const parentWindow = await getDpsParentWindow();
 
       if (!parentWindow) {
         return;
@@ -115,20 +94,96 @@ export default function DpsPingPage() {
     }
   }, []);
 
+  const updateFooterDom = useCallback(
+    (memory: MemorySnapshot) => {
+      const pingMs = memory.pingMs;
+      const pingActive = typeof pingMs === "number" && Number.isFinite(pingMs);
+      const pingTone = !pingActive
+        ? "text-white/60"
+        : pingMs < 60
+          ? "text-green-400"
+          : pingMs < 120
+            ? "text-yellow-400"
+            : "text-rose-400";
+
+      pingHistoryRef.current = memory.pingHistory ?? [];
+      setText(pingTextRef.current, pingActive ? `${Math.round(pingMs)} ms` : "--");
+      setText(cpuTextRef.current, formatPercent(memory.cpuPercent));
+      setText(memoryTextRef.current, formatMemory(memory.rssMb));
+
+      if (pingButtonRef.current) {
+        pingButtonRef.current.className = cn(PING_BUTTON_BASE_CLASS, pingTone);
+      }
+      if (wifiIconRef.current) {
+        wifiIconRef.current.style.display = pingActive ? "" : "none";
+      }
+      if (wifiOffIconRef.current) {
+        wifiOffIconRef.current.style.display = pingActive ? "none" : "";
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     let mounted = true;
-    let unlisten: null | (() => void) = null;
 
     const setup = async () => {
       try {
-        const parentWindow = await WebviewWindow.getByLabel(PARENT_WINDOW_LABEL);
-        if (!parentWindow || !mounted) {
-          return;
+        unlistenMemoryRef.current = await listen<MemorySnapshot>("dps-memory", (event) => {
+          if (!mounted) {
+            return;
+          }
+
+          const nextMemory = event.payload;
+          pingHistoryRef.current = nextMemory.pingHistory ?? [];
+
+          const nextSignature = `${nextMemory.pingMs ?? ""}|${nextMemory.cpuPercent ?? ""}|${nextMemory.rssMb ?? ""}`;
+
+          if (lastMemorySignatureRef.current === nextSignature) {
+            return;
+          }
+
+          lastMemorySignatureRef.current = nextSignature;
+          updateFooterDom(nextMemory);
+        });
+      } catch (error) {
+        console.error("setup dps ping listeners failed:", error);
+      }
+    };
+
+    void setup();
+
+    return () => {
+      mounted = false;
+
+      if (unlistenMemoryRef.current) {
+        void unlistenMemoryRef.current();
+        unlistenMemoryRef.current = null;
+      }
+    };
+  }, [updateFooterDom]);
+
+  useEffect(() => {
+    let mounted = true;
+    const unlisteners: Array<() => void> = [];
+
+    const setup = async () => {
+      try {
+        const parentWindows = await Promise.all(
+          PARENT_WINDOW_LABELS.map(async (label) => WebviewWindow.getByLabel(label))
+        );
+
+        for (const parentWindow of parentWindows) {
+          if (!parentWindow || !mounted) {
+            continue;
+          }
+
+          const unlisten = await parentWindow.onResized(() => {
+            void syncSizeWithParent();
+          });
+          unlisteners.push(unlisten);
         }
 
-        unlisten = await parentWindow.onResized(() => {
-          void syncSizeWithParent();
-        });
         await syncSizeWithParent();
       } catch (error) {
         console.error("setup dps_ping parent resize listener failed:", error);
@@ -139,87 +194,13 @@ export default function DpsPingPage() {
 
     return () => {
       mounted = false;
-      unlisten?.();
+      unlisteners.forEach((unlisten) => unlisten());
     };
   }, [syncSizeWithParent]);
 
-  useEffect(() => {
-    void syncSizeWithParent();
-  }, [syncSizeWithParent, memorySnapshot]);
-
-  const footerData = useMemo<FooterData>(() => {
-    const formatMemory = (mb?: number | null) => {
-      if (typeof mb !== "number" || !Number.isFinite(mb)) {
-        return "--";
-      }
-
-      return `${mb.toFixed(1)}M`;
-    };
-
-    const formatPercent = (value?: number | null) => {
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        return "--";
-      }
-
-      return `${value.toFixed(1)}%`;
-    };
-
-    const pingMs = memorySnapshot?.pingMs;
-
-    const pingActive = typeof pingMs === "number" && Number.isFinite(pingMs);
-
-    const pingValue = pingActive ? `${Math.round(pingMs)} ms` : "--";
-
-    const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
-    const totalPacketSize = packetEntries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
-
-    const portPacketEntries = packetEntries.filter(([key]) => /^\d+-\d+$/.test(key));
-
-    const otherPacketEntries = packetEntries.filter(([key]) => !/^\d+-\d+$/.test(key));
-
-    const combatPort = memorySnapshot?.capPort ?? null;
-
-    const packetTooltipLines =
-      packetEntries.length > 0
-        ? [
-            `Total: ${(totalPacketSize / 1000).toFixed(2)}k`,
-            combatPort ? `Combat port: ${combatPort}` : "Combat port: --",
-            ...otherPacketEntries.map(
-              ([key, value]) => `${key}: ${(Number(value) / 1000).toFixed(2)}k`
-            ),
-          ]
-        : ["No buffers"];
-
-    const packetPortLines = portPacketEntries.map(([key, value]) => ({
-      key,
-      value: `${(Number(value) / 1000).toFixed(2)}k`,
-      isCombatPort: key === combatPort,
-    }));
-
-    return {
-      cpu: formatPercent(memorySnapshot?.cpuPercent),
-      ram: formatMemory(memorySnapshot?.rssMb),
-      ping: pingValue,
-      packetTotalKb: totalPacketSize > 0 ? `${(totalPacketSize / 1000).toFixed(1)}k` : "0k",
-      packetTooltipLines,
-      packetPortLines,
-      combatPort,
-      mainActorName: memorySnapshot?.mainActorName ?? "--",
-      pingHistory: memorySnapshot?.pingHistory ?? [],
-      pingActive,
-      pingTone: !pingActive
-        ? "text-white/60"
-        : pingMs < 60
-          ? "text-green-400"
-          : pingMs < 120
-            ? "text-yellow-400"
-            : "text-rose-400",
-    };
-  }, [memorySnapshot]);
-
   const toggleLock = async () => {
     try {
-      const parent = await WebviewWindow.getByLabel("dps");
+      const parent = await getDpsParentWindow();
       if (!parent) return;
 
       const nextLocked = !locked;
@@ -253,41 +234,40 @@ export default function DpsPingPage() {
             isRightAligned ? "flex-row-reverse" : "flex-row"
           )}
         >
-          {dpsAppearance.pingWindowShowLatency &&
-            (footerData.pingActive ? (
-              <button
-                type="button"
-                className={cn(
-                  "flex cursor-pointer items-center gap-1 hover:brightness-110",
-                  footerData.pingTone
-                )}
-                onClick={async () => {
-                  if (!locked) {
-                    await emit("ping-history", footerData.pingHistory);
-                  }
-                }}
-              >
-                <Wifi className="h-4 w-4" />
-                <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ping}</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-1 text-white/60">
-                <WifiOff className="h-4 w-4" />
-                <span className="text-sm select-none">--</span>
-              </div>
-            ))}
+          {dpsAppearance.pingWindowShowLatency && (
+            <button
+              ref={pingButtonRef}
+              type="button"
+              className={cn(PING_BUTTON_BASE_CLASS, "text-white/60")}
+              onClick={async () => {
+                if (!locked) {
+                  await emit("ping-history", pingHistoryRef.current);
+                }
+              }}
+            >
+              <Wifi ref={wifiIconRef} className="h-4 w-4" style={{ display: "none" }} />
+              <WifiOff ref={wifiOffIconRef} className="h-4 w-4" />
+              <span ref={pingTextRef} className="text-stroke-2 text-stroke-black text-sm">
+                --
+              </span>
+            </button>
+          )}
 
           {dpsAppearance.pingWindowShowCpu && (
             <div className="flex items-center gap-1 text-slate-200">
               <span className="text-[10px] font-semibold text-slate-400">CPU</span>
-              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.cpu}</span>
+              <span ref={cpuTextRef} className="text-stroke-2 text-stroke-black text-sm">
+                --
+              </span>
             </div>
           )}
 
           {dpsAppearance.pingWindowShowMemory && (
             <div className="flex items-center gap-1 text-slate-200">
               <span className="text-[10px] font-semibold text-slate-400">MEM</span>
-              <span className="text-stroke-2 text-stroke-black text-sm">{footerData.ram}</span>
+              <span ref={memoryTextRef} className="text-stroke-2 text-stroke-black text-sm">
+                --
+              </span>
             </div>
           )}
 

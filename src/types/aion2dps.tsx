@@ -12,10 +12,10 @@ export type PlayerOverviewStat = {
   actorServerId: string;
   actorClass: string;
   counts: number;
-  total_damage?: number;
-  min_damage?: number;
-  max_damage?: number;
-  special_counts?: Record<string, number>;
+  totalDamage?: number;
+  minDamage?: number;
+  maxDamage?: number;
+  specialCounts?: Record<string, number>;
   dps: number;
   damageShare: number;
   damageContribution: number;

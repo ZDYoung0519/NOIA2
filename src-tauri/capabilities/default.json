@@ -10,7 +10,8 @@
     "dps_log",
     "dps_settings",
     "dps_ping",
-    "dps_new"
+    "dps_new",
+    "dps_canvas"
   ],
   "permissions": [
     "core:default",

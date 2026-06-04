@@ -1,24 +1,40 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUp, FileText, Plus } from "lucide-react";
 
 import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
 import CharacterCardCarousel from "@/components/character-card-carousel";
+import { DpsLightGuideDialog } from "@/components/dps-light-guide-dialog";
 import RecentTeammatesCard from "@/components/recent-teammates-card";
 
 import { toast } from "sonner";
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { createDpsWindow } from "@/lib/window";
+import { createDpsNewWindow, createDpsWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
 
 export default function HomePage() {
   const [mainCharacter, setMainCharacter] = useState<MainActorRecord | null>(null);
   const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
+  const [showLightDialog, setShowLightDialog] = useState(false);
   const { t } = useAppTranslation();
   const navigate = useNavigate();
 
+  const handleLightDps = async () => {
+    await createDpsNewWindow(true);
+    toast.info("轻量水表已经启动！");
+    setShowLightDialog(true);
+  };
+
   const quickActions = [
-    { label: t("home.actions.openDps"), icon: Plus, onClick: () => { createDpsWindow(true); toast.info("水表已经启动，请切换至游戏窗口查看！"); } },
+    { label: "DPS水表(新版)", icon: Plus, onClick: handleLightDps },
+    {
+      label: "DPS水表(旧版)",
+      icon: Plus,
+      onClick: () => {
+        createDpsWindow(true);
+        toast.info("水表已经启动，请切换至游戏窗口查看！");
+      },
+    },
 
     {
       label: t("home.actions.characterRating"),
@@ -73,6 +89,8 @@ export default function HomePage() {
           />
         </section>
       </div>
+
+      <DpsLightGuideDialog open={showLightDialog} onOpenChange={setShowLightDialog} />
     </div>
   );
 }

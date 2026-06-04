@@ -26,6 +26,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAppSettings } from "@/hooks/use-app-settings";
 
 const DpsPage = lazy(() => import("./pages/dps"));
+const DpsNewPage = lazy(() => import("./pages/dps_new"));
+
 const DpsPingPage = lazy(() => import("./pages/dps_ping"));
 const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
@@ -64,6 +66,7 @@ function App() {
     <Routes>
       <Route element={<Outlet />}>
         <Route path="/dps" element={<DpsPage />} />
+        <Route path="/dps_new" element={<DpsNewPage />} />
 
         <Route path="/dps_ping" element={<DpsPingPage />} />
         <Route path="/dps_settings" element={<DpsSettingPage />} />

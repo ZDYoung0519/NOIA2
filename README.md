@@ -1,171 +1,176 @@
 <div align="center">
 
+<img src="./public/icon.png" alt="NOIA2" width="96" height="96" />
+
 # NOIA2
 
-[简体中文](./README.zh-CN.md) | English
+An elegant desktop companion for AION2 players, built around a lightweight real-time DPS overlay, battle history, rankings, and multi-window combat analysis.
 
-[![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri)](https://tauri.app/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+[![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white)](https://tauri.app/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-backend-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/License-MIT-22C55E)](./LICENSE)
 
-A desktop companion for AION2 with a floating DPS meter, battle history, and multi-window tools.
+[简体中文](./README.zh-CN.md) · English
 
 </div>
 
-## Overview
+---
 
-NOIA2 is a Tauri desktop app focused on AION2 tooling.
+## What Is NOIA2?
 
-It combines:
+NOIA2 is a Windows desktop toolkit for AION2. It combines a Rust packet-capture backend with a polished Tauri + React interface, giving players a fast floating DPS meter, historical battle review, detail popups, and practical combat diagnostics without a heavy in-game UI.
 
-- A floating DPS overlay
-- Battle detail and history views
-- A home dashboard for recent characters, teammates, and target history
-- Multi-window utilities such as settings, logs, and detail popups
-- A Rust backend for capture, parsing, aggregation, and diagnostics
+The project is designed for day-to-day play: open the meter, switch back to the game, and let the overlay follow your combat flow.
+
+## Highlights
+
+- **Lightweight floating DPS overlay** with two visual styles: Hunter Compact and Classic Bars.
+- **Real-time latency footer** with ping, CPU, memory, click-through lock, and ping history chart.
+- **Battle history and detail views** for reviewing target damage, skill breakdowns, and player contributions.
+- **Home dashboard** for recent characters, teammates, and battle target trends.
+- **Character scoring tools** for browsing equipment, stats, growth direction, and overall character strength.
+- **Damage rankings** for comparing personal and party performance across recorded encounters.
+- **Class statistics** for understanding class-level DPS distribution and combat trends.
+- **Multi-window workflow** for DPS, detail, settings, logs, guide dialog, and focused overlays.
+- **Rust capture pipeline** for packet capture, parsing, aggregation, diagnostics, and storage.
+- **User-tunable appearance** including opacity, scale, colors, nickname masking, target HP display, and class icon style.
+- **Global shortcuts, tray behavior, updater flow, and localization** built into the desktop app.
 
 ## Preview
 
-Home Page:
+### Home Dashboard
 
-![App Screenshot](./screenshots/app.jpg)
+![NOIA2 home dashboard](./public/home.png)
 
-DPS overlay:
+### Lightweight DPS Overlay
 
-![App Screenshot](./screenshots/dps.jpg)
+![NOIA2 DPS overlay](./public/dps.png)
 
-DPS Detail:
+### DPS Detail View
 
-![App Screenshot](./screenshots/dps_detail.png)
+![NOIA2 DPS detail](./public/dps_detail.png)
 
-## Features
+### Character Score
 
-- Floating DPS meter with configurable colors, opacity, scale, and nickname masking
-- Multi-window workflow for `main`, `dps`, `dps_detail`, `dps_log`, and settings
-- Real-time battle snapshot pipeline implemented in Rust
-- History storage in localStorage with in-app management and cleanup
-- Support for global shortcuts, tray behavior, updater flow, and custom title bars
-- Home dashboard with recent teammates and battle target DPS history
-- UI localization with English, Simplified Chinese, Traditional Chinese, and Korean
+![NOIA2 character score](./public/character_score.png)
 
-## Tech Stack
+### DPS Rankings
 
-- Desktop framework: [Tauri v2](https://tauri.app/)
-- Frontend: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- Build tool: [Vite](https://vite.dev/)
-- UI: [shadcn/ui](https://ui.shadcn.com/) + [Tailwind CSS v4](https://tailwindcss.com/)
-- i18n: [i18next](https://www.i18next.com/)
-- Charts: [Recharts](https://recharts.org/)
-- Backend: Rust
+![NOIA2 DPS rankings](./public/dps_rank.png)
 
-## Requirements
+### Class Statistics
 
+![NOIA2 class statistics](./public/class_stats.png)
+
+## Quick Start
+
+### Requirements
+
+- Windows
 - Node.js 18+
 - pnpm 9+
 - Rust toolchain
-- Windows environment for the current desktop capture workflow
-- Npcap installed for packet capture
+- Npcap for packet capture
 
-## Getting Started
-
-### Install dependencies
+### Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-### Start in development mode
+### Run In Development
 
 ```bash
-pnpm tauri dev
-```
-
-### Build a production package
-
-```bash
-pnpm tauri build
-```
-
-## Common Scripts
-
-```bash
-pnpm dev
-pnpm build
 pnpm tauri:dev
+```
+
+### Build Installer
+
+```bash
 pnpm tauri:build
-pnpm lint
-pnpm lint:fix
-pnpm format
-pnpm format:check
-pnpm check
+```
+
+## Usage Guide
+
+NOIA2 includes a built-in guide when you open the lightweight DPS meter. The flow is:
+
+1. Install Npcap and keep the WinPcap-compatible option enabled.
+2. Enter the game and teleport once so NOIA2 can identify your character.
+3. Start fighting in a training or dungeon scenario. DPS data appears automatically.
+
+<p align="center">
+  <img src="./public/guide1.png" alt="Npcap setup guide" width="30%" />
+  <img src="./public/guide2.png" alt="Character detection guide" width="30%" />
+  <img src="./public/guide3.png" alt="Combat data guide" width="30%" />
+</p>
+
+## Feature Tour
+
+| Area | What It Does |
+| --- | --- |
+| DPS Overlay | Shows live damage, DPS, contribution percentage, class icon, server tag, and target timer. |
+| Ping Footer | Shows latency, CPU, memory, and a lock button for click-through overlay mode. |
+| Detail Window | Opens skill and player details without interrupting the main overlay. |
+| History | Saves battle snapshots locally and supports later review and upload status tracking. |
+| Character Score | Helps inspect character equipment, stats, and progression strength in a dedicated rating page. |
+| Rankings | Provides damage ranking views, personal DPS comparison, and party performance review. |
+| Class Statistics | Summarizes class-level combat trends so players can compare DPS distribution by class. |
+| Settings | Controls overlay style, scale, opacity, colors, shortcuts, and backend capture behavior. |
+
+## Architecture
+
+```text
+NOIA2
+├─ src/                     React + TypeScript frontend
+│  ├─ components/           UI, dashboard, DPS panels, guide dialog
+│  ├─ hooks/                settings, translation, updater, user state
+│  ├─ lib/                  window helpers, storage, uploads, AION2 utilities
+│  ├─ pages/                multi-window routes
+│  └─ types/                shared frontend types
+├─ src-tauri/               Tauri v2 desktop shell and Rust backend
+│  ├─ src/dps_meter/        capture, parsing, calculator, models, storage
+│  ├─ src/plugins/          tray, focus tracking, window tracking, HTTP helpers
+│  └─ tauri.conf.json       desktop configuration
+├─ public/                  app images, guide images, class/skill assets
+├─ docs/                    updater, shortcut, and i18n docs
+└─ screenshots/             legacy screenshots
+```
+
+## Scripts
+
+```bash
+pnpm dev              # Start Vite only
+pnpm tauri:dev        # Start the desktop app in development
+pnpm build            # Type-check and build frontend
+pnpm tauri:build      # Build Windows installer
+pnpm lint             # Run ESLint
+pnpm format           # Format source files
+pnpm check            # Format check, lint, and full build
 ```
 
 ## Release Flow
-
-Version release is handled by:
 
 ```bash
 pnpm release:version
 ```
 
-This script:
+The release script checks repository state, validates version consistency, creates the release commit, and tags the build. GitHub Actions can then produce installer and updater artifacts from release tags.
 
-- checks that the working tree is clean
-- requires the current branch to be `main`
-- verifies version consistency across frontend and Tauri config
-- creates the release commit and matching `vX.Y.Z` tag
-- optionally pushes the branch and tag
+## Notes
 
-GitHub Actions then builds the installer and updater artifacts from release tags.
+- The current capture workflow is tuned for Windows desktop usage.
+- Npcap is required for packet capture.
+- Some data is intentionally displayed transparently, including unknown actors or distant summon-related entries, so users can see what the parser actually observes.
+- Local storage is used for UI settings, recent character history, and DPS history.
 
-## Project Structure
-
-```text
-.
-├─ src/
-│  ├─ components/
-│  │  ├─ dps/
-│  │  └─ ui/
-│  ├─ hooks/
-│  ├─ i18n/
-│  ├─ lib/
-│  ├─ pages/
-│  │  ├─ home.tsx
-│  │  ├─ dps.tsx
-│  │  ├─ dps_detail.tsx
-│  │  ├─ dps_log.tsx
-│  │  ├─ settings.tsx
-│  │  └─ settings_view.tsx
-│  └─ types/
-├─ src-tauri/
-│  ├─ src/
-│  │  ├─ dps_meter/
-│  │  │  ├─ api/
-│  │  │  ├─ capture/
-│  │  │  ├─ engine/
-│  │  │  ├─ models/
-│  │  │  └─ storage/
-│  │  └─ plugins/
-│  └─ tauri.conf.json
-├─ src-python/
-├─ docs/
-├─ public/
-└─ screenshots/
-```
-
-## Docs
+## Documentation
 
 - [Auto Update](./docs/AUTO_UPDATE.md)
 - [Global Shortcut](./docs/GLOBAL_SHORTCUT.md)
 - [I18N](./docs/I18N.md)
 
-## Notes
-
-- The current capture and detection flow is tuned for Windows desktop usage.
-- Some older Python parsing code remains in `src-python/` as reference material.
-- localStorage is used for UI settings, recent character history, and DPS history.
-
 ## License
 
-MIT
+MIT. See [LICENSE](./LICENSE).

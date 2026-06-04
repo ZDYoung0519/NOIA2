@@ -245,7 +245,7 @@
       "unknownServer": "未知"
     },
     "detail": {
-      "modeLive": "居住",
+      "modeLive": "实时",
       "modeHistory": "历史",
       "target": "目标",
       "records": "记录",

@@ -376,12 +376,16 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   }, [showMain]);
 
   useEffect(() => {
-    if (getCurrentWebviewWindow().label !== "dps") {
+    const currentWindow = getCurrentWebviewWindow();
+    const isClassicDpsWindow = currentWindow.label === "dps";
+    const isLightDpsWindow = currentWindow.label === "dps_new";
+
+    if (!isClassicDpsWindow && !isLightDpsWindow) {
       return;
     }
 
     const handleToggleDpsWindow = async () => {
-      const dpsWindow = getCurrentWebviewWindow();
+      const dpsWindow = currentWindow;
       const shouldHide = (await dpsWindow.isVisible()) && !(await dpsWindow.isMinimized());
 
       if (shouldHide) {
@@ -399,7 +403,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     };
 
     const registerDpsShortcuts = async () => {
-      if (showDps) {
+      if ((isClassicDpsWindow || isLightDpsWindow) && showDps) {
         await registerShortcut(showDps, handleToggleDpsWindow);
       }
       if (resetDps) {
@@ -410,7 +414,9 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
     void registerDpsShortcuts();
 
     return () => {
-      void unregisterShortcut(showDps);
+      if (isClassicDpsWindow || isLightDpsWindow) {
+        void unregisterShortcut(showDps);
+      }
       void unregisterShortcut(resetDps);
     };
   }, [showDps, resetDps]);

@@ -203,6 +203,7 @@ export async function createWindow(
     shadow?: boolean;
     parent?: string;
     focus?: boolean;
+    focusable?: boolean;
   },
   handlers?: {
     onCreated?: () => void;
@@ -287,6 +288,43 @@ export async function createWindow(
   }
 }
 
+export const createDpsNewWindow = async (autoStart: boolean) => {
+  try {
+    await invoke("start_dps_meter");
+  } catch (error) {
+    console.error("start dps meter failed:", error);
+  }
+
+  try {
+    await invoke("set_dps_manual_hidden", { hidden: false });
+  } catch (e) {
+    /* */
+  }
+  if (autoStart) {
+    try {
+      await invoke("start_dps_meter");
+    } catch (e) {
+      /* */
+    }
+  }
+  await createWindow("dps_new", {
+    title: "DPS Meter (新版)",
+    url: "/dps_new",
+    width: 250,
+    height: 50,
+    resizable: true,
+    maximizable: false,
+    minimizable: false,
+    decorations: false,
+    transparent: true,
+    shadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+  });
+  await waitForWindowReady("dps_new");
+  await ensureDpsPingWindow("dps_new");
+};
+
 export const createDpsWindow = async (autoStart: boolean) => {
   try {
     await invoke("set_dps_manual_hidden", { hidden: false });
@@ -318,49 +356,61 @@ export const createDpsWindow = async (autoStart: boolean) => {
   });
 
   await waitForWindowReady("dps");
+  await ensureDpsPingWindow("dps");
 };
 
-export const createDpsNewWindow = async (autoStart: boolean) => {
-  try {
-    await invoke("set_dps_manual_hidden", { hidden: false });
-  } catch (error) {
-    console.error("clear dps manual hidden state failed:", error);
-  }
-
-  if (autoStart) {
-    try {
-      await invoke("start_dps_meter");
-    } catch (error) {
-      console.error("start dps meter failed:", error);
-    }
-  }
-
-  await createWindow("dps_new", {
-    title: "DPS Meter (新版)",
-    url: "/dps_new",
-    width: 250,
-    height: 50,
-    resizable: true,
-    maximizable: false,
-    minimizable: false,
-    decorations: true,
+export const ensureDpsPingWindow = async (parentLabel: "dps" | "dps_new") => {
+  await createWindow("dps_ping", {
+    title: "DPS Ping",
+    url: "/dps_ping",
+    width: 150,
+    height: 20,
+    decorations: false,
     transparent: true,
+    resizable: false,
     shadow: false,
     alwaysOnTop: true,
     skipTaskbar: true,
+    focus: false,
+    focusable: false,
   });
 
-  await waitForWindowReady("dps_new");
+  await waitForWindowReady("dps_ping");
+
+  await invoke("ensure_tracked_window", {
+    options: {
+      parentLabel,
+      childLabel: "dps_ping",
+      url: "/dps_ping",
+      title: "DPS Ping",
+      position: "bottom",
+      width: 150,
+      height: 20,
+      gap: 0,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    },
+  });
 };
 
 export const showDpsWindows = async () => {
   await showWindow("dps", false);
+  await showWindow("dps_new", false);
   await showWindow("dps_ping", false);
 };
 
 export const hideDpsWindows = async () => {
   const dpsWindow = await WebviewWindow.getByLabel("dps");
   await dpsWindow?.hide();
+
+  const dpsNewWindow = await WebviewWindow.getByLabel("dps_new");
+  await dpsNewWindow?.hide();
 
   const pingWindow = await WebviewWindow.getByLabel("dps_ping");
   await pingWindow?.hide();

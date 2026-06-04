@@ -7,7 +7,7 @@ use tauri::{
 };
 
 const AION2_PROCESS_NAME: &str = "Aion2.exe";
-const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 2] = ["dps", "dps_ping"];
+const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 3] = ["dps", "dps_new", "dps_ping"];
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
