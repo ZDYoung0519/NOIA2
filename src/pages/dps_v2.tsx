@@ -19,6 +19,7 @@ import {
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { createWindow } from "@/lib/window";
+import { uploadDpsDataBatch } from "@/lib/supabase/upload-dps-data";
 import type {
   CombatSnapshot,
   DpsDetailPayload,
@@ -93,6 +94,9 @@ function fmtTimer(s: number) {
   const sec = Math.floor(s % 60);
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
+
+const HISTORY_THRESHOLD = 1_000_000;
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 const ROW_CLASS =
   "group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border-cyan-500/40 hover:bg-white/5";
@@ -427,6 +431,7 @@ export default function DpsV2Page() {
     snapshotRef.current = null;
     lastTotalDamageRef.current = Number.NaN;
     lastStatsLengthRef.current = -1;
+    lastVisiblePlayerCountRef.current = 0;
     rowCacheRef.current = [];
     detailSelectionRef.current = null;
     setText(targetNameRef.current, "No Target");
@@ -435,6 +440,70 @@ export default function DpsV2Page() {
       row.root.style.display = "none";
     }
     setView("dps");
+    window.requestAnimationFrame(() => {
+      void resizeWindow(true);
+    });
+  }, [resizeWindow]);
+
+  const persistHistoryFromSnapshot = useCallback((snapshot: CombatSnapshot | null) => {
+    if (!snapshot) {
+      return;
+    }
+
+    const records = Object.entries(snapshot.byTargetPlayerStats ?? {}).flatMap(
+      ([targetId, playerStats]) => {
+        const numericTargetId = Number(targetId);
+        const totalDamage = Object.values(playerStats ?? {}).reduce(
+          (sum, stats) => sum + Number(stats?.total_damage ?? 0),
+          0
+        );
+
+        if (!Number.isFinite(numericTargetId) || totalDamage <= HISTORY_THRESHOLD) {
+          return [];
+        }
+
+        return [
+          {
+            id: `${targetId}-${Date.now()}`,
+            targetId: numericTargetId,
+            thisTargetAllPlayerStats: clone(playerStats),
+            thisTargetAllPlayerSkillStats: clone(
+              snapshot.byTargetPlayerSkillStats?.[targetId] ?? {}
+            ),
+            thisTargetAllPlayerSkillRecords: {},
+            combatInfos: clone({
+              ...snapshot.combatInfos,
+              targetInfos: snapshot.combatInfos.targetInfos?.[targetId]
+                ? { [targetId]: snapshot.combatInfos.targetInfos[targetId] }
+                : {},
+            }),
+          },
+        ];
+      }
+    );
+
+    if (records.length > 0) {
+      Aion2DpsHistory.addMany(
+        records.map((record) => ({ ...record, uploaded: false })) as HistoryTargetRecord[]
+      );
+    }
+  }, []);
+
+  const uploadPendingHistoryRecords = useCallback(async () => {
+    const allRecords = Aion2DpsHistory.get();
+    const pending = allRecords.filter((record) => !record.uploaded);
+    if (pending.length === 0) {
+      return;
+    }
+
+    try {
+      await uploadDpsDataBatch(pending);
+      Aion2DpsHistory.updateMany(
+        pending.map((record) => ({ id: record.id, uploaded: true }) as HistoryTargetRecord)
+      );
+    } catch (error) {
+      console.error("DPS upload failed:", error);
+    }
   }, []);
 
   const ensureDetailWindow = useCallback(async () => {
@@ -699,8 +768,10 @@ export default function DpsV2Page() {
       unlisteners.push(unlistenDetailRequest);
 
       const unlistenResetRequest = await listen("dps-reset-requested", async () => {
+        persistHistoryFromSnapshot(snapshotRef.current);
         await invoke("reset_dps_meter");
         resetUi();
+        await uploadPendingHistoryRecords();
       });
       unlisteners.push(unlistenResetRequest);
 
@@ -709,7 +780,10 @@ export default function DpsV2Page() {
         actorName: string;
         sid?: string | null;
       }>("dps-main-actor-detected", async (e) => {
+        persistHistoryFromSnapshot(snapshotRef.current);
         await invoke("reset_dps_meter"); // only reset the ui
+        resetUi();
+        await uploadPendingHistoryRecords();
         // add to main actor history
         const p = e.payload;
         const sid = p.sid ? Number(p.sid) : NaN;
@@ -740,7 +814,13 @@ export default function DpsV2Page() {
       }
       unlisteners.forEach((unlisten) => unlisten());
     };
-  }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow, schedulePaint]);
+  }, [
+    dpsAppearanceSetting.autoResizeHeight,
+    persistHistoryFromSnapshot,
+    resizeWindow,
+    schedulePaint,
+    uploadPendingHistoryRecords,
+  ]);
 
   useEffect(() => {
     void (async () => {
@@ -830,10 +910,12 @@ export default function DpsV2Page() {
   }, [isRunning]);
 
   const handleReset = useCallback(async () => {
+    persistHistoryFromSnapshot(snapshotRef.current);
     await invoke("reset_dps_meter");
     resetUi();
     await emit("dps-detail-v2-clear");
-  }, [resetUi]);
+    await uploadPendingHistoryRecords();
+  }, [persistHistoryFromSnapshot, resetUi, uploadPendingHistoryRecords]);
 
   const handleStart = useCallback(async () => {
     await invoke("start_dps_meter");
@@ -855,8 +937,8 @@ export default function DpsV2Page() {
       shadow: false,
       alwaysOnTop: true,
       skipTaskbar: true,
-      focus: false,
-      focusable: false,
+      focus: true,
+      focusable: true,
     });
 
     await waitForWindowReady("dps_settings");
@@ -876,8 +958,8 @@ export default function DpsV2Page() {
         shadow: false,
         alwaysOnTop: true,
         skipTaskbar: true,
-        focus: false,
-        focusable: false,
+        focus: true,
+        focusable: true,
       },
     });
   }, []);

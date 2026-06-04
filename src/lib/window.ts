@@ -363,8 +363,43 @@ export const createDpsV2Window = async (autoStart: boolean) => {
 
   const dpsPingWindow = await WebviewWindow.getByLabel("dps_ping");
   if (!dpsPingWindow) {
-    await ensureDpsPingWindow("dps_v2");
+    await createWindow("dps_ping", {
+      title: "DPS Ping",
+      url: "/dps_ping",
+      width: 150,
+      height: 20,
+      decorations: false,
+      transparent: true,
+      resizable: false,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    });
+    await waitForWindowReady("dps_ping");
   }
+
+  await invoke("ensure_tracked_window", {
+    options: {
+      parentLabel: "dps_v2",
+      childLabel: "dps_ping",
+      url: "/dps_ping",
+      title: "DPS Ping",
+      position: "bottom",
+      width: 150,
+      height: 20,
+      gap: 0,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    },
+  });
 };
 
 export const createDpsWindow = async (autoStart: boolean) => {
