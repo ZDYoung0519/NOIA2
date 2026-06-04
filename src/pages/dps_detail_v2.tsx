@@ -114,6 +114,8 @@ export default function DpsDetailV2Page() {
             setDetailData(seedDetailData);
           }
           rebuildLiveDetail(latestSnapshotRef.current, selection.targetId, selection.playerId);
+        } else {
+          setDetailData(seedDetailData);
         }
       });
       unlisteners.push(unlistenOpen);

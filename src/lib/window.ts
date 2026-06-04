@@ -340,22 +340,31 @@ export const createDpsV2Window = async (autoStart: boolean) => {
     }
   }
 
-  await createWindow("dps_v2", {
-    title: "DPS Meter V2",
-    url: "/dps_v2",
-    width: 320,
-    height: 280,
-    resizable: true,
-    maximizable: false,
-    minimizable: false,
-    decorations: false,
-    transparent: true,
-    shadow: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-  });
-  await waitForWindowReady("dps_v2");
-  await ensureDpsPingWindow("dps_v2");
+  const dpsV2Window = await WebviewWindow.getByLabel("dps_v2");
+  if (!dpsV2Window) {
+    await createWindow("dps_v2", {
+      title: "DPS Meter V2",
+      url: "/dps_v2",
+      width: 320,
+      height: 280,
+      resizable: true,
+      maximizable: false,
+      minimizable: false,
+      decorations: false,
+      transparent: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+    });
+    await waitForWindowReady("dps_v2");
+  } else {
+    await showWindow("dps_v2", false);
+  }
+
+  const dpsPingWindow = await WebviewWindow.getByLabel("dps_ping");
+  if (!dpsPingWindow) {
+    await ensureDpsPingWindow("dps_v2");
+  }
 };
 
 export const createDpsWindow = async (autoStart: boolean) => {

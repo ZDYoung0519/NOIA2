@@ -1,15 +1,43 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Clock3, Play, RotateCcw, Square, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Book,
+  Clock3,
+  History,
+  Pin,
+  Play,
+  RotateCcw,
+  Settings,
+  Square,
+  X,
+} from "lucide-react";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { createWindow } from "@/lib/window";
-import type { CombatSnapshot, DpsDetailPayload, PlayerOverviewStat } from "@/types/aion2dps";
-import { Aion2MainActorHistory } from "@/lib/localStorageHistory";
+import type {
+  CombatSnapshot,
+  DpsDetailPayload,
+  HistoryTargetRecord,
+  PlayerOverviewStat,
+} from "@/types/aion2dps";
+import { Aion2DpsHistory, Aion2MainActorHistory } from "@/lib/localStorageHistory";
+import { MemoizedDpsHistory } from "@/components/dps-history";
+import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { PingCurve } from "@/components/ping-curve";
+import { cn } from "@/lib/utils";
+import { maskNickname } from "@/lib/name-mask";
 
 function hexToRgba(hex: string, alpha: number) {
   const h = hex.replace("#", "");
@@ -147,14 +175,21 @@ type RowCache = {
 };
 
 export default function DpsV2Page() {
-  const { settings } = useAppSettings();
+  const { settings, saveSettings } = useAppSettings();
   const dpsAppearanceSetting = settings.appearance.dpsWindow;
+
   const bg = hexToRgba(
     dpsAppearanceSetting.backgroundColor,
     dpsAppearanceSetting.backgroundOpacity
   );
 
   const [isRunning, setIsRunning] = useState(false);
+  const [view, setView] = useState<"dps" | "dps_history" | "ping">("dps");
+  const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const [selectedHistoryRecord, setSelectedHistoryRecord] = useState<HistoryTargetRecord | null>(
+    null
+  );
 
   const snapshotRef = useRef<CombatSnapshot | null>(null);
   const isRunningRef = useRef(false);
@@ -174,6 +209,20 @@ export default function DpsV2Page() {
   const lastVisiblePlayerCountRef = useRef(-1);
   const lastHeightRef = useRef(0);
   const resizeTimerRef = useRef(0);
+  const viewRef = useRef<"dps" | "dps_history" | "ping">("dps");
+
+  viewRef.current = view;
+
+  const selectedHistoryTargetInfo = useMemo(() => {
+    if (!selectedHistoryRecord) {
+      return null;
+    }
+
+    return (
+      selectedHistoryRecord.combatInfos.targetInfos?.[String(selectedHistoryRecord.targetId)] ??
+      null
+    );
+  }, [selectedHistoryRecord]);
 
   const setText = (element: HTMLElement | null, value: string) => {
     if (!element || element.textContent === value) {
@@ -278,7 +327,7 @@ export default function DpsV2Page() {
       }
 
       const maxDamage = stats[0]?.totalDamage ?? 1;
-      const mainActorId = snapshot.combatInfos?.mainActorId;
+      const mainActorName = snapshot.combatInfos?.mainActorName;
 
       stats.slice(0, 8).forEach((player, index) => {
         const row = rows[index];
@@ -290,16 +339,20 @@ export default function DpsV2Page() {
         const damage = player.totalDamage ?? 0;
         const scale = `scaleX(${damage / Math.max(1, maxDamage)})`;
         const playerColor =
-          mainActorId != null && player.actorId === mainActorId
+          mainActorName != null && player.actorName === mainActorName
             ? dpsAppearanceSetting.mainPlayerColor
             : dpsAppearanceSetting.otherPlayerColor;
-        const background = colorToRgba(playerColor, 0.5);
+        const background = colorToRgba(playerColor, 1);
         const iconSrc = player.actorClass
           ? dpsAppearanceSetting.classIconStyle === "default"
             ? `/images/class/${player.actorClass.toLowerCase()}.webp`
             : `/images/class/${player.actorClass.toLowerCase()}.png`
           : "/images/aion2.png";
-        const name = player.actorName || `Player ${player.actorId}`;
+        // const name = player.actorName || `Player ${player.actorId}`;
+        const name = maskNickname(
+          player.actorName || `Player ${player.actorId}`,
+          dpsAppearanceSetting.maskNicknames
+        );
         const server = player.actorServerId
           ? `[${serverNameCacheRef.current.get(player.actorServerId) ?? getServerShortName(Number(player.actorServerId))}]`
           : "";
@@ -381,6 +434,7 @@ export default function DpsV2Page() {
     for (const row of rowsRef.current) {
       row.root.style.display = "none";
     }
+    setView("dps");
   }, []);
 
   const ensureDetailWindow = useCallback(async () => {
@@ -422,8 +476,37 @@ export default function DpsV2Page() {
     });
   }, []);
 
+  const buildHistoryDetailPayload = useCallback(
+    (playerId: number): DpsDetailPayload | null => {
+      if (!selectedHistoryRecord) {
+        return null;
+      }
+
+      const playerStats =
+        selectedHistoryRecord.thisTargetAllPlayerStats?.[String(playerId)] ?? null;
+      if (!playerStats) {
+        return null;
+      }
+
+      return {
+        mode: "history",
+        actorId: playerId,
+        targetId: selectedHistoryRecord.targetId,
+        combatInfos: selectedHistoryRecord.combatInfos,
+        playerStats,
+        playerSkillStats:
+          selectedHistoryRecord.thisTargetAllPlayerSkillStats?.[String(playerId)] ?? {},
+      };
+    },
+    [selectedHistoryRecord]
+  );
+
   const handleContainerClick = useCallback(
     async (event: React.MouseEvent<HTMLDivElement>) => {
+      if (viewRef.current !== "dps") {
+        return;
+      }
+
       const row = (event.target as HTMLElement).closest("[data-row]") as HTMLElement | null;
       if (!row) {
         return;
@@ -456,6 +539,29 @@ export default function DpsV2Page() {
     [ensureDetailWindow]
   );
 
+  const handleHistoryPlayerClick = useCallback(
+    async (playerId: number) => {
+      const detailData = buildHistoryDetailPayload(playerId);
+      if (!detailData || !selectedHistoryRecord) {
+        return;
+      }
+
+      const selection: DpsDetailV2Selection = {
+        mode: "history",
+        targetId: selectedHistoryRecord.targetId,
+        playerId,
+      };
+      detailSelectionRef.current = selection;
+
+      await ensureDetailWindow();
+      await emit("dps-detail-v2-open", {
+        selection,
+        detailData,
+      } satisfies DpsDetailV2OpenPayload);
+    },
+    [buildHistoryDetailPayload, ensureDetailWindow, selectedHistoryRecord]
+  );
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -477,6 +583,27 @@ export default function DpsV2Page() {
     });
     rowCacheRef.current = [];
   }, []);
+
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    rowsRef.current = Array.from({ length: 8 }, (_, i) => {
+      const r = c.querySelector<HTMLElement>(`[data-row="${i}"]`)!;
+      return {
+        root: r,
+        bar: r.querySelector<HTMLElement>(".js-bar")!,
+        accentBar: r.querySelector<HTMLElement>(".js-accent-bar"),
+        icon: r.querySelector<HTMLImageElement>(".js-icon")!,
+        name: r.querySelector<HTMLElement>(".js-name")!,
+        server: r.querySelector<HTMLElement>(".js-server")!,
+        dps: r.querySelector<HTMLElement>(".js-dps")!,
+        dmg: r.querySelector<HTMLElement>(".js-dmg")!,
+        pct: r.querySelector<HTMLElement>(".js-pct")!,
+      };
+    });
+    rowCacheRef.current = [];
+    schedulePaint();
+  }, [dpsAppearanceSetting.panelStyle]);
 
   useEffect(() => {
     let alive = true;
@@ -596,6 +723,13 @@ export default function DpsV2Page() {
         }
       });
       unlisteners.push(unlistenMainCharacterDetected);
+
+      const unlistenPing = await listen("ping-history", async (e) => {
+        console.log("ping history updated", e.payload);
+        setPingHistory(e.payload as [number, number][]);
+        setView("ping");
+      });
+      unlisteners.push(unlistenPing);
     })();
 
     return () => {
@@ -621,6 +755,37 @@ export default function DpsV2Page() {
       }
     })();
   }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow]);
+
+  useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
+
+    void (async () => {
+      try {
+        const scaleFactor = await appWindow.scaleFactor();
+        const outerSize = await appWindow.outerSize();
+        const width = outerSize.width / scaleFactor;
+
+        if (view === "ping") {
+          await appWindow.setSize(new LogicalSize(width, 260));
+          return;
+        }
+
+        if (view === "dps_history") {
+          await appWindow.setSize(new LogicalSize(width, 420));
+          return;
+        }
+
+        if (dpsAppearanceSetting.autoResizeHeight) {
+          await resizeWindow(true);
+          return;
+        }
+
+        await appWindow.setSize(new LogicalSize(320, 280));
+      } catch {
+        /* empty */
+      }
+    })();
+  }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow, view]);
 
   useEffect(() => {
     lastTotalDamageRef.current = Number.NaN;
@@ -667,10 +832,114 @@ export default function DpsV2Page() {
   const handleReset = useCallback(async () => {
     await invoke("reset_dps_meter");
     resetUi();
+    await emit("dps-detail-v2-clear");
   }, [resetUi]);
+
+  const handleStart = useCallback(async () => {
+    await invoke("start_dps_meter");
+  }, []);
+
+  const handleStop = useCallback(async () => {
+    await invoke("stop_dps_meter");
+  }, []);
+
+  const handleOpenSettings = useCallback(async () => {
+    await createWindow("dps_settings", {
+      title: "DPS Settings",
+      url: "/dps_settings",
+      width: 560,
+      height: 1080,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    });
+
+    await waitForWindowReady("dps_settings");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps_v2",
+        childLabel: "dps_settings",
+        url: "/dps_settings",
+        title: "DPS Settings",
+        width: 560,
+        height: 1080,
+        gap: 0,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      },
+    });
+  }, []);
+
+  const handleOpenLog = useCallback(async () => {
+    await createWindow("dps_log", {
+      title: "DPS Log",
+      url: "/dps_log",
+      width: 560,
+      height: 320,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    });
+
+    await waitForWindowReady("dps_log");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps_v2",
+        childLabel: "dps_log",
+        url: "/dps_log",
+        title: "DPS Log",
+        width: 560,
+        height: 320,
+        gap: 0,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      },
+    });
+  }, []);
 
   const handleClose = useCallback(async () => {
     await getCurrentWebviewWindow().close();
+  }, []);
+
+  const handleOpenHistory = useCallback(() => {
+    setView((current) => {
+      const next = current === "dps_history" ? "dps" : "dps_history";
+      if (next === "dps") {
+        setSelectedHistoryId(null);
+        setSelectedHistoryRecord(null);
+        detailSelectionRef.current = null;
+        void emit("dps-detail-v2-clear");
+      } else {
+        const nextHistoryRecords = Aion2DpsHistory.get();
+        setSelectedHistoryId(nextHistoryRecords[0]?.id ?? null);
+        setSelectedHistoryRecord(nextHistoryRecords[0] ?? null);
+      }
+      return next;
+    });
   }, []);
 
   return (
@@ -681,7 +950,21 @@ export default function DpsV2Page() {
       >
         <div className="flex min-w-0 flex-1 items-center gap-2" data-tauri-drag-region>
           <div className="flex h-full shrink-0 items-center gap-1.5" data-tauri-drag-region>
-            <Clock3 className="h-3.5 w-3.5 text-slate-400" data-tauri-drag-region />
+            {view === "dps" ? (
+              <Clock3 className="h-3.5 w-3.5 text-slate-400" data-tauri-drag-region />
+            ) : (
+              <button
+                type="button"
+                title="Back"
+                onClick={(event) => {
+                  event.currentTarget.blur();
+                  setView("dps");
+                }}
+                className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline-none active:bg-white/5"
+              >
+                <ArrowLeft className="h-3 w-3" />
+              </button>
+            )}
             <span
               ref={timerRef}
               className="font-mono text-xs font-medium text-slate-100 tabular-nums"
@@ -708,6 +991,38 @@ export default function DpsV2Page() {
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
+            title="Pin"
+            onClick={() => {
+              const next = !dpsAppearanceSetting.autoHide;
+              void invoke("set_auto_hide_enabled", { enabled: next });
+              void saveSettings({
+                appearance: { dpsWindow: { autoHide: next } },
+              });
+            }}
+            className={`flex h-5 w-5 items-center justify-center rounded border transition focus-visible:outline-none active:bg-white/5 ${dpsAppearanceSetting.autoHide ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"}`}
+          >
+            <Pin className="h-3 w-3" />
+          </button>
+
+          <button
+            type="button"
+            title="History"
+            onClick={(event) => {
+              event.currentTarget.blur();
+              handleOpenHistory();
+            }}
+            className={cn(
+              "flex h-5 w-5 items-center justify-center rounded border transition",
+              view === "dps_history"
+                ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
+                : "border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100"
+            )}
+          >
+            <History className="h-3 w-3" />
+          </button>
+
+          <button
+            type="button"
             title={isRunning ? "Stop" : "Start"}
             onClick={() => {
               void handleStartStop();
@@ -716,16 +1031,52 @@ export default function DpsV2Page() {
           >
             {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
           </button>
-          <button
-            type="button"
-            title="Reset"
-            onClick={() => {
-              void handleReset();
-            }}
-            className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+              >
+                <Settings className="h-3 w-3" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-20 p-0.5">
+              <DropdownMenuItem
+                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                onClick={isRunning ? handleStop : handleStart}
+              >
+                {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                <span className="text-xs">{isRunning ? "停止" : "启动"}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                onClick={() => {
+                  void handleReset();
+                }}
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span className="text-xs">重置</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                onClick={() => {
+                  void handleOpenSettings();
+                }}
+              >
+                <Settings className="h-3 w-3" />
+                <span className="text-xs">设置</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                onClick={() => {
+                  void handleOpenLog();
+                }}
+              >
+                <Book className="h-3 w-3" />
+                <span className="text-xs">日志</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             type="button"
             title="Close"
@@ -739,21 +1090,69 @@ export default function DpsV2Page() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-1" style={{ backgroundColor: bg }}>
+      <div
+        className={cn("flex-1 overflow-hidden p-1", view === "dps" ? "block" : "hidden")}
+        style={{ backgroundColor: bg }}
+      >
         <div
           ref={containerRef}
           className="space-y-0"
           onClick={handleContainerClick}
           style={{ zoom: dpsAppearanceSetting.scaleFactor }}
         >
-          {Array.from({ length: 8 }, (_, index) => (
-            <div key={index} data-row={index} className={ROW_CLASS} style={{ display: "none" }}>
-              <div className={BAR_CLASS} style={{ transform: "scaleX(0)" }} />
-              <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
-                <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
-                  <div className="relative h-6 w-6 flex-shrink-0">
+          {dpsAppearanceSetting.panelStyle === "classicBars" && (
+            <>
+              {Array.from({ length: 8 }, (_, index) => (
+                <div key={index} data-row={index} className={ROW_CLASS} style={{ display: "none" }}>
+                  <div className={BAR_CLASS} style={{ transform: "scaleX(0)" }} />
+                  <div className="relative z-10 flex w-full items-center justify-between pr-1 select-none">
+                    <div className="flex min-w-0 flex-1 items-center gap-1 select-none">
+                      <div className="relative h-6 w-6 flex-shrink-0">
+                        <img
+                          className="js-icon h-full w-full rounded-md object-cover shadow-sm"
+                          alt="class"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                          onContextMenu={(event) => event.preventDefault()}
+                        />
+                      </div>
+                      <div className="flex min-w-0 items-baseline gap-0 font-mono text-sm">
+                        <span className="js-name min-w-0 truncate" />
+                        <span className="js-server shrink-0" />
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <div className="text-right">
+                        <span className="js-dmg font-mono text-sm text-gray-100 tabular-nums" />
+                      </div>
+                      <div className="text-right">
+                        <span className="js-dps font-mono text-sm font-medium text-green-400 tabular-nums" />
+                        <span className="text-xs text-green-400">/s</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="js-pct font-mono text-sm text-gray-200 tabular-nums" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {dpsAppearanceSetting.panelStyle === "hunterCompact" && (
+            <>
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={`hunter-${i}`} data-row={i} style={{ display: "none" }}>
+                  <div style={{ transform: "scaleX(0)" }} />
+                  <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/[0.04]" />
+                  <div
+                    className="js-accent-bar absolute bottom-0 left-0 h-[3px] w-full origin-left overflow-hidden transition-transform duration-500"
+                    style={{ transform: "scaleX(0)" }}
+                  />
+                  <div className="relative z-10 flex items-center justify-center">
                     <img
-                      className="js-icon h-full w-full rounded-md object-cover shadow-sm"
+                      className="js-icon h-8 w-8 rounded object-cover"
                       alt="class"
                       onError={(event) => {
                         event.currentTarget.style.display = "none";
@@ -761,28 +1160,82 @@ export default function DpsV2Page() {
                       onContextMenu={(event) => event.preventDefault()}
                     />
                   </div>
-                  <div className="flex min-w-0 items-baseline gap-0 font-mono text-sm">
-                    <span className="js-name min-w-0 truncate" />
-                    <span className="js-server shrink-0" />
+                  <div className="relative z-10 min-w-0 py-1 pr-2 pl-2">
+                    <div className="flex min-w-0 items-baseline gap-0">
+                      <span className="js-name text-md truncate leading-4 font-medium text-slate-50" />
+                    </div>
+                    <div className="truncate text-[12px] leading-3 font-normal text-slate-500">
+                      <span className="js-server" />
+                    </div>
+                  </div>
+                  <div className="relative z-10 grid h-9 w-[142px] grid-cols-[70px_64px] grid-rows-[18px_18px] items-center pr-2 font-mono tabular-nums">
+                    <div className="row-span-2 flex items-center justify-end pr-2 text-right">
+                      <span className="js-dps text-md leading-none font-semibold text-cyan-50 drop-shadow-[0_0_5px_rgba(103,232,249,0.55)]" />
+                      <span className="ml-0.5 self-end pb-0 text-[9px] text-slate-400">/s</span>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-end gap-1 leading-none">
+                      <span className="shrink-0 text-[10px] font-semibold text-slate-500">PCT</span>
+                      <span className="js-pct min-w-0 truncate text-[12px] font-medium text-slate-100" />
+                    </div>
+                    <div className="flex min-w-0 items-center justify-end gap-1 leading-none">
+                      <span className="shrink-0 text-[10px] font-medium text-slate-500">DMG</span>
+                      <span className="js-dmg min-w-0 truncate text-[11px] font-medium text-slate-300/80" />
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  <div className="text-right">
-                    <span className="js-dmg font-mono text-sm text-gray-100 tabular-nums" />
-                  </div>
-                  <div className="text-right">
-                    <span className="js-dps font-mono text-sm font-medium text-green-400 tabular-nums" />
-                    <span className="text-xs text-green-400">/s</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="js-pct font-mono text-sm text-gray-200 tabular-nums" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+              ))}
+            </>
+          )}
         </div>
       </div>
+
+      {view === "ping" && (
+        <div className="flex min-h-0 flex-1 overflow-hidden p-2" style={{ backgroundColor: bg }}>
+          <PingCurve pingHistory={pingHistory} />
+        </div>
+      )}
+
+      {view === "dps_history" && (
+        <div className="flex min-h-0 flex-1 overflow-hidden p-1" style={{ backgroundColor: bg }}>
+          <MemoizedDpsHistory
+            selectedHistoryId={selectedHistoryId}
+            onSelect={(id, record) => {
+              setSelectedHistoryId(id);
+              setSelectedHistoryRecord(record);
+              detailSelectionRef.current = null;
+              void emit("dps-detail-v2-clear");
+            }}
+            onClear={() => {
+              setSelectedHistoryId(null);
+              setSelectedHistoryRecord(null);
+              detailSelectionRef.current = null;
+              void emit("dps-detail-v2-clear");
+            }}
+          />
+
+          <div className="min-w-0 flex-1 overflow-hidden">
+            {selectedHistoryRecord && selectedHistoryTargetInfo ? (
+              <MemoizedDpsPanel
+                targetInfo={selectedHistoryTargetInfo}
+                thisTargetPlayerStats={selectedHistoryRecord.thisTargetAllPlayerStats}
+                combatInfos={selectedHistoryRecord.combatInfos}
+                mainPlayerColor={dpsAppearanceSetting.mainPlayerColor}
+                otherPlayerColor={dpsAppearanceSetting.otherPlayerColor}
+                barOpacity={100}
+                maskNicknames={dpsAppearanceSetting.maskNicknames}
+                percentDisplayMode={dpsAppearanceSetting.percentDisplayMode}
+                classIconStyle={dpsAppearanceSetting.classIconStyle}
+                showTargetHpBar={dpsAppearanceSetting.showTargetHpBar}
+                onPlayerClicked={handleHistoryPlayerClick}
+              />
+            ) : (
+              <div className="flex h-full min-h-24 items-center justify-center px-4 text-xs text-slate-400">
+                Select a history target
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
