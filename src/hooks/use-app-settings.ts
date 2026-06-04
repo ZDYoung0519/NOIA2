@@ -378,7 +378,7 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     const currentWindow = getCurrentWebviewWindow();
     const isClassicDpsWindow = currentWindow.label === "dps";
-    const isLightDpsWindow = currentWindow.label === "dps_new";
+    const isLightDpsWindow = currentWindow.label === "dps_new" || currentWindow.label === "dps_v2";
 
     if (!isClassicDpsWindow && !isLightDpsWindow) {
       return;

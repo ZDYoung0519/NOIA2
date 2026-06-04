@@ -325,6 +325,39 @@ export const createDpsNewWindow = async (autoStart: boolean) => {
   await ensureDpsPingWindow("dps_new");
 };
 
+export const createDpsV2Window = async (autoStart: boolean) => {
+  try {
+    await invoke("set_dps_manual_hidden", { hidden: false });
+  } catch (error) {
+    console.error("clear dps manual hidden state failed:", error);
+  }
+
+  if (autoStart) {
+    try {
+      await invoke("start_dps_meter");
+    } catch (error) {
+      console.error("start dps meter failed:", error);
+    }
+  }
+
+  await createWindow("dps_v2", {
+    title: "DPS Meter V2",
+    url: "/dps_v2",
+    width: 320,
+    height: 280,
+    resizable: true,
+    maximizable: false,
+    minimizable: false,
+    decorations: false,
+    transparent: true,
+    shadow: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+  });
+  await waitForWindowReady("dps_v2");
+  await ensureDpsPingWindow("dps_v2");
+};
+
 export const createDpsWindow = async (autoStart: boolean) => {
   try {
     await invoke("set_dps_manual_hidden", { hidden: false });
@@ -359,7 +392,7 @@ export const createDpsWindow = async (autoStart: boolean) => {
   await ensureDpsPingWindow("dps");
 };
 
-export const ensureDpsPingWindow = async (parentLabel: "dps" | "dps_new") => {
+export const ensureDpsPingWindow = async (parentLabel: "dps" | "dps_new" | "dps_v2") => {
   await createWindow("dps_ping", {
     title: "DPS Ping",
     url: "/dps_ping",
@@ -402,6 +435,7 @@ export const ensureDpsPingWindow = async (parentLabel: "dps" | "dps_new") => {
 export const showDpsWindows = async () => {
   await showWindow("dps", false);
   await showWindow("dps_new", false);
+  await showWindow("dps_v2", false);
   await showWindow("dps_ping", false);
 };
 
@@ -411,6 +445,9 @@ export const hideDpsWindows = async () => {
 
   const dpsNewWindow = await WebviewWindow.getByLabel("dps_new");
   await dpsNewWindow?.hide();
+
+  const dpsV2Window = await WebviewWindow.getByLabel("dps_v2");
+  await dpsV2Window?.hide();
 
   const pingWindow = await WebviewWindow.getByLabel("dps_ping");
   await pingWindow?.hide();

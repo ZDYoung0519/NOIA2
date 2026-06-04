@@ -9,7 +9,7 @@ import RecentTeammatesCard from "@/components/recent-teammates-card";
 
 import { toast } from "sonner";
 import { useAppTranslation } from "@/hooks/use-app-translation";
-import { createDpsNewWindow, createDpsWindow } from "@/lib/window";
+import { createDpsNewWindow, createDpsV2Window, createDpsWindow } from "@/lib/window";
 import type { MainActorRecord } from "@/types/aion2dps";
 
 export default function HomePage() {
@@ -27,6 +27,14 @@ export default function HomePage() {
 
   const quickActions = [
     { label: "DPS水表(新版)", icon: Plus, onClick: handleLightDps },
+    {
+      label: "DPS水表(V2)",
+      icon: Plus,
+      onClick: async () => {
+        await createDpsV2Window(true);
+        toast.info("DPS V2 已启动！");
+      },
+    },
     {
       label: "DPS水表(旧版)",
       icon: Plus,

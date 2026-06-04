@@ -9,7 +9,7 @@ import { useAppSettings } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
 import { MemorySnapshot } from "@/types/aion2dps";
 
-const PARENT_WINDOW_LABELS = ["dps_new", "dps"] as const;
+const PARENT_WINDOW_LABELS = ["dps_v2", "dps_new", "dps"] as const;
 const PING_WINDOW_HEIGHT = 25;
 const MIN_WINDOW_WIDTH = 25;
 const PING_BUTTON_BASE_CLASS = "flex cursor-pointer items-center gap-1 hover:brightness-110";

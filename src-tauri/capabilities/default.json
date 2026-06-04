@@ -11,7 +11,7 @@
     "dps_settings",
     "dps_ping",
     "dps_new",
-    "dps_canvas"
+    "dps_v2"
   ],
   "permissions": [
     "core:default",

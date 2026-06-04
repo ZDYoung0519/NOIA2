@@ -329,7 +329,6 @@ export default function DpsNewPage() {
   /* ---- resize ---- */
   const lastHeight = useRef(0);
   const resizeTimer = useRef(0);
-  const lastVisiblePlayerCountRef = useRef(-1);
   const resizeWindow = useCallback(async (force = false) => {
     if (viewRef.current !== "dps") return;
     const dpsAppearanceSetting = dpsAppearanceSettingRef.current;
@@ -385,6 +384,21 @@ export default function DpsNewPage() {
       }
     })();
   }, [resizeWindow, view]);
+
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const sched = () => {
+      if (resizeTimer.current) clearTimeout(resizeTimer.current);
+      resizeTimer.current = window.setTimeout(() => {
+        void resizeWindow();
+      }, 50);
+    };
+    const obs = new ResizeObserver(() => sched());
+    obs.observe(c);
+    sched();
+    return () => obs.disconnect();
+  }, [resizeWindow]);
 
   useEffect(() => {
     const timer = window.setTimeout(async () => {
@@ -444,17 +458,6 @@ export default function DpsNewPage() {
 
       const u2 = await listen<CombatSnapshot>("dps-snapshot", (e) => {
         if (!alive) return;
-        const nextStats = e.payload.lastTargetAllPlayersOverviewStats as
-          | PlayerOverviewStat[]
-          | undefined;
-        const nextVisiblePlayerCount = Math.min(8, nextStats?.length ?? 0);
-        if (nextVisiblePlayerCount !== lastVisiblePlayerCountRef.current) {
-          lastVisiblePlayerCountRef.current = nextVisiblePlayerCount;
-          if (resizeTimer.current) clearTimeout(resizeTimer.current);
-          resizeTimer.current = window.setTimeout(() => {
-            void resizeWindow();
-          }, 50);
-        }
         snapshotRef.current = e.payload;
         schedulePaint();
         const now = Date.now();
@@ -537,10 +540,6 @@ export default function DpsNewPage() {
     })();
     return () => {
       alive = false;
-      if (resizeTimer.current) {
-        clearTimeout(resizeTimer.current);
-        resizeTimer.current = 0;
-      }
       unlistenAll.current.forEach((f) => f());
     };
   }, []);
@@ -739,7 +738,6 @@ export default function DpsNewPage() {
         snapshotRef.current = null;
         lastDmg.current = 0;
         lastStatsLen.current = 0;
-        lastVisiblePlayerCountRef.current = 0;
         rowPaintCacheRef.current = [];
         selectedPlayerRef.current = 0;
         for (const r of rowsRef.current) r.root.style.display = "none";
