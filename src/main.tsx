@@ -28,6 +28,7 @@ import { useAppSettings } from "@/hooks/use-app-settings";
 const DpsPage = lazy(() => import("./pages/dps"));
 const DpsNewPage = lazy(() => import("./pages/dps_new"));
 const DpsV2Page = lazy(() => import("./pages/dps_v2"));
+const DpsDetailV2Page = lazy(() => import("./pages/dps_detail_v2"));
 
 const DpsPingPage = lazy(() => import("./pages/dps_ping"));
 const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
@@ -69,6 +70,7 @@ function App() {
         <Route path="/dps" element={<DpsPage />} />
         <Route path="/dps_new" element={<DpsNewPage />} />
         <Route path="/dps_v2" element={<DpsV2Page />} />
+        <Route path="/dps_detail_v2" element={<DpsDetailV2Page />} />
 
         <Route path="/dps_ping" element={<DpsPingPage />} />
         <Route path="/dps_settings" element={<DpsSettingPage />} />

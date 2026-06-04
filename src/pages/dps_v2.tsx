@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
-import { listen } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { emit, listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Clock3, Play, RotateCcw, Square, X } from "lucide-react";
 
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { getServerShortName } from "@/lib/aion2/servers";
-import type { CombatSnapshot, PlayerOverviewStat } from "@/types/aion2dps";
+import { createWindow } from "@/lib/window";
+import type { CombatSnapshot, DpsDetailPayload, PlayerOverviewStat } from "@/types/aion2dps";
+import { Aion2MainActorHistory } from "@/lib/localStorageHistory";
 
 function hexToRgba(hex: string, alpha: number) {
   const h = hex.replace("#", "");
@@ -65,8 +67,61 @@ function fmtTimer(s: number) {
 }
 
 const ROW_CLASS =
-  "group relative flex h-7.5 cursor-default items-center overflow-hidden rounded border border-transparent";
+  "group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border-cyan-500/40 hover:bg-white/5";
 const BAR_CLASS = "js-bar absolute inset-y-0 left-0 w-full origin-left rounded";
+
+type DpsDetailV2Mode = "live" | "history";
+
+type DpsDetailV2Selection = {
+  mode: DpsDetailV2Mode;
+  targetId: number;
+  playerId: number;
+};
+
+type DpsDetailV2OpenPayload = {
+  selection: DpsDetailV2Selection;
+  detailData: DpsDetailPayload | null;
+};
+
+const waitForWindowReady = async (label: string, timeoutMs = 1500) => {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    const targetWindow = await WebviewWindow.getByLabel(label);
+    if (targetWindow) {
+      return targetWindow;
+    }
+
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 50));
+  }
+
+  throw new Error(`window '${label}' was not ready in time`);
+};
+
+function buildLiveDetailPayload(
+  snapshot: CombatSnapshot | null,
+  targetId: number,
+  playerId: number
+): DpsDetailPayload | null {
+  if (!snapshot) {
+    return null;
+  }
+
+  const playerStats = snapshot.byTargetPlayerStats?.[String(targetId)]?.[String(playerId)] ?? null;
+  if (!playerStats) {
+    return null;
+  }
+
+  return {
+    mode: "live",
+    actorId: playerId,
+    targetId,
+    combatInfos: snapshot.combatInfos,
+    playerStats,
+    playerSkillStats:
+      snapshot.byTargetPlayerSkillStats?.[String(targetId)]?.[String(playerId)] ?? {},
+  };
+}
 
 type Row = {
   root: HTMLElement;
@@ -115,6 +170,10 @@ export default function DpsV2Page() {
   const lastDotClassRef = useRef("");
   const lastTimerRef = useRef("");
   const serverNameCacheRef = useRef(new Map<string, string>());
+  const detailSelectionRef = useRef<DpsDetailV2Selection | null>(null);
+  const lastVisiblePlayerCountRef = useRef(-1);
+  const lastHeightRef = useRef(0);
+  const resizeTimerRef = useRef(0);
 
   const setText = (element: HTMLElement | null, value: string) => {
     if (!element || element.textContent === value) {
@@ -132,6 +191,52 @@ export default function DpsV2Page() {
     lastDotClassRef.current = className;
     dotRef.current.className = `h-1.5 w-1.5 shrink-0 rounded-full ${className}`;
   };
+
+  const resizeWindow = useCallback(
+    async (force = false) => {
+      if (!dpsAppearanceSetting.autoResizeHeight) {
+        return;
+      }
+
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+
+      try {
+        const appWindow = getCurrentWebviewWindow();
+        const titleHeight = 28;
+        const bodyPadding = 8;
+        const minHeight = 120;
+        const maxHeight = 1000;
+        const targetHeight = Math.max(
+          minHeight,
+          Math.min(
+            maxHeight,
+            Math.ceil(
+              container.scrollHeight * dpsAppearanceSetting.scaleFactor + titleHeight + bodyPadding
+            )
+          )
+        );
+        const scaleFactor = await appWindow.scaleFactor();
+        const outerSize = await appWindow.outerSize();
+
+        if (Math.abs(outerSize.height / scaleFactor - targetHeight) < 5) {
+          lastHeightRef.current = targetHeight;
+          return;
+        }
+        if (!force && Math.abs(lastHeightRef.current - targetHeight) < 5) {
+          return;
+        }
+
+        lastHeightRef.current = targetHeight;
+        await appWindow.setSize(new LogicalSize(outerSize.width / scaleFactor, targetHeight));
+      } catch {
+        /* empty */
+      }
+    },
+    [dpsAppearanceSetting.autoResizeHeight, dpsAppearanceSetting.scaleFactor]
+  );
 
   const schedulePaint = useCallback(() => {
     if (pendingPaintRef.current) {
@@ -270,12 +375,86 @@ export default function DpsV2Page() {
     lastTotalDamageRef.current = Number.NaN;
     lastStatsLengthRef.current = -1;
     rowCacheRef.current = [];
+    detailSelectionRef.current = null;
     setText(targetNameRef.current, "No Target");
     setText(timerRef.current, "00:00");
     for (const row of rowsRef.current) {
       row.root.style.display = "none";
     }
   }, []);
+
+  const ensureDetailWindow = useCallback(async () => {
+    await createWindow("dps_detail_v2", {
+      title: "DPS Detail V2",
+      url: "/dps_detail_v2",
+      width: 1440,
+      height: 420,
+      decorations: false,
+      transparent: true,
+      resizable: true,
+      shadow: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      focus: false,
+      focusable: false,
+    });
+
+    await waitForWindowReady("dps_detail_v2");
+
+    await invoke("ensure_tracked_window", {
+      options: {
+        parentLabel: "dps_v2",
+        childLabel: "dps_detail_v2",
+        url: "/dps_detail_v2",
+        title: "DPS Detail V2",
+        width: 1440,
+        height: 420,
+        gap: 8,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      },
+    });
+  }, []);
+
+  const handleContainerClick = useCallback(
+    async (event: React.MouseEvent<HTMLDivElement>) => {
+      const row = (event.target as HTMLElement).closest("[data-row]") as HTMLElement | null;
+      if (!row) {
+        return;
+      }
+
+      const index = Number(row.dataset.row);
+      const snapshot = snapshotRef.current;
+      const stats = snapshot?.lastTargetAllPlayersOverviewStats as PlayerOverviewStat[] | undefined;
+      const targetId = snapshot?.lastTargetInfo?.id;
+      const player = stats?.[index];
+
+      if (!player || !targetId) {
+        return;
+      }
+
+      const selection: DpsDetailV2Selection = {
+        mode: "live",
+        targetId,
+        playerId: player.actorId,
+      };
+      detailSelectionRef.current = selection;
+      const detailData = buildLiveDetailPayload(snapshot, targetId, player.actorId);
+
+      await ensureDetailWindow();
+      await emit("dps-detail-v2-open", {
+        selection,
+        detailData,
+      } satisfies DpsDetailV2OpenPayload);
+    },
+    [ensureDetailWindow]
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -337,9 +516,28 @@ export default function DpsV2Page() {
         }
 
         snapshotRef.current = event.payload;
+        const nextStats = event.payload.lastTargetAllPlayersOverviewStats as
+          | PlayerOverviewStat[]
+          | undefined;
+        const nextVisiblePlayerCount = Math.min(8, nextStats?.length ?? 0);
+        if (
+          dpsAppearanceSetting.autoResizeHeight &&
+          nextVisiblePlayerCount !== lastVisiblePlayerCountRef.current
+        ) {
+          lastVisiblePlayerCountRef.current = nextVisiblePlayerCount;
+          if (resizeTimerRef.current) {
+            window.clearTimeout(resizeTimerRef.current);
+          }
+          resizeTimerRef.current = window.setTimeout(() => {
+            void resizeWindow();
+          }, 50);
+        }
         const targetInfo = event.payload.lastTargetInfo;
         if (targetInfo) {
-          setText(targetNameRef.current, targetInfo.targetName || `Mob ${targetInfo.targetMobCode}`);
+          setText(
+            targetNameRef.current,
+            targetInfo.targetName || `Mob ${targetInfo.targetMobCode}`
+          );
           const lastTime = Math.max(0, ...Object.values(targetInfo.targetLastTime ?? {}));
           const startTime = Math.min(lastTime, ...Object.values(targetInfo.targetStartTime ?? {}));
           const timer = fmtTimer(Math.max(0, lastTime - startTime));
@@ -358,23 +556,71 @@ export default function DpsV2Page() {
         schedulePaint();
       });
       unlisteners.push(unlistenSnapshot);
+
+      const unlistenDetailRequest = await listen("dps-detail-v2-request-selection", async () => {
+        if (detailSelectionRef.current) {
+          await emit("dps-detail-v2-open", {
+            selection: detailSelectionRef.current,
+            detailData: buildLiveDetailPayload(
+              snapshotRef.current,
+              detailSelectionRef.current.targetId,
+              detailSelectionRef.current.playerId
+            ),
+          } satisfies DpsDetailV2OpenPayload);
+        }
+      });
+      unlisteners.push(unlistenDetailRequest);
+
+      const unlistenResetRequest = await listen("dps-reset-requested", async () => {
+        await invoke("reset_dps_meter");
+        resetUi();
+      });
+      unlisteners.push(unlistenResetRequest);
+
+      const unlistenMainCharacterDetected = await listen<{
+        actorId: number;
+        actorName: string;
+        sid?: string | null;
+      }>("dps-main-actor-detected", async (e) => {
+        await invoke("reset_dps_meter"); // only reset the ui
+        // add to main actor history
+        const p = e.payload;
+        const sid = p.sid ? Number(p.sid) : NaN;
+        if (p.actorName && Number.isFinite(sid)) {
+          Aion2MainActorHistory.add({
+            id: `${p.actorName}-${sid}`,
+            actorName: p.actorName,
+            serverId: sid,
+            lastSeenAt: Date.now(),
+          });
+        }
+      });
+      unlisteners.push(unlistenMainCharacterDetected);
     })();
 
     return () => {
       alive = false;
+      if (resizeTimerRef.current) {
+        window.clearTimeout(resizeTimerRef.current);
+        resizeTimerRef.current = 0;
+      }
       unlisteners.forEach((unlisten) => unlisten());
     };
-  }, [schedulePaint]);
+  }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow, schedulePaint]);
 
   useEffect(() => {
     void (async () => {
       try {
-        await getCurrentWebviewWindow().setSize(new LogicalSize(320, 280));
+        if (!dpsAppearanceSetting.autoResizeHeight) {
+          await getCurrentWebviewWindow().setSize(new LogicalSize(320, 280));
+        } else {
+          await resizeWindow(true);
+        }
       } catch {
         /* empty */
       }
     })();
-  }, []);
+  }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow]);
 
   useEffect(() => {
     lastTotalDamageRef.current = Number.NaN;
@@ -385,8 +631,15 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.classIconStyle,
     dpsAppearanceSetting.mainPlayerColor,
     dpsAppearanceSetting.otherPlayerColor,
+    dpsAppearanceSetting.scaleFactor,
     schedulePaint,
   ]);
+
+  useEffect(() => {
+    if (dpsAppearanceSetting.autoResizeHeight) {
+      void resizeWindow(true);
+    }
+  }, [dpsAppearanceSetting.autoResizeHeight, dpsAppearanceSetting.scaleFactor, resizeWindow]);
 
   useEffect(() => {
     const window = getCurrentWebviewWindow();
@@ -412,12 +665,8 @@ export default function DpsV2Page() {
   }, [isRunning]);
 
   const handleReset = useCallback(async () => {
-    try {
-      await invoke("reset_dps_meter");
-      resetUi();
-    } catch {
-      /* empty */
-    }
+    await invoke("reset_dps_meter");
+    resetUi();
   }, [resetUi]);
 
   const handleClose = useCallback(async () => {
@@ -491,7 +740,12 @@ export default function DpsV2Page() {
       </div>
 
       <div className="flex-1 overflow-hidden p-1" style={{ backgroundColor: bg }}>
-        <div ref={containerRef} className="space-y-0">
+        <div
+          ref={containerRef}
+          className="space-y-0"
+          onClick={handleContainerClick}
+          style={{ zoom: dpsAppearanceSetting.scaleFactor }}
+        >
           {Array.from({ length: 8 }, (_, index) => (
             <div key={index} data-row={index} className={ROW_CLASS} style={{ display: "none" }}>
               <div className={BAR_CLASS} style={{ transform: "scaleX(0)" }} />
