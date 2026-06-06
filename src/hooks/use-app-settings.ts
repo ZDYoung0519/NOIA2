@@ -31,7 +31,6 @@ export type MainWindowAppearance = {
 
 export type DpsWindowAppearance = {
   autoHide: boolean;
-  autoOpenDpsWin: boolean;
   panelStyle: "classicBars" | "hunterCompact";
   backgroundColor: string;
   backgroundOpacity: number;
@@ -59,6 +58,7 @@ export type AppSettings = {
     resetDps: string;
   };
   dpsMeter: DpsMeterConfig;
+  autoCloseMainOnStartup: boolean;
   appearance: {
     mainWindow: MainWindowAppearance;
     dpsWindow: DpsWindowAppearance;
@@ -68,6 +68,7 @@ export type AppSettings = {
 export type AppSettingsUpdate = {
   shortcuts?: Partial<AppSettings["shortcuts"]>;
   dpsMeter?: Partial<DpsMeterConfig>;
+  autoCloseMainOnStartup?: boolean;
   appearance?: {
     mainWindow?: Partial<MainWindowAppearance>;
     dpsWindow?: Partial<DpsWindowAppearance>;
@@ -81,6 +82,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     resetDps: "",
   },
   dpsMeter: DEFAULT_DPS_METER_CONFIG,
+  autoCloseMainOnStartup: false,
   appearance: {
     mainWindow: {
       backgroundColor: "#0f172a",
@@ -88,7 +90,6 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     },
     dpsWindow: {
       autoHide: true,
-      autoOpenDpsWin: true,
       panelStyle: "classicBars",
       backgroundColor: "#000000",
       backgroundOpacity: 75,
@@ -152,6 +153,8 @@ type PartialAppSettings = {
   shortcut?: string;
   shortcuts?: Partial<AppSettings["shortcuts"]>;
   dpsMeter?: Partial<DpsMeterConfig>;
+  autoCloseMainOnStartup?: boolean;
+  autoRunDpsOnStartup?: boolean;
   appearance?: {
     mainWindow?: Partial<MainWindowAppearance>;
     dpsWindow?: Partial<DpsWindowAppearance>;
@@ -171,6 +174,10 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
       ...DEFAULT_DPS_METER_CONFIG,
       ...(input?.dpsMeter ?? {}),
     },
+    autoCloseMainOnStartup:
+      input?.autoCloseMainOnStartup ??
+      input?.autoRunDpsOnStartup ??
+      DEFAULT_APP_SETTINGS.autoCloseMainOnStartup,
     appearance: {
       mainWindow: {
         ...DEFAULT_APP_SETTINGS.appearance.mainWindow,
@@ -439,6 +446,8 @@ function AppSettingsProviderInner({ children }: { children: ReactNode }) {
               ...current.dpsMeter,
               ...(updater.dpsMeter ?? {}),
             },
+            autoCloseMainOnStartup:
+              updater.autoCloseMainOnStartup ?? current.autoCloseMainOnStartup,
             appearance: {
               mainWindow: {
                 ...current.appearance.mainWindow,

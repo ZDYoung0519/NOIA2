@@ -288,7 +288,15 @@ export function renderEquipmentSlotWithTooltip({
   );
 }
 
-export function renderEquipSlotSmall({ eq, size = 15 }: { eq: any; size: Number }) {
+export function renderEquipSlotSmall({
+  eq,
+  size = 15,
+  text_size = 12,
+}: {
+  eq: any;
+  size?: number;
+  text_size?: number;
+}) {
   const cfg = gradeConfig[eq.detail.grade as GradeType] || gradeConfig.Common;
   return (
     <div
@@ -297,7 +305,9 @@ export function renderEquipSlotSmall({ eq, size = 15 }: { eq: any; size: Number 
     >
       <div>
         <img src={eq.detail.icon} alt={eq.detail.name} className="h-full w-full p-0" />
-        <div className="absolute right-0 bottom-0 translate-y-1/4 text-[12px] font-bold text-white drop-shadow">
+        <div
+          className={`absolute right-0 bottom-0 translate-y-1/4 text-[${text_size}px] font-bold text-white drop-shadow`}
+        >
           {eq.detail.exceedLevel > 0 ? (
             renderDiamond({
               solid: true,
@@ -306,7 +316,7 @@ export function renderEquipSlotSmall({ eq, size = 15 }: { eq: any; size: Number 
               h: 18,
             })
           ) : (
-            <span>+{eq.detail.enchantLevel}</span>
+            <span className={`text-[${text_size}px]`}>+{eq.detail.enchantLevel}</span>
           )}
         </div>
       </div>
@@ -319,11 +329,13 @@ export function renderEquipSlotSmallWithTooltip({
   size = 15,
 }: {
   eq: Record<string, any>;
-  size: Number;
+  size?: number;
 }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{renderEquipSlotSmall({ eq: eq, size: size })}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        {renderEquipSlotSmall({ eq: eq, size: size, text_size: 10 })}
+      </TooltipTrigger>
       <TooltipContent side="right" align="start" className="rounded-none p-0">
         <EquipTooltip eq={eq} />
       </TooltipContent>

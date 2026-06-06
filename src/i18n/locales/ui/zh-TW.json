@@ -347,7 +347,7 @@
       "loadingButton": "登录中...",
       "socialProviderText": "使用 {{provider}} 登录",
       "linkText": "已经有账户？在此登录",
-      "description": "登录到你的个人账户"
+      "description": "登录到你的个人账户（不登录注册也可以照常使用水表）"
     },
     "signUp": {
       "emailLabel": "邮箱地址",

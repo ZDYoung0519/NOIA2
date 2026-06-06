@@ -75,31 +75,33 @@ export function TitleBar({
   return (
     <div
       style={style}
+      data-tauri-drag-region
       className={cn(
-        "text-card-foreground flex h-10 shrink-0 items-center justify-between bg-transparent select-none",
+        "drag-region text-card-foreground relative z-20 flex h-16 shrink-0 items-center justify-between bg-transparent select-none",
         className
       )}
     >
-      {/* Left: Title + Drag region */}
-      <div
-        data-tauri-drag-region
-        onDoubleClick={handleDragRegionDoubleClick}
-        className="flex min-w-0 grow items-center gap-2 px-3.5"
-      >
-        {showAppIcon && (
-          <img
-            src="icon.png"
-            alt="App icon"
-            className="size-4 shrink-0 rounded-sm"
-            onError={(event) => {
-              (event.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        )}
-        {title && (
-          <span className="text-muted-foreground truncate text-[13px] font-medium">{title}</span>
-        )}
+      <div className="flex min-w-0 grow items-center gap-3 pl-3.5">
         {leftActions}
+
+        <div
+          onDoubleClick={handleDragRegionDoubleClick}
+          className="drag-region flex min-w-0 grow items-center gap-2"
+        >
+          {showAppIcon && (
+            <img
+              src="icon.png"
+              alt="App icon"
+              className="size-4 shrink-0 rounded-sm"
+              onError={(event) => {
+                (event.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          )}
+          {title && (
+            <span className="text-muted-foreground truncate text-[13px] font-medium">{title}</span>
+          )}
+        </div>
       </div>
 
       {/* Right: Control buttons */}
@@ -113,7 +115,7 @@ export function TitleBar({
         {showMinimize && (
           <button
             onClick={handleMinimize}
-            className="title-bar-control"
+            className="title-bar-control no-drag-region"
             aria-label="Minimize"
             tabIndex={-1}
           >
@@ -124,7 +126,7 @@ export function TitleBar({
         {showMaximize && (
           <button
             onClick={handleToggleMaximize}
-            className="title-bar-control"
+            className="title-bar-control no-drag-region"
             aria-label={isMaximized ? "Restore" : "Maximize"}
             tabIndex={-1}
           >
@@ -135,7 +137,7 @@ export function TitleBar({
         {showClose && (
           <button
             onClick={handleClose}
-            className="title-bar-control hover:bg-destructive hover:text-destructive-foreground"
+            className="title-bar-control no-drag-region hover:bg-destructive hover:text-destructive-foreground"
             aria-label="Close"
             tabIndex={-1}
           >

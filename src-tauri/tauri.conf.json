@@ -13,17 +13,12 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "noia2"
-        ]
+        "schemes": ["noia2"]
       }
     },
     "updater": {
       "pubkey": "__TAURI_UPDATER_PUBKEY__",
-      "endpoints": [
-        "__TAURI_UPDATER_ENDPOINT_1__",
-        "__TAURI_UPDATER_ENDPOINT_2__"
-      ],
+      "endpoints": ["__TAURI_UPDATER_ENDPOINT_1__", "__TAURI_UPDATER_ENDPOINT_2__"],
       "windows": {
         "installMode": "passive"
       }
@@ -31,22 +26,6 @@
   },
   "app": {
     "windows": [
-      {
-        "label": "splash",
-        "title": "noia2-app",
-        "url": "/splash",
-        "width": 500,
-        "height": 350,
-        "decorations": false,
-        "transparent": true,
-        "resizable": false,
-        "maximizable": false,
-        "minimizable": false,
-        "closable": false,
-        "center": true,
-        "alwaysOnTop": true,
-        "visible": true
-      },
       {
         "label": "main",
         "title": "noia2 永恒诺亚",
@@ -56,6 +35,35 @@
         "transparent": true,
         "center": true,
         "shadow": true,
+        "visible": false
+      },
+      {
+        "label": "dps_v2",
+        "title": "DPS Meter V2",
+        "url": "/dps_v2",
+        "width": 320,
+        "height": 280,
+        "decorations": false,
+        "transparent": true,
+        "resizable": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false
+      },
+      {
+        "label": "dps_ping",
+        "title": "DPS Ping",
+        "url": "/dps_ping",
+        "width": 150,
+        "height": 20,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
         "visible": false
       }
     ],
@@ -70,10 +78,7 @@
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
-        "languages": [
-          "SimpChinese",
-          "English"
-        ]
+        "languages": ["SimpChinese", "English"]
       }
     },
     "icon": [

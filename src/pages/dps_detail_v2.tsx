@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { Minus, X } from "lucide-react";
 
 import { DpsDetailContent } from "@/components/dps/dps-detail-content";
-import { TitleBar } from "@/components/title-bar";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { getServerShortName } from "@/lib/aion2/servers";
@@ -64,6 +64,69 @@ function buildLivePayload(
     playerSkillStats:
       snapshot.byTargetPlayerSkillStats?.[String(targetId)]?.[String(playerId)] ?? {},
   };
+}
+
+function DpsDetailTitleBar({
+  actorIcon,
+  actorName,
+  actorServerName,
+  modeLabel,
+}: {
+  actorIcon: string;
+  actorName: string;
+  actorServerName: string;
+  modeLabel: string;
+}) {
+  const handleMinimize = async () => {
+    const appWindow = getCurrentWebviewWindow();
+    await appWindow.minimize();
+  };
+
+  const handleClose = async () => {
+    const appWindow = getCurrentWebviewWindow();
+    await appWindow.close();
+  };
+
+  return (
+    <div className="drag-region text-card-foreground relative z-20 flex h-12 shrink-0 items-center justify-between bg-background/90 px-3.5 select-none">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <img
+          src={actorIcon}
+          alt={actorName}
+          className="h-6 w-6 rounded object-cover"
+          onError={(event) => {
+            (event.target as HTMLImageElement).src = "icon.png";
+          }}
+        />
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-[13px] font-semibold text-white/92">{actorName}</span>
+          <span className="text-[11px] text-white/46">[{actorServerName}]</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-[11px] font-semibold tracking-[0.16em] text-white/72 uppercase">
+          {modeLabel}
+        </div>
+        <button
+          type="button"
+          onClick={handleMinimize}
+          className="no-drag-region flex h-9 w-9 items-center justify-center rounded-full bg-white/8 text-white/72 transition hover:bg-white/14 hover:text-white"
+          aria-label="Minimize"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="no-drag-region flex h-9 w-9 items-center justify-center rounded-full bg-white/8 text-white/72 transition hover:bg-rose-500/20 hover:text-rose-50"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function DpsDetailV2Page() {
@@ -231,34 +294,11 @@ export default function DpsDetailV2Page() {
       style={{ backgroundColor: shellBackground }}
       ref={contentRef}
     >
-      <TitleBar
-        title=""
-        showMaximize={false}
-        leftActions={
-          <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
-            <img
-              src={actorIcon}
-              alt={actorClass || "actor"}
-              className="h-6 w-6 rounded object-cover"
-              onError={(event) => {
-                (event.target as HTMLImageElement).src = "icon.png";
-              }}
-            />
-            <div className="flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-              <span className="truncate text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
-                {actorName}
-              </span>
-              <span className="text-xs text-slate-400">[{actorServerName}]</span>
-            </div>
-          </div>
-        }
-        rightActions={
-          <div className="mr-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold tracking-[0.18em] text-slate-300 uppercase">
-            {mode === "history" ? t("dps.detail.modeHistory") : t("dps.detail.modeLive")}
-          </div>
-        }
-        className="border-white/10"
-        style={{ backgroundColor: shellBackground }}
+      <DpsDetailTitleBar
+        actorIcon={actorIcon}
+        actorName={actorName}
+        actorServerName={actorServerName}
+        modeLabel={mode === "history" ? t("dps.detail.modeHistory") : t("dps.detail.modeLive")}
       />
 
       <div className="flex w-full flex-col gap-2 self-start bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_32%)] p-2">

@@ -511,7 +511,7 @@ export function AuthModal() {
             setAuthView("sign_in");
             setShowAuthModal(true);
           }}
-          className="gap-2"
+          className="no-drag-region h-10 rounded-full bg-black/25 px-4 text-white/84 backdrop-blur-md transition hover:bg-white/18 hover:text-white"
         >
           <UserIcon className="h-4 w-4" />
           {t("auth.signIn.button")}
@@ -521,40 +521,49 @@ export function AuthModal() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Link to="/user">
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9 hover:brightness-110">
+                <Button
+                  variant="ghost"
+                  className="no-drag-region relative h-10 w-10 rounded-full bg-black/25 p-0 text-white/84 backdrop-blur-md transition hover:bg-white/18 hover:text-white"
+                >
+                  <Avatar className="h-8.5 w-8.5 rounded-full ring-1 ring-white/18 transition hover:brightness-110">
                     <AvatarImage src={avatarUrl} alt={userName} />
-                    <AvatarFallback>{userName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="bg-white/12 text-xs font-semibold text-white">
+                      {userName.slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </Link>
             </TooltipTrigger>
 
-            <TooltipContent side="bottom" align="end" className="w-56 p-0">
+            <TooltipContent
+              side="bottom"
+              align="end"
+              className="w-60 rounded-2xl border border-white/10 bg-black/70 p-0 text-white shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+            >
               <div className="flex flex-col">
-                <div className="px-3 py-2.5">
+                <div className="px-4 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-medium">{userName}</p>
 
                     {isPremium && (
-                      <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-medium">
+                      <span className="rounded-full bg-[#F4C06A]/18 px-2 py-0.5 text-[10px] font-medium text-[#F4C06A]">
                         PRO
                       </span>
                     )}
                   </div>
 
-                  <p className="text-muted-foreground mt-0.5 truncate text-xs">{userEmail}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">{membershipText}</p>
+                  <p className="mt-0.5 truncate text-xs text-white/58">{userEmail}</p>
+                  <p className="mt-1 text-xs text-white/52">{membershipText}</p>
                 </div>
 
-                <div className="bg-border h-px" />
+                <div className="h-px bg-white/8" />
 
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     signOut();
                   }}
-                  className="flex cursor-pointer items-center px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
+                  className="flex cursor-pointer items-center px-4 py-2.5 text-sm text-red-300 transition-colors hover:bg-white/6 hover:text-red-200"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   {t("auth.signOut")}

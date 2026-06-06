@@ -333,7 +333,7 @@ export default function DpsV2Page() {
             ? `/images/class/${player.actorClass.toLowerCase()}.webp`
             : `/images/class/${player.actorClass.toLowerCase()}.png`
           : "/images/aion2.png";
-        // const name = player.actorName || `Player ${player.actorId}`;
+
         const name = maskNickname(
           player.actorName || `Player ${player.actorId}`,
           dpsAppearanceSetting.maskNicknames
@@ -349,7 +349,11 @@ export default function DpsV2Page() {
         }
         const dps = fmtDps(player.dps);
         const dmg = fmtDmg(damage);
-        const pct = `${(player.damageShare * 100).toFixed(1)}%`;
+        const pctValue =
+          dpsAppearanceSetting.percentDisplayMode === "contribution"
+            ? player.damageContribution
+            : player.damageShare;
+        const pct = `${(Math.min(1, Math.max(0, pctValue)) * 100).toFixed(1)}%`;
 
         if (cache.visible !== true) {
           row.root.style.display = "";
@@ -613,28 +617,6 @@ export default function DpsV2Page() {
   );
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
-    rowsRef.current = Array.from({ length: 8 }, (_, index) => {
-      const root = container.querySelector<HTMLElement>(`[data-row="${index}"]`)!;
-      return {
-        root,
-        bar: root.querySelector<HTMLElement>(".js-bar")!,
-        icon: root.querySelector<HTMLImageElement>(".js-icon")!,
-        name: root.querySelector<HTMLElement>(".js-name")!,
-        server: root.querySelector<HTMLElement>(".js-server")!,
-        dps: root.querySelector<HTMLElement>(".js-dps")!,
-        dmg: root.querySelector<HTMLElement>(".js-dmg")!,
-        pct: root.querySelector<HTMLElement>(".js-pct")!,
-      };
-    });
-    rowCacheRef.current = [];
-  }, []);
-
-  useEffect(() => {
     const c = containerRef.current;
     if (!c) return;
     rowsRef.current = Array.from({ length: 8 }, (_, i) => {
@@ -653,7 +635,7 @@ export default function DpsV2Page() {
     });
     rowCacheRef.current = [];
     schedulePaint();
-  }, [dpsAppearanceSetting.panelStyle]);
+  }, [dpsAppearanceSetting.panelStyle, dpsAppearanceSetting.percentDisplayMode]);
 
   useEffect(() => {
     let alive = true;
@@ -874,9 +856,24 @@ export default function DpsV2Page() {
 
   useEffect(() => {
     const window = getCurrentWebviewWindow();
-    const unlisten = window.onCloseRequested(async () => {
+    const unlisten = window.onCloseRequested(async (event) => {
+      event.preventDefault();
+      await invoke("set_dps_manual_hidden", { hidden: true });
       try {
         await invoke("stop_dps_meter");
+      } catch {
+        /* empty */
+      }
+
+      try {
+        await window.hide();
+      } catch {
+        /* empty */
+      }
+
+      try {
+        const pingWindow = await WebviewWindow.getByLabel("dps_ping");
+        await pingWindow?.hide();
       } catch {
         /* empty */
       }
@@ -913,7 +910,7 @@ export default function DpsV2Page() {
 
   const handleOpenSettings = useCallback(async () => {
     await createWindow("dps_settings", {
-      title: "DPS Settings",
+      title: "NOIA2 DPS Settings",
       url: "/dps_settings",
       width: 560,
       height: 1080,
@@ -952,7 +949,7 @@ export default function DpsV2Page() {
 
   const handleOpenLog = useCallback(async () => {
     await createWindow("dps_log", {
-      title: "DPS Log",
+      title: "NOIA2DPS Log",
       url: "/dps_log",
       width: 560,
       height: 320,
@@ -1211,16 +1208,25 @@ export default function DpsV2Page() {
           {dpsAppearanceSetting.panelStyle === "hunterCompact" && (
             <>
               {Array.from({ length: 8 }, (_, i) => (
-                <div key={`hunter-${i}`} data-row={i} style={{ display: "none" }}>
-                  <div style={{ transform: "scaleX(0)" }} />
-                  <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/[0.04]" />
+                <div
+                  key={`hunter-${i}`}
+                  data-row={i}
+                  className="group relative grid h-10 w-full cursor-pointer grid-cols-[30px_minmax(0,1fr)_142px] items-center overflow-hidden border-t border-white/10 px-1 text-left transition first:border-t-0 hover:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-cyan-300/60 focus-visible:outline-none"
+                  style={{ display: "none" }}
+                >
                   <div
-                    className="js-accent-bar absolute bottom-0 left-0 h-[3px] w-full origin-left overflow-hidden transition-transform duration-500"
+                    className="js-bar absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500"
                     style={{ transform: "scaleX(0)" }}
-                  />
+                  >
+                    <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden opacity-80">
+                      <div className="absolute inset-0 bg-inherit" />
+                      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,transparent_88%,rgba(255,255,255,0.42)_94%,rgba(255,255,255,0.6)_100%)]" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-white/[0.06]" />
                   <div className="relative z-10 flex items-center justify-center">
                     <img
-                      className="js-icon h-8 w-8 rounded object-cover"
+                      className="js-icon h-full w-full rounded-md object-cover shadow-sm"
                       alt="class"
                       onError={(event) => {
                         event.currentTarget.style.display = "none";
@@ -1230,7 +1236,7 @@ export default function DpsV2Page() {
                   </div>
                   <div className="relative z-10 min-w-0 py-1 pr-2 pl-2">
                     <div className="flex min-w-0 items-baseline gap-0">
-                      <span className="js-name text-md truncate leading-4 font-medium text-slate-50" />
+                      <span className="js-name truncate text-[15px] leading-4 font-medium text-slate-50" />
                     </div>
                     <div className="truncate text-[12px] leading-3 font-normal text-slate-500">
                       <span className="js-server" />

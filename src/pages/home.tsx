@@ -1,114 +1,54 @@
-﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowUp, FileText, Plus } from "lucide-react";
+import { Menu } from "lucide-react";
 
-import BattleTargetDpsChart from "@/components/battle-target-dps-chart";
-import CharacterCardCarousel from "@/components/character-card-carousel";
-import { DpsLightGuideDialog } from "@/components/dps-light-guide-dialog";
-import RecentTeammatesCard from "@/components/recent-teammates-card";
-
-import { toast } from "sonner";
-import { useAppTranslation } from "@/hooks/use-app-translation";
-import { createDpsV2Window, createDpsWindow } from "@/lib/window";
-import type { MainActorRecord } from "@/types/aion2dps";
-
-const DPS_LIGHT_GUIDE_SUPPRESS_KEY = "DPS_LIGHT_GUIDE_SUPPRESS";
+import { DpsMeterLauncherButton } from "@/components/dps-meter-launcher-button";
+import { HomeCharacterCarousel } from "@/components/home-character-carousel";
+import { HomeNewsCarousel } from "@/components/home-news-carousel";
+import { useAppSettings } from "@/hooks/use-app-settings";
 
 export default function HomePage() {
-  const [mainCharacter, setMainCharacter] = useState<MainActorRecord | null>(null);
-  const [selectedTargetKey, setSelectedTargetKey] = useState<string | null>(null);
-  const [showLightDialog, setShowLightDialog] = useState(false);
-  const { t } = useAppTranslation();
-  const navigate = useNavigate();
-
-  const handleCreateDpsV2Window = async () => {
-    await createDpsV2Window(true);
-    toast.info("水表v2已经启动！");
-    if (localStorage.getItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY) !== "1") {
-      setShowLightDialog(true);
-    }
-  };
-
-  const quickActions = [
-    // { label: "DPS水表(新版)", icon: Plus, onClick: handleLightDps },
-    {
-      label: "DPS水表(V2)",
-      icon: Plus,
-      onClick: async () => {
-        await handleCreateDpsV2Window();
-      },
-    },
-    {
-      label: "使用指南",
-      icon: FileText,
-      onClick: () => {
-        setShowLightDialog(true);
-      },
-    },
-    {
-      label: "DPS水表(旧版)",
-      icon: Plus,
-      onClick: () => {
-        createDpsWindow(true);
-        toast.info("水表已经启动，请切换至游戏窗口查看！");
-      },
-    },
-
-    {
-      label: t("home.actions.characterRating"),
-      icon: ArrowUp,
-      onClick: () => navigate("/character/search"),
-    },
-    { label: t("home.actions.rankings"), icon: ArrowUp, onClick: () => navigate("/dps-rank") },
-    {
-      label: t("home.actions.comingSoon"),
-      icon: FileText,
-      onClick: () => navigate("/history-battle-query"),
-    },
-  ];
+  const { settings, saveSettings } = useAppSettings();
+  const autoCloseMain = settings.autoCloseMainOnStartup;
 
   return (
-    <div className="mx-auto max-w-[2500px] pt-5 pr-5 pl-5">
-      <div className="space-y-8">
-        <section className="grid gap-x-8 gap-y-8 xl:grid-cols-[1.16fr_0.6fr_0.56fr]">
-          <div className="min-w-0">
-            <CharacterCardCarousel onActiveCharacterChange={setMainCharacter} />
-          </div>
-          <RecentTeammatesCard mainCharacter={mainCharacter} />
-          <div className="min-w-0 pt-1">
-            <h3 className="text-foreground mb-6 text-[18px] font-semibold md:text-[20px]">
-              {t("home.quickActions")}
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              {quickActions.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.label}
-                    className="border/50 bg-card text-foreground hover:bg-accent hover:text-accent-foreground flex cursor-pointer flex-col items-center gap-3 rounded-[22px] border px-3 py-5 transition-all hover:-translate-y-0.5 hover:shadow-sm"
-                    onClick={item.onClick}
-                  >
-                    <span className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-2xl">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
+    <div className="relative h-full w-full overflow-hidden bg-transparent text-white">
+      <main className="absolute inset-0 z-20 overflow-hidden">
+        <div className="h-full overflow-y-auto px-10 pt-10 pb-0">
+          <div className="flex w-full items-start justify-between gap-12">
+            <div className="w-[450px] shrink-0">
+              <HomeNewsCarousel />
+            </div>
+
+            <div className="ml-auto w-[400px] shrink-0">
+              <HomeCharacterCarousel />
             </div>
           </div>
-        </section>
+        </div>
+      </main>
 
-        <section>
-          <BattleTargetDpsChart
-            mainCharacter={mainCharacter}
-            selectedTargetKey={selectedTargetKey}
-            onSelectTargetKey={setSelectedTargetKey}
-          />
-        </section>
-      </div>
+      <section className="absolute right-10 bottom-10 z-30 flex flex-col items-end gap-2">
+        <div className="flex items-center">
+          <button className="flex h-[54px] w-[66px] items-center justify-center rounded-l-md bg-black/45 backdrop-blur-xl transition hover:bg-black/60">
+            <Menu size={30} />
+          </button>
 
-      <DpsLightGuideDialog open={showLightDialog} onOpenChange={setShowLightDialog} />
+          <DpsMeterLauncherButton />
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-white drop-shadow">
+          <button
+            type="button"
+            onClick={() => {
+              const next = !autoCloseMain;
+              void saveSettings({ autoCloseMainOnStartup: next });
+            }}
+            className="flex h-4 w-4 items-center justify-center rounded-sm border-2 border-white"
+            aria-label="启动软件后自动关闭主窗口（减少负担）"
+          >
+            {autoCloseMain ? <span className="text-[11px] leading-none text-white">✓</span> : null}
+          </button>
+          启动水表悬浮窗后，自动关闭主窗口（减少运行负担）
+        </label>
+      </section>
     </div>
   );
 }

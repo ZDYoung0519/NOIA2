@@ -93,6 +93,7 @@
 @layer utilities {
   .title-bar-btn {
     @apply text-muted-foreground hover:bg-background/55 hover:text-foreground flex size-7 cursor-pointer items-center justify-center rounded-lg transition-colors outline-none;
+    -webkit-app-region: no-drag;
   }
 
   .title-bar-btn svg {
@@ -101,6 +102,15 @@
 
   .title-bar-control {
     @apply text-muted-foreground hover:bg-background/55 hover:text-foreground flex h-10 w-11 cursor-pointer items-center justify-center transition-colors outline-none;
+    -webkit-app-region: no-drag;
+  }
+
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag-region {
+    -webkit-app-region: no-drag;
   }
 
   .title-bar-control svg {

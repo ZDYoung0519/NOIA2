@@ -18,16 +18,13 @@ servers.forEach((server) => {
 });
 
 // 按种族分组的服务器
-const serversByRace = servers.reduce<Record<number, Server[]>>(
-  (acc, server) => {
-    if (!acc[server.raceId]) {
-      acc[server.raceId] = [];
-    }
-    acc[server.raceId].push(server);
-    return acc;
-  },
-  {},
-);
+const serversByRace = servers.reduce<Record<number, Server[]>>((acc, server) => {
+  if (!acc[server.raceId]) {
+    acc[server.raceId] = [];
+  }
+  acc[server.raceId].push(server);
+  return acc;
+}, {});
 
 /**
  * 根据服务器ID获取服务器名称
@@ -47,6 +44,16 @@ export const getServerName = (serverId: number): string => {
 export const getServerShortName = (serverId: number): string => {
   const server = serverMap.get(serverId);
   return server?.serverShortName || "未知";
+};
+
+export const getServerIdByShortName = (serverShortName: string): number | null => {
+  const lowerShortName = serverShortName.toLowerCase();
+  for (const [id, server] of serverMap.entries()) {
+    if (server.serverShortName.toLowerCase() === lowerShortName) {
+      return id;
+    }
+  }
+  return null;
 };
 
 /**
@@ -120,7 +127,7 @@ export const searchServersByName = (keyword: string): Server[] => {
   return servers.filter(
     (server) =>
       server.serverName.toLowerCase().includes(lowerKeyword) ||
-      server.serverShortName.toLowerCase().includes(lowerKeyword),
+      server.serverShortName.toLowerCase().includes(lowerKeyword)
   );
 };
 
@@ -139,7 +146,7 @@ export const getServerNames = (serverIds: number[]): string[] => {
  * @returns 选项数组 [{ value: serverId, label: serverName }]
  */
 export const getServerOptions = (
-  raceId?: number,
+  raceId?: number
 ): Array<{ value: number; label: string; shortName: string }> => {
   const targetServers = raceId ? getRaceServers(raceId) : servers;
   return targetServers.map((server) => ({

@@ -94,35 +94,32 @@ export default function DpsPingPage() {
     }
   }, []);
 
-  const updateFooterDom = useCallback(
-    (memory: MemorySnapshot) => {
-      const pingMs = memory.pingMs;
-      const pingActive = typeof pingMs === "number" && Number.isFinite(pingMs);
-      const pingTone = !pingActive
-        ? "text-white/60"
-        : pingMs < 60
-          ? "text-green-400"
-          : pingMs < 120
-            ? "text-yellow-400"
-            : "text-rose-400";
+  const updateFooterDom = useCallback((memory: MemorySnapshot) => {
+    const pingMs = memory.pingMs;
+    const pingActive = typeof pingMs === "number" && Number.isFinite(pingMs);
+    const pingTone = !pingActive
+      ? "text-white/60"
+      : pingMs < 60
+        ? "text-green-400"
+        : pingMs < 120
+          ? "text-yellow-400"
+          : "text-rose-400";
 
-      pingHistoryRef.current = memory.pingHistory ?? [];
-      setText(pingTextRef.current, pingActive ? `${Math.round(pingMs)} ms` : "--");
-      setText(cpuTextRef.current, formatPercent(memory.cpuPercent));
-      setText(memoryTextRef.current, formatMemory(memory.rssMb));
+    pingHistoryRef.current = memory.pingHistory ?? [];
+    setText(pingTextRef.current, pingActive ? `${Math.round(pingMs)} ms` : "--");
+    setText(cpuTextRef.current, formatPercent(memory.cpuPercent));
+    setText(memoryTextRef.current, formatMemory(memory.rssMb));
 
-      if (pingButtonRef.current) {
-        pingButtonRef.current.className = cn(PING_BUTTON_BASE_CLASS, pingTone);
-      }
-      if (wifiIconRef.current) {
-        wifiIconRef.current.style.display = pingActive ? "" : "none";
-      }
-      if (wifiOffIconRef.current) {
-        wifiOffIconRef.current.style.display = pingActive ? "none" : "";
-      }
-    },
-    []
-  );
+    if (pingButtonRef.current) {
+      pingButtonRef.current.className = cn(PING_BUTTON_BASE_CLASS, pingTone);
+    }
+    if (wifiIconRef.current) {
+      wifiIconRef.current.style.display = pingActive ? "" : "none";
+    }
+    if (wifiOffIconRef.current) {
+      wifiOffIconRef.current.style.display = pingActive ? "none" : "";
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;

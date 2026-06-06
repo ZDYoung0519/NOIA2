@@ -375,7 +375,7 @@ export function getStatEntriesMap(character: CharacterProps): Record<string, Sta
 
   // 称号属性
   titleList.forEach((item) => {
-    const equipStatList = item?.equipStatList;
+    const equipStatList = item?.equipStatList || [];
     equipStatList.forEach((stat) => {
       const [name, value] = stat.desc.split(" ");
       const unit = String(value).includes("%") ? "%" : "";

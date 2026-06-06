@@ -10,9 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-
-const DPS_LIGHT_GUIDE_SUPPRESS_KEY = "DPS_LIGHT_GUIDE_SUPPRESS";
 
 const DPS_GUIDE_STEPS = [
   {
@@ -41,7 +38,6 @@ type DpsLightGuideDialogProps = {
 export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogProps) {
   const [guideStep, setGuideStep] = useState(0);
   const [npcapOk, setNpcapOk] = useState<boolean | null>(null);
-  const [suppressNextTime, setSuppressNextTime] = useState(false);
   const currentGuideStep = DPS_GUIDE_STEPS[guideStep];
 
   const checkNpcap = async () => {
@@ -53,13 +49,9 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      localStorage.setItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY, suppressNextTime ? "1" : "0");
-    }
     onOpenChange(nextOpen);
     if (nextOpen) {
       setGuideStep(0);
-      setSuppressNextTime(localStorage.getItem(DPS_LIGHT_GUIDE_SUPPRESS_KEY) === "1");
       void checkNpcap();
     }
   };
@@ -80,6 +72,7 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
                 <a
                   href="https://npcap.com/dist/npcap-1.87.exe"
                   target="_blank"
+                  rel="noreferrer"
                   className="cursor-pointer underline hover:text-white"
                   onClick={(event) => {
                     event.preventDefault();
@@ -90,10 +83,12 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
                 >
                   Npcap
                 </a>
-                （默认勾选 WinPcap 选项）
+                （默认勾选第三个选项）
                 <button
                   type="button"
-                  onClick={checkNpcap}
+                  onClick={() => {
+                    void checkNpcap();
+                  }}
                   className="ml-2 rounded border border-white/10 px-1.5 py-0.5 text-xs text-white/50 hover:text-white"
                 >
                   重新检测
@@ -116,14 +111,14 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
           {guideStep === 1 && (
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-slate-500">2.</span>
-              <span>在游戏中传送奇斯克以识别角色</span>
+              <span>在游戏中传送一次，以便正确识别自己的角色。</span>
             </div>
           )}
 
           {guideStep === 2 && (
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-slate-500">3.</span>
-              <span>进行打桩 / 副本战斗，数据会自动显示</span>
+              <span>进行打桩或副本战斗后，数据会自动显示。</span>
             </div>
           )}
 
@@ -132,7 +127,7 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
               <div className="rounded-md border border-white/10 bg-white/5 p-3">
                 <div className="font-medium text-white/90">wifi 图标没有延迟？</div>
                 <div>
-                  请确保你已经下载了 Npcap 并勾选了第三个选项。如果仍然没有，属于加速器不支持。
+                  请确保你已经下载了 Npcap，并勾选了第三个选项。如果仍然没有，属于加速器不支持。
                 </div>
               </div>
               <div className="rounded-md border border-white/10 bg-white/5 p-3">
@@ -166,14 +161,8 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
         </div>
 
         <DialogFooter className="items-center gap-2 sm:justify-between">
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-xs text-white/60">
-              <Switch checked={suppressNextTime} onCheckedChange={setSuppressNextTime} />
-              <span>下次不再提示</span>
-            </label>
-            <div className="text-xs text-white/45">
-              {guideStep + 1} / {DPS_GUIDE_STEPS.length}
-            </div>
+          <div className="text-xs text-white/45">
+            {guideStep + 1} / {DPS_GUIDE_STEPS.length}
           </div>
           <div className="flex gap-2">
             <Button

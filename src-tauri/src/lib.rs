@@ -1,6 +1,7 @@
 mod dps_meter;
 mod plugins;
 
+use crate::plugins::window_tracking::{ensure_tracked_window, TrackedWindowOptions, TrackedWindowPosition};
 use tauri::Manager;
 use tauri_plugin_window_state::StateFlags;
 
@@ -68,17 +69,37 @@ pub fn run() {
                 app.deep_link().register_all()?;
             }
 
-            // Temporary delay to preview the startup loading screen.
-            // thread::sleep(Duration::from_secs(5));
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
             app.manage(meter);
+            if let Some(window) = app.get_webview_window("dps_v2") {
+                let _ = window.show();
+                let _ = window.unminimize();
+            }
+            let _ = ensure_tracked_window(
+                app.handle().clone(),
+                TrackedWindowOptions {
+                    parent_label: "dps_v2".to_string(),
+                    child_label: "dps_ping".to_string(),
+                    url: "/dps_ping".to_string(),
+                    title: Some("DPS Ping".to_string()),
+                    width: Some(150.0),
+                    height: Some(20.0),
+                    gap: Some(0.0),
+                    position: Some(TrackedWindowPosition::Bottom),
+                    decorations: Some(false),
+                    transparent: Some(true),
+                    resizable: Some(true),
+                    shadow: Some(false),
+                    always_on_top: Some(true),
+                    skip_taskbar: Some(true),
+                    focus: Some(false),
+                    focusable: Some(false),
+                },
+            );
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
                 let _ = window.set_focus();
-            }
-            if let Some(window) = app.get_webview_window("splash") {
-                let _ = window.close();
             }
             Ok(())
         });

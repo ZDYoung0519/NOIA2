@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/custom-tooltip";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fetchFengwo, formatFengwoResponse } from "@/lib/aion2/fetchFengwo";
+import { fetchFengwoV2, formatFengwoResponse } from "@/lib/aion2/fetchFengwo";
 import { getServerShortName } from "@/lib/aion2/servers";
 import { MemoizedDpsPanel } from "@/components/dps/dps-panel";
 import { DpsDetailContent } from "@/components/dps/dps-detail-content";
@@ -907,10 +907,11 @@ export default function CharacterViewPage() {
       setLoading(true);
 
       // 查询蜂窝接口，并且获取评分
-      const data1 = await fetchFengwo(characterName, serverName);
-      const character = await formatFengwoResponse(data1);
-      const combatPower = data1?.queryResult?.data?.profile?.combatPower;
-      const fengwoScore = data1?.rating?.scores?.score;
+      // const data = await fetchFengwo(characterName, serverName);
+      const data = await fetchFengwoV2(characterName, serverName);
+      const character = await formatFengwoResponse(data);
+      const combatPower = data?.queryResult?.data?.profile?.combatPower;
+      const fengwoScore = data?.rating?.scores?.score;
       const itemLevel = character.data.statList?.find((item) => item?.type === "ItemLevel")?.value;
       setCharacterScores({
         itemLevel: itemLevel,

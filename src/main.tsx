@@ -1,41 +1,40 @@
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect } from "react";
 import React, { lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import "./index.css";
-import "./i18n";
-import { AuthDeepLinkHandler } from "./components/auth-deep-link-handler";
-import { MainShell } from "./components/main-shell";
-import { AppSettingsProvider } from "./hooks/use-app-settings";
-import { TooltipProvider } from "./components/ui/tooltip";
-import Splash from "./pages/Splash";
 
+import Splash from "./pages/Splash";
 import HomePage from "./pages/home";
 import DpsClassStatsPage from "./pages/dps_class_stats";
 import DpsRankPage from "./pages/dps_rank";
-import HistoryBattleQueryPage from "./pages/history_battle_query";
+
 import CharacterPage from "./pages/character";
 import CharacterViewPage from "./pages/character_view";
 import SettingsViewPage from "./pages/settings_view";
 import UserPage from "./pages/user";
-import { useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
+
 import { useAppTranslation } from "@/hooks/use-app-translation";
+import { AppSettingsProvider } from "./hooks/use-app-settings";
+import { AuthDeepLinkHandler } from "./components/auth-deep-link-handler";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { WindowFrame } from "./components/window-frame";
+import { MainTitleBar } from "./components/main-title-bar";
+import { UpdaterDialog } from "./components/updater-dialog";
 
-import { useAppSettings } from "@/hooks/use-app-settings";
+import "./index.css";
+import "./i18n";
 
 const DpsPage = lazy(() => import("./pages/dps"));
-const DpsNewPage = lazy(() => import("./pages/dps_new"));
-const DpsV2Page = lazy(() => import("./pages/dps_v2"));
-const DpsDetailV2Page = lazy(() => import("./pages/dps_detail_v2"));
-
-const DpsPingPage = lazy(() => import("./pages/dps_ping"));
-const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
 const DpsDetailPage = lazy(() => import("./pages/dps_detail"));
 
+const DpsV2Page = lazy(() => import("./pages/dps_v2"));
+const DpsDetailV2Page = lazy(() => import("./pages/dps_detail_v2"));
+const DpsPingPage = lazy(() => import("./pages/dps_ping"));
+const DpsSettingPage = lazy(() => import("./pages/dps_settings"));
 const DpsLogPage = lazy(() => import("./pages/dps_log"));
-const AboutPage = lazy(() => import("./pages/about"));
 
 function App() {
   const { t } = useAppTranslation();
@@ -54,44 +53,30 @@ function App() {
     void initTrayMenu();
   }, [t]);
 
-  const { saveSettings } = useAppSettings();
-
-  useEffect(() => {
-    void saveSettings({
-      dpsMeter: {
-        maxPacketSizeThreshold: Number(8192),
-      },
-    });
-  }, []);
-
   return (
     <Routes>
       <Route element={<Outlet />}>
         <Route path="/dps" element={<DpsPage />} />
-        <Route path="/dps_new" element={<DpsNewPage />} />
+        <Route path="/dps_detail" element={<DpsDetailPage />} />
         <Route path="/dps_v2" element={<DpsV2Page />} />
         <Route path="/dps_detail_v2" element={<DpsDetailV2Page />} />
-
         <Route path="/dps_ping" element={<DpsPingPage />} />
         <Route path="/dps_settings" element={<DpsSettingPage />} />
-        <Route path="/dps_detail" element={<DpsDetailPage />} />
         <Route path="/dps_log" element={<DpsLogPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/splash" element={<Splash />} />
       </Route>
 
       <Route
         element={
-          <MainShell>
-            <Toaster />
+          <WindowFrame titleBar={<MainTitleBar />} showSidebar contentClassName="overflow-auto">
+            <UpdaterDialog />
             <Outlet />
-          </MainShell>
+          </WindowFrame>
         }
       >
         <Route path="/" element={<HomePage />} />
         <Route path="/dps-rank" element={<DpsRankPage />} />
         <Route path="/dps-class-stats" element={<DpsClassStatsPage />} />
-        <Route path="/history-battle-query" element={<HistoryBattleQueryPage />} />
         <Route path="/character/search" element={<CharacterPage />} />
         <Route path="/character/view" element={<CharacterViewPage />} />
         <Route path="/settings-view" element={<SettingsViewPage />} />
@@ -110,6 +95,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <TooltipProvider>
           <BrowserRouter>
             <AuthDeepLinkHandler />
+            <Toaster />
             <App />
           </BrowserRouter>
         </TooltipProvider>

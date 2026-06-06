@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listen } from "@tauri-apps/api/event";
-import { Package, RotateCcw, Search } from "lucide-react";
+import { Minus, Package, RotateCcw, Search, X } from "lucide-react";
 
-import { TitleBar } from "@/components/title-bar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAppSettings } from "@/hooks/use-app-settings";
@@ -41,6 +41,75 @@ const formatLocalLogTime = (timestamp: number) => {
 
   return new Date(timestamp * 1000).toLocaleTimeString();
 };
+
+function DpsLogTitleBar({
+  searchQuery,
+  onSearchQueryChange,
+  onClearLogs,
+}: {
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
+  onClearLogs: () => void;
+}) {
+  const handleMinimize = async () => {
+    const appWindow = getCurrentWebviewWindow();
+    await appWindow.minimize();
+  };
+
+  const handleClose = async () => {
+    const appWindow = getCurrentWebviewWindow();
+    await appWindow.close();
+  };
+
+  return (
+    <div className="drag-region text-slate-100 relative z-20 flex h-12 shrink-0 items-center justify-between border-b border-white/10 bg-background/90 px-3.5 select-none">
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+          <span className="text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
+            DPS Log
+          </span>
+        </div>
+        <div className="relative w-52 min-w-0" data-tauri-drag-region="false">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder="Search logs"
+            className="h-7 border-white/10 bg-white/5 pl-8 text-xs text-slate-100 placeholder:text-slate-400 focus-visible:border-white/20 focus-visible:ring-white/10"
+          />
+        </div>
+        <button
+          type="button"
+          title="Clear logs"
+          onClick={onClearLogs}
+          className="no-drag-region flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="no-drag-region flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleMinimize}
+          className="no-drag-region flex h-9 w-9 items-center justify-center rounded-full bg-white/8 text-white/72 transition hover:bg-white/14 hover:text-white"
+          aria-label="Minimize"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="no-drag-region flex h-9 w-9 items-center justify-center rounded-full bg-white/8 text-white/72 transition hover:bg-rose-500/20 hover:text-rose-50"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function DpsLogPage() {
   const { settings } = useAppSettings();
@@ -115,7 +184,6 @@ export default function DpsLogPage() {
     () => hexToRgba(dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity),
     [dpsAppearance.backgroundColor, dpsAppearance.backgroundOpacity]
   );
-  const titleBarBackground = shellBackground;
   const panelBackground = shellBackground;
   const footerBackground = shellBackground;
   const packetEntries = Object.entries(memorySnapshot?.packetSizes ?? {});
@@ -141,38 +209,10 @@ export default function DpsLogPage() {
       className="flex h-screen w-screen flex-col overflow-hidden rounded-lg border border-white/10 text-slate-100"
       style={{ backgroundColor: shellBackground }}
     >
-      <TitleBar
-        title=""
-        showMaximize={false}
-        leftActions={
-          <div className="flex min-w-0 items-center gap-2" data-tauri-drag-region>
-            <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-              <span className="text-xs font-semibold tracking-[0.18em] text-slate-100 uppercase">
-                DPS Log
-              </span>
-            </div>
-            <div className="relative w-52 min-w-0" data-tauri-drag-region="false">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search logs"
-                className="h-7 border-white/10 bg-white/5 pl-8 text-xs text-slate-100 placeholder:text-slate-400 focus-visible:border-white/20 focus-visible:ring-white/10"
-              />
-            </div>
-            <button
-              type="button"
-              title="Clear logs"
-              onClick={handleClearLogs}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        }
-        className="border-white/10"
-        style={{ backgroundColor: titleBarBackground }}
+      <DpsLogTitleBar
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onClearLogs={handleClearLogs}
       />
 
       <div

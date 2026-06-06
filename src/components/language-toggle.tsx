@@ -48,7 +48,7 @@ export function LanguageToggle() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="title-bar-btn mr-1"
+        className="title-bar-btn no-drag-region mr-1"
         aria-label={t("language.toggle")}
         title={t("language.current", { language: t(`language.${currentLanguage}`) })}
         tabIndex={-1}
