@@ -113,7 +113,6 @@ mod windows_impl {
                     .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
                     .unwrap_or(false);
                 let focused = aion2_focused
-                    || is_current_app_hwnd(hwnd_raw)
                     || is_overlay_related_window_focused(&app_for_processor);
 
                 if last_focused == Some(focused) {
@@ -203,9 +202,7 @@ mod windows_impl {
                 .as_deref()
                 .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
                 .unwrap_or(false);
-            let focused = aion2_focused
-                || is_current_app_hwnd(hwnd.0 as isize)
-                || is_overlay_related_window_focused(&app_for_poller);
+            let focused = aion2_focused || is_overlay_related_window_focused(&app_for_poller);
 
             let (dps_manual_hidden, auto_hide_enabled) = app_for_poller
                 .try_state::<Aion2FocusState>()
@@ -277,21 +274,14 @@ mod windows_impl {
     }
 
     fn is_overlay_related_window_focused<R: Runtime>(app: &AppHandle<R>) -> bool {
-        ["dps_settings", "main"].iter().any(|label| {
+        ["dps_settings", "dps_log", "dps_detail_v2"].iter().any(|label| {
             app.get_webview_window(label)
                 .and_then(|window| window.is_focused().ok())
                 .unwrap_or(false)
         })
     }
 
-    fn is_current_app_hwnd(hwnd_raw: isize) -> bool {
-        unsafe {
-            let hwnd = HWND(hwnd_raw as *mut _);
-            let mut process_id = 0u32;
-            GetWindowThreadProcessId(hwnd, Some(&mut process_id));
-            process_id != 0 && process_id == std::process::id()
-        }
-    }
+
 
     fn process_name_for_hwnd(hwnd_raw: isize) -> Option<String> {
         unsafe {

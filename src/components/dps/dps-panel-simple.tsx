@@ -19,6 +19,8 @@ type DpsPanelProps = {
   percentDisplayMode?: "contribution" | "damageShare";
   showTargetHpBar?: boolean;
   classIconStyle?: "default" | "colored";
+  showPlayerName?: boolean;
+  showServerName?: boolean;
   backgroundColor?: string;
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
@@ -208,6 +210,8 @@ const DpsPanel = function DpsPanel({
   percentDisplayMode = "damageShare",
   showTargetHpBar = false,
   classIconStyle = "default",
+  showPlayerName = true,
+  showServerName = true,
   backgroundColor = "transparent",
   onPlayerClicked,
   onPlayerHovered,
@@ -261,6 +265,8 @@ const DpsPanel = function DpsPanel({
           const playerServerName = playerServerId
             ? getServerName(Number(playerServerId))
             : t("dps.list.unknownServer");
+          const displayName = showPlayerName ? displayPlayerName : "";
+          const displayServerName = showServerName ? playerServerName : "";
           const actorClassIcon = actorClass
             ? classIconStyle === "default"
               ? `/images/class/${actorClass.toLowerCase()}.webp`
@@ -349,18 +355,22 @@ const DpsPanel = function DpsPanel({
 
               <div className="relative z-10 min-w-0 py-1 pr-2 pl-2">
                 <div className="flex min-w-0 items-baseline gap-0">
-                  <span className="text-md truncate leading-4 font-medium text-slate-50">
-                    {displayPlayerName}
-                  </span>
+                  {showPlayerName ? (
+                    <span className="text-md truncate leading-4 font-medium text-slate-50">
+                      {displayName}
+                    </span>
+                  ) : null}
                   {isMainPlayer ? (
                     <span className="shrink-0 rounded-sm border border-cyan-300/35 bg-cyan-300/12 px-1 py-px text-[9px] leading-none font-semibold text-cyan-100">
                       ME
                     </span>
                   ) : null}
                 </div>
-                <div className="truncate text-[12px] leading-3 font-normal text-slate-500">
-                  {playerServerName}
-                </div>
+                {showServerName ? (
+                  <div className="truncate text-[12px] leading-3 font-normal text-slate-500">
+                    {displayServerName}
+                  </div>
+                ) : null}
               </div>
 
               <div className="relative z-10 grid h-9 w-[142px] grid-cols-[70px_64px] grid-rows-[18px_18px] items-center pr-2 font-mono tabular-nums">

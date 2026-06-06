@@ -3,6 +3,7 @@ mod plugins;
 
 use crate::plugins::window_tracking::{ensure_tracked_window, TrackedWindowOptions, TrackedWindowPosition};
 use tauri::Manager;
+use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_window_state::StateFlags;
 
 #[cfg(any(windows, target_os = "linux"))]
@@ -22,14 +23,29 @@ fn update_tray_menu(
     plugins::system_tray::update_tray_menu(&app, &show_text, &quit_text)
 }
 
+#[tauri::command]
+fn show_system_notification(
+    app: tauri::AppHandle,
+    title: String,
+    body: String,
+) -> Result<(), String> {
+    app.notification()
+        .builder()
+        .title(&title)
+        .body(&body)
+        .show()
+        .map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
+            if let Ok(window) = plugins::system_tray::ensure_main_window(&app) {
                 let _ = window.set_focus();
                 let _ = window.unminimize();
                 let _ = window.show();
@@ -48,6 +64,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             update_tray_menu,
+            show_system_notification,
             dps_meter::api::commands::apply_dps_meter_config,
             dps_meter::api::commands::get_dps_meter_config,
             dps_meter::api::commands::start_dps_meter,
@@ -71,10 +88,10 @@ pub fn run() {
 
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
             app.manage(meter);
-            if let Some(window) = app.get_webview_window("dps_v2") {
-                let _ = window.show();
-                let _ = window.unminimize();
-            }
+            // if let Some(window) = app.get_webview_window("dps_v2") {
+            //     let _ = window.show();
+            //     let _ = window.unminimize();
+            // }
             let _ = ensure_tracked_window(
                 app.handle().clone(),
                 TrackedWindowOptions {

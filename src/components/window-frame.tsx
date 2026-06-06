@@ -91,7 +91,7 @@ function SidebarNavItem({ path, label, icon: Icon, expanded }: NavItem & { expan
   );
 }
 
-function WindowSidebar() {
+function WindowSidebar({ isHomePage }: { isHomePage: boolean }) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -113,6 +113,7 @@ function WindowSidebar() {
     <aside
       className={cn(
         "text-card-foreground relative z-10 shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
+        isHomePage ? "bg-transparent" : "bg-background/52",
         expanded ? "w-[212px]" : "w-16"
       )}
     >
@@ -178,6 +179,16 @@ export function WindowFrame({
         className
       )}
     >
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
+        style={{
+          backgroundImage: `url("/images/aion2/background.png")`,
+        }}
+      />
+      <div className="via-background/35 to-background/45 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
+      <div className="from-background/55 to-background/60 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
+      <div className="bg-background/68 pointer-events-none absolute inset-0" />
+
       {isHomePage ? (
         <video
           className="absolute inset-0 h-full w-full object-cover"
@@ -189,24 +200,19 @@ export function WindowFrame({
         >
           <source src="/bg_01_main.mp4" type="video/mp4" />
         </video>
-      ) : (
-        <>
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
-            style={{
-              backgroundImage: `url("/images/aion2/background.png")`,
-            }}
-          />
-          <div className="via-background/35 to-background/45 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
-          <div className="from-background/55 to-background/60 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
-          <div className="bg-background/68 pointer-events-none absolute inset-0" />
-        </>
-      )}
+      ) : null}
 
-      {titleBar}
+      <div
+        className={cn(
+          "relative z-20",
+          isHomePage ? "bg-transparent" : "bg-background/62"
+        )}
+      >
+        {titleBar}
+      </div>
       <main className="min-h-0 flex-1">
         <div className="relative flex h-full min-h-0">
-          {showSidebar && <WindowSidebar />}
+          {showSidebar && <WindowSidebar isHomePage={isHomePage} />}
 
           <section className="relative z-10 min-h-0 min-w-0 flex-1 p-0 pt-0">
             <div
@@ -214,7 +220,7 @@ export function WindowFrame({
                 "relative h-full min-h-0 overflow-hidden",
                 isHomePage
                   ? "bg-transparent shadow-none ring-0"
-                  : "rounded-2xl bg-card/45 shadow-[0_20px_70px_rgba(0,0,0,0.2)] ring-1 ring-black/5",
+                  : "rounded-2xl bg-background/52 shadow-[0_20px_70px_rgba(0,0,0,0.2)]",
                 contentClassName
               )}
             >

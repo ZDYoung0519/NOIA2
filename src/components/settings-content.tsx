@@ -382,6 +382,8 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 maskNicknames={dpsAppearance.maskNicknames}
                 percentDisplayMode={dpsAppearance.percentDisplayMode}
                 classIconStyle={dpsAppearance.classIconStyle}
+                showPlayerName={dpsAppearance.showPlayerName}
+                showServerName={dpsAppearance.showServerName}
                 showTargetHpBar={dpsAppearance.showTargetHpBar}
                 onPlayerClicked={() => {}}
               />
@@ -397,6 +399,8 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 maskNicknames={dpsAppearance.maskNicknames}
                 percentDisplayMode={dpsAppearance.percentDisplayMode}
                 classIconStyle={dpsAppearance.classIconStyle}
+                showPlayerName={dpsAppearance.showPlayerName}
+                showServerName={dpsAppearance.showServerName}
                 showTargetHpBar={dpsAppearance.showTargetHpBar}
                 onPlayerClicked={() => {}}
               />
@@ -449,6 +453,40 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
                 <SelectItem value="colored">colored</SelectItem>
               </SelectContent>
             </Select>
+          }
+        />
+        <SettingsRow
+          label="显示玩家名称"
+          control={
+            <Switch
+              checked={dpsAppearance.showPlayerName}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showPlayerName: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label="显示服务器名称"
+          control={
+            <Switch
+              checked={dpsAppearance.showServerName}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showServerName: checked,
+                    },
+                  },
+                });
+              }}
+            />
           }
         />
         <SettingsRow

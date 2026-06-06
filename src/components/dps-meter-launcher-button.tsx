@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/hooks/use-app-settings";
 
+const DPS_METER_STARTED_AT_KEY = "dps-meter-started-at";
+
 function formatElapsed(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -20,6 +22,24 @@ function formatElapsed(totalSeconds: number) {
   }
 
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function readStartedAt() {
+  const raw = window.localStorage.getItem(DPS_METER_STARTED_AT_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  const numeric = Number(raw);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+
+function persistStartedAt(timestamp: number) {
+  window.localStorage.setItem(DPS_METER_STARTED_AT_KEY, String(timestamp));
+}
+
+function clearStartedAt() {
+  window.localStorage.removeItem(DPS_METER_STARTED_AT_KEY);
 }
 
 export function DpsMeterLauncherButton() {
@@ -44,7 +64,9 @@ export function DpsMeterLauncherButton() {
 
         setIsDpsMeterRunning(initial);
         if (initial) {
-          setStartedAt(Date.now());
+          const persistedStartedAt = readStartedAt() ?? Date.now();
+          setStartedAt(persistedStartedAt);
+          persistStartedAt(persistedStartedAt);
         }
       } catch (error) {
         console.error("get dps meter status failed:", error);
@@ -57,9 +79,18 @@ export function DpsMeterLauncherButton() {
 
         const nextRunning = Boolean(event.payload);
         setIsDpsMeterRunning(nextRunning);
-        setStartedAt((current) => (nextRunning ? (current ?? Date.now()) : null));
+        setStartedAt((current) => {
+          if (!nextRunning) {
+            return null;
+          }
+
+          const nextStartedAt = current ?? readStartedAt() ?? Date.now();
+          persistStartedAt(nextStartedAt);
+          return nextStartedAt;
+        });
         if (!nextRunning) {
           setElapsedSeconds(0);
+          clearStartedAt();
         }
       });
 
@@ -102,16 +133,23 @@ export function DpsMeterLauncherButton() {
         setIsDpsMeterRunning(false);
         setStartedAt(null);
         setElapsedSeconds(0);
+        clearStartedAt();
       } else {
         await invoke("start_dps_meter");
         await invoke("set_dps_manual_hidden", { hidden: false });
 
+        const nextStartedAt = Date.now();
         setIsDpsMeterRunning(true);
-        setStartedAt(Date.now());
+        setStartedAt(nextStartedAt);
+        persistStartedAt(nextStartedAt);
 
         if (autoCloseMain) {
+          await invoke("show_system_notification", {
+            title: "NOIA2",
+            body: "水表已经运行，请切换至游戏内窗口查看",
+          });
           const appWindow = getCurrentWebviewWindow();
-          await appWindow.hide();
+          await appWindow.close();
         }
       }
     } catch (error) {
@@ -140,7 +178,7 @@ export function DpsMeterLauncherButton() {
         <Play size={24} fill="currentColor" strokeWidth={1.5} className="ml-0.5" />
       )}
       <span className="truncate text-[22px] font-bold tracking-widest">
-        {isPending ? "处理中..." : isDpsMeterRunning ? elapsedText : "启动水表"}
+        {isPending ? "正在关闭..." : isDpsMeterRunning ? elapsedText : "启动水表"}
       </span>
     </button>
   );

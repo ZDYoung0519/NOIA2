@@ -54,6 +54,7 @@
     "global-shortcut:allow-unregister-all",
     "window-state:default",
     "deep-link:default",
+    "notification:default",
     "dialog:default",
     "fs:default"
   ]

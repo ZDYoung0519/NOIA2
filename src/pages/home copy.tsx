@@ -33,7 +33,7 @@ export default function HomePage() {
       icon: Plus,
       onClick: () => {
         createDpsWindow(true);
-        toast.info("水表已经启动，请切换至游戏窗口查看！");
+        toast.info("水表已经运行，请切换至游戏内窗口查看");
       },
     },
 

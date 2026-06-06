@@ -152,6 +152,8 @@ type RowCache = {
   scale?: string;
   background?: string;
   iconSrc?: string;
+  showName?: boolean;
+  showServer?: boolean;
   name?: string;
   server?: string;
   dps?: string;
@@ -338,6 +340,8 @@ export default function DpsV2Page() {
           player.actorName || `Player ${player.actorId}`,
           dpsAppearanceSetting.maskNicknames
         );
+        const showName = dpsAppearanceSetting.showPlayerName;
+        const showServer = dpsAppearanceSetting.showServerName;
         const server = player.actorServerId
           ? `[${serverNameCacheRef.current.get(player.actorServerId) ?? getServerShortName(Number(player.actorServerId))}]`
           : "";
@@ -372,12 +376,20 @@ export default function DpsV2Page() {
           row.icon.src = iconSrc;
           cache.iconSrc = iconSrc;
         }
+        if (cache.showName !== showName) {
+          row.name.style.display = showName ? "" : "none";
+          cache.showName = showName;
+        }
+        if (cache.showServer !== showServer) {
+          row.server.style.display = showServer ? "" : "none";
+          cache.showServer = showServer;
+        }
         if (cache.name !== name) {
-          setText(row.name, name);
+          setText(row.name, showName ? name : "");
           cache.name = name;
         }
         if (cache.server !== server) {
-          setText(row.server, server);
+          setText(row.server, showServer ? server : "");
           cache.server = server;
         }
         if (cache.dps !== dps) {
@@ -409,6 +421,8 @@ export default function DpsV2Page() {
   }, [
     dpsAppearanceSetting.classIconStyle,
     dpsAppearanceSetting.mainPlayerColor,
+    dpsAppearanceSetting.showPlayerName,
+    dpsAppearanceSetting.showServerName,
     dpsAppearanceSetting.otherPlayerColor,
   ]);
 
@@ -844,6 +858,8 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.classIconStyle,
     dpsAppearanceSetting.mainPlayerColor,
     dpsAppearanceSetting.otherPlayerColor,
+    dpsAppearanceSetting.showPlayerName,
+    dpsAppearanceSetting.showServerName,
     dpsAppearanceSetting.scaleFactor,
     schedulePaint,
   ]);
@@ -1299,6 +1315,8 @@ export default function DpsV2Page() {
                 maskNicknames={dpsAppearanceSetting.maskNicknames}
                 percentDisplayMode={dpsAppearanceSetting.percentDisplayMode}
                 classIconStyle={dpsAppearanceSetting.classIconStyle}
+                showPlayerName={dpsAppearanceSetting.showPlayerName}
+                showServerName={dpsAppearanceSetting.showServerName}
                 showTargetHpBar={dpsAppearanceSetting.showTargetHpBar}
                 onPlayerClicked={handleHistoryPlayerClick}
               />

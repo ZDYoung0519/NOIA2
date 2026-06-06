@@ -816,6 +816,8 @@ function DpsRecordTable({
                     barOpacity={100}
                     maskNicknames={dpsAppearance.maskNicknames}
                     percentDisplayMode={dpsAppearance.percentDisplayMode}
+                    showPlayerName={dpsAppearance.showPlayerName}
+                    showServerName={dpsAppearance.showServerName}
                     onPlayerClicked={setSelectedPlayerId}
                     onPlayerHovered={() => {}}
                     onPlayerHoverEnd={() => {}}

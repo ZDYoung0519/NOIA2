@@ -5,7 +5,7 @@ use tauri::{
     AppHandle, Manager, Runtime, WebviewWindow, WebviewWindowBuilder,
 };
 
-fn ensure_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<WebviewWindow<R>, String> {
+pub(crate) fn ensure_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<WebviewWindow<R>, String> {
     if let Some(window) = app.get_webview_window("main") {
         return Ok(window);
     }

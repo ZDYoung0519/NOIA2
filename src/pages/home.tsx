@@ -1,13 +1,24 @@
+import { useState } from "react";
 import { Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { DpsMeterLauncherButton } from "@/components/dps-meter-launcher-button";
+import { DpsLightGuideDialog } from "@/components/dps-light-guide-dialog";
 import { HomeCharacterCarousel } from "@/components/home-character-carousel";
 import { HomeNewsCarousel } from "@/components/home-news-carousel";
 import { useAppSettings } from "@/hooks/use-app-settings";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function HomePage() {
+  const [showLightDialog, setShowLightDialog] = useState(false);
   const { settings, saveSettings } = useAppSettings();
   const autoCloseMain = settings.autoCloseMainOnStartup;
+  const navigate = useNavigate();
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-transparent text-white">
@@ -27,9 +38,29 @@ export default function HomePage() {
 
       <section className="absolute right-10 bottom-10 z-30 flex flex-col items-end gap-2">
         <div className="flex items-center">
-          <button className="flex h-[54px] w-[66px] items-center justify-center rounded-l-md bg-black/45 backdrop-blur-xl transition hover:bg-black/60">
-            <Menu size={30} />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex h-[54px] w-[66px] items-center justify-center rounded-l-md bg-black/45 backdrop-blur-xl transition hover:bg-black/60">
+                <Menu size={30} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="min-w-36 p-1">
+              <DropdownMenuItem
+                onClick={() => {
+                  setShowLightDialog(true);
+                }}
+              >
+                使用指南
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate("/settings-view");
+                }}
+              >
+                应用设置
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DpsMeterLauncherButton />
         </div>
@@ -49,6 +80,8 @@ export default function HomePage() {
           启动水表悬浮窗后，自动关闭主窗口（减少运行负担）
         </label>
       </section>
+
+      <DpsLightGuideDialog open={showLightDialog} onOpenChange={setShowLightDialog} />
     </div>
   );
 }

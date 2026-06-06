@@ -1195,6 +1195,8 @@ export default function DpsNewPage() {
                 maskNicknames={dpsAppearanceSetting.maskNicknames}
                 percentDisplayMode={dpsAppearanceSetting.percentDisplayMode}
                 classIconStyle={dpsAppearanceSetting.classIconStyle}
+                showPlayerName={dpsAppearanceSetting.showPlayerName}
+                showServerName={dpsAppearanceSetting.showServerName}
                 showTargetHpBar={dpsAppearanceSetting.showTargetHpBar}
                 onPlayerClicked={handleHistoryPlayerClick}
               />

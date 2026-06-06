@@ -41,6 +41,8 @@ export type DpsWindowAppearance = {
   mainPlayerColor: string;
   otherPlayerColor: string;
   classIconStyle: "default" | "colored";
+  showPlayerName: boolean;
+  showServerName: boolean;
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
   detailWindowPosition: "follow" | "center";
@@ -100,6 +102,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       mainPlayerColor: "rgba(34,197,94,0.42)",
       otherPlayerColor: "rgba(56,189,248,0.28)",
       classIconStyle: "default",
+      showPlayerName: true,
+      showServerName: true,
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
       detailWindowPosition: "follow",
@@ -246,6 +250,12 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
             : input?.appearance?.dpsWindow?.classIconStyle === "colored"
               ? "colored"
               : DEFAULT_APP_SETTINGS.appearance.dpsWindow.classIconStyle,
+        showPlayerName:
+          input?.appearance?.dpsWindow?.showPlayerName ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.showPlayerName,
+        showServerName:
+          input?.appearance?.dpsWindow?.showServerName ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.showServerName,
         pingWindowAlignment:
           input?.appearance?.dpsWindow?.pingWindowAlignment === "right" ? "right" : "left",
         pingWindowShowLatency:

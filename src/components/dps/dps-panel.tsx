@@ -18,6 +18,8 @@ type DpsPanelProps = {
   percentDisplayMode?: "contribution" | "damageShare";
   showTargetHpBar?: boolean;
   classIconStyle?: "default" | "colored";
+  showPlayerName?: boolean;
+  showServerName?: boolean;
   onPlayerClicked: (playerId: number) => void;
   onPlayerHovered?: (playerId: number) => void;
   onPlayerHoverEnd?: (playerId: number) => void;
@@ -38,6 +40,8 @@ const DpsPanel = function DpsPanel({
   percentDisplayMode = "damageShare",
   showTargetHpBar = false,
   classIconStyle = "default",
+  showPlayerName = true,
+  showServerName = true,
   onPlayerClicked,
   onPlayerHovered,
   onPlayerHoverEnd,
@@ -84,6 +88,9 @@ const DpsPanel = function DpsPanel({
         const playerServerName = playerServerId
           ? getServerShortName(Number(playerServerId))
           : t("dps.list.unknownServer");
+        const displayLabel = [showPlayerName ? displayPlayerName : "", showServerName ? `[${playerServerName}]` : ""]
+          .filter(Boolean)
+          .join("");
 
         const actorClassIcon = actorClass
           ? classIconStyle === "default"
@@ -141,7 +148,7 @@ const DpsPanel = function DpsPanel({
                 </div>
 
                 <span className="truncate font-mono text-sm">
-                  {displayPlayerName}[{playerServerName}]
+                  {displayLabel}
                 </span>
               </div>
 

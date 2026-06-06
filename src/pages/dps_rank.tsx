@@ -364,6 +364,8 @@ function DpsRankDetailDialog({
                   barOpacity={100}
                   maskNicknames={dpsAppearance.maskNicknames}
                   percentDisplayMode={dpsAppearance.percentDisplayMode}
+                  showPlayerName={true}
+                  showServerName={true}
                   onPlayerClicked={setSelectedPlayerId}
                   onPlayerHovered={() => {}}
                   onPlayerHoverEnd={() => {}}
