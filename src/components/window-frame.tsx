@@ -198,16 +198,11 @@ export function WindowFrame({
           playsInline
           preload="auto"
         >
-          <source src="/bg_01_main.mp4" type="video/mp4" />
+          <source src="/bg.mp4" type="video/mp4" />
         </video>
       ) : null}
 
-      <div
-        className={cn(
-          "relative z-20",
-          isHomePage ? "bg-transparent" : "bg-background/62"
-        )}
-      >
+      <div className={cn("relative z-20", isHomePage ? "bg-transparent" : "bg-background/62")}>
         {titleBar}
       </div>
       <main className="min-h-0 flex-1">
@@ -220,7 +215,7 @@ export function WindowFrame({
                 "relative h-full min-h-0 overflow-hidden",
                 isHomePage
                   ? "bg-transparent shadow-none ring-0"
-                  : "rounded-2xl bg-background/52 shadow-[0_20px_70px_rgba(0,0,0,0.2)]",
+                  : "bg-background/52 rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.2)]",
                 contentClassName
               )}
             >
