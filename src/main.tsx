@@ -22,7 +22,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { WindowFrame } from "./components/window-frame";
 import { MainTitleBar } from "./components/main-title-bar";
-// import { UpdaterDialog } from "./components/updater-dialog";
+import { UpdaterDialog } from "./components/updater-dialog";
 
 import "./index.css";
 import "./i18n";
@@ -69,7 +69,7 @@ function App() {
       <Route
         element={
           <WindowFrame titleBar={<MainTitleBar />} showSidebar contentClassName="overflow-auto">
-            {/* <UpdaterDialog /> */}
+            <UpdaterDialog />
             <Outlet />
           </WindowFrame>
         }

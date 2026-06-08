@@ -268,9 +268,6 @@ impl DpsMeter {
     fn clear_runtime_state_nopacket(&self) {
         self.data_storage.clear();
         self.calculator.reset_snapshot_state();
-        // self.packet_channel.clear();
-        // self.dispatcher.clear();
-        // self.ping_tracker.reset();
         *self.last_emitted_total_damage.lock().unwrap() = None;
     }
 

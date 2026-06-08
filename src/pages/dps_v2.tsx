@@ -56,6 +56,25 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+function colorToAlpha(color: string, alpha: number) {
+  const trimmed = color.trim();
+  if (trimmed.startsWith("#")) {
+    return hexToRgba(trimmed, alpha * 100);
+  }
+
+  const match = trimmed.match(/rgba?\(([^)]+)\)/i);
+  if (!match) {
+    return color;
+  }
+
+  const [r, g, b] = match[1].split(",").map((part) => Number(part.trim()));
+  if (![r, g, b].every((channel) => Number.isFinite(channel))) {
+    return color;
+  }
+
+  return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, alpha))})`;
+}
+
 function fmt(n: number) {
   return Math.floor(n).toLocaleString();
 }
@@ -197,6 +216,7 @@ export default function DpsV2Page() {
   );
 
   const [isRunning, setIsRunning] = useState(false);
+  const [isClickThrough, setIsClickThrough] = useState(false);
   const [view, setView] = useState<"dps" | "dps_history" | "ping">("dps");
   const [pingHistory, setPingHistory] = useState<[number, number][]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
@@ -218,11 +238,13 @@ export default function DpsV2Page() {
   const bossHpNameRef = useRef<HTMLSpanElement | null>(null);
   const bossHpPercentRef = useRef<HTMLSpanElement | null>(null);
   const bossHpTextRef = useRef<HTMLSpanElement | null>(null);
+  const bossHpTimerRef = useRef<HTMLSpanElement | null>(null);
   const bossHpBarRef = useRef<HTMLDivElement | null>(null);
   const dotRef = useRef<HTMLDivElement | null>(null);
   const lastBossHpNameRef = useRef("");
   const lastBossHpTextRef = useRef("");
   const lastBossHpPercentTextRef = useRef("");
+  const lastBossHpTimerTextRef = useRef("");
   const lastBossHpScaleRef = useRef("");
   const lastDotClassRef = useRef("");
   const lastTimerRef = useRef("");
@@ -277,7 +299,7 @@ export default function DpsV2Page() {
 
       try {
         const appWindow = getCurrentWebviewWindow();
-        const titleHeight = 28;
+        const titleHeight = isClickThrough ? 0 : 28;
         const bodyPadding = 8;
         const minHeight = 120;
         const maxHeight = 1000;
@@ -307,7 +329,7 @@ export default function DpsV2Page() {
         /* empty */
       }
     },
-    [dpsAppearanceSetting.autoResizeHeight, dpsAppearanceSetting.scaleFactor]
+    [dpsAppearanceSetting.autoResizeHeight, dpsAppearanceSetting.scaleFactor, isClickThrough]
   );
 
   const schedulePaint = useCallback(() => {
@@ -327,6 +349,46 @@ export default function DpsV2Page() {
         return;
       }
 
+      const nextStats = snapshot.lastTargetAllPlayersOverviewStats as
+        | PlayerOverviewStat[]
+        | undefined;
+      const nextVisiblePlayerCount = Math.min(8, nextStats?.length ?? 0);
+      if (
+        dpsAppearanceSetting.autoResizeHeight &&
+        nextVisiblePlayerCount !== lastVisiblePlayerCountRef.current
+      ) {
+        lastVisiblePlayerCountRef.current = nextVisiblePlayerCount;
+        if (resizeTimerRef.current) {
+          window.clearTimeout(resizeTimerRef.current);
+        }
+        resizeTimerRef.current = window.setTimeout(() => {
+          void resizeWindow();
+        }, 50);
+      }
+      const targetInfo = snapshot.lastTargetInfo ?? null;
+      const nextTargetName = getTargetDisplayName(
+        mainActorNameRef.current || snapshot.combatInfos.mainActorName,
+        targetInfo?.targetName,
+        targetInfo ? `Mob ${targetInfo.targetMobCode}` : "",
+        dpsAppearanceSetting.maskNicknames
+      );
+      setText(targetNameRef.current, nextTargetName);
+
+      if (targetInfo) {
+        const lastTime = Math.max(0, ...Object.values(targetInfo.targetLastTime ?? {}));
+        const startTime = Math.min(lastTime, ...Object.values(targetInfo.targetStartTime ?? {}));
+        const timer = fmtTimer(Math.max(0, lastTime - startTime));
+        if (timer !== lastTimerRef.current) {
+          lastTimerRef.current = timer;
+          setText(timerRef.current, timer);
+        }
+      } else {
+        if (lastTimerRef.current !== "00:00") {
+          lastTimerRef.current = "00:00";
+          setText(timerRef.current, "00:00");
+        }
+      }
+
       const stats = snapshot.lastTargetAllPlayersOverviewStats as PlayerOverviewStat[] | undefined;
       const filteredStats = dpsAppearanceSetting.showUnknownActors
         ? stats
@@ -334,7 +396,6 @@ export default function DpsV2Page() {
       const nextLength = Math.min(8, filteredStats?.length ?? 0);
 
       // 目标血量
-      const targetInfo = snapshot.lastTargetInfo ?? null;
       const targetMaxHp = Number(targetInfo?.maxHp ?? 0);
       const targetCurrentHp = Number(targetInfo?.currentHp ?? 0);
       const shouldShowBossHp = viewRef.current === "dps" && !!targetInfo && targetMaxHp > 0;
@@ -345,6 +406,12 @@ export default function DpsV2Page() {
         const hpPercentText = `${((safeCurrentHp / Math.max(1, targetMaxHp)) * 100).toFixed(1)}%`;
         const hpName = targetInfo.targetName || `Target ${targetInfo.id}`;
         const hpText = `${fmtDmg(safeCurrentHp)} / ${fmtDmg(targetMaxHp)}`;
+        const hpLastTime = Math.max(0, ...Object.values(targetInfo.targetLastTime ?? {}));
+        const hpStartTime = Math.min(
+          hpLastTime,
+          ...Object.values(targetInfo.targetStartTime ?? {})
+        );
+        const hpTimerText = fmtTimer(Math.max(0, hpLastTime - hpStartTime));
 
         if (bossHpWrapRef.current) {
           bossHpWrapRef.current.style.display = "";
@@ -360,6 +427,10 @@ export default function DpsV2Page() {
         if (lastBossHpPercentTextRef.current !== hpPercentText) {
           setText(bossHpPercentRef.current, hpPercentText);
           lastBossHpPercentTextRef.current = hpPercentText;
+        }
+        if (lastBossHpTimerTextRef.current !== hpTimerText) {
+          setText(bossHpTimerRef.current, hpTimerText);
+          lastBossHpTimerTextRef.current = hpTimerText;
         }
         if (bossHpBarRef.current && lastBossHpScaleRef.current !== hpScale) {
           bossHpBarRef.current.style.transform = hpScale;
@@ -411,7 +482,13 @@ export default function DpsV2Page() {
           mainActorName != null && player.actorName === mainActorName
             ? dpsAppearanceSetting.mainPlayerColor
             : dpsAppearanceSetting.otherPlayerColor;
-        const background = playerColor;
+        const background =
+          dpsAppearanceSetting.panelStyle === "hunterCompact"
+            ? `linear-gradient(90deg, ${colorToAlpha(playerColor, 0.55)} 0%, ${colorToAlpha(
+                playerColor,
+                0.25
+              )} 65%, transparent 100%)`
+            : playerColor;
         const iconSrc = player.actorClass
           ? dpsAppearanceSetting.classIconStyle === "default"
             ? `/images/class/${player.actorClass.toLowerCase()}.webp`
@@ -439,7 +516,8 @@ export default function DpsV2Page() {
           dpsAppearanceSetting.percentDisplayMode === "contribution"
             ? player.damageContribution
             : player.damageShare;
-        const pct = `${(Math.min(1, Math.max(0, pctValue)) * 100).toFixed(1)}%`;
+        const percent = Math.min(1, Math.max(0, pctValue)) * 100;
+        const pct = `${Number.isInteger(percent) ? percent : percent.toFixed(1)}%`;
 
         if (cache.visible !== true) {
           row.root.style.display = "";
@@ -508,6 +586,8 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.showUnknownActors,
     dpsAppearanceSetting.otherPlayerColor,
     dpsAppearanceSetting.showTargetHpBar,
+    dpsAppearanceSetting.panelStyle,
+    isClickThrough,
   ]);
 
   const resetUi = useCallback(() => {
@@ -519,6 +599,7 @@ export default function DpsV2Page() {
     lastBossHpNameRef.current = "";
     lastBossHpTextRef.current = "";
     lastBossHpPercentTextRef.current = "";
+    lastBossHpTimerTextRef.current = "";
     lastBossHpScaleRef.current = "";
     detailSelectionRef.current = null;
     setText(
@@ -813,49 +894,9 @@ export default function DpsV2Page() {
         if (!isRunningRef.current) {
           isRunningRef.current = true;
           setIsRunning(true);
-          setDot("bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] status-dot-breathe");
+          setDot("bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]");
         }
-
         snapshotRef.current = event.payload;
-        const nextStats = event.payload.lastTargetAllPlayersOverviewStats as
-          | PlayerOverviewStat[]
-          | undefined;
-        const nextVisiblePlayerCount = Math.min(8, nextStats?.length ?? 0);
-        if (
-          dpsAppearanceSetting.autoResizeHeight &&
-          nextVisiblePlayerCount !== lastVisiblePlayerCountRef.current
-        ) {
-          lastVisiblePlayerCountRef.current = nextVisiblePlayerCount;
-          if (resizeTimerRef.current) {
-            window.clearTimeout(resizeTimerRef.current);
-          }
-          resizeTimerRef.current = window.setTimeout(() => {
-            void resizeWindow();
-          }, 50);
-        }
-        const targetInfo = event.payload.lastTargetInfo;
-        const nextTargetName = getTargetDisplayName(
-          mainActorNameRef.current || event.payload.combatInfos.mainActorName,
-          targetInfo?.targetName,
-          targetInfo ? `Mob ${targetInfo.targetMobCode}` : "",
-          dpsAppearanceSetting.maskNicknames
-        );
-        setText(targetNameRef.current, nextTargetName);
-
-        if (targetInfo) {
-          const lastTime = Math.max(0, ...Object.values(targetInfo.targetLastTime ?? {}));
-          const startTime = Math.min(lastTime, ...Object.values(targetInfo.targetStartTime ?? {}));
-          const timer = fmtTimer(Math.max(0, lastTime - startTime));
-          if (timer !== lastTimerRef.current) {
-            lastTimerRef.current = timer;
-            setText(timerRef.current, timer);
-          }
-        } else {
-          if (lastTimerRef.current !== "00:00") {
-            lastTimerRef.current = "00:00";
-            setText(timerRef.current, "00:00");
-          }
-        }
 
         schedulePaint();
       });
@@ -898,7 +939,7 @@ export default function DpsV2Page() {
         await uploadPendingHistoryRecords();
         // add to main actor history
         const p = e.payload;
-        mainActorNameRef.current = p.actorName || "";
+        mainActorNameRef.current = p?.actorName;
         if (!snapshotRef.current?.lastTargetInfo) {
           setText(
             targetNameRef.current,
@@ -928,6 +969,18 @@ export default function DpsV2Page() {
         setView("ping");
       });
       unlisteners.push(unlistenPing);
+
+      const unlistenClickThrough = await listen<{ clickThrough: boolean }>(
+        "dps-click-through-changed",
+        (event) => {
+          if (!alive) {
+            return;
+          }
+
+          setIsClickThrough(Boolean(event.payload.clickThrough));
+        }
+      );
+      unlisteners.push(unlistenClickThrough);
     })();
 
     return () => {
@@ -961,6 +1014,52 @@ export default function DpsV2Page() {
       }
     })();
   }, [dpsAppearanceSetting.autoResizeHeight, resizeWindow]);
+
+  useEffect(() => {
+    void resizeWindow(true);
+  }, [resizeWindow]);
+
+  useEffect(() => {
+    if (isClickThrough) {
+      return;
+    }
+    let alive = true;
+
+    void (async () => {
+      // 标题栏在 click-through 时会被卸载；恢复后用后端真实状态重新写回标题栏内容。
+      const backendRunning = await invoke<boolean>("get_dps_meter_status").catch(
+        () => isRunningRef.current
+      );
+      if (!alive) {
+        return;
+      }
+
+      isRunningRef.current = backendRunning;
+
+      const snapshot = snapshotRef.current;
+      const targetInfo = snapshot?.lastTargetInfo;
+      const nextTargetName = getTargetDisplayName(
+        mainActorNameRef.current || snapshot?.combatInfos.mainActorName,
+        targetInfo?.targetName,
+        targetInfo ? `Mob ${targetInfo.targetMobCode}` : "",
+        dpsAppearanceSetting.maskNicknames
+      );
+
+      setText(targetNameRef.current, nextTargetName);
+      setText(timerRef.current, lastTimerRef.current || "00:00");
+
+      lastDotClassRef.current = "";
+      setDot(
+        backendRunning
+          ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] status-dot-breathe"
+          : "bg-rose-400"
+      );
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [dpsAppearanceSetting.maskNicknames, isClickThrough]);
 
   useEffect(() => {
     const appWindow = getCurrentWebviewWindow();
@@ -1056,11 +1155,7 @@ export default function DpsV2Page() {
   }, []);
 
   const handleStartStop = useCallback(async () => {
-    try {
-      await invoke(isRunning ? "stop_dps_meter" : "start_dps_meter");
-    } catch {
-      /* empty */
-    }
+    await invoke(isRunning ? "stop_dps_meter" : "start_dps_meter");
   }, [isRunning]);
 
   const handleReset = useCallback(async () => {
@@ -1180,160 +1275,166 @@ export default function DpsV2Page() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden rounded-sm text-slate-100">
-      <div
-        className="flex h-7 shrink-0 items-center justify-between border border-white/10 px-2 select-none"
-        style={{ backgroundColor: bg }}
-      >
-        <div className="flex min-w-0 flex-1 items-center gap-2" data-tauri-drag-region>
-          <div className="flex h-full shrink-0 items-center gap-1.5" data-tauri-drag-region>
-            {view === "dps" ? (
-              <Clock3 className="h-3.5 w-3.5 text-slate-400" data-tauri-drag-region />
-            ) : (
-              <button
-                type="button"
-                title="Back"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={(event) => {
-                  event.currentTarget.blur();
-                  setView("dps");
-                }}
-                className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/5`}
+      {!isClickThrough && (
+        <div
+          className="flex h-7 shrink-0 items-center justify-between border border-white/10 px-2 select-none"
+          style={{ backgroundColor: bg }}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-2" data-tauri-drag-region>
+            <div className="flex h-full shrink-0 items-center gap-1.5" data-tauri-drag-region>
+              {view === "dps" ? (
+                <Clock3 className="h-3.5 w-3.5 text-slate-400" data-tauri-drag-region />
+              ) : (
+                <button
+                  type="button"
+                  title="Back"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={(event) => {
+                    event.currentTarget.blur();
+                    setView("dps");
+                  }}
+                  className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/5`}
+                >
+                  <ArrowLeft className="h-3 w-3" />
+                </button>
+              )}
+              <span
+                ref={timerRef}
+                className="font-mono text-xs font-medium text-slate-100 tabular-nums"
+                data-tauri-drag-region
               >
-                <ArrowLeft className="h-3 w-3" />
-              </button>
-            )}
-            <span
-              ref={timerRef}
-              className="font-mono text-xs font-medium text-slate-100 tabular-nums"
-              data-tauri-drag-region
-            >
-              00:00
-            </span>
+                00:00
+              </span>
+            </div>
+            <div className="flex min-w-0 items-center gap-1.5" data-tauri-drag-region>
+              <div
+                ref={dotRef}
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400"
+                data-tauri-drag-region
+              />
+              <span
+                ref={targetNameRef}
+                className="truncate text-xs font-medium text-slate-300"
+                data-tauri-drag-region
+              >
+                请传送以检测角色
+              </span>
+            </div>
           </div>
-          <div className="flex min-w-0 items-center gap-1.5" data-tauri-drag-region>
-            <div
-              ref={dotRef}
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400"
-              data-tauri-drag-region
-            />
-            <span
-              ref={targetNameRef}
-              className="truncate text-xs font-medium text-slate-300"
-              data-tauri-drag-region
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              title="Pin"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                const next = !dpsAppearanceSetting.autoHide;
+                void invoke("set_auto_hide_enabled", { enabled: next });
+                void saveSettings({
+                  appearance: { dpsWindow: { autoHide: next } },
+                });
+              }}
+              className={`${TITLEBAR_BUTTON_CLASS} active:bg-white/5 ${dpsAppearanceSetting.autoHide ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"}`}
             >
-              请传送以检测角色
-            </span>
+              <Pin className="h-3 w-3" />
+            </button>
+
+            <button
+              type="button"
+              title="History"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={(event) => {
+                event.currentTarget.blur();
+                handleOpenHistory();
+              }}
+              className={cn(
+                TITLEBAR_BUTTON_CLASS,
+                view === "dps_history"
+                  ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
+                  : "border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100"
+              )}
+            >
+              <History className="h-3 w-3" />
+            </button>
+
+            <button
+              type="button"
+              title={isRunning ? "Stop" : "Start"}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                void handleStartStop();
+              }}
+              className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
+            >
+              {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
+                >
+                  <Settings className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-20 p-0.5">
+                <DropdownMenuItem
+                  className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                  onClick={isRunning ? handleStop : handleStart}
+                >
+                  {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                  <span className="text-xs">{isRunning ? "停止" : "启动"}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                  onClick={() => {
+                    void handleReset();
+                  }}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span className="text-xs">重置</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                  onClick={() => {
+                    void handleOpenSettings();
+                  }}
+                >
+                  <Settings className="h-3 w-3" />
+                  <span className="text-xs">设置</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
+                  onClick={() => {
+                    void handleOpenLog();
+                  }}
+                >
+                  <Book className="h-3 w-3" />
+                  <span className="text-xs">日志</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button
+              type="button"
+              title="Close"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                void handleClose();
+              }}
+              className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100`}
+            >
+              <X className="h-3 w-3" />
+            </button>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            title="Pin"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              const next = !dpsAppearanceSetting.autoHide;
-              void invoke("set_auto_hide_enabled", { enabled: next });
-              void saveSettings({
-                appearance: { dpsWindow: { autoHide: next } },
-              });
-            }}
-            className={`${TITLEBAR_BUTTON_CLASS} active:bg-white/5 ${dpsAppearanceSetting.autoHide ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"}`}
-          >
-            <Pin className="h-3 w-3" />
-          </button>
-
-          <button
-            type="button"
-            title="History"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={(event) => {
-              event.currentTarget.blur();
-              handleOpenHistory();
-            }}
-            className={cn(
-              TITLEBAR_BUTTON_CLASS,
-              view === "dps_history"
-                ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
-                : "border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100"
-            )}
-          >
-            <History className="h-3 w-3" />
-          </button>
-
-          <button
-            type="button"
-            title={isRunning ? "Stop" : "Start"}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              void handleStartStop();
-            }}
-            className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
-          >
-            {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
-              >
-                <Settings className="h-3 w-3" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-20 p-0.5">
-              <DropdownMenuItem
-                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
-                onClick={isRunning ? handleStop : handleStart}
-              >
-                {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                <span className="text-xs">{isRunning ? "停止" : "启动"}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
-                onClick={() => {
-                  void handleReset();
-                }}
-              >
-                <RotateCcw className="h-3 w-3" />
-                <span className="text-xs">重置</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
-                onClick={() => {
-                  void handleOpenSettings();
-                }}
-              >
-                <Settings className="h-3 w-3" />
-                <span className="text-xs">设置</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="gap-1.5 px-1.5 py-0.5 text-xs [&_svg]:size-3"
-                onClick={() => {
-                  void handleOpenLog();
-                }}
-              >
-                <Book className="h-3 w-3" />
-                <span className="text-xs">日志</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button
-            type="button"
-            title="Close"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              void handleClose();
-            }}
-            className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100`}
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
-      </div>
+      )}
 
       <div
-        className={cn("flex-1 overflow-hidden p-1", view === "dps" ? "block" : "hidden")}
+        className={cn(
+          "flex-1 overflow-hidden p-1",
+          view === "dps" ? "block" : "hidden",
+          dpsAppearanceSetting.panelStyle === "classicBars" ? "p-1" : "p-0"
+        )}
         style={{ backgroundColor: bg }}
       >
         <div
@@ -1422,50 +1523,52 @@ export default function DpsV2Page() {
               {dpsAppearanceSetting.showTargetHpBar && (
                 <div
                   ref={bossHpWrapRef}
-                  className="relative overflow-hidden border-b border-white/10 bg-black/20 px-2 py-1.5 text-slate-50"
+                  className="relative overflow-hidden border-b border-white/10 px-2 py-1 text-slate-50"
                   style={{ display: "none" }}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(248,113,113,0.16),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_52%)]" />
-                  <div className="relative z-10 grid grid-cols-[32px_minmax(0,1fr)] gap-2">
-                    <div className="relative flex h-8 w-8 items-center justify-center">
-                      <div className="absolute h-[26px] w-[26px] rotate-45 rounded-[5px] border border-red-200/45 bg-slate-950/85 shadow-[0_0_14px_rgba(248,113,113,0.22)]" />
-                      <img
-                        src="/images/aion2/bossIcon.png"
-                        alt=""
-                        className="relative h-7 w-7 rounded-[5px] object-cover drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
-                        draggable={false}
-                        onContextMenu={(event) => event.preventDefault()}
-                      />
+                  <div className="relative z-10 flex h-[54px] w-full items-center gap-3 select-none">
+                    <div className="relative h-[44px] w-[44px] shrink-0">
+                      <div className="absolute inset-0 rotate-45 border-2 border-[#d33434] bg-[#141616]/95 shadow-[0_0_14px_rgba(211,52,52,0.28),inset_0_0_14px_rgba(211,52,52,0.1)]" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <img
+                          src="/images/aion2/bossIcon.png"
+                          alt=""
+                          className="relative h-8 w-8 rounded-[4px] object-cover drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
+                          draggable={false}
+                          onContextMenu={(event) => event.preventDefault()}
+                        />
+                      </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex h-4 min-w-0 items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center justify-between gap-2">
                         <span
                           ref={bossHpNameRef}
-                          className="min-w-0 truncate text-xs leading-none font-semibold tracking-normal text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+                          className="min-w-0 truncate font-mono text-[13px] leading-none font-medium tracking-wide text-white/88"
                         />
                         <span
                           ref={bossHpPercentRef}
-                          className="shrink-0 font-mono text-xs leading-none font-semibold text-white tabular-nums"
+                          className="shrink-0 font-mono text-[13px] leading-none font-medium text-white/82 tabular-nums"
                         />
                       </div>
 
-                      <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-[10px] leading-none tabular-nums">
-                        <span ref={bossHpTextRef} className="truncate text-white/78" />
-                      </div>
-
-                      <div className="relative mt-1 h-2 overflow-hidden rounded-[3px] border border-white/22 bg-black/45 shadow-[inset_0_1px_2px_rgba(0,0,0,0.75)]">
+                      <div className="relative h-[16px] overflow-hidden border-2 border-[#cf3a2b] bg-[#401111]/70 shadow-[0_0_10px_rgba(207,58,43,0.22)] [clip-path:polygon(4%_0,100%_0,96%_100%,0_100%)]">
                         <div
                           ref={bossHpBarRef}
-                          className="absolute inset-y-px left-px w-[calc(100%-2px)] origin-left rounded-[2px] bg-gradient-to-r from-red-700 via-red-500 to-orange-300 shadow-[0_0_10px_rgba(248,113,113,0.45)] transition-transform duration-100 ease-out"
+                          className="absolute inset-y-[3px] right-[4px] left-[4px] origin-left bg-gradient-to-r from-[#7f1517]/95 via-[#b52a20]/90 to-[#d84a2d]/85 shadow-[inset_0_0_10px_rgba(255,255,255,0.08)] [clip-path:polygon(4%_0,100%_0,96%_100%,0_100%)]"
                           style={{ transform: "scaleX(0)" }}
                         />
-                        <div className="absolute inset-x-0 top-0 h-px bg-white/35" />
-                        <div className="absolute inset-0 grid grid-cols-10">
-                          {Array.from({ length: 10 }).map((_, index) => (
-                            <span key={index} className="border-l border-white/20 first:border-l-0" />
-                          ))}
-                        </div>
+                      </div>
+
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <span
+                          ref={bossHpTimerRef}
+                          className="shrink-0 font-mono text-[10px] leading-none text-white/68 tabular-nums"
+                        />
+                        <span
+                          ref={bossHpTextRef}
+                          className="block truncate font-mono text-[10px] leading-none text-white/72 tabular-nums"
+                        />
                       </div>
                     </div>
                   </div>
@@ -1476,22 +1579,21 @@ export default function DpsV2Page() {
                 <div
                   key={`hunter-${i}`}
                   data-row={i}
-                  className="group relative grid h-10 w-full cursor-pointer grid-cols-[30px_minmax(0,1fr)_142px] items-center overflow-hidden border-t border-white/10 px-1 text-left transition first:border-t-0 hover:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-cyan-300/60 focus-visible:outline-none"
+                  className="relative flex h-[40px] cursor-pointer items-center overflow-hidden border-2 border-transparent border-b-white/10 transition-colors duration-150 hover:border-cyan-500/40"
                   style={{ display: "none" }}
                 >
+                  {/* 背景贡献条 */}
                   <div
                     className="js-bar absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500"
                     style={{ transform: "scaleX(0)" }}
                   >
-                    <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden opacity-80">
-                      <div className="absolute inset-0 bg-inherit" />
-                      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent_0%,transparent_88%,rgba(255,255,255,0.42)_94%,rgba(255,255,255,0.6)_100%)]" />
-                    </div>
+                    <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0.08)_60%,transparent_100%)] mix-blend-screen" />
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 h-px bg-white/[0.06]" />
-                  <div className="relative z-10 flex items-center justify-center">
+
+                  {/* 职业图标区域 */}
+                  <div className="relative z-10 flex h-full w-[45px] shrink-0 items-center justify-center">
                     <img
-                      className="js-icon h-full w-full rounded-md object-cover shadow-sm"
+                      className="js-icon h-8 w-8 object-contain"
                       alt="class"
                       onError={(event) => {
                         event.currentTarget.style.display = "none";
@@ -1499,26 +1601,32 @@ export default function DpsV2Page() {
                       onContextMenu={(event) => event.preventDefault()}
                     />
                   </div>
-                  <div className="relative z-10 min-w-0 py-1 pr-2 pl-2">
-                    <div className="flex min-w-0 items-baseline gap-0">
-                      <span className="js-name truncate text-[15px] leading-4 font-medium text-slate-50" />
+
+                  <div className="relative z-10 min-w-0 flex-1 space-y-2 px-3 select-none">
+                    <div className="truncate font-mono text-[14px] leading-none text-white">
+                      <span className="js-name" />
                     </div>
-                    <div className="truncate text-[12px] leading-3 font-normal text-slate-500">
+
+                    <div className="truncate font-mono text-[12px] leading-none text-white/65">
                       <span className="js-server" />
                     </div>
                   </div>
-                  <div className="relative z-10 grid h-9 w-[142px] grid-cols-[70px_64px] grid-rows-[18px_18px] items-center pr-2 font-mono tabular-nums">
-                    <div className="row-span-2 flex items-center justify-end pr-2 text-right">
-                      <span className="js-dps text-md leading-none font-semibold text-cyan-50 drop-shadow-[0_0_5px_rgba(103,232,249,0.55)]" />
-                      <span className="ml-0.5 self-end pb-0 text-[9px] text-slate-400">/s</span>
+
+                  <div className="relative z-10 flex w-[50px] shrink-0 items-center justify-end gap-1 select-none">
+                    <span className="text-[12px] text-emerald-400">▲</span>
+                    <span className="js-dps text-[16px] font-semibold text-white" />
+                    <span className="text-[13px] text-white/45">/s</span>
+                  </div>
+
+                  <div className="relative z-10 w-[100px] shrink-0 pr-4 text-right font-mono tabular-nums select-none">
+                    <div className="font-mono text-[12px] text-white">
+                      <span className="mr-2 text-white/45">PCT</span>
+                      <span className="js-pct" />
                     </div>
-                    <div className="flex min-w-0 items-center justify-end gap-1 leading-none">
-                      <span className="shrink-0 text-[10px] font-semibold text-slate-500">PCT</span>
-                      <span className="js-pct min-w-0 truncate text-[12px] font-medium text-slate-100" />
-                    </div>
-                    <div className="flex min-w-0 items-center justify-end gap-1 leading-none">
-                      <span className="shrink-0 text-[10px] font-medium text-slate-500">DMG</span>
-                      <span className="js-dmg min-w-0 truncate text-[11px] font-medium text-slate-300/80" />
+
+                    <div className="mt-1 font-mono text-[12px] text-white">
+                      <span className="mr-2 text-white/45">DMG</span>
+                      <span className="js-dmg" />
                     </div>
                   </div>
                 </div>

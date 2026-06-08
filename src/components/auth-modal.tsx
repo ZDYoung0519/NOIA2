@@ -474,7 +474,7 @@ export function AuthModal() {
       hasResolvedInitialAuthRef.current = true;
     } else if (!hasResolvedInitialAuthRef.current || previousUser) {
       setAuthView("sign_in");
-      setShowAuthModal(true);
+      // setShowAuthModal(true);
       hasResolvedInitialAuthRef.current = true;
     }
 
