@@ -43,6 +43,7 @@ export type DpsWindowAppearance = {
   classIconStyle: "default" | "colored";
   showPlayerName: boolean;
   showServerName: boolean;
+  showUnknownActors: boolean;
   percentDisplayMode: "contribution" | "damageShare";
   showDetailOnHover: boolean;
   detailWindowPosition: "follow" | "center";
@@ -104,6 +105,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
       classIconStyle: "default",
       showPlayerName: true,
       showServerName: true,
+      showUnknownActors: true,
       percentDisplayMode: "contribution",
       showDetailOnHover: false,
       detailWindowPosition: "follow",
@@ -256,6 +258,9 @@ function normalizeSettings(input?: PartialAppSettings): AppSettings {
         showServerName:
           input?.appearance?.dpsWindow?.showServerName ??
           DEFAULT_APP_SETTINGS.appearance.dpsWindow.showServerName,
+        showUnknownActors:
+          input?.appearance?.dpsWindow?.showUnknownActors ??
+          DEFAULT_APP_SETTINGS.appearance.dpsWindow.showUnknownActors,
         pingWindowAlignment:
           input?.appearance?.dpsWindow?.pingWindowAlignment === "right" ? "right" : "left",
         pingWindowShowLatency:

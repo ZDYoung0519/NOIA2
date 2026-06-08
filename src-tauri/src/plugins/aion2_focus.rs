@@ -24,7 +24,7 @@ pub struct Aion2FocusState {
 impl Default for Aion2FocusState {
     fn default() -> Self {
         Self {
-            dps_manual_hidden: AtomicBool::new(false),
+            dps_manual_hidden: AtomicBool::new(true),
             auto_hide_enabled: AtomicBool::new(true),
         }
     }
@@ -113,7 +113,8 @@ mod windows_impl {
                     .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
                     .unwrap_or(false);
                 let focused = aion2_focused
-                    || is_overlay_related_window_focused(&app_for_processor);
+                    || is_overlay_related_window_focused(&app_for_processor)
+                    || foreground_belongs_to_current_app(hwnd_raw);
 
                 if last_focused == Some(focused) {
                     continue;
@@ -202,7 +203,9 @@ mod windows_impl {
                 .as_deref()
                 .map(|name| name.eq_ignore_ascii_case(AION2_PROCESS_NAME))
                 .unwrap_or(false);
-            let focused = aion2_focused || is_overlay_related_window_focused(&app_for_poller);
+            let focused = aion2_focused
+                || is_overlay_related_window_focused(&app_for_poller)
+                || foreground_belongs_to_current_app(hwnd.0 as isize);
 
             let (dps_manual_hidden, auto_hide_enabled) = app_for_poller
                 .try_state::<Aion2FocusState>()
@@ -279,6 +282,15 @@ mod windows_impl {
                 .and_then(|window| window.is_focused().ok())
                 .unwrap_or(false)
         })
+    }
+
+    fn foreground_belongs_to_current_app(hwnd_raw: isize) -> bool {
+        unsafe {
+            let hwnd = HWND(hwnd_raw as *mut _);
+            let mut process_id = 0u32;
+            GetWindowThreadProcessId(hwnd, Some(&mut process_id));
+            process_id != 0 && process_id == std::process::id()
+        }
     }
 
 

@@ -490,6 +490,23 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
           }
         />
         <SettingsRow
+          label="显示未识别角色"
+          control={
+            <Switch
+              checked={dpsAppearance.showUnknownActors}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showUnknownActors: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
           label="显示 Boss 血条"
           control={
             <Switch

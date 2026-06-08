@@ -48,6 +48,14 @@ fn pair_key(parent_label: &str, child_label: &str) -> String {
     format!("{parent_label}->{child_label}")
 }
 
+fn is_pair_tracked<R: Runtime>(app: &AppHandle<R>, key: &str) -> bool {
+    app.state::<TrackedWindowPairs>()
+        .0
+        .lock()
+        .map(|tracked| tracked.contains(key))
+        .unwrap_or(false)
+}
+
 fn position_child_next_to_parent<R: Runtime>(
     parent_window: &WebviewWindow<R>,
     child_window: &WebviewWindow<R>,
@@ -155,9 +163,14 @@ fn register_tracking_if_needed<R: Runtime>(
     let parent_for_move = parent_label.to_string();
     let child_for_move = child_label.to_string();
     let position_for_move = position.clone();
+    let key_for_move = key.clone();
 
     parent_window.on_window_event(move |event| match event {
         WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
+            if !is_pair_tracked(&app_for_move, &key_for_move) {
+                return;
+            }
+
             let Some(parent) = app_for_move.get_webview_window(&parent_for_move) else {
                 return;
             };
@@ -167,6 +180,10 @@ fn register_tracking_if_needed<R: Runtime>(
             let _ = position_child_by_position(&parent, &child, gap, &position_for_move);
         }
         WindowEvent::Destroyed => {
+            if !is_pair_tracked(&app_for_move, &key_for_move) {
+                return;
+            }
+
             if let Some(child) = app_for_move.get_webview_window(&child_for_move) {
                 let _ = child.close();
             }
@@ -205,7 +222,6 @@ pub fn ensure_tracked_window<R: Runtime>(
 
     if let Some(existing_window) = app.get_webview_window(&options.child_label) {
         let _ = existing_window.set_focusable(focusable);
-        let _ = existing_window.set_size(LogicalSize::new(width, height));
         let _ = existing_window.show();
         let _ = existing_window.unminimize();
         if focus {
@@ -276,6 +292,23 @@ pub fn ensure_tracked_window<R: Runtime>(
         position,
     );
 
+    Ok(())
+}
+
+#[tauri::command]
+pub fn untrack_window_pair<R: Runtime>(
+    app: AppHandle<R>,
+    parent_label: String,
+    child_label: String,
+) -> Result<(), String> {
+    let key = pair_key(&parent_label, &child_label);
+    let tracked_pairs_state = app.state::<TrackedWindowPairs>();
+    let mut tracked_pairs = tracked_pairs_state
+        .0
+        .lock()
+        .map_err(|_| "failed to lock tracked window pairs".to_string())?;
+
+    tracked_pairs.remove(&key);
     Ok(())
 }
 

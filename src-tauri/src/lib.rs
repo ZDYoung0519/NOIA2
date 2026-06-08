@@ -77,6 +77,7 @@ pub fn run() {
             plugins::aion2_focus::set_auto_hide_enabled,
             plugins::http::http_request,
             plugins::window_tracking::ensure_tracked_window,
+            plugins::window_tracking::untrack_window_pair,
             plugins::window_tracking::resize_window,
             plugins::window_tracking::get_window_size
         ])

@@ -12,7 +12,6 @@ function isAllowedDpsUploadMobCode(mobCode: unknown) {
   if (typeof mobCode !== "number" || !Number.isFinite(mobCode)) {
     return false;
   }
-
   return ALLOWED_DPS_UPLOAD_MOB_CODES.has(String(mobCode));
 }
 

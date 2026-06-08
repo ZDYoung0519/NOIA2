@@ -39,6 +39,40 @@ impl<'a> DamagePacketReader<'a> {
     }
 }
 
+/// 数据包前缀信息。
+///
+/// 协议在长度 varint 后面，可能会额外插入 1 个扩展字节（extraFlag，范围 0xF0~0xFE）。
+/// 这个字节不属于真正的业务 opcode，只会让后续 payload 整体后移 1 字节。
+#[derive(Debug, Clone, Copy)]
+struct PacketPrefixInfo {
+    /// 真实业务 payload 的起始偏移（也就是 opcode 开始的位置）
+    payload_offset: usize,
+    /// 当前包是否带有 extraFlag
+    has_extra_flag: bool,
+}
+
+/// 解析长度字段后面的传输层前缀。
+///
+/// 目前已知协议有两种形式：
+/// 1. [length varint][opcode...]
+/// 2. [length varint][extraFlag][opcode...]
+///
+/// 这里统一把真正的 payload 起始偏移算出来，避免各个解析函数各自重复处理。
+fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPrefixInfo> {
+    let first_byte = *packet.get(length_offset)?;
+    let has_extra_flag = (0xF0..0xFF).contains(&first_byte);
+    let payload_offset = length_offset + if has_extra_flag { 1 } else { 0 };
+
+    if payload_offset >= packet.len() {
+        return None;
+    }
+
+    Some(PacketPrefixInfo {
+        payload_offset,
+        has_extra_flag,
+    })
+}
+
 pub struct StreamProcessor {
     data_storage: Arc<DataStorage>,
     logger: Arc<DpsLogger>,
@@ -111,10 +145,15 @@ impl StreamProcessor {
                 break;
             }
 
-            let payload_start = length_info.length;
-            let is_bundle = payload_start + 1 < total_packet_bytes
-                && buffer[offset + payload_start] == 0xFF
-                && buffer[offset + payload_start + 1] == 0xFF;
+            let current_packet = &buffer[offset..offset + total_packet_bytes];
+            let Some(prefix_info) = resolve_packet_prefix(current_packet, length_info.length) else {
+                offset += 1;
+                continue;
+            };
+            let payload_start = prefix_info.payload_offset;
+            let is_bundle = payload_start + 1 < current_packet.len()
+                && current_packet[payload_start] == 0xFF
+                && current_packet[payload_start + 1] == 0xFF;
 
             if is_bundle {
                 let bundle_size = total_packet_bytes + 1;
@@ -124,14 +163,14 @@ impl StreamProcessor {
                 self.unwrap_bundle(&buffer[offset + payload_start..offset + bundle_size]);
                 offset += bundle_size;
             } else {
-                self.parse_packet(&buffer[offset..offset + total_packet_bytes]);
+                self.parse_packet(current_packet);
                 offset += total_packet_bytes;
             }
         }
 
-        if buffer.len() >= 4 {
-            self.scan_for_embedded_048d(buffer);
-        }
+        // if buffer.len() >= 4 {
+        //     self.scan_for_embedded_048d(buffer);
+        // }
 
         if offset == 0 && !buffer.is_empty() {
             if enable_resync_on_stall {
@@ -201,7 +240,10 @@ impl StreamProcessor {
             }
 
             let inner_packet = &decompressed[offset..inner_end];
-            let inner_payload_start = length_info.length;
+            let Some(prefix_info) = resolve_packet_prefix(inner_packet, length_info.length) else {
+                break;
+            };
+            let inner_payload_start = prefix_info.payload_offset;
             let is_nested_bundle = inner_packet.len() > inner_payload_start + 1
                 && inner_packet[inner_payload_start] == 0xFF
                 && inner_packet[inner_payload_start + 1] == 0xFF;
@@ -256,7 +298,18 @@ impl StreamProcessor {
             return false;
         }
 
-        let mut reader = DamagePacketReader::new(packet, packet_length_info.length);
+        let Some(prefix_info) = resolve_packet_prefix(packet, packet_length_info.length) else {
+            return false;
+        };
+
+        if prefix_info.has_extra_flag {
+            self.logger.debug(format!(
+                "[{}] damage packet detected with extraFlag, payload_offset={}",
+                self.port, prefix_info.payload_offset
+            ));
+        }
+
+        let mut reader = DamagePacketReader::new(packet, prefix_info.payload_offset);
         if reader.offset + 1 >= packet.len() {
             return false;
         }
@@ -559,7 +612,11 @@ impl StreamProcessor {
             return false;
         }
 
-        let mut offset = packet_length_info.length;
+        let Some(prefix_info) = resolve_packet_prefix(packet, packet_length_info.length) else {
+            return false;
+        };
+
+        let mut offset = prefix_info.payload_offset;
         if packet.len() <= offset + 1 || packet[offset] != 0x05 || packet[offset + 1] != 0x38 {
             return false;
         }
@@ -633,7 +690,10 @@ impl StreamProcessor {
         if !packet_length_info.is_valid() {
             return false;
         }
-        let offset = packet_length_info.length;
+        let Some(prefix_info) = resolve_packet_prefix(packet, packet_length_info.length) else {
+            return false;
+        };
+        let offset = prefix_info.payload_offset;
         if offset + 1 >= packet.len() || packet[offset] != 0x04 || packet[offset + 1] != 0x8D {
             return false;
         }

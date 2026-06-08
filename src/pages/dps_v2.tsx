@@ -76,8 +76,34 @@ function fmtTimer(s: number) {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
+const TITLEBAR_BUTTON_CLASS =
+  "flex h-5 w-5 items-center justify-center rounded border transition outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0";
+
+function getTargetDisplayName(
+  mainActorName: string | null | undefined,
+  targetName: string | null | undefined,
+  fallbackTargetName: string | null | undefined,
+  maskNicknames: boolean
+) {
+  if (!mainActorName) {
+    return "请传送以检测角色";
+  }
+
+  if (!targetName) {
+    if (!fallbackTargetName) {
+      return maskNickname(mainActorName, maskNicknames);
+    }
+
+    return fallbackTargetName;
+  }
+
+  return targetName;
+}
+
 const HISTORY_THRESHOLD = 1_000_000;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const DETAIL_WINDOW_DEFAULT_WIDTH = 1440;
+const DETAIL_WINDOW_DEFAULT_HEIGHT = 420;
 
 const ROW_CLASS =
   "group relative flex h-7.5 cursor-pointer items-center overflow-hidden rounded border border-transparent hover:border-cyan-500/40 hover:bg-white/5";
@@ -188,9 +214,19 @@ export default function DpsV2Page() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const timerRef = useRef<HTMLSpanElement | null>(null);
   const targetNameRef = useRef<HTMLSpanElement | null>(null);
+  const bossHpWrapRef = useRef<HTMLDivElement | null>(null);
+  const bossHpNameRef = useRef<HTMLSpanElement | null>(null);
+  const bossHpPercentRef = useRef<HTMLSpanElement | null>(null);
+  const bossHpTextRef = useRef<HTMLSpanElement | null>(null);
+  const bossHpBarRef = useRef<HTMLDivElement | null>(null);
   const dotRef = useRef<HTMLDivElement | null>(null);
+  const lastBossHpNameRef = useRef("");
+  const lastBossHpTextRef = useRef("");
+  const lastBossHpPercentTextRef = useRef("");
+  const lastBossHpScaleRef = useRef("");
   const lastDotClassRef = useRef("");
   const lastTimerRef = useRef("");
+  const mainActorNameRef = useRef("");
   const serverNameCacheRef = useRef(new Map<string, string>());
   const detailSelectionRef = useRef<DpsDetailV2Selection | null>(null);
   const lastVisiblePlayerCountRef = useRef(-1);
@@ -285,11 +321,56 @@ export default function DpsV2Page() {
 
       const snapshot = snapshotRef.current;
       if (!snapshot || !isRunningRef.current) {
+        if (bossHpWrapRef.current) {
+          bossHpWrapRef.current.style.display = "none";
+        }
         return;
       }
 
       const stats = snapshot.lastTargetAllPlayersOverviewStats as PlayerOverviewStat[] | undefined;
-      const nextLength = Math.min(8, stats?.length ?? 0);
+      const filteredStats = dpsAppearanceSetting.showUnknownActors
+        ? stats
+        : stats?.filter((player) => !!player.actorName?.trim());
+      const nextLength = Math.min(8, filteredStats?.length ?? 0);
+
+      // 目标血量
+      const targetInfo = snapshot.lastTargetInfo ?? null;
+      const targetMaxHp = Number(targetInfo?.maxHp ?? 0);
+      const targetCurrentHp = Number(targetInfo?.currentHp ?? 0);
+      const shouldShowBossHp = viewRef.current === "dps" && !!targetInfo && targetMaxHp > 0;
+
+      if (shouldShowBossHp) {
+        const safeCurrentHp = Math.max(0, Math.min(targetMaxHp, targetCurrentHp));
+        const hpScale = `scaleX(${safeCurrentHp / Math.max(1, targetMaxHp)})`;
+        const hpPercentText = `${((safeCurrentHp / Math.max(1, targetMaxHp)) * 100).toFixed(1)}%`;
+        const hpName = targetInfo.targetName || `Target ${targetInfo.id}`;
+        const hpText = `${fmtDmg(safeCurrentHp)} / ${fmtDmg(targetMaxHp)}`;
+
+        if (bossHpWrapRef.current) {
+          bossHpWrapRef.current.style.display = "";
+        }
+        if (lastBossHpNameRef.current !== hpName) {
+          setText(bossHpNameRef.current, hpName);
+          lastBossHpNameRef.current = hpName;
+        }
+        if (lastBossHpTextRef.current !== hpText) {
+          setText(bossHpTextRef.current, hpText);
+          lastBossHpTextRef.current = hpText;
+        }
+        if (lastBossHpPercentTextRef.current !== hpPercentText) {
+          setText(bossHpPercentRef.current, hpPercentText);
+          lastBossHpPercentTextRef.current = hpPercentText;
+        }
+        if (bossHpBarRef.current && lastBossHpScaleRef.current !== hpScale) {
+          bossHpBarRef.current.style.transform = hpScale;
+          lastBossHpScaleRef.current = hpScale;
+        }
+      } else {
+        if (bossHpWrapRef.current) {
+          bossHpWrapRef.current.style.display = "none";
+        }
+      }
+
       if (
         snapshot.totalDamage === lastTotalDamageRef.current &&
         nextLength === lastStatsLengthRef.current
@@ -297,11 +378,12 @@ export default function DpsV2Page() {
         return;
       }
 
+      // DPS列表
       lastTotalDamageRef.current = snapshot.totalDamage;
       lastStatsLengthRef.current = nextLength;
 
       const rows = rowsRef.current;
-      if (!stats || nextLength === 0) {
+      if (!filteredStats || nextLength === 0) {
         for (const [index, row] of rows.entries()) {
           const cache = rowCacheRef.current[index] ?? {};
           if (cache.visible !== false) {
@@ -313,10 +395,10 @@ export default function DpsV2Page() {
         return;
       }
 
-      const maxDamage = stats[0]?.totalDamage ?? 1;
+      const maxDamage = filteredStats[0]?.totalDamage ?? 1;
       const mainActorName = snapshot.combatInfos?.mainActorName;
 
-      stats.slice(0, 8).forEach((player, index) => {
+      filteredStats.slice(0, 8).forEach((player, index) => {
         const row = rows[index];
         if (!row) {
           return;
@@ -423,7 +505,9 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.mainPlayerColor,
     dpsAppearanceSetting.showPlayerName,
     dpsAppearanceSetting.showServerName,
+    dpsAppearanceSetting.showUnknownActors,
     dpsAppearanceSetting.otherPlayerColor,
+    dpsAppearanceSetting.showTargetHpBar,
   ]);
 
   const resetUi = useCallback(() => {
@@ -432,9 +516,22 @@ export default function DpsV2Page() {
     lastStatsLengthRef.current = -1;
     lastVisiblePlayerCountRef.current = 0;
     rowCacheRef.current = [];
+    lastBossHpNameRef.current = "";
+    lastBossHpTextRef.current = "";
+    lastBossHpPercentTextRef.current = "";
+    lastBossHpScaleRef.current = "";
     detailSelectionRef.current = null;
-    setText(targetNameRef.current, "No Target");
+    setText(
+      targetNameRef.current,
+      getTargetDisplayName(mainActorNameRef.current, "", "", dpsAppearanceSetting.maskNicknames)
+    );
     setText(timerRef.current, "00:00");
+    if (bossHpWrapRef.current) {
+      bossHpWrapRef.current.style.display = "none";
+    }
+    if (bossHpBarRef.current) {
+      bossHpBarRef.current.style.transform = "scaleX(0)";
+    }
     for (const row of rowsRef.current) {
       row.root.style.display = "none";
     }
@@ -442,7 +539,7 @@ export default function DpsV2Page() {
     window.requestAnimationFrame(() => {
       void resizeWindow(true);
     });
-  }, [resizeWindow]);
+  }, [dpsAppearanceSetting.maskNicknames, resizeWindow]);
 
   const persistHistoryFromSnapshot = useCallback((snapshot: CombatSnapshot | null) => {
     if (!snapshot) {
@@ -506,11 +603,40 @@ export default function DpsV2Page() {
   }, []);
 
   const ensureDetailWindow = useCallback(async () => {
+    const detailPosition = dpsAppearanceSetting.detailWindowPosition;
+
+    if (detailPosition === "center") {
+      await invoke("untrack_window_pair", {
+        parentLabel: "dps_v2",
+        childLabel: "dps_detail_v2",
+      }).catch(() => {});
+
+      await createWindow("dps_detail_v2", {
+        title: "DPS Detail V2",
+        url: "/dps_detail_v2",
+        width: DETAIL_WINDOW_DEFAULT_WIDTH,
+        height: DETAIL_WINDOW_DEFAULT_HEIGHT,
+        center: true,
+        decorations: false,
+        transparent: true,
+        resizable: true,
+        shadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focus: false,
+        focusable: false,
+      });
+
+      const detailWindow = await waitForWindowReady("dps_detail_v2");
+      await detailWindow.center().catch(() => {});
+      return;
+    }
+
     await createWindow("dps_detail_v2", {
       title: "DPS Detail V2",
       url: "/dps_detail_v2",
-      width: 1440,
-      height: 420,
+      width: DETAIL_WINDOW_DEFAULT_WIDTH,
+      height: DETAIL_WINDOW_DEFAULT_HEIGHT,
       decorations: false,
       transparent: true,
       resizable: true,
@@ -529,8 +655,6 @@ export default function DpsV2Page() {
         childLabel: "dps_detail_v2",
         url: "/dps_detail_v2",
         title: "DPS Detail V2",
-        width: 1440,
-        height: 420,
         gap: 8,
         decorations: false,
         transparent: true,
@@ -542,7 +666,7 @@ export default function DpsV2Page() {
         focusable: false,
       },
     });
-  }, []);
+  }, [dpsAppearanceSetting.detailWindowPosition]);
 
   const buildHistoryDetailPayload = useCallback(
     (playerId: number): DpsDetailPayload | null => {
@@ -649,7 +773,11 @@ export default function DpsV2Page() {
     });
     rowCacheRef.current = [];
     schedulePaint();
-  }, [dpsAppearanceSetting.panelStyle, dpsAppearanceSetting.percentDisplayMode]);
+  }, [
+    dpsAppearanceSetting.panelStyle,
+    dpsAppearanceSetting.percentDisplayMode,
+    dpsAppearanceSetting.showTargetHpBar,
+  ]);
 
   useEffect(() => {
     let alive = true;
@@ -685,7 +813,7 @@ export default function DpsV2Page() {
         if (!isRunningRef.current) {
           isRunningRef.current = true;
           setIsRunning(true);
-          setDot("bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]");
+          setDot("bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] status-dot-breathe");
         }
 
         snapshotRef.current = event.payload;
@@ -706,11 +834,15 @@ export default function DpsV2Page() {
           }, 50);
         }
         const targetInfo = event.payload.lastTargetInfo;
+        const nextTargetName = getTargetDisplayName(
+          mainActorNameRef.current || event.payload.combatInfos.mainActorName,
+          targetInfo?.targetName,
+          targetInfo ? `Mob ${targetInfo.targetMobCode}` : "",
+          dpsAppearanceSetting.maskNicknames
+        );
+        setText(targetNameRef.current, nextTargetName);
+
         if (targetInfo) {
-          setText(
-            targetNameRef.current,
-            targetInfo.targetName || `Mob ${targetInfo.targetMobCode}`
-          );
           const lastTime = Math.max(0, ...Object.values(targetInfo.targetLastTime ?? {}));
           const startTime = Math.min(lastTime, ...Object.values(targetInfo.targetStartTime ?? {}));
           const timer = fmtTimer(Math.max(0, lastTime - startTime));
@@ -723,7 +855,6 @@ export default function DpsV2Page() {
             lastTimerRef.current = "00:00";
             setText(timerRef.current, "00:00");
           }
-          setText(targetNameRef.current, "No Target");
         }
 
         schedulePaint();
@@ -767,6 +898,18 @@ export default function DpsV2Page() {
         await uploadPendingHistoryRecords();
         // add to main actor history
         const p = e.payload;
+        mainActorNameRef.current = p.actorName || "";
+        if (!snapshotRef.current?.lastTargetInfo) {
+          setText(
+            targetNameRef.current,
+            getTargetDisplayName(
+              mainActorNameRef.current,
+              "",
+              "",
+              dpsAppearanceSetting.maskNicknames
+            )
+          );
+        }
         const sid = p.sid ? Number(p.sid) : NaN;
         if (p.actorName && Number.isFinite(sid)) {
           Aion2MainActorHistory.add({
@@ -797,6 +940,7 @@ export default function DpsV2Page() {
     };
   }, [
     buildHistoryDetailPayload,
+    dpsAppearanceSetting.maskNicknames,
     dpsAppearanceSetting.autoResizeHeight,
     persistHistoryFromSnapshot,
     resizeWindow,
@@ -853,6 +997,10 @@ export default function DpsV2Page() {
     lastTotalDamageRef.current = Number.NaN;
     lastStatsLengthRef.current = -1;
     rowCacheRef.current = [];
+    lastBossHpNameRef.current = "";
+    lastBossHpTextRef.current = "";
+    lastBossHpPercentTextRef.current = "";
+    lastBossHpScaleRef.current = "";
     schedulePaint();
   }, [
     dpsAppearanceSetting.classIconStyle,
@@ -860,6 +1008,8 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.otherPlayerColor,
     dpsAppearanceSetting.showPlayerName,
     dpsAppearanceSetting.showServerName,
+    dpsAppearanceSetting.showUnknownActors,
+    dpsAppearanceSetting.showTargetHpBar,
     dpsAppearanceSetting.scaleFactor,
     schedulePaint,
   ]);
@@ -868,7 +1018,12 @@ export default function DpsV2Page() {
     if (dpsAppearanceSetting.autoResizeHeight) {
       void resizeWindow(true);
     }
-  }, [dpsAppearanceSetting.autoResizeHeight, dpsAppearanceSetting.scaleFactor, resizeWindow]);
+  }, [
+    dpsAppearanceSetting.autoResizeHeight,
+    dpsAppearanceSetting.scaleFactor,
+    dpsAppearanceSetting.showTargetHpBar,
+    resizeWindow,
+  ]);
 
   useEffect(() => {
     const window = getCurrentWebviewWindow();
@@ -1037,11 +1192,12 @@ export default function DpsV2Page() {
               <button
                 type="button"
                 title="Back"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={(event) => {
                   event.currentTarget.blur();
                   setView("dps");
                 }}
-                className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white focus-visible:outline-none active:bg-white/5"
+                className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/5`}
               >
                 <ArrowLeft className="h-3 w-3" />
               </button>
@@ -1065,7 +1221,7 @@ export default function DpsV2Page() {
               className="truncate text-xs font-medium text-slate-300"
               data-tauri-drag-region
             >
-              No Target
+              请传送以检测角色
             </span>
           </div>
         </div>
@@ -1073,6 +1229,7 @@ export default function DpsV2Page() {
           <button
             type="button"
             title="Pin"
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
               const next = !dpsAppearanceSetting.autoHide;
               void invoke("set_auto_hide_enabled", { enabled: next });
@@ -1080,7 +1237,7 @@ export default function DpsV2Page() {
                 appearance: { dpsWindow: { autoHide: next } },
               });
             }}
-            className={`flex h-5 w-5 items-center justify-center rounded border transition focus-visible:outline-none active:bg-white/5 ${dpsAppearanceSetting.autoHide ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"}`}
+            className={`${TITLEBAR_BUTTON_CLASS} active:bg-white/5 ${dpsAppearanceSetting.autoHide ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" : "border-amber-400/30 bg-amber-400/15 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"}`}
           >
             <Pin className="h-3 w-3" />
           </button>
@@ -1088,12 +1245,13 @@ export default function DpsV2Page() {
           <button
             type="button"
             title="History"
+            onMouseDown={(event) => event.preventDefault()}
             onClick={(event) => {
               event.currentTarget.blur();
               handleOpenHistory();
             }}
             className={cn(
-              "flex h-5 w-5 items-center justify-center rounded border transition",
+              TITLEBAR_BUTTON_CLASS,
               view === "dps_history"
                 ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
                 : "border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100"
@@ -1105,10 +1263,11 @@ export default function DpsV2Page() {
           <button
             type="button"
             title={isRunning ? "Stop" : "Start"}
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
               void handleStartStop();
             }}
-            className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+            className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
           >
             {isRunning ? <Square className="h-3 w-3" /> : <Play className="h-3 w-3" />}
           </button>
@@ -1116,7 +1275,8 @@ export default function DpsV2Page() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                onMouseDown={(event) => event.preventDefault()}
+                className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`}
               >
                 <Settings className="h-3 w-3" />
               </button>
@@ -1161,10 +1321,11 @@ export default function DpsV2Page() {
           <button
             type="button"
             title="Close"
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => {
               void handleClose();
             }}
-            className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100"
+            className={`${TITLEBAR_BUTTON_CLASS} border-white/10 bg-white/5 text-slate-300 hover:bg-rose-500/20 hover:text-rose-100`}
           >
             <X className="h-3 w-3" />
           </button>
@@ -1183,6 +1344,41 @@ export default function DpsV2Page() {
         >
           {dpsAppearanceSetting.panelStyle === "classicBars" && (
             <>
+              {dpsAppearanceSetting.showTargetHpBar && (
+                <div
+                  ref={bossHpWrapRef}
+                  className="overflow-hidden rounded border border-red-500/30 bg-red-950/20 text-slate-50"
+                  style={{ display: "none" }}
+                >
+                  <div className="relative flex w-full items-center justify-between pr-1 select-none">
+                    <div
+                      ref={bossHpBarRef}
+                      className="absolute inset-y-0 left-0 w-full origin-left bg-red-500/55"
+                      style={{ transform: "scaleX(0)" }}
+                    />
+                    <div className="relative z-10 flex min-w-0 flex-1 items-center gap-1">
+                      <div className="relative h-6 w-6 flex-shrink-0">
+                        <img
+                          src="/images/aion2/bossIcon.png"
+                          alt=""
+                          className="h-full w-full rounded-md object-cover shadow-sm"
+                          draggable={false}
+                          onContextMenu={(event) => event.preventDefault()}
+                        />
+                      </div>
+                      <span
+                        ref={bossHpNameRef}
+                        className="truncate font-mono text-sm text-white/92"
+                      />
+                    </div>
+                    <div className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono tabular-nums">
+                      <span ref={bossHpTextRef} className="text-sm text-white/78" />
+                      <span ref={bossHpPercentRef} className="text-sm font-semibold text-red-100" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {Array.from({ length: 8 }, (_, index) => (
                 <div key={index} data-row={index} className={ROW_CLASS} style={{ display: "none" }}>
                   <div className={BAR_CLASS} style={{ transform: "scaleX(0)" }} />
@@ -1223,6 +1419,59 @@ export default function DpsV2Page() {
 
           {dpsAppearanceSetting.panelStyle === "hunterCompact" && (
             <>
+              {dpsAppearanceSetting.showTargetHpBar && (
+                <div
+                  ref={bossHpWrapRef}
+                  className="relative overflow-hidden border-b border-white/10 bg-black/20 px-2 py-1.5 text-slate-50"
+                  style={{ display: "none" }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(248,113,113,0.16),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_52%)]" />
+                  <div className="relative z-10 grid grid-cols-[32px_minmax(0,1fr)] gap-2">
+                    <div className="relative flex h-8 w-8 items-center justify-center">
+                      <div className="absolute h-[26px] w-[26px] rotate-45 rounded-[5px] border border-red-200/45 bg-slate-950/85 shadow-[0_0_14px_rgba(248,113,113,0.22)]" />
+                      <img
+                        src="/images/aion2/bossIcon.png"
+                        alt=""
+                        className="relative h-7 w-7 rounded-[5px] object-cover drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
+                        draggable={false}
+                        onContextMenu={(event) => event.preventDefault()}
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex h-4 min-w-0 items-center justify-between gap-2">
+                        <span
+                          ref={bossHpNameRef}
+                          className="min-w-0 truncate text-xs leading-none font-semibold tracking-normal text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+                        />
+                        <span
+                          ref={bossHpPercentRef}
+                          className="shrink-0 font-mono text-xs leading-none font-semibold text-white tabular-nums"
+                        />
+                      </div>
+
+                      <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-[10px] leading-none tabular-nums">
+                        <span ref={bossHpTextRef} className="truncate text-white/78" />
+                      </div>
+
+                      <div className="relative mt-1 h-2 overflow-hidden rounded-[3px] border border-white/22 bg-black/45 shadow-[inset_0_1px_2px_rgba(0,0,0,0.75)]">
+                        <div
+                          ref={bossHpBarRef}
+                          className="absolute inset-y-px left-px w-[calc(100%-2px)] origin-left rounded-[2px] bg-gradient-to-r from-red-700 via-red-500 to-orange-300 shadow-[0_0_10px_rgba(248,113,113,0.45)] transition-transform duration-100 ease-out"
+                          style={{ transform: "scaleX(0)" }}
+                        />
+                        <div className="absolute inset-x-0 top-0 h-px bg-white/35" />
+                        <div className="absolute inset-0 grid grid-cols-10">
+                          {Array.from({ length: 10 }).map((_, index) => (
+                            <span key={index} className="border-l border-white/20 first:border-l-0" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {Array.from({ length: 8 }, (_, i) => (
                 <div
                   key={`hunter-${i}`}

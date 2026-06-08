@@ -86,20 +86,6 @@ impl DispatcherState {
         Self {
             data_storage: Arc::clone(&data_storage),
             config: Arc::clone(&config),
-            // unified: StreamAssembler::new(
-            //     Arc::clone(&data_storage),
-            //     Arc::clone(&logger),
-            //     "unified".to_string(),
-            //     ProcessingMode::MetadataOnly,
-            //     Arc::clone(&config),
-            // ),
-            // unified1: StreamAssembler::new(
-            //     data_storage,
-            //     logger,
-            //     "unified1".to_string(),
-            //     ProcessingMode::MetadataOnly,
-            //     config,
-            // ),
             assemblers: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
             logged_packets: 0,
@@ -179,7 +165,7 @@ impl CaptureDispatcher {
                 ping_tracker.on_packet(&packet.data, packet.captured_at);
 
                 if state.logged_packets < 20 {
-                    logger.debug(format!(
+                    logger.info(format!(
                         "dispatcher packet src={} dst={} payload_len={} captured_at={:.3}",
                         packet.src_port,
                         packet.dst_port,
@@ -232,11 +218,6 @@ impl CaptureDispatcher {
                         });
                     }
                 }
-
-                // let _ = state.unified.process_chunk(&packet.data);
-                // if contains_magic {
-                //     let _ = state.unified1.process_chunk(&packet.data);
-                // }
                 if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
