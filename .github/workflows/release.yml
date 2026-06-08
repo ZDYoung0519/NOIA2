@@ -99,6 +99,7 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+          retryAttempts: 3
 
       - name: Generate proxy updater manifest
         shell: bash
