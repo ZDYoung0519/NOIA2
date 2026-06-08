@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.4]
+## [2.1.0]
 
 - 增加boss血条，完善huntercompact风格
 - huntercompact风格资源占用比classic略高，仍然建议使用classic
