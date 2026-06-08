@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/hooks/use-app-settings";
+import { hideDpsWindows, showDpsWindows } from "@/lib/window";
 
 const DPS_METER_STARTED_AT_KEY = "dps-meter-started-at";
 
@@ -134,9 +135,11 @@ export function DpsMeterLauncherButton() {
         setStartedAt(null);
         setElapsedSeconds(0);
         clearStartedAt();
+        hideDpsWindows();
       } else {
         await invoke("start_dps_meter");
         await invoke("set_dps_manual_hidden", { hidden: false });
+        await showDpsWindows();
 
         const nextStartedAt = Date.now();
         setIsDpsMeterRunning(true);

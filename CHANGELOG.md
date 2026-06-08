@@ -1,9 +1,10 @@
 # Changelog
 
-## [2.0.2]
+## [2.0.3]
 
 - 增加boss血条，完善huntercompact风格
 - huntercompact风格资源占用比classic略高，仍然建议使用classic
+- 修复启动后无法正常显示窗口
 - 修复技能窗口无法正常居中
 - 修复部分情况会检测不到某个玩家伤害（还待确认是否完全修复
 
