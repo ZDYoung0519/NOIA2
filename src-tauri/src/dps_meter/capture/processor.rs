@@ -339,10 +339,10 @@ impl StreamProcessor {
                 reader.offset = checkpoint;
                 break;
             };
-            if target_id < 100 {
-                reader.offset = checkpoint;
-                break;
-            }
+            // if target_id < 100 {
+            //     reader.offset = checkpoint;
+            //     break;
+            // }
 
             let Some(switch_value) = reader.try_read_var_int() else {
                 reader.offset = checkpoint;
@@ -363,10 +363,10 @@ impl StreamProcessor {
                 reader.offset = checkpoint;
                 break;
             };
-            if actor_id < 100 {
-                reader.offset = checkpoint;
-                break;
-            }
+            // if actor_id < 100 {
+            //     reader.offset = checkpoint;
+            //     break;
+            // }
 
             if reader.offset + 4 > packet.len() {
                 reader.offset = checkpoint;
