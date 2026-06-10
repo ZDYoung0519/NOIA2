@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::process::Command;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex, RwLock,
@@ -326,13 +328,20 @@ fn normalized_port_key(src_port: u16, dst_port: u16) -> String {
 }
 
 
+fn hidden_cmd(program: &str) -> Command {
+    let mut cmd = Command::new(program);
+    #[cfg(windows)]
+    { cmd.creation_flags(0x08000000); }
+    cmd
+}
+
 fn find_accelerator_ports(logger: &DpsLogger) -> Vec<AccelInfo> {
     logger.info("port scan: starting...");
     let aion2_pid = match get_pid("Aion2.exe") {
         Some(p) => { logger.info(format!("port scan: Aion2.exe PID={p}")); p }
         None => { logger.info("port scan: Aion2.exe not running"); return vec![]; }
     };
-    let netstat = match Command::new("netstat").args(["-ano", "-p", "tcp"]).output() {
+    let netstat = match hidden_cmd("netstat").args(["-ano", "-p", "tcp"]).output() {
         Ok(o) => o,
         Err(e) => { logger.info(format!("port scan: netstat failed: {e}")); return vec![]; }
     };
@@ -386,12 +395,12 @@ pub struct AccelInfo {
 }
 
 fn get_pid(name: &str) -> Option<u32> {
-    let out = Command::new("tasklist").args(["/fo", "csv", "/nh", "/fi", &format!("imagename eq {name}")]).output().ok()?;
+    let out = hidden_cmd("tasklist").args(["/fo", "csv", "/nh", "/fi", &format!("imagename eq {name}")]).output().ok()?;
     String::from_utf8_lossy(&out.stdout).split(',').nth(1)?.trim_matches('"').trim().parse().ok()
 }
 
 fn get_name(pid: u32) -> String {
-    Command::new("tasklist").args(["/fi", &format!("PID eq {pid}"), "/fo", "csv", "/nh"]).output().ok()
+    hidden_cmd("tasklist").args(["/fi", &format!("PID eq {pid}"), "/fo", "csv", "/nh"]).output().ok()
         .and_then(|o| String::from_utf8_lossy(&o.stdout).split(',').next().map(|s| s.trim_matches('"').to_string()))
         .unwrap_or_else(|| pid.to_string())
 }
