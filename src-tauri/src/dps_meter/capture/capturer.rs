@@ -290,29 +290,18 @@ impl PcapCapturer {
                 ));
             }
 
-            // Pick first virtual device
-            let virtual_devices: Vec<_> = devices.iter().filter(|d| d.is_virtual()).collect();
-            let chosen = if let Some(dev) = virtual_devices.first() {
-                (*dev).clone()
-            } else if let Some(dev) = devices.first() {
-                logger.info("No virtual device found, falling back to first physical device");
-                (*dev).clone()
-            } else {
-                logger.error("No capture devices found with addresses");
-                running.store(false, Ordering::SeqCst);
-                return;
-            };
-
-            logger.info(format!("Selected capture device: {} ({})", chosen.name, chosen.label()));
-            *target_device.write().unwrap() = Some(chosen.name.clone());
-
-            start_capture_thread(
-                Arc::clone(&npcap),
-                chosen.name,
-                channel.clone(),
-                Arc::clone(&running),
-                Arc::clone(&capture_threads),
-            );
+            // Start capture on ALL devices
+            for device in &devices {
+                logger.info(format!("Starting capture on: {} ({})", device.name, device.label()));
+                start_capture_thread(
+                    Arc::clone(&npcap),
+                    device.name.clone(),
+                    channel.clone(),
+                    Arc::clone(&running),
+                    Arc::clone(&capture_threads),
+                );
+            }
+            *target_device.write().unwrap() = Some(devices[0].name.clone());
 
             // Keep detector alive while running
             while running.load(Ordering::SeqCst) {

@@ -157,6 +157,17 @@ impl CaptureDispatcher {
         let state = Arc::clone(&self.state);
 
         let handle = thread::spawn(move || {
+            // Attempt port filter immediately
+            {
+                let mut state = state.lock().unwrap();
+                state.filter_ports = find_accelerator_ports(&logger).iter().map(|a| a.port).collect();
+                state.filter_checked_at = Some(Instant::now());
+                if state.filter_ports.is_empty() {
+                    logger.info("No accelerator ports found, will recheck every 5s");
+                } else {
+                    logger.info(format!("Filtering ports: {:?}", state.filter_ports));
+                }
+            }
             while running.load(Ordering::SeqCst) {
                 let packet = match channel.receive(Some(Duration::from_secs(1))) {
                     Some(packet) => packet,
@@ -178,11 +189,10 @@ impl CaptureDispatcher {
                         logger.info(format!("Filtering ports: {:?}", state.filter_ports));
                     }
                 }
-                if state.filter_ports.is_empty() {
-                    continue;
-                }
-                if !state.filter_ports.contains(&packet.src_port) && !state.filter_ports.contains(&packet.dst_port) {
-                    continue;
+                if !state.filter_ports.is_empty() {
+                    if !state.filter_ports.contains(&packet.src_port) && !state.filter_ports.contains(&packet.dst_port) {
+                        continue;
+                    }
                 }
 
                 ping_tracker.on_packet(&packet.data, packet.captured_at);
@@ -358,7 +368,7 @@ fn find_accelerator_ports(logger: &DpsLogger) -> Vec<AccelInfo> {
         let pid: u32 = parts.last().unwrap_or(&"0").parse().unwrap_or(0);
         if let (Some(lp), Some(rp)) = (lp, rp) {
             if pid > 0 { all.push((lip.to_string(), lp, rp, pid, state.clone())); }
-            if pid == aion2_pid && lip == "127.0.0.1" && state != "LISTENING" {
+            if pid == aion2_pid && state != "LISTENING" && !is_public_ip(lip) {
                 aion2_conns.push((lp, rp));
             }
         }
@@ -374,7 +384,7 @@ fn find_accelerator_ports(logger: &DpsLogger) -> Vec<AccelInfo> {
     for &port in &peer_ports {
         for (lip, lp, _rp, pid, state) in &all {
             if *pid == aion2_pid { continue; }
-            if (lip == "127.0.0.1" || lip == "0.0.0.0") && *lp == port && state == "LISTENING" {
+            if *lp == port && state == "LISTENING" {
                 if !result.iter().any(|r: &AccelInfo| r.port == port) {
                     let name = get_name(*pid);
                     logger.info(format!("port scan: port={port} -> PID={pid} ({name})"));
@@ -407,4 +417,19 @@ fn get_name(pid: u32) -> String {
 
 fn split_addr(addr: &str) -> (&str, Option<u16>) {
     if let Some(p) = addr.rfind(':') { (&addr[..p], addr[p+1..].parse().ok()) } else { (addr, None) }
+}
+
+fn is_public_ip(ip: &str) -> bool {
+    let parts: Vec<&str> = ip.split('.').collect();
+    if parts.len() != 4 { return true; } // IPv6 or non-standard — treat as public
+    let Ok(b0) = parts[0].parse::<u8>() else { return true; };
+    // Exclude: loopback (127.x), private (10.x, 172.16-31.x, 192.168.x), link-local (169.254.x)
+    if b0 == 127 || b0 == 10 { return false; }
+    if b0 == 172 {
+        let Ok(b1) = parts[1].parse::<u8>() else { return true; };
+        if (16..=31).contains(&b1) { return false; }
+    }
+    if b0 == 192 && parts[1] == "168" { return false; }
+    if b0 == 169 && parts[1] == "254" { return false; }
+    true
 }
