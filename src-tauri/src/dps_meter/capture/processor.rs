@@ -282,7 +282,7 @@ impl StreamProcessor {
         // if self.parse_summon_packet(packet){
         //     return true;
         // }
-        self.parse_4036(packet);
+        self.parse_4136(packet);
         self.parse_summon_ownership_packet(packet);
         self.parse_summon_packet(packet);
         self.parse_remain_hp_packet(packet);
@@ -590,7 +590,7 @@ impl StreamProcessor {
             };
 
             self.data_storage.append_damage(parsed);
-            self.logger.debug(format!(
+            self.logger.info(format!(
                 "[{}] damage target={} actor={} skill={} damage={} multi_hit_count={} multi_hit_damage={}",
                 self.port,
                 target_id,
@@ -738,7 +738,7 @@ impl StreamProcessor {
         let mut found_any = false;
 
         while idx < packet.len() {
-            let Some(pos) = find_bytes(packet, idx, &[0x40, 0x36]) else {
+            let Some(pos) = find_bytes(packet, idx, &[0x41, 0x36]) else {
                 break;
             };
 
@@ -1217,10 +1217,10 @@ impl StreamProcessor {
         None
     }
 
-    fn parse_4036(&mut self, payload: &[u8]) {
+    fn parse_4136(&mut self, payload: &[u8]) {
         let mut idx = 0usize;
         while idx < payload.len() {
-            let Some(pos) = find_bytes(payload, idx, &[0x40, 0x36]) else {
+            let Some(pos) = find_bytes(payload, idx, &[0x41, 0x36]) else {
                 break;
             };
             let aid_info = read_varint(payload, pos + 2);
@@ -1317,7 +1317,7 @@ impl StreamProcessor {
     fn parse_4436_optimized(&mut self, payload: &[u8]) {
         let mut idx = 0usize;
         while idx < payload.len() {
-            let Some(pos) = find_bytes(payload, idx, &[0x44, 0x36]) else {
+            let Some(pos) = find_bytes(payload, idx, &[0x45, 0x36]) else {
                 break;
             };
             let Some((actor_id, name, sid)) = self.extract_4436_actor(payload, pos) else {

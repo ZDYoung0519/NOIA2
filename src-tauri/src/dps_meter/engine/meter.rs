@@ -20,7 +20,7 @@ use crate::dps_meter::models::combat::CombatSnapshot;
 use crate::dps_meter::models::diagnostics::MemorySnapshot;
 use crate::dps_meter::storage::data_storage::DataStorage;
 
-const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
+const STALE_ASSEMBLER_IDLE_SECS: u64 = 20;
 
 pub struct DpsMeter {
     app: AppHandle,
@@ -316,9 +316,7 @@ fn build_memory_snapshot(
         vms_mb: vms_bytes / (1024.0 * 1024.0),
         memory_percent: ((rss_bytes / total_memory) * 100.0) as f32,
         cap_device: capturer.target_device(),
-        cap_port: dispatcher
-            .current_combat_port()
-            .or_else(|| capturer.target_port()),
+        cap_port: dispatcher.current_combat_port(),
         packet_sizes,
         ping_ms: ping_tracker.current_ping_ms(),
         ping_history: ping_tracker.history_snapshot(100),

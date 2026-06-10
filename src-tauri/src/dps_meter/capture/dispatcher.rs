@@ -1,4 +1,5 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::process::Command;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex, RwLock,
@@ -17,7 +18,6 @@ use crate::dps_meter::storage::data_storage::DataStorage;
 
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
-const MAGIC: [u8; 3] = [0x06, 0x00, 0x36];
 
 #[derive(Default)]
 struct RecentPortWindow {
@@ -55,8 +55,8 @@ struct DispatcherState {
     // unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
     recent_ports: RecentPortWindow,
-    logged_packets: usize,
-    logged_magic_packets: usize,
+    filter_ports: HashSet<u16>,
+    filter_checked_at: Option<Instant>,
 }
 
 struct TrackedAssembler {
@@ -88,8 +88,8 @@ impl DispatcherState {
             config: Arc::clone(&config),
             assemblers: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
-            logged_packets: 0,
-            logged_magic_packets: 0,
+            filter_ports: HashSet::new(),
+            filter_checked_at: None,
         }
     }
 
@@ -101,8 +101,8 @@ impl DispatcherState {
         }
         self.assemblers.clear();
         self.recent_ports.entries.clear();
-        self.logged_packets = 0;
-        self.logged_magic_packets = 0;
+        self.filter_checked_at = None;
+        self.filter_ports.clear();
     }
 }
 
@@ -162,18 +162,28 @@ impl CaptureDispatcher {
                 };
 
                 let mut state = state.lock().unwrap();
-                ping_tracker.on_packet(&packet.data, packet.captured_at);
 
-                if state.logged_packets < 20 {
-                    logger.info(format!(
-                        "dispatcher packet src={} dst={} payload_len={} captured_at={:.3}",
-                        packet.src_port,
-                        packet.dst_port,
-                        packet.data.len(),
-                        packet.captured_at
-                    ));
-                    state.logged_packets += 1;
+                // Port filtering: only process accelerator ports
+                let should_recheck = state.filter_checked_at
+                    .map(|t| t.elapsed() > Duration::from_secs(5))
+                    .unwrap_or(true);
+                if should_recheck {
+                    state.filter_ports = find_accelerator_ports(&logger).iter().map(|a| a.port).collect();
+                    state.filter_checked_at = Some(Instant::now());
+                    if state.filter_ports.is_empty() {
+                        logger.info("No accelerator ports found, skipping all packets");
+                    } else {
+                        logger.info(format!("Filtering ports: {:?}", state.filter_ports));
+                    }
                 }
+                if state.filter_ports.is_empty() {
+                    continue;
+                }
+                if !state.filter_ports.contains(&packet.src_port) && !state.filter_ports.contains(&packet.dst_port) {
+                    continue;
+                }
+
+                ping_tracker.on_packet(&packet.data, packet.captured_at);
 
                 if looks_like_tls_payload(&packet.data) {
                     logger.debug(format!(
@@ -186,39 +196,26 @@ impl CaptureDispatcher {
                 }
 
                 let key = normalized_port_key(packet.src_port, packet.dst_port);
-                let contains_magic = packet
-                    .data
-                    .windows(MAGIC.len())
-                    .any(|window| window == MAGIC);
 
-                if contains_magic && state.logged_magic_packets < 20 {
-                    logger.debug(format!(
-                        "dispatcher magic packet key={} payload_len={} head={}",
-                        key,
-                        packet.data.len(),
-                        format_packet_prefix(&packet.data, 24)
-                    ));
-                    state.logged_magic_packets += 1;
+                // On loopback device, all packets are potentially game traffic
+                // Register port and create assembler on first packet seen
+                if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
+                    *combat_port.write().unwrap() = Some(locked.clone());
+                    let data_storage = Arc::clone(&state.data_storage);
+                    let logger = Arc::clone(&logger);
+                    let config = Arc::clone(&state.config);
+                    state.assemblers.entry(locked.clone()).or_insert_with(|| {
+                        TrackedAssembler::new(StreamAssembler::new(
+                            data_storage,
+                            logger,
+                            locked,
+                            ProcessingMode::Full,
+                            Arc::clone(&config),
+                        ))
+                    });
                 }
-
-                if contains_magic {
-                    if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
-                        *combat_port.write().unwrap() = Some(locked.clone());
-                        let data_storage = Arc::clone(&state.data_storage);
-                        let logger = Arc::clone(&logger);
-                        let config = Arc::clone(&state.config);
-                        state.assemblers.entry(locked.clone()).or_insert_with(|| {
-                            TrackedAssembler::new(StreamAssembler::new(
-                                data_storage,
-                                logger,
-                                locked,
-                                ProcessingMode::Full,
-                                Arc::clone(&config),
-                            ))
-                        });
-                    }
-                }
-                if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
+                {
+                    // Process packet through its port's assembler
                     let data_storage = Arc::clone(&state.data_storage);
                     let assembler_logger = Arc::clone(&logger);
                     let config = Arc::clone(&state.config);
@@ -328,10 +325,77 @@ fn normalized_port_key(src_port: u16, dst_port: u16) -> String {
     format!("{a}-{b}")
 }
 
-fn format_packet_prefix(data: &[u8], max_bytes: usize) -> String {
-    data.iter()
-        .take(max_bytes)
-        .map(|byte| format!("{byte:02X}"))
-        .collect::<Vec<_>>()
-        .join(" ")
+
+fn find_accelerator_ports(logger: &DpsLogger) -> Vec<AccelInfo> {
+    logger.info("port scan: starting...");
+    let aion2_pid = match get_pid("Aion2.exe") {
+        Some(p) => { logger.info(format!("port scan: Aion2.exe PID={p}")); p }
+        None => { logger.info("port scan: Aion2.exe not running"); return vec![]; }
+    };
+    let netstat = match Command::new("netstat").args(["-ano", "-p", "tcp"]).output() {
+        Ok(o) => o,
+        Err(e) => { logger.info(format!("port scan: netstat failed: {e}")); return vec![]; }
+    };
+    let text = String::from_utf8_lossy(&netstat.stdout);
+
+    let mut all: Vec<(String, u16, u16, u32, String)> = Vec::new();
+    let mut aion2_conns: Vec<(u16, u16)> = Vec::new();
+    for line in text.lines().skip(4) {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 5 { continue; }
+        let (lip, lp) = split_addr(parts.get(1).unwrap_or(&""));
+        let (_, rp) = split_addr(parts.get(2).unwrap_or(&""));
+        let state = parts.get(3).unwrap_or(&"").to_string();
+        let pid: u32 = parts.last().unwrap_or(&"0").parse().unwrap_or(0);
+        if let (Some(lp), Some(rp)) = (lp, rp) {
+            if pid > 0 { all.push((lip.to_string(), lp, rp, pid, state.clone())); }
+            if pid == aion2_pid && lip == "127.0.0.1" && state != "LISTENING" {
+                aion2_conns.push((lp, rp));
+            }
+        }
+    }
+    logger.info(format!("port scan: found {} Aion2 loopback connections", aion2_conns.len()));
+
+    let peer_ports: Vec<u16> = aion2_conns.iter()
+        .filter(|(lp, rp)| !aion2_conns.iter().any(|(l2, r2)| (l2 != lp || r2 != rp) && *lp == *r2 && *rp == *l2))
+        .map(|(_, rp)| *rp).collect::<HashSet<_>>().into_iter().collect();
+    logger.info(format!("port scan: {} unique peer ports (after excluding self-comm): {:?}", peer_ports.len(), peer_ports));
+
+    let mut result = Vec::new();
+    for &port in &peer_ports {
+        for (lip, lp, _rp, pid, state) in &all {
+            if *pid == aion2_pid { continue; }
+            if (lip == "127.0.0.1" || lip == "0.0.0.0") && *lp == port && state == "LISTENING" {
+                if !result.iter().any(|r: &AccelInfo| r.port == port) {
+                    let name = get_name(*pid);
+                    logger.info(format!("port scan: port={port} -> PID={pid} ({name})"));
+                    result.push(AccelInfo { port, pid: *pid, name });
+                }
+            }
+        }
+    }
+    logger.info(format!("port scan: done, {} accelerator ports found", result.len()));
+    result
+}
+
+#[derive(Debug, Clone)]
+pub struct AccelInfo {
+    pub port: u16,
+    pub pid: u32,
+    pub name: String,
+}
+
+fn get_pid(name: &str) -> Option<u32> {
+    let out = Command::new("tasklist").args(["/fo", "csv", "/nh", "/fi", &format!("imagename eq {name}")]).output().ok()?;
+    String::from_utf8_lossy(&out.stdout).split(',').nth(1)?.trim_matches('"').trim().parse().ok()
+}
+
+fn get_name(pid: u32) -> String {
+    Command::new("tasklist").args(["/fi", &format!("PID eq {pid}"), "/fo", "csv", "/nh"]).output().ok()
+        .and_then(|o| String::from_utf8_lossy(&o.stdout).split(',').next().map(|s| s.trim_matches('"').to_string()))
+        .unwrap_or_else(|| pid.to_string())
+}
+
+fn split_addr(addr: &str) -> (&str, Option<u16>) {
+    if let Some(p) = addr.rfind(':') { (&addr[..p], addr[p+1..].parse().ok()) } else { (addr, None) }
 }

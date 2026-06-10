@@ -27,7 +27,6 @@ pub struct CapturedPacket {
 #[derive(Debug, Clone)]
 pub struct CaptureTarget {
     pub device_name: String,
-    pub target_port: Option<String>,
 }
 
 type PcapT = *mut std::ffi::c_void;
@@ -233,7 +232,6 @@ pub struct PcapCapturer {
     detector_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
     target_device: Arc<RwLock<Option<String>>>,
-    target_port: Arc<RwLock<Option<String>>>,
     detection_interval: Duration,
     detection_timeout: Duration,
 }
@@ -247,7 +245,6 @@ impl PcapCapturer {
             detector_thread: Arc::new(Mutex::new(None)),
             capture_threads: Arc::new(Mutex::new(Vec::new())),
             target_device: Arc::new(RwLock::new(None)),
-            target_port: Arc::new(RwLock::new(None)),
             detection_interval: Duration::from_secs(20),
             detection_timeout: Duration::from_secs(1),
         }
@@ -263,9 +260,6 @@ impl PcapCapturer {
         let running = Arc::clone(&self.running);
         let capture_threads = Arc::clone(&self.capture_threads);
         let target_device = Arc::clone(&self.target_device);
-        let target_port = Arc::clone(&self.target_port);
-        let detection_interval = self.detection_interval;
-        let detection_timeout = self.detection_timeout;
 
         let detector_handle = thread::spawn(move || {
             let npcap = match NpcapLib::load() {
@@ -276,99 +270,54 @@ impl PcapCapturer {
                     return;
                 }
             };
-            let mut last_device_inventory = String::new();
-            let mut last_detected_target = String::new();
 
-            while running.load(Ordering::SeqCst) {
-                // 1. find magic devices
-                let devices = match npcap.find_all_devices() {
-                    Ok(devices) => devices,
-                    Err(error) => {
-                        logger.error(format!("Failed to enumerate capture devices: {error}"));
-                        thread::sleep(detection_interval);
-                        continue;
-                    }
-                };
-
-                let devices = prioritize_devices(devices);
-                let inventory = format_device_inventory(&devices);
-                if inventory != last_device_inventory {
-                    if devices.is_empty() {
-                        logger.info("capture device: none");
-                    } else {
-                        for device_line in &devices {
-                            logger.info(format!(
-                                "capture device: {} | desc={} | has_addresses={} | loopback={} | virtual={}",
-                                device_line.name,
-                                if device_line.description.is_empty() {
-                                    "--"
-                                } else {
-                                    device_line.description.as_str()
-                                },
-                                device_line.has_addresses,
-                                device_line.is_loopback,
-                                device_line.is_virtual()
-                            ));
-                        }
-                    }
-                    last_device_inventory = inventory;
+            let devices = match npcap.find_all_devices() {
+                Ok(devices) => devices,
+                Err(error) => {
+                    logger.error(format!("Failed to enumerate capture devices: {error}"));
+                    running.store(false, Ordering::SeqCst);
+                    return;
                 }
-                let mut detected_target: Option<CaptureTarget> = None;
+            };
 
-                for device in devices {
-                    if let Some(target_port_value) = inspect_device_for_magic(
-                        npcap.as_ref(),
-                        &device,
-                        detection_timeout,
-                        &running,
-                    ) {
-                        detected_target = Some(CaptureTarget {
-                            device_name: device.name,
-                            target_port: Some(target_port_value),
-                        });
-                        break;
-                    }
-                }
-
-                if let Some(target) = detected_target {
-                    let detected_signature = format!(
-                        "{}@{}",
-                        target.device_name,
-                        target.target_port.as_deref().unwrap_or("--")
-                    );
-                    if detected_signature != last_detected_target {
-                        logger.info(format!(
-                            "capture target detected: device={} port={}",
-                            target.device_name,
-                            target.target_port.as_deref().unwrap_or("--")
-                        ));
-                        last_detected_target = detected_signature;
-                    }
-
-                    let previous_device = target_device.read().unwrap().clone();
-                    let should_restart = previous_device.as_deref()
-                        != Some(target.device_name.as_str())
-                        || capture_threads.lock().unwrap().is_empty();
-
-                    *target_device.write().unwrap() = Some(target.device_name.clone());
-                    *target_port.write().unwrap() = target.target_port.clone();
-
-                    if should_restart {
-                        stop_capture_threads(&capture_threads);
-                        start_capture_thread(
-                            Arc::clone(&npcap),
-                            target.device_name,
-                            channel.clone(),
-                            Arc::clone(&running),
-                            Arc::clone(&capture_threads),
-                        );
-                    }
-                }
-
-                sleep_while_running(&running, detection_interval);
+            let devices: Vec<_> = devices.into_iter().filter(|d| d.has_addresses).collect();
+            for d in &devices {
+                logger.info(format!(
+                    "capture device: {} | desc={} | has_addresses={} | loopback={} | virtual={}",
+                    d.name,
+                    if d.description.is_empty() { "--" } else { d.description.as_str() },
+                    d.has_addresses, d.is_loopback, d.is_virtual()
+                ));
             }
 
-            stop_capture_threads(&capture_threads);
+            // Pick first virtual device
+            let virtual_devices: Vec<_> = devices.iter().filter(|d| d.is_virtual()).collect();
+            let chosen = if let Some(dev) = virtual_devices.first() {
+                (*dev).clone()
+            } else if let Some(dev) = devices.first() {
+                logger.info("No virtual device found, falling back to first physical device");
+                (*dev).clone()
+            } else {
+                logger.error("No capture devices found with addresses");
+                running.store(false, Ordering::SeqCst);
+                return;
+            };
+
+            logger.info(format!("Selected capture device: {} ({})", chosen.name, chosen.label()));
+            *target_device.write().unwrap() = Some(chosen.name.clone());
+
+            start_capture_thread(
+                Arc::clone(&npcap),
+                chosen.name,
+                channel.clone(),
+                Arc::clone(&running),
+                Arc::clone(&capture_threads),
+            );
+
+            // Keep detector alive while running
+            while running.load(Ordering::SeqCst) {
+                thread::sleep(Duration::from_secs(1));
+            }
         });
 
         *self.detector_thread.lock().unwrap() = Some(detector_handle);
@@ -386,15 +335,10 @@ impl PcapCapturer {
         }
         stop_capture_threads(&self.capture_threads);
         *self.target_device.write().unwrap() = None;
-        *self.target_port.write().unwrap() = None;
     }
 
     pub fn target_device(&self) -> Option<String> {
         self.target_device.read().unwrap().clone()
-    }
-
-    pub fn target_port(&self) -> Option<String> {
-        self.target_port.read().unwrap().clone()
     }
 
     pub fn channel(&self) -> Channel<CapturedPacket> {
@@ -637,3 +581,15 @@ fn sleep_while_running(running: &Arc<AtomicBool>, duration: Duration) {
         thread::sleep(Duration::from_millis(100));
     }
 }
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcceleratorInfo {
+    pub port: u16,
+    pub pid: u32,
+    pub name: String,
+}
+
+
+
+
