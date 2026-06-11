@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Toaster } from "@/components/ui/sonner";
+
 import { Switch } from "@/components/ui/switch";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useAppTranslation } from "@/hooks/use-app-translation";
@@ -1010,9 +1010,8 @@ export function SettingsContent() {
   const [storageSummary, setStorageSummary] = useState(() => getLocalStorageSummary());
   const { t } = useAppTranslation();
   const { theme, setTheme } = useTheme();
-  const { settings, saveSettings } = useAppSettings();
+
   const { checkUpdate, checking, showNoUpdate } = useManualUpdateCheck();
-  const showMainShortcut = settings.shortcuts.showMain;
 
   useEffect(() => {
     void getVersion().then(setAppVersion);
@@ -1043,24 +1042,6 @@ export function SettingsContent() {
       window.removeEventListener("storage", handleStorage);
     };
   }, [refreshStorageSummary]);
-
-  const handleShortcutChange = async (newShortcut: string) => {
-    if (newShortcut) {
-      await saveSettings({
-        shortcuts: {
-          showMain: newShortcut,
-        },
-      });
-      toast.success(t("settings.shortcut.setSuccess", { shortcut: newShortcut }));
-    } else {
-      await saveSettings({
-        shortcuts: {
-          showMain: "",
-        },
-      });
-      toast.info(t("settings.shortcut.cleared"));
-    }
-  };
 
   const handleOpenLink = useCallback((href: string) => {
     void openUrl(href);
