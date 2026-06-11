@@ -2,6 +2,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowLeft, Globe, HandHeart, Moon, RefreshCcw, Sun } from "lucide-react";
 import { FaQq } from "react-icons/fa";
 import { FaGithub } from "react-icons/fa6";
+import { SiBilibili } from "react-icons/si";
 import { useTheme } from "@/components/theme-provider";
 
 import { TitleBar } from "@/components/title-bar";
@@ -62,6 +63,11 @@ const EXTERNAL_ACTIONS: ExternalAction[] = [
         />
       </div>
     ),
+  },
+  {
+    label: "Bilibili",
+    href: "https://space.bilibili.com/3546381214778483",
+    icon: SiBilibili,
   },
   {
     label: "赞助",
