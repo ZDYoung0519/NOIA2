@@ -44763,5 +44763,19 @@
     "npcType": "",
     "npcSubType": "",
     "mainCategory": "monster"
+  },
+  "2301089": {
+    "name": "伊斯卡利爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301090": {
+    "name": "凱德利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
   }
 }
