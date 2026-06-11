@@ -42,27 +42,27 @@ The project is designed for day-to-day play: open the meter, switch back to the 
 
 ### Home Dashboard
 
-![NOIA2 home dashboard](./public/home.png)
+![NOIA2 home dashboard](./docs/images/home.png)
 
 ### Lightweight DPS Overlay
 
-![NOIA2 DPS overlay](./public/dps.png)
+![NOIA2 DPS overlay](./docs/images/dps.png)
 
 ### DPS Detail View
 
-![NOIA2 DPS detail](./public/dps_detail.png)
+![NOIA2 DPS detail](./docs/images/dps_detail.png)
 
 ### Character Score
 
-![NOIA2 character score](./public/character_score.png)
+![NOIA2 character score](./docs/images/character_score.png)
 
 ### DPS Rankings
 
-![NOIA2 DPS rankings](./public/dps_rank.png)
+![NOIA2 DPS rankings](./docs/images/dps_rank.png)
 
 ### Class Statistics
 
-![NOIA2 class statistics](./public/class_stats.png)
+![NOIA2 class statistics](./docs/images/class_stats.png)
 
 ## Quick Start
 
