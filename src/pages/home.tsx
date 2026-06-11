@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +18,10 @@ export default function HomePage() {
   const [showLightDialog, setShowLightDialog] = useState(false);
   const { settings, saveSettings } = useAppSettings();
   const autoCloseMain = settings.autoCloseMainOnStartup;
+
+  useEffect(() => {
+    void saveSettings({ autoCloseMainOnStartup: true });
+  }, []);
   const navigate = useNavigate();
 
   return (
