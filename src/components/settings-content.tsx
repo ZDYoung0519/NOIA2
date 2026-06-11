@@ -359,6 +359,73 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
         />
       </SettingsGroup>
 
+      <SettingsGroup title="运行配置">
+        <SettingsRow
+          label="显示未知召唤物"
+          control={
+            <Switch
+              checked={dpsAppearance.showUnknownActors}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      showUnknownActors: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
+
+        <SettingsRow
+          label={t("settings.dps.bossOnly")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.bossOnly}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    bossOnly: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.showPossibleBoss")}
+          description={t("settings.dps.showPossibleBossDescription")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.showPossibleBoss}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    showPossibleBoss: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+        <SettingsRow
+          label={t("settings.dps.myMuzhuangOnly")}
+          control={
+            <Switch
+              checked={settings.dpsMeter.myMuzhuangOnly}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  dpsMeter: {
+                    myMuzhuangOnly: checked,
+                  },
+                });
+              }}
+            />
+          }
+        />
+      </SettingsGroup>
+
       <SettingsGroup title={t("settings.dps.windowAppearanceGroup")}>
         <div className="space-y-3 px-5 py-5">
           <div className="text-sm font-medium">{t("settings.dps.previewWindowTitle")}</div>
@@ -472,6 +539,24 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
             />
           }
         />
+
+        <SettingsRow
+          label={t("settings.dps.maskNicknames")}
+          control={
+            <Switch
+              checked={dpsAppearance.maskNicknames}
+              onCheckedChange={(checked) => {
+                void saveSettings({
+                  appearance: {
+                    dpsWindow: {
+                      maskNicknames: checked,
+                    },
+                  },
+                });
+              }}
+            />
+          }
+        />
         <SettingsRow
           label="显示服务器名称"
           control={
@@ -489,23 +574,7 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
             />
           }
         />
-        <SettingsRow
-          label="显示未识别角色"
-          control={
-            <Switch
-              checked={dpsAppearance.showUnknownActors}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  appearance: {
-                    dpsWindow: {
-                      showUnknownActors: checked,
-                    },
-                  },
-                });
-              }}
-            />
-          }
-        />
+
         <SettingsRow
           label="显示 Boss 血条"
           control={
@@ -655,23 +724,6 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
           }
         />
         <SettingsRow
-          label={t("settings.dps.showDetailOnHover")}
-          control={
-            <Switch
-              checked={dpsAppearance.showDetailOnHover}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  appearance: {
-                    dpsWindow: {
-                      showDetailOnHover: checked,
-                    },
-                  },
-                });
-              }}
-            />
-          }
-        />
-        <SettingsRow
           label={t("settings.dps.detailWindowPosition")}
           control={
             <Select
@@ -719,42 +771,6 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
           }
         />
 
-        <SettingsRow
-          label={t("settings.appearance.autoReset")}
-          description={t("settings.appearance.autoResetDescription")}
-          control={
-            <Switch
-              checked={dpsAppearance.autoReset}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  appearance: {
-                    dpsWindow: {
-                      autoReset: checked,
-                    },
-                  },
-                });
-              }}
-            />
-          }
-        />
-
-        <SettingsRow
-          label={t("settings.dps.maskNicknames")}
-          control={
-            <Switch
-              checked={dpsAppearance.maskNicknames}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  appearance: {
-                    dpsWindow: {
-                      maskNicknames: checked,
-                    },
-                  },
-                });
-              }}
-            />
-          }
-        />
         <SettingsRow
           label={t("settings.dps.percentDisplayMode")}
           description={t("settings.dps.percentDisplayModeDescription")}
@@ -982,52 +998,6 @@ export function DpsSettingsPanel({ className }: { className?: string }) {
             </div>
           }
         />
-        <SettingsRow
-          label={t("settings.dps.bossOnly")}
-          control={
-            <Switch
-              checked={settings.dpsMeter.bossOnly}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  dpsMeter: {
-                    bossOnly: checked,
-                  },
-                });
-              }}
-            />
-          }
-        />
-        <SettingsRow
-          label={t("settings.dps.showPossibleBoss")}
-          description={t("settings.dps.showPossibleBossDescription")}
-          control={
-            <Switch
-              checked={settings.dpsMeter.showPossibleBoss}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  dpsMeter: {
-                    showPossibleBoss: checked,
-                  },
-                });
-              }}
-            />
-          }
-        />
-        <SettingsRow
-          label={t("settings.dps.myMuzhuangOnly")}
-          control={
-            <Switch
-              checked={settings.dpsMeter.myMuzhuangOnly}
-              onCheckedChange={(checked) => {
-                void saveSettings({
-                  dpsMeter: {
-                    myMuzhuangOnly: checked,
-                  },
-                });
-              }}
-            />
-          }
-        />
       </SettingsGroup>
     </div>
   );
@@ -1134,7 +1104,6 @@ export function SettingsContent() {
 
   return (
     <>
-      <Toaster />
       <aside className="border-border flex h-full w-44 shrink-0 flex-col border-r p-4">
         <nav className="flex-1 space-y-1">
           {menuItems.map((item) => {
@@ -1205,15 +1174,6 @@ export function SettingsContent() {
                 <SettingsRow
                   label={t("settings.appearance.language")}
                   control={<LanguageToggle />}
-                />
-              </SettingsGroup>
-
-              <SettingsGroup title={t("settings.general.shortcutsGroup")}>
-                <SettingsRow
-                  label={t("settings.shortcut.showMain")}
-                  control={
-                    <ShortcutInput value={showMainShortcut} onChange={handleShortcutChange} />
-                  }
                 />
               </SettingsGroup>
             </div>

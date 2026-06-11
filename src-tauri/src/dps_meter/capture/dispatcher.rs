@@ -17,7 +17,7 @@ use crate::dps_meter::storage::data_storage::DataStorage;
 
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
-const MAGIC: [u8; 3] = [0x06, 0x00, 0x36];
+const MAGIC: [u8; 3] = [0x0E, 0x00, 0x36];
 
 #[derive(Default)]
 struct RecentPortWindow {

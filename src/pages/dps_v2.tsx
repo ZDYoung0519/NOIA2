@@ -223,6 +223,7 @@ export default function DpsV2Page() {
   const [selectedHistoryRecord, setSelectedHistoryRecord] = useState<HistoryTargetRecord | null>(
     null
   );
+  const [mainActorName, setMainActorName] = useState<string | null>(null);
 
   const snapshotRef = useRef<CombatSnapshot | null>(null);
   const isRunningRef = useRef(false);
@@ -257,6 +258,12 @@ export default function DpsV2Page() {
   const viewRef = useRef<"dps" | "dps_history" | "ping">("dps");
 
   viewRef.current = view;
+
+  useEffect(() => {
+    if (mainActorName) {
+      mainActorNameRef.current = mainActorName;
+    }
+  }, [mainActorName]);
 
   const selectedHistoryTargetInfo = useMemo(() => {
     if (!selectedHistoryRecord) {
@@ -924,7 +931,7 @@ export default function DpsV2Page() {
         persistHistoryFromSnapshot(snapshotRef.current);
         await invoke("reset_dps_meter");
         resetUi();
-        await uploadPendingHistoryRecords();
+        // await uploadPendingHistoryRecords();
       });
       unlisteners.push(unlistenResetRequest);
 
@@ -934,23 +941,18 @@ export default function DpsV2Page() {
         sid?: string | null;
       }>("dps-main-actor-detected", async (e) => {
         persistHistoryFromSnapshot(snapshotRef.current);
-        await invoke("reset_dps_meter"); // only reset the ui
-        resetUi();
-        await uploadPendingHistoryRecords();
+        await invoke("reset_dps_meter");
+
+        // resetUi(); // don't reset the ui
+        // await uploadPendingHistoryRecords();
         // add to main actor history
         const p = e.payload;
+        setMainActorName(p?.actorName);
         mainActorNameRef.current = p?.actorName;
-        if (!snapshotRef.current?.lastTargetInfo) {
-          setText(
-            targetNameRef.current,
-            getTargetDisplayName(
-              mainActorNameRef.current,
-              "",
-              "",
-              dpsAppearanceSetting.maskNicknames
-            )
-          );
-        }
+        setText(
+          targetNameRef.current,
+          getTargetDisplayName(p?.actorName, "", "", dpsAppearanceSetting.maskNicknames)
+        );
         const sid = p.sid ? Number(p.sid) : NaN;
         if (p.actorName && Number.isFinite(sid)) {
           Aion2MainActorHistory.add({
@@ -1110,6 +1112,7 @@ export default function DpsV2Page() {
     dpsAppearanceSetting.showUnknownActors,
     dpsAppearanceSetting.showTargetHpBar,
     dpsAppearanceSetting.scaleFactor,
+    mainActorName,
     schedulePaint,
   ]);
 
@@ -1163,7 +1166,7 @@ export default function DpsV2Page() {
     await invoke("reset_dps_meter");
     resetUi();
     await emit("dps-detail-v2-clear");
-    await uploadPendingHistoryRecords();
+    // await uploadPendingHistoryRecords();
   }, [persistHistoryFromSnapshot, resetUi, uploadPendingHistoryRecords]);
 
   const handleStart = useCallback(async () => {

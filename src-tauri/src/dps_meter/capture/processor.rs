@@ -738,7 +738,7 @@ impl StreamProcessor {
         let mut found_any = false;
 
         while idx < packet.len() {
-            let Some(pos) = find_bytes(packet, idx, &[0x40, 0x36]) else {
+            let Some(pos) = find_bytes(packet, idx, &[0x41, 0x36]) else {
                 break;
             };
 
@@ -1220,7 +1220,7 @@ impl StreamProcessor {
     fn parse_4036(&mut self, payload: &[u8]) {
         let mut idx = 0usize;
         while idx < payload.len() {
-            let Some(pos) = find_bytes(payload, idx, &[0x40, 0x36]) else {
+            let Some(pos) = find_bytes(payload, idx, &[0x41, 0x36]) else {
                 break;
             };
             let aid_info = read_varint(payload, pos + 2);
@@ -1317,7 +1317,7 @@ impl StreamProcessor {
     fn parse_4436_optimized(&mut self, payload: &[u8]) {
         let mut idx = 0usize;
         while idx < payload.len() {
-            let Some(pos) = find_bytes(payload, idx, &[0x44, 0x36]) else {
+            let Some(pos) = find_bytes(payload, idx, &[0x45, 0x36]) else {
                 break;
             };
             let Some((actor_id, name, sid)) = self.extract_4436_actor(payload, pos) else {

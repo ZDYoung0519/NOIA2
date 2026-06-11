@@ -66,7 +66,7 @@ struct PcapPkthdr {
 }
 
 const PCAP_IF_LOOPBACK: c_uint = 0x0000_0001;
-const MAGIC_PATTERN: [u8; 3] = [0x06, 0x00, 0x36];
+const MAGIC_PATTERN: [u8; 3] = [0x0E, 0x00, 0x36];
 
 #[derive(Clone)]
 struct DeviceInfo {
