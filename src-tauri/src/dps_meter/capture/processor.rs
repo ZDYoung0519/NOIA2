@@ -710,7 +710,7 @@ impl StreamProcessor {
         pos += 4;
 
         let owner_info = read_varint(packet, pos);
-        if !owner_info.is_valid() || owner_info.value < 100 || owner_info.value == summon_info.value
+        if !owner_info.is_valid() || owner_info.value == summon_info.value
         {
             return false;
         }
