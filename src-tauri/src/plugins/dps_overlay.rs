@@ -40,6 +40,8 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     .skip_taskbar(true)
     .inner_size(320.0, 240.0)
     .min_inner_size(200.0, 120.0)
+    .maximizable(false)
+    .fullscreen(false)
     .visible(false)
     .build()
     .map_err(|e| e.to_string())?;
