@@ -40,6 +40,11 @@
     "global-shortcut:allow-register-all",
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
-    "notification:default"
+    "notification:default",
+    "deep-link:default",
+    "dialog:default",
+    "fs:default",
+    "window-state:default",
+    "core:window:allow-set-ignore-cursor-events"
   ]
 }
