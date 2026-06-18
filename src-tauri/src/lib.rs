@@ -2,6 +2,7 @@ mod dps_meter;
 mod plugins;
 
 use tauri::{Manager, RunEvent};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_window_state::StateFlags;
 
@@ -109,6 +110,7 @@ pub fn run() {
                 let _ = window.unminimize();
                 let _ = window.set_focus();
             }
+            app.deep_link().register_all()?;
             Ok(())
         });
 
