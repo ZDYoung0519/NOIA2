@@ -92,7 +92,7 @@ export function AuthDeepLinkHandler() {
         await handleUrls(currentUrls);
       }
 
-      const unlisten = await onOpenUrl((urls) => {
+      const unlisten = await onOpenUrl((urls: string[]) => {
         void handleUrls(urls);
       });
 
