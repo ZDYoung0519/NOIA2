@@ -27,7 +27,8 @@ export function UpdaterDialog({ manualCheck = false, onCheckComplete }: UpdaterD
     if (!manualCheck) {
       void checkUpdate();
     }
-  }, [manualCheck, checkUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualCheck]);
 
   useEffect(() => {
     if (update) {
