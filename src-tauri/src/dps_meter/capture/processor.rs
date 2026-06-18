@@ -1,0 +1,1425 @@
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+use lz4_flex::block::decompress;
+
+use crate::dps_meter::config::SharedDpsMeterConfig;
+use crate::dps_meter::logging::DpsLogger;
+use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
+use crate::dps_meter::storage::data_storage::DataStorage;
+
+#[derive(Debug)]
+struct DamagePacketReader<'a> {
+    packet: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> DamagePacketReader<'a> {
+    fn new(packet: &'a [u8], offset: usize) -> Self {
+        Self { packet, offset }
+    }
+
+    fn remaining_bytes(&self) -> usize {
+        self.packet.len().saturating_sub(self.offset)
+    }
+
+    fn try_read_var_int(&mut self) -> Option<u32> {
+        let out = read_varint(self.packet, self.offset);
+        if !out.is_valid() {
+            return None;
+        }
+        self.offset += out.length;
+        u32::try_from(out.value).ok()
+    }
+}
+
+/// 数据包前缀信息。
+///
+/// 协议在长度 varint 后面，可能会额外插入 1 个扩展字节（extraFlag，范围 0xF0~0xFE）。
+/// 这个字节不属于真正的业务 opcode，只会让后续 payload 整体后移 1 字节。
+#[derive(Debug, Clone, Copy)]
+struct PacketPrefixInfo {
+    /// 真实业务 payload 的起始偏移（也就是 opcode 开始的位置）
+    payload_offset: usize,
+}
+
+/// 解析长度字段后面的传输层前缀。
+///
+/// 目前已知协议有两种形式：
+/// 1. [length varint][opcode...]
+/// 2. [length varint][extraFlag][opcode...]
+///
+/// 这里统一把真正的 payload 起始偏移算出来，避免各个解析函数各自重复处理。
+fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPrefixInfo> {
+    let first_byte = *packet.get(length_offset)?;
+    let has_extra_flag = (0xF0..0xFF).contains(&first_byte);
+    let payload_offset = length_offset + if has_extra_flag { 1 } else { 0 };
+
+    if payload_offset >= packet.len() {
+        return None;
+    }
+
+    Some(PacketPrefixInfo { payload_offset })
+}
+
+pub struct StreamProcessor {
+    data_storage: Arc<DataStorage>,
+    logger: Arc<DpsLogger>,
+    port: String,
+    config: SharedDpsMeterConfig,
+    stalled_since: Option<Instant>,
+}
+
+impl StreamProcessor {
+    pub fn new(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<DpsLogger>,
+        port: String,
+        config: SharedDpsMeterConfig,
+    ) -> Self {
+        Self {
+            data_storage,
+            logger,
+            port,
+            config,
+            stalled_since: None,
+        }
+    }
+
+    pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
+        let mut offset = 0usize;
+        let (max_packet_size_threshold, enable_resync_on_stall, resync_delay_ms) = {
+            let config = self.config.read().unwrap();
+            (
+                usize::try_from(config.max_packet_size_threshold).unwrap_or(1024 * 8),
+                config.enable_resync_on_stall,
+                config.resync_delay_ms,
+            )
+        };
+
+        while offset < buffer.len() {
+            if buffer[offset] == 0x00 {
+                offset += 1;
+                continue;
+            }
+
+            let length_info = read_varint(buffer, offset);
+            if !length_info.is_valid() || length_info.value <= 0 {
+                if offset + 5 > buffer.len() {
+                    break;
+                }
+                offset += 1;
+                continue;
+            }
+
+            let Ok(total_packet_bytes) = usize::try_from(length_info.value.saturating_sub(3))
+            else {
+                offset += 1;
+                continue;
+            };
+
+            if total_packet_bytes == 0 || total_packet_bytes > 65_535 {
+                offset += 1;
+                continue;
+            }
+
+            if offset + total_packet_bytes > buffer.len() {
+                if total_packet_bytes > max_packet_size_threshold {
+                    offset += 1;
+                    continue;
+                }
+                break;
+            }
+
+            let current_packet = &buffer[offset..offset + total_packet_bytes];
+            let Some(prefix_info) = resolve_packet_prefix(current_packet, length_info.length)
+            else {
+                offset += 1;
+                continue;
+            };
+            let payload_start = prefix_info.payload_offset;
+            let is_bundle = payload_start + 1 < current_packet.len()
+                && current_packet[payload_start] == 0xFF
+                && current_packet[payload_start + 1] == 0xFF;
+
+            if is_bundle {
+                let bundle_size = total_packet_bytes + 1;
+                if offset + bundle_size > buffer.len() {
+                    break;
+                }
+                self.unwrap_bundle(&buffer[offset + payload_start..offset + bundle_size]);
+                offset += bundle_size;
+            } else {
+                self.parse_packet(current_packet);
+                offset += total_packet_bytes;
+            }
+        }
+
+        // if buffer.len() >= 4 {
+        //     self.scan_for_embedded_048d(buffer);
+        // }
+
+        if offset == 0 && !buffer.is_empty() {
+            if enable_resync_on_stall {
+                let now = Instant::now();
+                if let Some(stalled_since) = self.stalled_since {
+                    if now.duration_since(stalled_since) >= Duration::from_millis(resync_delay_ms) {
+                        self.logger.info(format!(
+                            "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
+                            self.port,
+                            resync_delay_ms,
+                            buffer.len()
+                        ));
+                        self.stalled_since = Some(now);
+                        return 1;
+                    }
+                } else {
+                    self.stalled_since = Some(now);
+                }
+            } else {
+                self.stalled_since = None;
+            }
+        } else {
+            self.stalled_since = None;
+        }
+
+        offset
+    }
+
+    fn unwrap_bundle(&mut self, payload: &[u8]) {
+        if payload.len() < 7 {
+            return;
+        }
+
+        let decompressed_size =
+            u32::from_le_bytes([payload[2], payload[3], payload[4], payload[5]]) as usize;
+        if decompressed_size == 0 || decompressed_size > 5_000_000 {
+            return;
+        }
+
+        let Ok(decompressed) = decompress(&payload[6..], decompressed_size) else {
+            return;
+        };
+
+        let mut offset = 0usize;
+        while offset < decompressed.len() {
+            if decompressed[offset] == 0x00 {
+                offset += 1;
+                continue;
+            }
+
+            let length_info = read_varint(&decompressed, offset);
+            if !length_info.is_valid() || length_info.value <= 0 {
+                break;
+            }
+
+            let Ok(inner_total_bytes) = usize::try_from(length_info.value.saturating_sub(3)) else {
+                break;
+            };
+            if inner_total_bytes == 0 {
+                offset += 1;
+                continue;
+            }
+
+            let inner_end = offset + inner_total_bytes;
+            if inner_end > decompressed.len() {
+                break;
+            }
+
+            let inner_packet = &decompressed[offset..inner_end];
+            let Some(prefix_info) = resolve_packet_prefix(inner_packet, length_info.length) else {
+                break;
+            };
+            let inner_payload_start = prefix_info.payload_offset;
+            let is_nested_bundle = inner_packet.len() > inner_payload_start + 1
+                && inner_packet[inner_payload_start] == 0xFF
+                && inner_packet[inner_payload_start + 1] == 0xFF;
+
+            if is_nested_bundle {
+                self.unwrap_bundle(&inner_packet[inner_payload_start..]);
+            } else {
+                self.parse_packet(inner_packet);
+            }
+
+            offset += inner_total_bytes;
+        }
+    }
+
+    fn parse_packet(&mut self, packet: &[u8]) -> bool {
+        if packet.len() < 3 {
+            return false;
+        }
+
+        let packet_length_info = read_varint(packet, 0);
+        if !packet_length_info.is_valid() {
+            return false;
+        }
+
+        let Some(prefix_info) = resolve_packet_prefix(packet, packet_length_info.length) else {
+            return false;
+        };
+
+        let payload = &packet[prefix_info.payload_offset..];
+        if payload.len() < 2 {
+            return false;
+        }
+
+        match (payload[0], payload[1]) {
+            (0x33, 0x36) => self.parse_main_nickname(payload),
+            (0x45, 0x36) => self.parse_other_nickname(payload),
+            (0x41, 0x36) => self.parse_summon_packet(payload),
+            (0x04, 0x38) => self.parse_damage_packet(payload),
+            (0x05, 0x38) => self.parse_dot_packet(payload),
+            (0x04, 0x8D) => self.parse_summon_packet_048d(payload),
+            (0x00, 0x8D) => self.parse_remain_hp_packet(payload),
+            _ => false,
+        }
+    }
+
+    #[allow(unused_assignments)]
+    fn parse_damage_packet(&mut self, packet: &[u8]) -> bool {
+        let mut reader = DamagePacketReader::new(packet, 0);
+        if reader.offset + 1 >= packet.len() {
+            return false;
+        }
+        if packet[reader.offset] != 0x04 || packet[reader.offset + 1] != 0x38 {
+            return false;
+        }
+        reader.offset += 2;
+
+        let mut parsed_any = false;
+        while reader.remaining_bytes() > 0 {
+            let checkpoint = reader.offset;
+
+            let mut is_chained_hit_marker = false;
+            if reader.remaining_bytes() >= 2
+                && packet[reader.offset] == 0x01
+                && packet[reader.offset + 1] == 0x00
+            {
+                reader.offset += 2;
+                is_chained_hit_marker = true;
+            }
+
+            if parsed_any && !is_chained_hit_marker {
+                break;
+            }
+
+            let Some(target_id) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+            // if target_id < 100 {
+            //     reader.offset = checkpoint;
+            //     break;
+            // }
+
+            let Some(switch_value) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+            let and_result = switch_value & 0x0F;
+            if !matches!(and_result, 4..=7) {
+                reader.offset = checkpoint;
+                break;
+            }
+
+            if reader.try_read_var_int().is_none() {
+                reader.offset = checkpoint;
+                break;
+            }
+
+            let Some(actor_id) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+            // if actor_id < 100 {
+            //     reader.offset = checkpoint;
+            //     break;
+            // }
+
+            if reader.offset + 4 > packet.len() {
+                reader.offset = checkpoint;
+                break;
+            }
+            let mut exact_skill_code = parse_u32_le(packet, reader.offset);
+            reader.offset += 4;
+
+            if (3_000_000..=3_099_999).contains(&exact_skill_code) {
+                exact_skill_code = exact_skill_code * 10 + 1;
+            }
+            if !(1..=299_999_999).contains(&exact_skill_code)
+                || (1_000_000..=9_999_999).contains(&exact_skill_code)
+            {
+                reader.offset = checkpoint;
+                break;
+            }
+
+            if reader.remaining_bytes() > 0 {
+                reader.offset += 1;
+            }
+
+            let Some(dummy_type) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+            let damage_type = (dummy_type & 0xFF) as u8;
+
+            let temp_v = match and_result {
+                5 => 12,
+                6 => 10,
+                7 => 14,
+                _ => 8,
+            };
+
+            let mut specials = Vec::new();
+            if matches!(and_result, 5..=7) && reader.remaining_bytes() > 0 {
+                let special_byte = packet[reader.offset];
+                if special_byte & 0x01 != 0 {
+                    specials.push(SpecialDamage::Back);
+                }
+                if special_byte & 0x04 != 0 {
+                    specials.push(SpecialDamage::Parry);
+                }
+                if special_byte & 0x08 != 0 {
+                    specials.push(SpecialDamage::Perfect);
+                }
+                if special_byte & 0x10 != 0 {
+                    specials.push(SpecialDamage::Double);
+                }
+                if special_byte & 0x40 != 0 {
+                    specials.push(SpecialDamage::Smite);
+                }
+            }
+
+            if damage_type == 3 {
+                specials.push(SpecialDamage::Critical);
+            }
+
+            reader.offset = reader.offset.saturating_add(temp_v);
+            if reader.offset >= packet.len() {
+                reader.offset = checkpoint;
+                break;
+            }
+
+            let Some(first_value) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+            let after_first_value_offset = reader.offset;
+            let Some(second_value) = reader.try_read_var_int() else {
+                reader.offset = checkpoint;
+                break;
+            };
+
+            let mut final_damage = if should_treat_first_value_as_damage(
+                first_value,
+                second_value,
+                and_result,
+                damage_type,
+            ) {
+                reader.offset = after_first_value_offset;
+                first_value
+            } else {
+                second_value
+            };
+
+            if (switch_value & 0x30) == 0x30 && reader.remaining_bytes() > 0 {
+                let _ = reader.try_read_var_int();
+            }
+
+            let pre_hit_offset = reader.offset;
+            let mut hit_count = 0u32;
+            if reader.remaining_bytes() > 0 {
+                let is_marker_next = reader.remaining_bytes() >= 2
+                    && packet[reader.offset + 1] == 0x00
+                    && (1..=7).contains(&packet[reader.offset]);
+
+                if !is_marker_next {
+                    if let Some(peek_val) = reader.try_read_var_int() {
+                        if peek_val <= 25 {
+                            hit_count = peek_val;
+                        } else {
+                            let is_marker_after_hp = reader.remaining_bytes() >= 2
+                                && packet[reader.offset + 1] == 0x00
+                                && (1..=7).contains(&packet[reader.offset]);
+                            if !is_marker_after_hp {
+                                if let Some(actual_hit_count) = reader.try_read_var_int() {
+                                    if actual_hit_count <= 25 {
+                                        hit_count = actual_hit_count;
+                                    } else {
+                                        reader.offset = pre_hit_offset;
+                                    }
+                                } else {
+                                    reader.offset = pre_hit_offset;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if final_damage > 99_999_999 {
+                reader.offset = checkpoint;
+                break;
+            }
+
+            let mut multi_hit_count = 0u32;
+            let mut multi_hit_damage = 0u64;
+            let mut first_multi_hit_value = None;
+            let mut all_multi_hits_match = true;
+
+            if hit_count > 0 && reader.remaining_bytes() > 0 {
+                let mut hit_sum = 0u64;
+                let mut hits_read = 0u32;
+                let safe_max_hits = hit_count.min(25);
+                let multi_hit_cap = final_damage.max(500_000);
+
+                while hits_read < safe_max_hits && reader.remaining_bytes() > 0 {
+                    let is_marker_next = reader.remaining_bytes() >= 2
+                        && packet[reader.offset + 1] == 0x00
+                        && (1..=7).contains(&packet[reader.offset]);
+                    let is_next_packet = reader.remaining_bytes() >= 2
+                        && packet[reader.offset] == 0x04
+                        && packet[reader.offset + 1] == 0x38;
+                    if is_marker_next || is_next_packet {
+                        break;
+                    }
+
+                    let Some(hit_value) = reader.try_read_var_int() else {
+                        break;
+                    };
+                    if hit_value > multi_hit_cap || hit_value < 50 {
+                        hit_sum = 0;
+                        hits_read = 0;
+                        first_multi_hit_value = None;
+                        all_multi_hits_match = true;
+                        break;
+                    }
+
+                    if let Some(first_hit) = first_multi_hit_value {
+                        if first_hit != hit_value {
+                            all_multi_hits_match = false;
+                        }
+                    } else {
+                        first_multi_hit_value = Some(hit_value);
+                    }
+
+                    hit_sum += u64::from(hit_value);
+                    hits_read += 1;
+                }
+
+                multi_hit_count = hits_read;
+                multi_hit_damage = hit_sum;
+            }
+
+            if switch_value == 54
+                && hit_count > multi_hit_count
+                && multi_hit_count == 1
+                && first_multi_hit_value.is_some()
+                && all_multi_hits_match
+            {
+                multi_hit_count = hit_count;
+                multi_hit_damage = u64::from(first_multi_hit_value.unwrap()) * u64::from(hit_count);
+            }
+
+            if should_use_repeated_hit_damage(
+                switch_value,
+                second_value,
+                multi_hit_count,
+                first_multi_hit_value,
+                all_multi_hits_match,
+            ) {
+                final_damage = first_multi_hit_value.unwrap_or(final_damage);
+            }
+
+            if multi_hit_count > 0
+                && multi_hit_damage > 0
+                && u64::from(final_damage) > multi_hit_damage
+            {
+                final_damage = u32::try_from(u64::from(final_damage) - multi_hit_damage)
+                    .unwrap_or(final_damage);
+            }
+
+            let resolved_skill_code = normalize_skill_id(exact_skill_code);
+
+            let parsed = ParsedDamagePacket {
+                target_id,
+                actor_id,
+                skill_code: resolved_skill_code,
+                ori_skill_code: exact_skill_code,
+                damage: u64::from(final_damage),
+                is_dot: false,
+                is_crit: specials.contains(&SpecialDamage::Critical),
+                multi_hit_damage,
+                multi_hit_count,
+                specials: specials
+                    .into_iter()
+                    .map(|special| special.as_str().to_string())
+                    .collect(),
+            };
+
+            self.data_storage.append_damage(parsed);
+            self.logger.debug(format!(
+                "[{}] damage target={} actor={} skill={} damage={} multi_hit_count={} multi_hit_damage={}",
+                self.port,
+                target_id,
+                actor_id,
+                resolved_skill_code,
+                final_damage,
+                multi_hit_count,
+                multi_hit_damage
+            ));
+            parsed_any = true;
+        }
+
+        parsed_any
+    }
+
+    fn parse_dot_packet(&mut self, packet: &[u8]) -> bool {
+        let mut offset = 0usize;
+        if packet.len() <= offset + 1 || packet[offset] != 0x05 || packet[offset + 1] != 0x38 {
+            return false;
+        }
+        offset += 2;
+
+        let target_info = read_varint(packet, offset);
+        if !target_info.is_valid() {
+            return false;
+        }
+        offset += target_info.length;
+        if packet.len() <= offset {
+            return false;
+        }
+
+        let unknown_bit_flag = packet[offset];
+        if (unknown_bit_flag & 0x02) == 0 {
+            return true;
+        }
+        offset += 1;
+
+        let actor_info = read_varint(packet, offset);
+        if !actor_info.is_valid() {
+            return false;
+        }
+        offset += actor_info.length;
+
+        let unknown_info = read_varint(packet, offset);
+        if !unknown_info.is_valid() {
+            return false;
+        }
+        offset += unknown_info.length;
+        if offset + 4 > packet.len() {
+            return false;
+        }
+
+        let skill_code_candidate = parse_u32_le(packet, offset);
+        let skill_code = normalize_skill_id(skill_code_candidate);
+        offset += 4;
+
+        let damage_info = read_varint(packet, offset);
+        if !damage_info.is_valid() {
+            return false;
+        }
+
+        let parsed = ParsedDamagePacket {
+            target_id: target_info.value as u32,
+            actor_id: actor_info.value as u32,
+            skill_code,
+            ori_skill_code: skill_code_candidate,
+            damage: damage_info.value as u64,
+            is_dot: true,
+            is_crit: false,
+            multi_hit_damage: 0,
+            multi_hit_count: 0,
+            specials: Vec::new(),
+        };
+        let log_target_id = parsed.target_id;
+        let log_actor_id = parsed.actor_id;
+        let log_skill_code = parsed.skill_code;
+        let log_damage = parsed.damage;
+        self.data_storage.append_damage(parsed);
+        self.logger.debug(format!(
+            "[{}] dot target={} actor={} skill={} damage={}",
+            self.port, log_target_id, log_actor_id, log_skill_code, log_damage
+        ));
+        true
+    }
+
+    fn parse_summon_packet_048d(&mut self, packet: &[u8]) -> bool {
+        let offset = 0usize;
+        if offset + 1 >= packet.len() || packet[offset] != 0x04 || packet[offset + 1] != 0x8D {
+            return false;
+        }
+
+        let mut pos = offset + 2;
+        let summon_info = read_varint(packet, pos);
+        if !summon_info.is_valid() || summon_info.value < 100 {
+            return false;
+        }
+        pos += summon_info.length;
+        if pos + 4 > packet.len() || packet[pos..pos + 4] != [0x00, 0x00, 0x00, 0x00] {
+            return false;
+        }
+        pos += 4;
+
+        let owner_info = read_varint(packet, pos);
+        if !owner_info.is_valid() || owner_info.value == summon_info.value {
+            return false;
+        }
+
+        self.data_storage
+            .append_summon(owner_info.value as u32, summon_info.value as u32);
+        if self.is_boss_summon(summon_info.value as u32) {
+            self.logger.info(format!(
+                "[{}] summon ownership owner={} owner_name={} summon={}",
+                self.port,
+                owner_info.value,
+                self.data_storage
+                    .actor_id_name_snapshot()
+                    .get(&(owner_info.value as u32))
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                summon_info.value
+            ));
+        }
+        true
+    }
+
+    fn parse_summon_packet(&mut self, packet: &[u8]) -> bool {
+        // 4136 的前半段按 Kotlin 版本保持一致：
+        // 1. opcode 后读取 summon_id / actor_id
+        // 2. 在整包中查找 00 40 02，找不到再尝试 00 00 02
+        // 3. marker 前 3 字节按 little-endian 拼出 mob_code
+        //
+        // 这样做的好处是包结构和旧版本经验完全一致，后续抓包时更容易直接对照。
+        //
+        // owner 归属部分则保留当前 Rust 版本的多级 fallback，以兼顾稳定性。
+        let summon_info = read_varint(packet, 2);
+        if !summon_info.is_valid() || summon_info.value <= 0 {
+            return false;
+        }
+
+        let summon_id = summon_info.value as u32;
+        let mut parsed_any = false;
+
+        let marker_idx = find_bytes(packet, 0, &[0x00, 0x40, 0x02])
+            .or_else(|| find_bytes(packet, 0, &[0x00, 0x00, 0x02]));
+
+        if let Some(marker_idx) = marker_idx {
+            if marker_idx >= 3 {
+                let mob_code = (packet[marker_idx - 3] as u32)
+                    | ((packet[marker_idx - 2] as u32) << 8)
+                    | ((packet[marker_idx - 1] as u32) << 16);
+
+                self.data_storage.append_mob(summon_id, mob_code);
+                if self
+                    .data_storage
+                    .boss_code_list_snapshot()
+                    .contains(&mob_code)
+                {
+                    let boss_name = self
+                        .data_storage
+                        .mob_code_name_snapshot()
+                        .get(&mob_code)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown Boss".to_string());
+                    self.logger.info(format!(
+                        "[{}] summon spawn target={} mob_code={} name={}",
+                        self.port, summon_id, mob_code, boss_name
+                    ));
+                }
+                parsed_any = true;
+            }
+        }
+
+        let mut real_actor_id = summon_id;
+        if real_actor_id > 1_000_000 {
+            real_actor_id = (real_actor_id & 0x3FFF) | 0x4000;
+        }
+
+        if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.info(format!(
+                "[{}] summon kotlin owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self.data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
+            ));
+            parsed_any = true;
+        } else if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.info(format!(
+                "[{}] summon fallback le32 owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self.data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
+            ));
+            parsed_any = true;
+        } else if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
+            self.data_storage.append_summon(owner_id, real_actor_id);
+            self.logger.info(format!(
+                "[{}] summon fallback marker owner={} owner_name={} summon={}",
+                self.port,
+                owner_id,
+                self.data_storage
+                    .actor_id_name_snapshot()
+                    .get(&owner_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string()),
+                real_actor_id
+            ));
+            parsed_any = true;
+        } else if !self.data_storage.has_summon_owner(real_actor_id) {
+            let mut best_match: Option<(u32, String)> = None;
+            let mut best_len = 0usize;
+            let actor_id_name_map = self.data_storage.actor_id_name_snapshot();
+
+            for (actor_id, nickname) in actor_id_name_map {
+                if nickname.is_empty() {
+                    continue;
+                }
+
+                let nickname_bytes = nickname.as_bytes();
+                if nickname_bytes.is_empty()
+                    || !packet
+                        .windows(nickname_bytes.len())
+                        .any(|window| window == nickname_bytes)
+                {
+                    continue;
+                }
+
+                let nickname_len = nickname.chars().count();
+                if nickname_len > best_len {
+                    best_len = nickname_len;
+                    best_match = Some((actor_id, nickname));
+                }
+            }
+
+            if let Some((owner_id, nickname)) = best_match {
+                self.data_storage.append_summon(owner_id, real_actor_id);
+                self.logger.info(format!(
+                    "[{}] summon-nickname matched nick owner={} owner_name={} summon={}",
+                    self.port, owner_id, nickname, real_actor_id
+                ));
+                parsed_any = true;
+            }
+        }
+
+        parsed_any
+    }
+
+    fn parse_remain_hp_packet(&mut self, packet: &[u8]) -> bool {
+        self.parse_remain_hp_packet_at(packet, 2)
+    }
+
+    fn parse_remain_hp_packet_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {
+        let mut offset = offset_after_opcode;
+
+        if packet.len() < offset {
+            return false;
+        }
+
+        let mob_id_info = read_varint(packet, offset);
+        if !mob_id_info.is_valid() || mob_id_info.value < 100 {
+            return false;
+        }
+        offset += mob_id_info.length;
+
+        let mob_id = mob_id_info.value as u32;
+        let skip_1 = read_varint(packet, offset);
+        if !skip_1.is_valid() {
+            return false;
+        }
+        offset += skip_1.length;
+
+        let skip_2 = read_varint(packet, offset);
+        if !skip_2.is_valid() {
+            return false;
+        }
+        offset += skip_2.length;
+
+        let skip_3 = read_varint(packet, offset);
+        if !skip_3.is_valid() {
+            return false;
+        }
+        offset += skip_3.length;
+
+        if offset + 4 > packet.len() {
+            return false;
+        }
+
+        let mob_hp = parse_u32_le(packet, offset);
+        if mob_hp > 1_000_000_000 {
+            return false;
+        }
+
+        // Mark as possible boss if HP exceeds threshold
+        const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 10_000_000;
+        let show_possible_boss = self.config.read().unwrap().show_possible_boss;
+        if show_possible_boss && mob_hp > POSSIBLE_BOSS_HP_THRESHOLD {
+            if let Some(mob_code) = self.data_storage.get_mob_code(mob_id) {
+                self.data_storage.add_possible_boss(mob_code);
+            }
+        }
+
+        // Skip non-boss targets hp changes when boss_only is enabled
+        {
+            let config = self.config.read().unwrap();
+            if config.boss_only {
+                let mob_code = self.data_storage.get_mob_code(mob_id);
+                let is_known =
+                    mob_code.is_some_and(|code| self.data_storage.is_known_boss_code(code));
+                let is_possible =
+                    mob_code.is_some_and(|code| self.data_storage.is_possible_boss(code));
+                if !is_known && !is_possible {
+                    return true;
+                }
+            }
+        }
+
+        let is_first_hp_detection = !self.data_storage.mob_id_hp_snapshot().contains_key(&mob_id);
+        self.data_storage.append_mob_hp(mob_id, mob_hp);
+        if is_first_hp_detection {
+            if let Some((current_hp, max_hp)) =
+                self.data_storage.mob_id_hp_snapshot().get(&mob_id).copied()
+            {
+                let mob_id_code_map = self.data_storage.mob_id_code_snapshot();
+                let mob_code_name_map = self.data_storage.mob_code_name_snapshot();
+
+                if let Some(mob_code) = mob_id_code_map.get(&mob_id).copied() {
+                    let mob_name = mob_code_name_map
+                        .get(&mob_code)
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown Boss".to_string());
+                    self.logger.info(format!(
+                        "[{}] first remain hp mob_id={} mob_code={} name={} current_hp={} max_hp={}",
+                        self.port, mob_id, mob_code, mob_name, current_hp, max_hp
+                    ));
+                } else {
+                    self.logger.info(format!(
+                        "[{}] first remain hp mob_id={} current_hp={} max_hp={}",
+                        self.port, mob_id, current_hp, max_hp
+                    ));
+                }
+            }
+        }
+        true
+    }
+
+    fn extract_summon_owner_kotlin_style(&self, packet: &[u8], summon_id: u32) -> Option<u32> {
+        let key_idx = find_bytes(packet, 0, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])?;
+        let after_packet_start = key_idx + 8;
+        if after_packet_start >= packet.len() {
+            return None;
+        }
+
+        let opcode_absolute_idx = find_bytes(packet, after_packet_start, &[0x07, 0x02, 0x06])?;
+        // Kotlin 原版是在 keyIdx + 8 之后切片，再用切片内索引 + 11。
+        // 换算回原始 packet 的绝对偏移，等价于 opcode 绝对位置 + 3。
+        let owner_offset = opcode_absolute_idx + 3;
+        if owner_offset + 2 > packet.len() {
+            return None;
+        }
+
+        let owner_id = u16::from_le_bytes([packet[owner_offset], packet[owner_offset + 1]]) as u32;
+        if !(1..=999_999).contains(&owner_id) {
+            return None;
+        }
+        if owner_id == summon_id
+            || self.data_storage.has_summon_owner(owner_id)
+            || self.data_storage.has_mob(owner_id)
+        {
+            return None;
+        }
+
+        Some(owner_id)
+    }
+
+    fn extract_owner_from_packet(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
+        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
+        let marker_idx = find_bytes(packet, 0, &marker)?;
+        let owner_offset = marker_idx + marker.len();
+        if owner_offset >= packet.len() {
+            return None;
+        }
+
+        let owner_info = read_varint(packet, owner_offset);
+        if !owner_info.is_valid() || !(100..=999_999).contains(&owner_info.value) {
+            return None;
+        }
+
+        let owner_id = owner_info.value as u32;
+        if owner_id == exclude_actor_id
+            || self.data_storage.has_summon_owner(owner_id)
+            || self.data_storage.has_mob(owner_id)
+        {
+            return None;
+        }
+
+        Some(owner_id)
+    }
+
+    fn is_boss_summon(&self, summon_id: u32) -> bool {
+        let mob_code = self
+            .data_storage
+            .mob_id_code_snapshot()
+            .get(&summon_id)
+            .copied();
+
+        mob_code
+            .map(|code| self.data_storage.boss_code_list_snapshot().contains(&code))
+            .unwrap_or(false)
+    }
+
+    fn scan_for_known_player_le32(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
+        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
+        let marker_idx = find_bytes(packet, 0, &marker)?;
+        let start_offset = marker_idx + marker.len();
+        let end_offset = packet.len().saturating_sub(3).min(start_offset + 48);
+        let known_actor_ids = self.data_storage.actor_id_name_snapshot();
+
+        for i in start_offset..end_offset {
+            let le32 = (packet[i] as u32)
+                | ((packet[i + 1] as u32) << 8)
+                | ((packet[i + 2] as u32) << 16)
+                | ((packet[i + 3] as u32) << 24);
+
+            if le32 != exclude_actor_id
+                && (1..=999_999).contains(&le32)
+                && known_actor_ids.contains_key(&le32)
+                && !self.data_storage.has_summon_owner(le32)
+                && !self.data_storage.has_mob(le32)
+            {
+                return Some(le32);
+            }
+        }
+
+        None
+    }
+
+    fn parse_main_nickname(&mut self, payload: &[u8]) -> bool {
+        let mut offset = 2usize;
+        let aid_info = read_varint(payload, offset);
+        if !aid_info.is_valid() || aid_info.value <= 0 {
+            return false;
+        }
+        offset += aid_info.length;
+        if offset >= payload.len() {
+            return false;
+        }
+
+        if payload.len() < offset + 10 {
+            return false;
+        }
+
+        let Some(splitter_idx) = find_byte_in_range(payload, 0x07, offset, offset + 10) else {
+            return false;
+        };
+        offset = splitter_idx + 1;
+
+        let name_length_info = read_varint(payload, offset);
+        if !name_length_info.is_valid() {
+            return false;
+        }
+        offset += name_length_info.length;
+        if name_length_info.length > 71 || offset >= payload.len() {
+            return false;
+        }
+
+        let name_len = usize::try_from(name_length_info.value).ok().unwrap_or(0);
+        if offset + name_len > payload.len() {
+            return false;
+        }
+
+        let Ok(name) = std::str::from_utf8(&payload[offset..offset + name_len]) else {
+            return false;
+        };
+        let Some(name) = sanitize_nickname(name) else {
+            return false;
+        };
+
+        offset += name_len;
+        let sid = if offset + 2 <= payload.len() {
+            let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
+            offset += 2;
+            Some(sid)
+        } else {
+            None
+        };
+
+        if offset < payload.len() {
+            let _job = payload[offset];
+        }
+
+        match sid {
+            Some(sid) => {
+                self.data_storage.append_actor(
+                    aid_info.value as u32,
+                    &name,
+                    Some(&sid.to_string()),
+                );
+                self.logger.info(format!(
+                    "[{}] main actor actor={} name={} sid={}",
+                    self.port, aid_info.value, name, sid
+                ));
+            }
+            None => {
+                self.data_storage
+                    .append_actor(aid_info.value as u32, &name, None);
+                self.logger.info(format!(
+                    "[{}] main actor actor={} name={} sid=none",
+                    self.port, aid_info.value, name
+                ));
+            }
+        }
+
+        self.data_storage
+            .set_main_actor(aid_info.value as u32, &name);
+        true
+    }
+
+    fn parse_other_nickname(&mut self, payload: &[u8]) -> bool {
+        let aid_info = read_varint(payload, 2);
+        if !aid_info.is_valid() || aid_info.value <= 0 {
+            return false;
+        }
+
+        let actor_id = aid_info.value as u32;
+        let mut offset = 2 + aid_info.length;
+        if payload.len() <= offset {
+            return false;
+        }
+
+        let unknown_info_1 = read_varint(payload, offset);
+        if !unknown_info_1.is_valid() {
+            return false;
+        }
+        offset += unknown_info_1.length;
+        if payload.len() <= offset {
+            return false;
+        }
+
+        let unknown_info_2 = read_varint(payload, offset);
+        if !unknown_info_2.is_valid() {
+            return false;
+        }
+        offset += unknown_info_2.length;
+        if payload.len().saturating_sub(offset) <= 2 {
+            return false;
+        }
+
+        offset += 1;
+        let base = offset;
+        let mut best_actor_name: Option<String> = None;
+        let mut best_actor_name_end = None;
+        let mut best_actor_name_bytes = 0usize;
+
+        for relative in 0..5usize {
+            let name_offset = base + relative;
+            if name_offset >= payload.len() {
+                continue;
+            }
+
+            let name_length_info = read_varint(payload, name_offset);
+            if !name_length_info.is_valid() {
+                continue;
+            }
+
+            let candidate_length = name_length_info.value as usize;
+            if !(1..=71).contains(&candidate_length) {
+                continue;
+            }
+
+            let value_start = name_offset + name_length_info.length;
+            let value_end = value_start + candidate_length;
+            if value_end > payload.len() {
+                continue;
+            }
+
+            let Ok(candidate_name) = std::str::from_utf8(&payload[value_start..value_end]) else {
+                continue;
+            };
+            let Some(sanitized_name) = sanitize_nickname(candidate_name) else {
+                continue;
+            };
+
+            let sanitized_bytes = sanitized_name.len();
+            if sanitized_bytes > best_actor_name_bytes {
+                best_actor_name_bytes = sanitized_bytes;
+                best_actor_name = Some(sanitized_name);
+                best_actor_name_end = Some(value_end);
+            }
+        }
+
+        let Some(actor_name) = best_actor_name else {
+            return false;
+        };
+        let Some(actor_name_end) = best_actor_name_end else {
+            return false;
+        };
+        if actor_name_end >= payload.len() {
+            return false;
+        }
+
+        let _job: u8 = payload[actor_name_end];
+        let server_base = actor_name_end + 1;
+        let sid = find_server_id(payload, server_base);
+
+        match sid {
+            Some(sid) => {
+                let sid_string = sid.to_string();
+                self.data_storage
+                    .append_actor(actor_id, &actor_name, Some(&sid_string));
+                self.logger.info(format!(
+                    "[{}] actor actor={} name={} sid={}",
+                    self.port, actor_id, actor_name, sid
+                ));
+            }
+            None => {
+                self.data_storage.append_actor(actor_id, &actor_name, None);
+                self.logger.info(format!(
+                    "[{}] actor actor={} name={} sid=none",
+                    self.port, actor_id, actor_name
+                ));
+            }
+        }
+
+        true
+    }
+}
+
+pub fn read_varint(data: &[u8], offset: usize) -> VarIntOutput {
+    let mut value: u32 = 0;
+    let mut shift = 0u32;
+    let mut count = 0usize;
+
+    loop {
+        if offset + count >= data.len() {
+            return VarIntOutput::invalid();
+        }
+
+        let byte_val = data[offset + count];
+        count += 1;
+        value |= u32::from(byte_val & 0x7F) << shift;
+
+        if (byte_val & 0x80) == 0 {
+            return VarIntOutput {
+                value: i64::from(value),
+                length: count,
+            };
+        }
+
+        shift += 7;
+        if shift >= 32 {
+            return VarIntOutput::invalid();
+        }
+    }
+}
+
+fn parse_u32_le(packet: &[u8], offset: usize) -> u32 {
+    if offset + 4 > packet.len() {
+        return 0;
+    }
+    u32::from_le_bytes([
+        packet[offset],
+        packet[offset + 1],
+        packet[offset + 2],
+        packet[offset + 3],
+    ])
+}
+
+fn normalize_skill_id(raw: u32) -> u32 {
+    if (30_000_000..=30_999_999).contains(&raw) {
+        raw
+    } else {
+        raw - (raw % 10_000)
+    }
+}
+
+fn should_use_repeated_hit_damage(
+    switch_value: u32,
+    encoded_damage: u32,
+    multi_hit_count: u32,
+    first_multi_hit_value: Option<u32>,
+    all_multi_hits_match: bool,
+) -> bool {
+    let Some(repeated_damage) = first_multi_hit_value else {
+        return false;
+    };
+    if switch_value != 54 || multi_hit_count == 0 || !all_multi_hits_match {
+        return false;
+    }
+
+    let main_hit_component =
+        i64::from(encoded_damage) - (i64::from(multi_hit_count) * i64::from(repeated_damage));
+    if main_hit_component > i64::from(repeated_damage) {
+        return false;
+    }
+
+    encoded_damage / 10 == repeated_damage
+}
+
+fn should_treat_first_value_as_damage(
+    first_value: u32,
+    second_value: u32,
+    and_result: u32,
+    damage_type: u8,
+) -> bool {
+    (1_000..=5_000_000).contains(&first_value)
+        && second_value <= 25
+        && and_result == 6
+        && damage_type == 3
+}
+
+fn find_bytes(haystack: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
+    haystack
+        .get(start..)
+        .and_then(|slice| {
+            slice
+                .windows(needle.len())
+                .position(|window| window == needle)
+        })
+        .map(|pos| start + pos)
+}
+
+fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Option<usize> {
+    data.get(start..end)
+        .and_then(|slice| slice.iter().position(|byte| *byte == target))
+        .map(|pos| start + pos)
+}
+
+fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
+    let mut relative = 0usize;
+    let mut fallback_sid = None;
+
+    loop {
+        let offset = server_base + relative;
+        relative += 1;
+
+        if offset + 2 > payload.len() {
+            break;
+        }
+
+        let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
+        if !is_available_server_id(sid) {
+            continue;
+        }
+
+        if fallback_sid.is_none() {
+            fallback_sid = Some(sid);
+        }
+
+        let legion_length_offset = offset + 2;
+        if legion_length_offset >= payload.len() {
+            continue;
+        }
+
+        let legion_length_info = read_varint(payload, legion_length_offset);
+        if !legion_length_info.is_valid() {
+            continue;
+        }
+
+        let legion_length = legion_length_info.value as usize;
+        if legion_length > 24 {
+            continue;
+        }
+
+        let legion_start = legion_length_offset + legion_length_info.length;
+        let legion_end = legion_start + legion_length;
+        if legion_end > payload.len() {
+            continue;
+        }
+
+        if legion_length == 0 {
+            return Some(sid);
+        }
+
+        let Ok(legion_name) = std::str::from_utf8(&payload[legion_start..legion_end]) else {
+            continue;
+        };
+
+        if legion_name.trim().is_empty() || legion_name.chars().any(|ch| !ch.is_ascii_digit()) {
+            return Some(sid);
+        }
+    }
+
+    fallback_sid.or_else(|| find_sid_0011(payload, server_base))
+}
+
+fn is_available_server_id(sid: u32) -> bool {
+    (1001..=1021).contains(&sid) || (2001..=2021).contains(&sid)
+}
+
+fn find_sid_0011(payload: &[u8], search_start: usize) -> Option<u32> {
+    let search_end = payload.len().saturating_sub(1).min(search_start + 200);
+    let mut pos = search_start;
+
+    while pos < search_end {
+        let Some(idx) = find_bytes(payload, pos, &[0x11, 0x11]) else {
+            break;
+        };
+        if idx < 4 {
+            break;
+        }
+        if payload[idx - 4] == 0x00 && payload[idx - 3] == 0x02 {
+            let sid = u16::from_le_bytes([payload[idx - 3], payload[idx - 2]]) as u32;
+            if is_available_server_id(sid) {
+                return Some(sid);
+            }
+        }
+        pos = idx + 2;
+    }
+
+    None
+}
+
+fn sanitize_nickname(nickname: &str) -> Option<String> {
+    let sanitized = nickname.split('\0').next().unwrap_or_default().trim();
+    if sanitized.is_empty() {
+        return None;
+    }
+
+    let mut result = String::new();
+    let mut only_numbers = true;
+    let mut has_han = false;
+
+    for ch in sanitized.chars() {
+        let code = ch as u32;
+        if code < 32 || code == 127 || (0x80..=0x9F).contains(&code) || ch == '\u{FFFD}' {
+            continue;
+        }
+
+        let is_han = matches!(code, 0x4E00..=0x9FFF | 0x3400..=0x4DBF | 0xF900..=0xFAFF);
+        if ch.is_alphanumeric() || is_han {
+            result.push(ch);
+            if ch.is_alphabetic() || is_han {
+                only_numbers = false;
+            }
+            if is_han {
+                has_han = true;
+            }
+        }
+    }
+
+    if result.is_empty() || only_numbers {
+        return None;
+    }
+    if result.chars().count() < 2 && !has_han {
+        return None;
+    }
+    if result.chars().count() == 1 && result.chars().all(|ch| ch.is_ascii_alphabetic()) {
+        return None;
+    }
+
+    Some(result)
+}

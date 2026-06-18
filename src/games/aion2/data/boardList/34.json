@@ -1,0 +1,3170 @@
+[
+  {
+    "boardId": 34,
+    "nodeId": 340005,
+    "name": "",
+    "row": 1,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340004,
+    "name": "",
+    "row": 1,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340007,
+    "name": "",
+    "row": 1,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340006,
+    "name": "",
+    "row": 1,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340001,
+    "name": "",
+    "row": 1,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340003,
+    "name": "",
+    "row": 1,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340002,
+    "name": "",
+    "row": 1,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340013,
+    "name": "",
+    "row": 1,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340012,
+    "name": "",
+    "row": 1,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340015,
+    "name": "",
+    "row": 1,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340014,
+    "name": "",
+    "row": 1,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340009,
+    "name": "",
+    "row": 1,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340008,
+    "name": "",
+    "row": 1,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340011,
+    "name": "",
+    "row": 1,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340010,
+    "name": "",
+    "row": 1,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340021,
+    "name": "",
+    "row": 2,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340020,
+    "name": "",
+    "row": 2,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340023,
+    "name": "多段打擊擊中",
+    "row": 2,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊擊中 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340022,
+    "name": "攻擊力",
+    "row": 2,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340017,
+    "name": "多段打擊抵抗",
+    "row": 2,
+    "col": 2,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊抵抗 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340016,
+    "name": "",
+    "row": 2,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340019,
+    "name": "暴擊",
+    "row": 2,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340018,
+    "name": "攻擊力",
+    "row": 2,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340029,
+    "name": "多段打擊抵抗",
+    "row": 2,
+    "col": 14,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊抵抗 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340028,
+    "name": "最大生命力",
+    "row": 2,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340031,
+    "name": "",
+    "row": 3,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340030,
+    "name": "",
+    "row": 2,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340025,
+    "name": "",
+    "row": 2,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340024,
+    "name": "防禦力",
+    "row": 2,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340027,
+    "name": "防禦力",
+    "row": 2,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340026,
+    "name": "",
+    "row": 2,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340037,
+    "name": "技能等級上升 - 獵人之魂",
+    "row": 3,
+    "col": 7,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "獵人之魂 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340036,
+    "name": "最大生命力",
+    "row": 3,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340039,
+    "name": "技能等級上升 - 抵抗決心",
+    "row": 3,
+    "col": 9,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "抵抗決心 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340038,
+    "name": "",
+    "row": 3,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340033,
+    "name": "",
+    "row": 3,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340032,
+    "name": "最大精神力",
+    "row": 3,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340035,
+    "name": "最大精神力",
+    "row": 3,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340034,
+    "name": "技能等級上升 - 目標箭",
+    "row": 3,
+    "col": 4,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "目標箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340045,
+    "name": "",
+    "row": 3,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340044,
+    "name": "暴擊",
+    "row": 3,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340047,
+    "name": "暴擊",
+    "row": 4,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340046,
+    "name": "",
+    "row": 4,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340041,
+    "name": "暴擊",
+    "row": 3,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340040,
+    "name": "最大精神力",
+    "row": 3,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340043,
+    "name": "",
+    "row": 3,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340042,
+    "name": "技能等級上升 - 速射",
+    "row": 3,
+    "col": 12,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "速射 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340053,
+    "name": "最大生命力",
+    "row": 4,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340052,
+    "name": "防禦力",
+    "row": 4,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340055,
+    "name": "",
+    "row": 4,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340054,
+    "name": "暴擊抵抗",
+    "row": 4,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340049,
+    "name": "最大生命力",
+    "row": 4,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340048,
+    "name": "",
+    "row": 4,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340051,
+    "name": "",
+    "row": 4,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340050,
+    "name": "",
+    "row": 4,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340061,
+    "name": "",
+    "row": 5,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340060,
+    "name": "",
+    "row": 4,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340063,
+    "name": "暴擊抵抗",
+    "row": 5,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340062,
+    "name": "技能等級上升 - 箭矢掃射",
+    "row": 5,
+    "col": 2,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "箭矢掃射 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340057,
+    "name": "攻擊力",
+    "row": 4,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340056,
+    "name": "",
+    "row": 4,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340059,
+    "name": "暴擊抵抗",
+    "row": 4,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340058,
+    "name": "",
+    "row": 4,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340069,
+    "name": "防禦力",
+    "row": 5,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340068,
+    "name": "",
+    "row": 5,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340071,
+    "name": "暴擊",
+    "row": 5,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340070,
+    "name": "技能等級上升 - 破裂箭",
+    "row": 5,
+    "col": 10,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "破裂箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340065,
+    "name": "技能等級上升 - 集中砲火",
+    "row": 5,
+    "col": 5,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "集中砲火 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340064,
+    "name": "最大精神力",
+    "row": 5,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340067,
+    "name": "攻擊力",
+    "row": 5,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340066,
+    "name": "暴擊抵抗",
+    "row": 5,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340077,
+    "name": "",
+    "row": 6,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340076,
+    "name": "",
+    "row": 6,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340079,
+    "name": "防禦力",
+    "row": 6,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340078,
+    "name": "",
+    "row": 6,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340073,
+    "name": "最大精神力",
+    "row": 5,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340072,
+    "name": "最大生命力",
+    "row": 5,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340075,
+    "name": "",
+    "row": 5,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340074,
+    "name": "技能等級上升 - 集中之眼",
+    "row": 5,
+    "col": 14,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "集中之眼 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340085,
+    "name": "最大生命力",
+    "row": 6,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340084,
+    "name": "",
+    "row": 6,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340087,
+    "name": "",
+    "row": 6,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340086,
+    "name": "",
+    "row": 6,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340081,
+    "name": "暴擊",
+    "row": 6,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340080,
+    "name": "",
+    "row": 6,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340083,
+    "name": "",
+    "row": 6,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340082,
+    "name": "",
+    "row": 6,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340093,
+    "name": "暴擊",
+    "row": 7,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340092,
+    "name": "暴擊抵抗",
+    "row": 7,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340095,
+    "name": "攻擊力",
+    "row": 7,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340094,
+    "name": "最大生命力",
+    "row": 7,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340089,
+    "name": "",
+    "row": 6,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340088,
+    "name": "暴擊抵抗",
+    "row": 6,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340091,
+    "name": "",
+    "row": 7,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340090,
+    "name": "",
+    "row": 6,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340101,
+    "name": "暴擊",
+    "row": 7,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340100,
+    "name": "最大精神力",
+    "row": 7,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340103,
+    "name": "防禦力",
+    "row": 7,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340102,
+    "name": "技能等級上升 - 束縛之眼",
+    "row": 7,
+    "col": 12,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "束縛之眼 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340097,
+    "name": "最大精神力",
+    "row": 7,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340096,
+    "name": "技能等級上升 - 爆炸圈套",
+    "row": 7,
+    "col": 6,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "爆炸圈套 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340099,
+    "name": "暴擊抵抗",
+    "row": 7,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340098,
+    "name": "防禦力",
+    "row": 7,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340109,
+    "name": "防禦力",
+    "row": 8,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340108,
+    "name": "",
+    "row": 8,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340111,
+    "name": "防禦力",
+    "row": 8,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340110,
+    "name": "",
+    "row": 8,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340105,
+    "name": "",
+    "row": 7,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340104,
+    "name": "最大精神力",
+    "row": 7,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340107,
+    "name": "技能等級上升 - 壓制箭",
+    "row": 8,
+    "col": 2,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "壓制箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340106,
+    "name": "",
+    "row": 8,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340117,
+    "name": "攻擊力",
+    "row": 8,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340116,
+    "name": "",
+    "row": 8,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340119,
+    "name": "技能等級上升 - 瞄準箭",
+    "row": 8,
+    "col": 14,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "瞄準箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340118,
+    "name": "",
+    "row": 8,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340113,
+    "name": "崔妮爾 - 開始",
+    "row": 8,
+    "col": 8,
+    "grade": "None",
+    "type": "Start",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Start_Sprite.png",
+    "effectList": [
+      {
+        "desc": ""
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340112,
+    "name": "",
+    "row": 8,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340115,
+    "name": "攻擊力",
+    "row": 8,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340114,
+    "name": "",
+    "row": 8,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340125,
+    "name": "暴擊抵抗",
+    "row": 9,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340124,
+    "name": "技能等級上升 - 獵人決心",
+    "row": 9,
+    "col": 4,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "獵人決心 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340127,
+    "name": "暴擊",
+    "row": 9,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340126,
+    "name": "最大生命力",
+    "row": 9,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340121,
+    "name": "",
+    "row": 9,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340120,
+    "name": "",
+    "row": 8,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340123,
+    "name": "攻擊力",
+    "row": 9,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340122,
+    "name": "最大生命力",
+    "row": 9,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340133,
+    "name": "暴擊抵抗",
+    "row": 9,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340132,
+    "name": "最大精神力",
+    "row": 9,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340135,
+    "name": "",
+    "row": 9,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340134,
+    "name": "暴擊",
+    "row": 9,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340129,
+    "name": "最大生命力",
+    "row": 9,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340128,
+    "name": "攻擊力",
+    "row": 9,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340131,
+    "name": "防禦力",
+    "row": 9,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340130,
+    "name": "技能等級上升 - 利錐箭",
+    "row": 9,
+    "col": 10,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "利錐箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340141,
+    "name": "最大精神力",
+    "row": 10,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340140,
+    "name": "",
+    "row": 10,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340143,
+    "name": "",
+    "row": 10,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340142,
+    "name": "",
+    "row": 10,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340137,
+    "name": "",
+    "row": 10,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340136,
+    "name": "",
+    "row": 10,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340139,
+    "name": "",
+    "row": 10,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340138,
+    "name": "暴擊",
+    "row": 10,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340149,
+    "name": "",
+    "row": 10,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340148,
+    "name": "",
+    "row": 10,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340151,
+    "name": "",
+    "row": 11,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340150,
+    "name": "",
+    "row": 10,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340145,
+    "name": "暴擊抵抗",
+    "row": 10,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340144,
+    "name": "",
+    "row": 10,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340147,
+    "name": "攻擊力",
+    "row": 10,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340146,
+    "name": "",
+    "row": 10,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340157,
+    "name": "攻擊力",
+    "row": 11,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340156,
+    "name": "技能等級上升 - 狂風箭",
+    "row": 11,
+    "col": 6,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "狂風箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340159,
+    "name": "防禦力",
+    "row": 11,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340158,
+    "name": "",
+    "row": 11,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340153,
+    "name": "最大生命力",
+    "row": 11,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340152,
+    "name": "技能等級上升 - 風之活力",
+    "row": 11,
+    "col": 2,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "風之活力 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340155,
+    "name": "暴擊抵抗",
+    "row": 11,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340154,
+    "name": "最大精神力",
+    "row": 11,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340165,
+    "name": "",
+    "row": 11,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340164,
+    "name": "技能等級上升 - 衝擊解除",
+    "row": 11,
+    "col": 14,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "衝擊解除 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340167,
+    "name": "暴擊",
+    "row": 12,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340166,
+    "name": "",
+    "row": 12,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340161,
+    "name": "技能等級上升 - 警戒之眼",
+    "row": 11,
+    "col": 11,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "警戒之眼 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340160,
+    "name": "暴擊",
+    "row": 11,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340163,
+    "name": "暴擊",
+    "row": 11,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340162,
+    "name": "最大生命力",
+    "row": 11,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340173,
+    "name": "最大精神力",
+    "row": 12,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340172,
+    "name": "暴擊",
+    "row": 12,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340175,
+    "name": "",
+    "row": 12,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340174,
+    "name": "攻擊力",
+    "row": 12,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340169,
+    "name": "防禦力",
+    "row": 12,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340168,
+    "name": "",
+    "row": 12,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340171,
+    "name": "",
+    "row": 12,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340170,
+    "name": "",
+    "row": 12,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340181,
+    "name": "",
+    "row": 13,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340180,
+    "name": "",
+    "row": 12,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340183,
+    "name": "",
+    "row": 13,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340182,
+    "name": "暴擊抵抗",
+    "row": 13,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340177,
+    "name": "最大精神力",
+    "row": 12,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340176,
+    "name": "",
+    "row": 12,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340179,
+    "name": "暴擊抵抗",
+    "row": 12,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340178,
+    "name": "",
+    "row": 12,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340189,
+    "name": "技能等級上升 - 回生契約",
+    "row": 13,
+    "col": 9,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "回生契約 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340188,
+    "name": "",
+    "row": 13,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340191,
+    "name": "最大生命力",
+    "row": 13,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340190,
+    "name": "最大精神力",
+    "row": 13,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340185,
+    "name": "暴擊抵抗",
+    "row": 13,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340184,
+    "name": "技能等級上升 - 套索箭",
+    "row": 13,
+    "col": 4,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "套索箭 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340187,
+    "name": "技能等級上升 - 近距離射擊",
+    "row": 13,
+    "col": 7,
+    "grade": "Rare",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "近距離射擊 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340186,
+    "name": "最大生命力",
+    "row": 13,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340197,
+    "name": "多段打擊擊中",
+    "row": 14,
+    "col": 2,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊擊中 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340196,
+    "name": "",
+    "row": 14,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340199,
+    "name": "攻擊力",
+    "row": 14,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340198,
+    "name": "最大精神力",
+    "row": 14,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340193,
+    "name": "",
+    "row": 13,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340192,
+    "name": "技能等級上升 - 狙擊",
+    "row": 13,
+    "col": 12,
+    "grade": "Legend",
+    "type": "SkillLevel",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "狙擊 +1"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340195,
+    "name": "",
+    "row": 13,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340194,
+    "name": "最大生命力",
+    "row": 13,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340205,
+    "name": "",
+    "row": 14,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340204,
+    "name": "防禦力",
+    "row": 14,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340207,
+    "name": "暴擊抵抗",
+    "row": 14,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "暴擊抵抗 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340206,
+    "name": "",
+    "row": 14,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340201,
+    "name": "",
+    "row": 14,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340200,
+    "name": "",
+    "row": 14,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340203,
+    "name": "多段打擊抵抗",
+    "row": 14,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊抵抗 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340202,
+    "name": "攻擊力",
+    "row": 14,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340213,
+    "name": "",
+    "row": 15,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340212,
+    "name": "",
+    "row": 15,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340215,
+    "name": "",
+    "row": 15,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340214,
+    "name": "",
+    "row": 15,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340209,
+    "name": "多段打擊擊中",
+    "row": 14,
+    "col": 14,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "多段打擊擊中 +3%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340208,
+    "name": "防禦力",
+    "row": 14,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "額外防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340211,
+    "name": "",
+    "row": 15,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340210,
+    "name": "",
+    "row": 14,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340221,
+    "name": "",
+    "row": 15,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340220,
+    "name": "",
+    "row": 15,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340223,
+    "name": "",
+    "row": 15,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340222,
+    "name": "",
+    "row": 15,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340217,
+    "name": "",
+    "row": 15,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340216,
+    "name": "",
+    "row": 15,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340219,
+    "name": "",
+    "row": 15,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340218,
+    "name": "",
+    "row": 15,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340225,
+    "name": "",
+    "row": 15,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 34,
+    "nodeId": 340224,
+    "name": "",
+    "row": 15,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  }
+]

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoiA DPS History</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="history-titlebar">
+        <span>DPS History</span>
+        <span class="header__count" id="header-count">--</span>
+        <button class="header__close" id="close-btn" title="Close">&times;</button>
+      </div>
+      <div class="upload-status" id="upload-status"></div>
+      <div class="record-list" id="record-list"></div>
+      <div class="empty" id="empty">No records yet — press Reset to save combat data</div>
+      <div class="history-footer">
+        <button class="history-footer__btn" id="upload-btn">Upload All</button>
+        <button class="history-footer__btn is-danger" id="delete-all-btn">Delete All</button>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,218 @@
+[
+  {
+    "raceId": 1,
+    "serverId": 1001,
+    "serverName": "希埃爾",
+    "serverShortName": "希埃"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1002,
+    "serverName": "奈薩肯",
+    "serverShortName": "奈薩"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1003,
+    "serverName": "白傑爾",
+    "serverShortName": "白傑"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1004,
+    "serverName": "凱西內爾",
+    "serverShortName": "凱西"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1005,
+    "serverName": "尤斯迪埃",
+    "serverShortName": "尤斯"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1006,
+    "serverName": "艾瑞爾",
+    "serverShortName": "艾瑞"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1007,
+    "serverName": "普雷奇翁",
+    "serverShortName": "普雷"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1008,
+    "serverName": "梅斯蘭泰達",
+    "serverShortName": "梅斯"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1009,
+    "serverName": "希塔尼耶",
+    "serverShortName": "希塔"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1010,
+    "serverName": "納尼亞",
+    "serverShortName": "納尼"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1011,
+    "serverName": "塔哈巴達",
+    "serverShortName": "塔哈"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1012,
+    "serverName": "路特斯",
+    "serverShortName": "路特"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1013,
+    "serverName": "菲爾諾斯",
+    "serverShortName": "菲爾"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1014,
+    "serverName": "達彌努",
+    "serverShortName": "達彌"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1015,
+    "serverName": "卡薩卡",
+    "serverShortName": "卡薩"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1016,
+    "serverName": "巴卡爾摩",
+    "serverShortName": "巴卡"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1017,
+    "serverName": "天加隆",
+    "serverShortName": "天加"
+  },
+  {
+    "raceId": 1,
+    "serverId": 1018,
+    "serverName": "科奇隆",
+    "serverShortName": "科奇"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2001,
+    "serverName": "伊斯拉佩爾",
+    "serverShortName": "伊斯"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2002,
+    "serverName": "吉凱爾",
+    "serverShortName": "吉凱"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2003,
+    "serverName": "崔妮爾",
+    "serverShortName": "崔妮"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2004,
+    "serverName": "露梅爾",
+    "serverShortName": "露梅"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2005,
+    "serverName": "瑪爾庫坦",
+    "serverShortName": "瑪爾"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2006,
+    "serverName": "阿斯佩爾",
+    "serverShortName": "阿斯"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2007,
+    "serverName": "艾萊修奇卡",
+    "serverShortName": "艾萊"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2008,
+    "serverName": "布里特拉",
+    "serverShortName": "布里"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2009,
+    "serverName": "奈蒙",
+    "serverShortName": "奈蒙"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2010,
+    "serverName": "哈達爾",
+    "serverShortName": "哈達"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2011,
+    "serverName": "盧德萊",
+    "serverShortName": "盧德"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2012,
+    "serverName": "鄔爾古倫",
+    "serverShortName": "鄔爾"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2013,
+    "serverName": "默尼",
+    "serverShortName": "默尼"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2014,
+    "serverName": "奧達爾",
+    "serverShortName": "奧達"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2015,
+    "serverName": "簡卡卡",
+    "serverShortName": "簡卡"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2016,
+    "serverName": "克羅梅德",
+    "serverShortName": "克羅"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2017,
+    "serverName": "奎靈",
+    "serverShortName": "奎靈"
+  },
+  {
+    "raceId": 2,
+    "serverId": 2018,
+    "serverName": "巴巴隆",
+    "serverShortName": "巴巴"
+  }
+]

@@ -1,0 +1,3386 @@
+[
+  {
+    "boardId": 46,
+    "nodeId": 460007,
+    "name": "PVP命中",
+    "row": 1,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460006,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 1,
+    "col": 6,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460005,
+    "name": "",
+    "row": 1,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460004,
+    "name": "異常狀態擊中",
+    "row": 1,
+    "col": 4,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460003,
+    "name": "PVP防禦力",
+    "row": 1,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460002,
+    "name": "PVP攻擊力",
+    "row": 1,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460001,
+    "name": "PVP傷害耐性",
+    "row": 1,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害耐性 +2.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460015,
+    "name": "PVP傷害增幅",
+    "row": 1,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害增幅 +2.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460014,
+    "name": "PVP攻擊力",
+    "row": 1,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460013,
+    "name": "PVP暴擊抵抗",
+    "row": 1,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460012,
+    "name": "異常狀態抵抗",
+    "row": 1,
+    "col": 12,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460011,
+    "name": "PVP迴避",
+    "row": 1,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460010,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 1,
+    "col": 10,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460009,
+    "name": "",
+    "row": 1,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460008,
+    "name": "PVP傷害耐性",
+    "row": 1,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460023,
+    "name": "PVP迴避",
+    "row": 2,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460022,
+    "name": "",
+    "row": 2,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460021,
+    "name": "PVP防禦力",
+    "row": 2,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460020,
+    "name": "PVP攻擊力",
+    "row": 2,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460019,
+    "name": "PVP迴避",
+    "row": 2,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460018,
+    "name": "",
+    "row": 2,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460017,
+    "name": "",
+    "row": 2,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460016,
+    "name": "PVP暴擊",
+    "row": 2,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460031,
+    "name": "PVP命中、PVP迴避",
+    "row": 3,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460030,
+    "name": "PVP命中",
+    "row": 2,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460029,
+    "name": "",
+    "row": 2,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460028,
+    "name": "PVP防禦力",
+    "row": 2,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460027,
+    "name": "",
+    "row": 2,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460026,
+    "name": "",
+    "row": 2,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460025,
+    "name": "PVP命中",
+    "row": 2,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460024,
+    "name": "",
+    "row": 2,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460039,
+    "name": "PVP防禦力",
+    "row": 3,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460038,
+    "name": "最大精神力",
+    "row": 3,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460037,
+    "name": "PVP命中、PVP迴避",
+    "row": 3,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460036,
+    "name": "PVP暴擊抵抗",
+    "row": 3,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460035,
+    "name": "",
+    "row": 3,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460034,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 3,
+    "col": 4,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460033,
+    "name": "PVP命中",
+    "row": 3,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460032,
+    "name": "PVP暴擊抵抗",
+    "row": 3,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460047,
+    "name": "",
+    "row": 4,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460046,
+    "name": "",
+    "row": 4,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460045,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 3,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460044,
+    "name": "PVP暴擊",
+    "row": 3,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460043,
+    "name": "PVP命中、PVP迴避",
+    "row": 3,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460042,
+    "name": "最大生命力",
+    "row": 3,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460041,
+    "name": "PVP暴擊",
+    "row": 3,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460040,
+    "name": "異常狀態擊中",
+    "row": 3,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460055,
+    "name": "",
+    "row": 4,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460054,
+    "name": "PVP迴避",
+    "row": 4,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460053,
+    "name": "",
+    "row": 4,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460052,
+    "name": "PVP暴擊",
+    "row": 4,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460051,
+    "name": "",
+    "row": 4,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460050,
+    "name": "",
+    "row": 4,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460049,
+    "name": "",
+    "row": 4,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460048,
+    "name": "PVP防禦力",
+    "row": 4,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460063,
+    "name": "PVP迴避",
+    "row": 5,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460062,
+    "name": "PVP攻擊力",
+    "row": 5,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460061,
+    "name": "異常狀態擊中",
+    "row": 5,
+    "col": 1,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460060,
+    "name": "",
+    "row": 4,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460059,
+    "name": "",
+    "row": 4,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460058,
+    "name": "PVP暴擊抵抗",
+    "row": 4,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460057,
+    "name": "",
+    "row": 4,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460056,
+    "name": "PVP攻擊力",
+    "row": 4,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460071,
+    "name": "PVP迴避",
+    "row": 5,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460070,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 5,
+    "col": 10,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460069,
+    "name": "PVP暴擊抵抗",
+    "row": 5,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460068,
+    "name": "異常狀態擊中",
+    "row": 5,
+    "col": 8,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460067,
+    "name": "PVP防禦力",
+    "row": 5,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460066,
+    "name": "PVP暴擊抵抗",
+    "row": 5,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460065,
+    "name": "異常狀態抵抗",
+    "row": 5,
+    "col": 5,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460064,
+    "name": "",
+    "row": 5,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460079,
+    "name": "PVP命中",
+    "row": 6,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460078,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 6,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460077,
+    "name": "",
+    "row": 6,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460076,
+    "name": "PVP暴擊抵抗",
+    "row": 6,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460075,
+    "name": "",
+    "row": 5,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460074,
+    "name": "",
+    "row": 5,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460073,
+    "name": "異常狀態抵抗",
+    "row": 5,
+    "col": 13,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460072,
+    "name": "PVP防禦力",
+    "row": 5,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460087,
+    "name": "",
+    "row": 6,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460086,
+    "name": "",
+    "row": 6,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460085,
+    "name": "PVP命中",
+    "row": 6,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460084,
+    "name": "",
+    "row": 6,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460083,
+    "name": "",
+    "row": 6,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460082,
+    "name": "PVP命中",
+    "row": 6,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460081,
+    "name": "",
+    "row": 6,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460080,
+    "name": "PVP暴擊",
+    "row": 6,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460095,
+    "name": "PVP攻擊力",
+    "row": 7,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460094,
+    "name": "",
+    "row": 7,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460093,
+    "name": "",
+    "row": 7,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460092,
+    "name": "",
+    "row": 7,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460091,
+    "name": "PVP暴擊",
+    "row": 7,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460090,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 6,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460089,
+    "name": "PVP命中",
+    "row": 6,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460088,
+    "name": "PVP暴擊",
+    "row": 6,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460103,
+    "name": "PVP命中、PVP迴避",
+    "row": 7,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460102,
+    "name": "最大精神力",
+    "row": 7,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460101,
+    "name": "PVP防禦力",
+    "row": 7,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460100,
+    "name": "異常狀態抵抗",
+    "row": 7,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460099,
+    "name": "PVP攻擊力",
+    "row": 7,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460098,
+    "name": "最大生命力",
+    "row": 7,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460097,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 7,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460096,
+    "name": "PVP迴避",
+    "row": 7,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460111,
+    "name": "PVP暴擊",
+    "row": 8,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460110,
+    "name": "",
+    "row": 8,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460109,
+    "name": "",
+    "row": 8,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460108,
+    "name": "PVP暴擊抵抗",
+    "row": 8,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460107,
+    "name": "PVP攻擊力",
+    "row": 8,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460106,
+    "name": "PVP傷害增幅",
+    "row": 8,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460105,
+    "name": "PVP迴避",
+    "row": 7,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460104,
+    "name": "",
+    "row": 7,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460119,
+    "name": "PVP攻擊力",
+    "row": 8,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460118,
+    "name": "PVP暴擊抵抗",
+    "row": 8,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460117,
+    "name": "",
+    "row": 8,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460116,
+    "name": "",
+    "row": 8,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460115,
+    "name": "PVP暴擊",
+    "row": 8,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460114,
+    "name": "",
+    "row": 8,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460113,
+    "name": "阿斯佩爾 - 開始",
+    "row": 8,
+    "col": 8,
+    "grade": "None",
+    "type": "Start",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Start_Sprite.png",
+    "effectList": [
+      {
+        "desc": ""
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460112,
+    "name": "",
+    "row": 8,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460127,
+    "name": "PVP攻擊力",
+    "row": 9,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460126,
+    "name": "異常狀態抵抗",
+    "row": 9,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460125,
+    "name": "PVP防禦力",
+    "row": 9,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460124,
+    "name": "最大生命力",
+    "row": 9,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460123,
+    "name": "PVP命中、PVP迴避",
+    "row": 9,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460122,
+    "name": "",
+    "row": 9,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460121,
+    "name": "PVP迴避",
+    "row": 9,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460120,
+    "name": "PVP傷害增幅",
+    "row": 8,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460135,
+    "name": "PVP暴擊",
+    "row": 9,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460134,
+    "name": "",
+    "row": 9,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460133,
+    "name": "",
+    "row": 9,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460132,
+    "name": "",
+    "row": 9,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460131,
+    "name": "PVP攻擊力",
+    "row": 9,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460130,
+    "name": "PVP迴避",
+    "row": 9,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460129,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 9,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460128,
+    "name": "最大精神力",
+    "row": 9,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460143,
+    "name": "",
+    "row": 10,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460142,
+    "name": "",
+    "row": 10,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460141,
+    "name": "PVP命中",
+    "row": 10,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460140,
+    "name": "",
+    "row": 10,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460139,
+    "name": "",
+    "row": 10,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460138,
+    "name": "PVP暴擊",
+    "row": 10,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460137,
+    "name": "PVP命中",
+    "row": 10,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460136,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 10,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460151,
+    "name": "",
+    "row": 11,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460150,
+    "name": "PVP暴擊抵抗",
+    "row": 10,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460149,
+    "name": "",
+    "row": 10,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460148,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 10,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460147,
+    "name": "PVP命中",
+    "row": 10,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460146,
+    "name": "PVP暴擊",
+    "row": 10,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460145,
+    "name": "",
+    "row": 10,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460144,
+    "name": "PVP命中",
+    "row": 10,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460159,
+    "name": "PVP防禦力",
+    "row": 11,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460158,
+    "name": "異常狀態擊中",
+    "row": 11,
+    "col": 8,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460157,
+    "name": "PVP暴擊抵抗",
+    "row": 11,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460156,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 11,
+    "col": 6,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460155,
+    "name": "PVP迴避",
+    "row": 11,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460154,
+    "name": "PVP防禦力",
+    "row": 11,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460153,
+    "name": "異常狀態抵抗",
+    "row": 11,
+    "col": 3,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460152,
+    "name": "",
+    "row": 11,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460167,
+    "name": "",
+    "row": 12,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460166,
+    "name": "",
+    "row": 12,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460165,
+    "name": "異常狀態擊中",
+    "row": 11,
+    "col": 15,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460164,
+    "name": "PVP攻擊力",
+    "row": 11,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460163,
+    "name": "PVP迴避",
+    "row": 11,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460162,
+    "name": "",
+    "row": 11,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460161,
+    "name": "異常狀態抵抗",
+    "row": 11,
+    "col": 11,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460160,
+    "name": "PVP暴擊抵抗",
+    "row": 11,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460175,
+    "name": "",
+    "row": 12,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460174,
+    "name": "PVP暴擊",
+    "row": 12,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460173,
+    "name": "",
+    "row": 12,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460172,
+    "name": "PVP迴避",
+    "row": 12,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460171,
+    "name": "",
+    "row": 12,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460170,
+    "name": "PVP攻擊力",
+    "row": 12,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460169,
+    "name": "",
+    "row": 12,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460168,
+    "name": "PVP暴擊抵抗",
+    "row": 12,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460183,
+    "name": "PVP命中、PVP迴避",
+    "row": 13,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460182,
+    "name": "PVP暴擊",
+    "row": 13,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460181,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 13,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460180,
+    "name": "",
+    "row": 12,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460179,
+    "name": "",
+    "row": 12,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460178,
+    "name": "PVP防禦力",
+    "row": 12,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460177,
+    "name": "",
+    "row": 12,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460176,
+    "name": "",
+    "row": 12,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460191,
+    "name": "",
+    "row": 13,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460190,
+    "name": "PVP暴擊抵抗",
+    "row": 13,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460189,
+    "name": "PVP命中、PVP迴避",
+    "row": 13,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460188,
+    "name": "最大生命力",
+    "row": 13,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460187,
+    "name": "PVP防禦力",
+    "row": 13,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460186,
+    "name": "異常狀態擊中",
+    "row": 13,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460185,
+    "name": "PVP暴擊",
+    "row": 13,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460184,
+    "name": "最大精神力",
+    "row": 13,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460199,
+    "name": "",
+    "row": 14,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460198,
+    "name": "PVP防禦力",
+    "row": 14,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460197,
+    "name": "",
+    "row": 14,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460196,
+    "name": "PVP命中",
+    "row": 14,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460195,
+    "name": "PVP命中、PVP迴避",
+    "row": 13,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      },
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460194,
+    "name": "PVP暴擊抵抗",
+    "row": 13,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460193,
+    "name": "PVP命中",
+    "row": 13,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460192,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 13,
+    "col": 12,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460207,
+    "name": "PVP迴避",
+    "row": 14,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460206,
+    "name": "PVP攻擊力",
+    "row": 14,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460205,
+    "name": "PVP防禦力",
+    "row": 14,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460204,
+    "name": "",
+    "row": 14,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460203,
+    "name": "PVP迴避",
+    "row": 14,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460202,
+    "name": "",
+    "row": 14,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460201,
+    "name": "PVP命中",
+    "row": 14,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460200,
+    "name": "",
+    "row": 14,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460215,
+    "name": "PVP迴避",
+    "row": 15,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP迴避 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460214,
+    "name": "異常狀態抵抗",
+    "row": 15,
+    "col": 4,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態抵抗 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460213,
+    "name": "PVP暴擊抵抗",
+    "row": 15,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460212,
+    "name": "PVP攻擊力",
+    "row": 15,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460211,
+    "name": "PVP傷害增幅",
+    "row": 15,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害增幅 +2.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460210,
+    "name": "PVP暴擊",
+    "row": 14,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460209,
+    "name": "",
+    "row": 14,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460208,
+    "name": "",
+    "row": 14,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460223,
+    "name": "PVP防禦力",
+    "row": 15,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460222,
+    "name": "異常狀態擊中",
+    "row": 15,
+    "col": 12,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "異常狀態擊中 +1%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460221,
+    "name": "",
+    "row": 15,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460220,
+    "name": "PVP攻擊力、PVP防禦力",
+    "row": 15,
+    "col": 10,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      },
+      {
+        "desc": "PVP防禦力 +50"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460219,
+    "name": "PVP命中",
+    "row": 15,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP命中 +10"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460218,
+    "name": "PVP傷害耐性",
+    "row": 15,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460217,
+    "name": "",
+    "row": 15,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460216,
+    "name": "PVP暴擊、PVP暴擊抵抗",
+    "row": 15,
+    "col": 6,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP暴擊 +5"
+      },
+      {
+        "desc": "PVP暴擊抵抗 +5"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460225,
+    "name": "PVP傷害耐性",
+    "row": 15,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP傷害耐性 +2.5%"
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 46,
+    "nodeId": 460224,
+    "name": "PVP攻擊力",
+    "row": 15,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVP攻擊力 +5"
+      }
+    ],
+    "open": 0
+  }
+]

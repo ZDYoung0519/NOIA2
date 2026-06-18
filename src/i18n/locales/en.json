@@ -1,0 +1,306 @@
+{
+  "app": {
+    "title": "Tauri App Template",
+    "welcome": "Welcome to Tauri + React",
+    "description": "Modern desktop application template with Tauri v2, React 19, and shadcn/ui"
+  },
+  "greet": {
+    "title": "Greet from Rust",
+    "description": "Test the communication between frontend and Tauri backend",
+    "placeholder": "Enter your name...",
+    "button": "Greet"
+  },
+  "about": {
+    "title": "About",
+    "button": "About",
+    "appName": "Tauri App Template",
+    "version": "Version",
+    "description": "A modern desktop application template built with Tauri v2, React 19, and shadcn/ui.",
+    "features": "Features",
+    "feature1": "Tauri v2 - Lightweight desktop app framework",
+    "feature2": "React 19 - Latest React version",
+    "feature3": "TypeScript - Type safety",
+    "feature4": "Tailwind CSS v4 - Modern CSS framework",
+    "feature5": "shadcn/ui - Beautiful UI components",
+    "close": "Close"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "toggle": "Switch language",
+    "en": "English",
+    "zh": "中文"
+  },
+  "tray": {
+    "show": "Show Window",
+    "quit": "Quit"
+  },
+  "updater": {
+    "checkForUpdates": "Check for Updates",
+    "checking": "Checking...",
+    "checkFailed": "Failed to check for updates.",
+    "upToDate": "You're using the latest version!",
+    "updateAvailable": "Update Available",
+    "downloading": "Downloading Update",
+    "installingVersion": "Installing version {{version}}...",
+    "versionAvailable": "Version {{version}} is available.",
+    "releaseNotes": "Release Notes:",
+    "later": "Later",
+    "installNow": "Install Now"
+  },
+  "gameSelector": {
+    "selectGame": "Switch game"
+  },
+  "aion2Home": {
+    "usageGuide": "User Guide",
+    "appSettings": "Settings",
+    "dpsLog": "DPS Log",
+    "startMeter": "Start Meter",
+    "stopping": "Stopping...",
+    "starting": "Starting...",
+    "loading": "Loading",
+    "loadingImage": "Loading Image",
+    "noEvents": "No official events are available right now.",
+    "openEventDetails": "Open the official event details.",
+    "notice": "Notice",
+    "update": "Update",
+    "noContent": "No content",
+    "mainCharacter": "Main Character",
+    "unknownServer": "Unknown Server",
+    "lastLogin": "Last login",
+    "viewCharacterDetail": "View character detail",
+    "refresh": "Refresh",
+    "noEquipData": "No equipment data",
+    "recentBosses": "Recent Bosses",
+    "highest": "Highest",
+    "average": "Average",
+    "noBossRecords": "No boss records",
+    "noMainActorRecords": "No main character records",
+    "switchCharacter": "Switch Character",
+    "noSwitchCharacters": "No characters to switch",
+    "unknown": "Unknown",
+    "times": "times",
+    "meterToggleFailed": "Failed to toggle DPS meter",
+    "meterRunningNotification": "DPS meter is running. Switch to the game window to view."
+  },
+  "dpsOverlay": {
+    "open": "Open DPS Overlay"
+  },
+  "settings": {
+    "title": "Settings",
+    "button": "Settings",
+    "close": "Close",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize the appearance and language of the app",
+      "theme": "Theme",
+      "themeDesc": "Choose light, dark, or system appearance and keep app windows in sync.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "language": "Language",
+      "languageDesc": "Switch the interface language and sync it to the tray menu and newly opened windows."
+    },
+    "shortcut": {
+      "placeholder": "Press key combination",
+      "setSuccess": "Shortcut set to {{shortcut}}!",
+      "cleared": "Shortcut cleared!"
+    },
+    "aion2": {
+      "title": "Aion 2",
+      "description": "DPS meter and overlay settings for Aion 2",
+      "shortcuts": "Shortcuts",
+      "overlay": "Overlay",
+      "backend": "Runtime",
+      "shortcutShowDpsOverlay": "Show / Hide DPS Overlay",
+      "shortcutShowDpsOverlayDesc": "Toggle the DPS overlay on and off",
+      "shortcutResetDpsMeter": "Reset DPS Meter",
+      "shortcutResetDpsMeterDesc": "Reset all combat statistics",
+      "shortcutToggleLock": "Lock / Unlock overlay",
+      "shortcutToggleLockDesc": "Toggle overlay click-through and hide title bar",
+      "overlayFontFamily": "Font family",
+      "overlayLocked": "Lock overlay",
+      "overlayLockedDesc": "Hides the title bar and lets mouse input pass through the DPS panel. Unlock from settings or with the shortcut.",
+      "overlayAlwaysOnTop": "Always on top",
+      "overlayAlwaysOnTopDesc": "Keeps the DPS panel visible even when Aion2 loses focus, useful for multi-monitor or streaming setups.",
+      "overlayContentScale": "Content scale",
+      "overlayContentScaleDesc": "Scales only the DPS list and bottom status bar. The window height is recalculated from the scaled content.",
+      "overlayMaskNicknames": "Mask nicknames",
+      "overlayShowBossHp": "Show boss HP bar",
+      "overlayBackgroundOpacity": "Background opacity",
+      "overlayBackgroundOpacityDesc": "Adjusts the content background opacity. Lower values make the panel closer to transparent.",
+      "overlayMainPlayerColor": "My character color",
+      "overlayMainPlayerColorDesc": "Color used for your own damage bar. Opacity controls how strong the bar background appears.",
+      "overlayOtherPlayerColor": "Other player color",
+      "overlayOtherPlayerColorDesc": "Color used for other players' damage bars. Pick a color distinct from your own.",
+      "overlayShowPlayerName": "Show player name",
+      "overlayShowPlayerNameDesc": "When disabled, player names are hidden while icons, damage and stats remain visible.",
+      "overlayShowServer": "Show server",
+      "overlayShowServerDesc": "Controls the server label after each player name. Disable it for a more compact list.",
+      "overlayShowDamage": "Show total damage",
+      "overlayShowDamageDesc": "Controls whether accumulated damage is shown on each row. It does not affect DPS or percentage calculations.",
+      "overlayShowDps": "Show DPS",
+      "overlayShowDpsDesc": "Controls whether realtime DPS is shown on each row. Disable it to reduce right-side information density.",
+      "overlayPctMode": "Percentage mode",
+      "overlayPctModeDesc": "Contribution is based on the visible list. Share is based on the full combat total.",
+      "overlayPctContribution": "Contribution",
+      "overlayPctShare": "Share",
+      "overlayHideUnknownPlayers": "Hide unknown players",
+      "overlayHideUnknownPlayersDesc": "Hides players whose character names were not identified, keeping the list focused on known actors.",
+      "overlayDetailWindowMode": "Skill detail window mode",
+      "overlayDetailWindowModeDesc": "When clicking a player for skill details, the window can follow the overlay or be centered on screen.",
+      "overlayDetailWindowFollow": "Follow",
+      "overlayDetailWindowCenter": "Center",
+      "autoHideEnabled": "Auto hide with game",
+      "autoHideEnabledDesc": "Shows the DPS panel only while Aion2 or a related overlay window is focused.",
+      "bossOnly": "Boss only",
+      "bossOnlyDesc": "Only record damage against boss monsters",
+      "myMuzhuangOnly": "My Muzhuang only",
+      "myMuzhuangOnlyDesc": "Only record damage from your own Muzhuang",
+      "dpsSnapshotInterval": "Snapshot interval (ms)",
+      "dpsSnapshotIntervalDesc": "Controls how often DPS data refreshes. Shorter intervals feel more realtime with slightly more overhead.",
+      "maxPacketSizeThreshold": "Packet size threshold",
+      "maxPacketSizeThresholdDesc": "Ignores unusually large packets to reduce parser errors or noisy records.",
+      "enableResyncOnStall": "Auto resync on stall",
+      "enableResyncOnStallDesc": "Attempts to resync when the data stream appears stalled, helping continuous tracking recover."
+    }
+  },
+  "auth": {
+    "title": "Sign In",
+    "userFallback": "User",
+    "signOut": "Sign Out",
+    "membership": {
+      "loading": "Loading membership status",
+      "expiresAt": "Membership expires: {{date}}",
+      "permanent": "Membership expires: Permanent",
+      "inactive": "Membership not activated"
+    },
+    "signIn": {
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Enter your password",
+      "button": "Sign In",
+      "loadingButton": "Signing in...",
+      "socialProviderText": "Sign in with {{provider}}",
+      "linkText": "Already have an account? Sign in",
+      "description": "Sign in to your account to sync your profile and membership status."
+    },
+    "signUp": {
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Enter your password again",
+      "emailPlaceholder": "Enter your email address",
+      "passwordPlaceholder": "Create a password",
+      "button": "Sign Up",
+      "loadingButton": "Creating account...",
+      "socialProviderText": "Sign up with {{provider}}",
+      "linkText": "Don't have an account? Sign up",
+      "confirmationText": "Registration successful. Check your email and open the link on this device to complete verification.",
+      "description": "Create a new account to unlock cloud-based features later."
+    },
+    "forgottenPassword": {
+      "emailLabel": "Email address",
+      "passwordLabel": "New password",
+      "emailPlaceholder": "Enter your email address",
+      "button": "Send Reset Instructions",
+      "loadingButton": "Sending reset instructions...",
+      "linkText": "Forgot your password?",
+      "confirmationText": "Check your email and open the reset link on this device.",
+      "description": "Enter your email address and we will send you a password reset link.",
+      "backToSignIn": "Back to sign in"
+    },
+    "magicLink": {
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email address",
+      "button": "Send Magic Link",
+      "loadingButton": "Sending magic link...",
+      "linkText": "Send a magic link instead",
+      "confirmationText": "Check your email for the magic link."
+    },
+    "updatePassword": {
+      "passwordLabel": "New password",
+      "passwordPlaceholder": "Enter your new password",
+      "button": "Set New Password",
+      "loadingButton": "Updating password...",
+      "confirmationText": "Your password has been updated successfully.",
+      "description": "Set a new password to complete account recovery.",
+      "confirmPasswordLabel": "Confirm new password",
+      "confirmPasswordPlaceholder": "Enter your new password again"
+    },
+    "verifyOtp": {
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email address",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "Enter your phone number",
+      "tokenLabel": "Verification code",
+      "tokenPlaceholder": "Enter the verification code",
+      "button": "Verify Code",
+      "loadingButton": "Verifying code..."
+    },
+    "feedback": {
+      "deepLinkSuccess": "Account verification completed successfully.",
+      "deepLinkFailed": "Failed to process the email link. Please try again.",
+      "recoveryReady": "Verification complete. You can now set a new password.",
+      "invalidCredentials": "The email or password is incorrect, or the email has not been verified yet.",
+      "userAlreadyExists": "This email is already registered. Please sign in directly.",
+      "resetEmailAlreadySent": "A reset email was already sent recently. Please check your inbox and try again later.",
+      "rateLimited": "Too many attempts in a short time. Please wait a moment and try again."
+    },
+    "validation": {
+      "invalidEmail": "Please enter a valid email address."
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "Patch",
+      "minor": "Minor",
+      "major": "Major",
+      "promoteBeta": "Promote beta to release",
+      "nextBeta": "Next beta",
+      "nextPatchBeta": "Next patch beta",
+      "custom": "Custom version"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\nEnter choice (1-{{max}}): ",
+      "enterCustomVersion": "Enter custom version: ",
+      "confirmRelease": "Continue with version update and tag creation?",
+      "pushNow": "Push commit and tag to remote now?"
+    },
+    "messages": {
+      "currentVersion": "Current version: {{version}}",
+      "selectNextVersion": "Select the next version:",
+      "invalidChoice": "Invalid choice, defaulting to patch release.",
+      "summaryTitle": "Release summary:",
+      "summaryBranch": "- Branch: {{branch}}",
+      "summaryCurrentVersion": "- Current version: {{version}}",
+      "summaryNextVersion": "- Next version: {{version}}",
+      "summaryTag": "- Tag: {{tag}}",
+      "cancelled": "Cancelled.",
+      "createdCommitAndTag": "Created commit and tag successfully.",
+      "pushCompleted": "Push completed.",
+      "pushSkipped": "Skipped push. You can push later with:",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "Unsupported version format: {{version}}",
+      "cargoVersionNotFound": "Failed to locate version in Cargo.toml",
+      "cargoPackageNameNotFound": "Failed to locate package name in Cargo.toml",
+      "cargoLockVersionNotFound": "Failed to locate version in Cargo.lock",
+      "releaseStagingIncomplete": "Release staging is incomplete. Staged files: {{stagedFiles}}",
+      "workingTreeNotClean": "Working tree is not clean. Please commit or stash your changes first.",
+      "tagExists": "Tag {{tag}} already exists.",
+      "remoteTagExists": "Remote tag {{tag}} already exists on origin.",
+      "branchNotMain": "Releases must be created from the main branch. Current branch: {{branch}}",
+      "versionMismatch": "Version mismatch detected. package.json={{packageVersion}}, tauri.conf.json={{tauriVersion}}, Cargo.toml={{cargoVersion}}, Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json version is missing or invalid",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json version is missing or invalid",
+      "invalidLang": "Invalid --lang value. Use zh or en."
+    }
+  }
+}

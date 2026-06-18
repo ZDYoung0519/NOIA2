@@ -1,0 +1,307 @@
+{
+  "app": {
+    "title": "Tauri 应用模板",
+    "welcome": "欢迎使用 Tauri + React",
+    "description": "基于 Tauri v2、React 19 和 shadcn/ui 的现代桌面应用模板"
+  },
+  "greet": {
+    "title": "来自 Rust 的问候",
+    "description": "测试前端与 Tauri 后端的通信",
+    "placeholder": "输入你的名字...",
+    "button": "问候"
+  },
+  "about": {
+    "title": "关于",
+    "button": "关于",
+    "appName": "Tauri 应用模板",
+    "version": "版本",
+    "description": "基于 Tauri v2、React 19 和 shadcn/ui 构建的现代桌面应用模板。",
+    "features": "特性",
+    "feature1": "Tauri v2 - 轻量级桌面应用框架",
+    "feature2": "React 19 - 最新的 React 版本",
+    "feature3": "TypeScript - 类型安全",
+    "feature4": "Tailwind CSS v4 - 现代 CSS 框架",
+    "feature5": "shadcn/ui - 精美的 UI 组件",
+    "close": "关闭"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "language": {
+    "toggle": "切换语言",
+    "en": "English",
+    "zh": "中文"
+  },
+  "tray": {
+    "show": "显示窗口",
+    "quit": "退出"
+  },
+  "updater": {
+    "checkForUpdates": "检查更新",
+    "checking": "检查中...",
+    "checkFailed": "检查更新失败。",
+    "upToDate": "您正在使用最新版本！",
+    "updateAvailable": "发现新版本",
+    "downloading": "正在下载更新",
+    "installingVersion": "正在安装版本 {{version}}...",
+    "versionAvailable": "版本 {{version}} 可用。",
+    "releaseNotes": "更新说明：",
+    "later": "稍后",
+    "installNow": "立即安装"
+  },
+  "gameSelector": {
+    "selectGame": "切换游戏"
+  },
+  "aion2Home": {
+    "usageGuide": "使用指南",
+    "appSettings": "应用设置",
+    "dpsLog": "DPS 日志",
+    "startMeter": "启动水表",
+    "stopping": "正在关闭...",
+    "starting": "正在启动...",
+    "loading": "Loading",
+    "loadingImage": "Loading Image",
+    "noEvents": "暂无官方活动。",
+    "openEventDetails": "打开官方活动详情。",
+    "notice": "公告",
+    "update": "更新",
+    "noContent": "暂无内容",
+    "mainCharacter": "主角色",
+    "unknownServer": "未知服务器",
+    "lastLogin": "上次登录",
+    "viewCharacterDetail": "查看角色详情",
+    "refresh": "刷新",
+    "noEquipData": "暂无装备数据",
+    "recentBosses": "近期副本 Boss",
+    "highest": "最高",
+    "average": "平均",
+    "noBossRecords": "暂无副本记录",
+    "noMainActorRecords": "暂无主角色记录",
+    "switchCharacter": "切换角色",
+    "noSwitchCharacters": "暂无可切换角色",
+    "unknown": "未知",
+    "times": "次",
+    "meterToggleFailed": "水表状态切换失败",
+    "meterRunningNotification": "水表已经运行，请切换至游戏内窗口查看"
+  },
+  "dpsOverlay": {
+    "open": "打开 DPS 悬浮窗"
+  },
+  "settings": {
+    "title": "设置",
+    "button": "设置",
+    "close": "关闭",
+    "appearance": {
+      "title": "外观",
+      "description": "自定义应用的外观和语言",
+      "theme": "主题",
+      "themeDesc": "选择浅色、深色或跟随系统外观，应用窗口会自动同步。",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "language": "语言",
+      "languageDesc": "切换界面语言，并同步到托盘菜单和新打开的窗口。"
+    },
+    "shortcut": {
+      "placeholder": "按下组合键设置",
+      "setSuccess": "已将快捷键设为 {{shortcut}}！",
+      "cleared": "已取消快捷键！"
+    },
+    "aion2": {
+      "title": "永恒之塔 2",
+      "description": "Aion 2 的 DPS 计量和悬浮窗设置",
+      "shortcuts": "快捷键",
+      "overlay": "悬浮窗",
+      "backend": "运行时",
+      "shortcutShowDpsOverlay": "显示/隐藏 DPS 悬浮窗",
+      "shortcutShowDpsOverlayDesc": "切换 DPS 悬浮窗的显示和隐藏",
+      "shortcutResetDpsMeter": "重置 DPS 统计",
+      "shortcutResetDpsMeterDesc": "重置所有战斗统计数据",
+      "shortcutToggleLock": "锁定 / 解锁悬浮窗",
+      "shortcutToggleLockDesc": "切换悬浮窗穿透状态并隐藏标题栏",
+      "overlayFontFamily": "字体选择",
+      "overlayLocked": "锁定悬浮窗",
+      "overlayLockedDesc": "开启后 DPS 面板会隐藏标题栏并穿透鼠标，方便游戏内点击；可通过设置或快捷键解除。",
+      "overlayAlwaysOnTop": "始终置顶",
+      "overlayAlwaysOnTopDesc": "开启后 DPS 面板不会因游戏失焦被自动隐藏，适合多屏或直播观察场景。",
+      "overlayContentScale": "内容缩放",
+      "overlayContentScaleDesc": "窗口高度会根据玩家数量自动重新计算。",
+      "overlayMaskNicknames": "昵称掩码",
+      "overlayShowBossHp": "显示 Boss 血条",
+      "overlayBackgroundOpacity": "背景透明度",
+      "overlayBackgroundOpacityDesc": "调整 DPS 面板内容区的背景透明度，数值越低越接近完全透明。",
+      "overlayMainPlayerColor": "自身角色颜色",
+      "overlayMainPlayerColorDesc": "用于标记自己的伤害条颜色，透明度会影响条形背景的明显程度。",
+      "overlayOtherPlayerColor": "其他玩家颜色",
+      "overlayOtherPlayerColorDesc": "用于其他玩家的伤害条颜色，建议和自身角色颜色保持区分。",
+      "overlayShowPlayerName": "显示玩家名",
+      "overlayShowPlayerNameDesc": "关闭后列表中不显示玩家名称，只保留图标、伤害和统计信息。",
+      "overlayShowServer": "显示服务器",
+      "overlayShowServerDesc": "控制玩家名后方的服务器标识，关闭后列表会更紧凑。",
+      "overlayShowDamage": "显示总伤害",
+      "overlayShowDamageDesc": "控制每行是否显示累计总伤害，不影响 DPS 和百分比计算。",
+      "overlayShowDps": "显示秒伤",
+      "overlayShowDpsDesc": "控制每行是否显示实时 DPS 数值，关闭后可以减少右侧信息密度。",
+      "overlayPctMode": "百分比模式",
+      "overlayPctModeDesc": "贡献度按当前显示列表计算，伤害占比按完整战斗总量计算。",
+      "overlayPctContribution": "贡献度",
+      "overlayPctShare": "伤害占比",
+      "overlayHideUnknownPlayers": "屏蔽未知角色",
+      "overlayHideUnknownPlayersDesc": "开启后隐藏未识别到角色名的玩家，避免列表被 ID 记录占满。",
+      "overlayDetailWindowMode": "技能窗口显示方式",
+      "overlayDetailWindowModeDesc": "点击玩家查看技能详情时，窗口跟随悬浮窗或屏幕居中显示。",
+      "overlayDetailWindowFollow": "跟随",
+      "overlayDetailWindowCenter": "居中",
+      "autoHideEnabled": "跟随游戏自动隐藏",
+      "autoHideEnabledDesc": "开启后只有 Aion2 或相关悬浮窗获得焦点时才显示 DPS 面板。",
+      "bossOnly": "仅记录 Boss",
+      "bossOnlyDesc": "仅记录对 Boss 怪物的伤害",
+      "myMuzhuangOnly": "仅记录我的木桩",
+      "myMuzhuangOnlyDesc": "仅记录自己木桩的伤害数据",
+      "dpsSnapshotInterval": "快照间隔 (ms)",
+      "dpsSnapshotIntervalDesc": "控制 DPS 数据刷新频率，间隔越短显示越实时但开销略高。",
+      "maxPacketSizeThreshold": "包大小阈值",
+      "maxPacketSizeThresholdDesc": "忽略超过阈值的异常数据包，减少解析错误或噪声记录。",
+      "enableResyncOnStall": "卡顿时自动重同步",
+      "enableResyncOnStallDesc": "检测到数据流停滞时尝试重新同步，帮助恢复持续统计。"
+    }
+  },
+
+  "auth": {
+    "title": "登录",
+    "userFallback": "用户",
+    "signOut": "退出登录",
+    "membership": {
+      "loading": "正在加载会员状态",
+      "expiresAt": "订阅到期时间：{{date}}",
+      "permanent": "订阅到期时间：永久",
+      "inactive": "无订阅"
+    },
+    "signIn": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请输入密码",
+      "button": "登录",
+      "loadingButton": "登录中...",
+      "socialProviderText": "使用 {{provider}} 登录",
+      "linkText": "已经有账户？在此登录",
+      "description": "登录到你的个人账户（不登录注册也可以照常使用水表）"
+    },
+    "signUp": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "请重复输入密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请设置密码",
+      "button": "注册",
+      "loadingButton": "注册中...",
+      "socialProviderText": "使用 {{provider}} 注册",
+      "linkText": "没有账号？去注册",
+      "confirmationText": "注册成功！请在本设备上检查并打开邮件中的链接，以激活账户",
+      "description": "注册一个新的账户来解锁云端功能和体验"
+    },
+    "forgottenPassword": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "新密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送重置邮件",
+      "loadingButton": "发送中...",
+      "linkText": "忘记密码？",
+      "confirmationText": "请检查邮箱中的链接",
+      "description": "输入你的邮件地址，我们会给你发送一个重置密码的链接",
+      "backToSignIn": "返回登录"
+    },
+    "magicLink": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送魔法链接",
+      "loadingButton": "发送中...",
+      "linkText": "使用魔法链接登录",
+      "confirmationText": "请检查邮箱中的登录链接"
+    },
+    "updatePassword": {
+      "passwordLabel": "新密码",
+      "passwordPlaceholder": "输入你的新密码",
+      "button": "设置新密码",
+      "loadingButton": "更新密码中...",
+      "confirmationText": "你的密码已经成功更新",
+      "description": "为你的账户设置一个新的密码",
+      "confirmPasswordLabel": "确认新密码",
+      "confirmPasswordPlaceholder": "重新输入你的密码"
+    },
+    "verifyOtp": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "phoneLabel": "手机号",
+      "phonePlaceholder": "请输入手机号",
+      "tokenLabel": "验证码",
+      "tokenPlaceholder": "请输入验证码",
+      "button": "验证",
+      "loadingButton": "验证中..."
+    },
+    "feedback": {
+      "deepLinkSuccess": "账号验证成功。",
+      "deepLinkFailed": "处理邮件链接失败，请重试。",
+      "recoveryReady": "验证完成，你现在可以设置新密码。",
+      "invalidCredentials": "邮箱或密码错误，或邮箱尚未验证。",
+      "userAlreadyExists": "该邮箱已注册，请直接登录。",
+      "resetEmailAlreadySent": "重置邮件已发送，请检查邮箱后稍后再试。",
+      "rateLimited": "短时间内操作过于频繁，请稍后再试。"
+    },
+    "validation": {
+      "invalidEmail": "请输入有效的邮箱地址。"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "补丁版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "将 beta 提升为正式版",
+      "nextBeta": "下一个 beta",
+      "nextPatchBeta": "下一个补丁 beta",
+      "custom": "自定义版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n请输入选择 (1-{{max}}): ",
+      "enterCustomVersion": "请输入自定义版本号: ",
+      "confirmRelease": "是否继续更新版本并创建 tag？",
+      "pushNow": "是否立即推送提交和 tag 到远程仓库？"
+    },
+    "messages": {
+      "currentVersion": "当前版本：{{version}}",
+      "selectNextVersion": "请选择下一个版本：",
+      "invalidChoice": "选择无效，默认使用第一个候选版本。",
+      "summaryTitle": "发布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 当前版本：{{version}}",
+      "summaryNextVersion": "- 新版本：{{version}}",
+      "summaryTag": "- Tag：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功创建提交和 tag。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳过推送，你之后可以执行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支持的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本字段",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到包名字段",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本字段",
+      "releaseStagingIncomplete": "发布暂存文件不完整，当前已暂存：{{stagedFiles}}",
+      "workingTreeNotClean": "当前工作区不干净，请先提交或暂存现有改动。",
+      "tagExists": "Tag {{tag}} 已存在。",
+      "remoteTagExists": "远程 origin 上已存在 Tag {{tag}}。",
+      "branchNotMain": "只能在 main 分支创建发布，当前分支：{{branch}}",
+      "versionMismatch": "检测到版本不一致：package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json 中的版本号缺失或无效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本号缺失或无效",
+      "invalidLang": "无效的 --lang 参数，请使用 zh 或 en。"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoiA DPS Detail</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="detail-titlebar">
+      <div class="detail-titlebar__left" id="detail-drag-handle">
+        <img class="detail-titlebar__icon" id="player-icon" alt="" />
+        <span class="detail-titlebar__name" id="player-name">Player</span>
+        <span class="detail-titlebar__server" id="player-server"></span>
+      </div>
+      <div class="detail-titlebar__right">
+        <span class="titlebar__mode" id="mode-badge">LIVE</span>
+        <button class="titlebar__close" id="close-btn" title="Close">&times;</button>
+      </div>
+    </div>
+    <div class="detail-content" id="detail-content">
+      <div class="empty">Click a player row to view skill details</div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

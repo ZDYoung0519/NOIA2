@@ -1,0 +1,324 @@
+[
+  {
+    "dungeon_id": "00001",
+    "name": {
+      "zh-CN": "青息之岛",
+      "zh-TW": "青息之島",
+      "en": "Azure Breath Island",
+      "ko": "Azure Breath Island"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2300219, 2300230, 2300200]
+  },
+  {
+    "dungeon_id": "00002",
+    "name": {
+      "zh-CN": "青息之岛",
+      "zh-TW": "青息之島",
+      "en": "Azure Breath Island",
+      "ko": "Azure Breath Island"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困難",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2300243, 2300244, 2300245]
+  },
+  {
+    "dungeon_id": "00003",
+    "name": {
+      "zh-CN": "幻影回廊",
+      "zh-TW": "幻影迴廊",
+      "en": "Phantoms Hall",
+      "ko": "Phantoms Hall"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2311402, 2311401, 2311403]
+  },
+  {
+    "dungeon_id": "00004",
+    "name": {
+      "zh-CN": "幻影回廊",
+      "zh-TW": "幻影迴廊",
+      "en": "Phantoms Hall",
+      "ko": "Phantoms Hall"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2321402, 2321401, 2321403]
+  },
+  {
+    "dungeon_id": "00005",
+    "name": {
+      "zh-CN": "无之摇篮",
+      "zh-TW": "無之搖籃",
+      "en": "CradleNihility",
+      "ko": "CradleNihility"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2311302, 2311303, 2311301]
+  },
+  {
+    "dungeon_id": "00006",
+    "name": {
+      "zh-CN": "无之摇篮",
+      "zh-TW": "無之搖籃",
+      "en": "CradleNihility",
+      "ko": "CradleNihility"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2321302, 2321303, 2321301]
+  },
+  {
+    "dungeon_id": "00007",
+    "name": {
+      "zh-CN": "死亡德拉瑪塔巢穴",
+      "zh-TW": "死亡德拉瑪塔巢穴",
+      "en": "DeadDramataNest",
+      "ko": "DeadDramataNest"
+    },
+    "difficulty": {
+      "zh-CN": "普通",
+      "zh-TW": "普通",
+      "en": "Normal",
+      "ko": "Normal"
+    },
+    "boss_ids": [2310508, 2310507, 2310509]
+  },
+  {
+    "dungeon_id": "00008",
+    "name": {
+      "zh-CN": "死亡德拉瑪塔巢穴",
+      "zh-TW": "死亡德拉瑪塔巢穴",
+      "en": "DeadDramataNest",
+      "ko": "DeadDramataNest"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2300154, 2300153, 2300155]
+  },
+  {
+    "dungeon_id": "10001",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "1阶段",
+      "zh-TW": "1階段",
+      "en": "Phase 1",
+      "ko": "Phase 1"
+    },
+    "boss_ids": [2301503, 2301502, 2301501]
+  },
+  {
+    "dungeon_id": "10002",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "2阶段",
+      "zh-TW": "2階段",
+      "en": "Phase 2",
+      "ko": "Phase 2"
+    },
+    "boss_ids": [2300002, 2300001, 2300000]
+  },
+  {
+    "dungeon_id": "10003",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "3阶段",
+      "zh-TW": "3階段",
+      "en": "Phase 3",
+      "ko": "Phase 3"
+    },
+    "boss_ids": [2300017, 2300016, 2300015]
+  },
+  {
+    "dungeon_id": "10004",
+    "name": {
+      "zh-CN": "沉没的生命神殿",
+      "zh-TW": "沉沒的生命神殿",
+      "en": "Sunken Temple",
+      "ko": "Sunken Temple"
+    },
+    "difficulty": {
+      "zh-CN": "4阶段",
+      "zh-TW": "4階段",
+      "en": "Phase 4",
+      "ko": "Phase 4"
+    },
+    "boss_ids": [2300032, 2300031, 2300030]
+  },
+  {
+    "dungeon_id": "10011",
+    "name": {
+      "zh-CN": "绯红羁绊之镜",
+      "zh-TW": "緋紅羈絆之鏡",
+      "en": "绯红羁绊之镜",
+      "ko": "绯红羁绊之镜"
+    },
+    "difficulty": {
+      "zh-CN": "1阶段",
+      "zh-TW": "1階段",
+      "en": "Phase 1",
+      "ko": "Phase 1"
+    },
+    "boss_ids": [2300259, 2300260, 2300261]
+  },
+  {
+    "dungeon_id": "10012",
+    "name": {
+      "zh-CN": "绯红羁绊之镜",
+      "zh-TW": "緋紅羈絆之鏡",
+      "en": "绯红羁绊之镜",
+      "ko": "绯红羁绊之镜"
+    },
+    "difficulty": {
+      "zh-CN": "2阶段",
+      "zh-TW": "2階段",
+      "en": "Phase 2",
+      "ko": "Phase 2"
+    },
+    "boss_ids": [2300299, 2300300, 2300317]
+  },
+
+  {
+    "dungeon_id": "10013",
+    "name": {
+      "zh-CN": "绯红羁绊之镜",
+      "zh-TW": "緋紅羈絆之鏡",
+      "en": "绯红羁绊之镜",
+      "ko": "绯红羁绊之镜"
+    },
+    "difficulty": {
+      "zh-CN": "3阶段",
+      "zh-TW": "3階段",
+      "en": "Phase 3",
+      "ko": "Phase 3"
+    },
+    "boss_ids": [2300334, 2300335, 2300336]
+  },
+
+  {
+    "dungeon_id": "10014",
+    "name": {
+      "zh-CN": "绯红羁绊之镜",
+      "zh-TW": "緋紅羈絆之鏡",
+      "en": "绯红羁绊之镜",
+      "ko": "绯红羁绊之镜"
+    },
+    "difficulty": {
+      "zh-CN": "4阶段",
+      "zh-TW": "4階段",
+      "en": "Phase 4",
+      "ko": "Phase 4"
+    },
+    "boss_ids": [2300353, 2300354, 2300355]
+  },
+  {
+    "dungeon_id": "20001",
+    "name": {
+      "zh-CN": "深淵重鑄·盧德萊",
+      "zh-TW": "深淵重鑄·盧德萊",
+      "en": "Reforged Abyss ",
+      "ko": "Reforged Abyss"
+    },
+    "difficulty": {
+      "zh-CN": "赛季1",
+      "zh-TW": "赛季1",
+      "en": "赛季1",
+      "ko": "赛季1"
+    },
+    "boss_ids": [2301006, 2301007, 2301014]
+  },
+  {
+    "dungeon_id": "20002",
+    "name": {
+      "zh-CN": "侵蚀·净化所",
+      "zh-TW": "侵蚀·净化所",
+      "en": "侵蚀·净化所",
+      "ko": "侵蚀·净化所"
+    },
+    "difficulty": {
+      "zh-CN": "赛季2",
+      "zh-TW": "赛季2",
+      "en": "赛季2",
+      "ko": "赛季2"
+    },
+    "boss_ids": [2301209, 2301207, 2301208]
+  },
+  {
+    "dungeon_id": "20003",
+    "name": {
+      "zh-CN": "穆斯费尔圣杯（困难）",
+      "zh-TW": "穆斯费尔圣杯（困难）",
+      "en": "穆斯费尔圣杯",
+      "ko": "穆斯费尔圣杯"
+    },
+    "difficulty": {
+      "zh-CN": "赛季3",
+      "zh-TW": "赛季3",
+      "en": "赛季3",
+      "ko": "赛季3"
+    },
+    "boss_ids": [2301059, 2301060]
+  },
+  {
+    "dungeon_id": "20004",
+    "name": {
+      "zh-CN": "穆斯费尔圣杯 （普通）",
+      "zh-TW": "穆斯费尔圣杯（普通）",
+      "en": "穆斯费尔圣杯",
+      "ko": "穆斯费尔圣杯"
+    },
+    "difficulty": {
+      "zh-CN": "赛季3",
+      "zh-TW": "赛季3",
+      "en": "赛季3",
+      "ko": "赛季3"
+    },
+    "boss_ids": [2301089, 2301090]
+  }
+]

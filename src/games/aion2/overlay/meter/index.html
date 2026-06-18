@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoiA DPS Overlay</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="title-bar">
+      <div class="title-bar__drag" id="drag-handle">
+        <span class="title-bar__label">DPS METER</span>
+      </div>
+      <button
+        class="title-bar__btn title-bar__pin"
+        id="pin-btn"
+        title="Always on top"
+        aria-pressed="false"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 17v5" />
+          <path
+            d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"
+          />
+        </svg>
+      </button>
+      <button class="title-bar__btn" id="reset-btn" title="Reset">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+          <path d="M3 3v5h5" />
+        </svg>
+      </button>
+      <button class="title-bar__btn" id="history-btn" title="History">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 7v14" />
+          <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+        </svg>
+      </button>
+      <button class="title-bar__btn" id="settings-btn" title="Settings">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+          />
+        </svg>
+      </button>
+      <button class="title-bar__close" id="close-btn" title="Close overlay">&times;</button>
+    </div>
+    <div class="scaled-overlay" id="scaled-overlay">
+      <div class="scaled-overlay__inner" id="scaled-overlay-inner">
+        <div class="content">
+          <div class="diag-message" id="diag-message"></div>
+          <div class="boss-row" id="boss-row" style="display: none">
+            <div class="boss-row__bar" id="boss-row-bar"></div>
+            <img
+              class="boss-row__icon"
+              id="boss-row-icon"
+              src="/aion2/bossIcon.png"
+              alt=""
+              onerror="this.style.display = 'none'"
+            />
+            <span class="boss-row__name" id="boss-row-name">--</span>
+            <span class="boss-row__hp" id="boss-row-hp">--</span>
+            <span class="boss-row__pct" id="boss-row-pct">--</span>
+          </div>
+          <div class="player-list" id="player-list"></div>
+        </div>
+        <div class="status-bar">
+          <div class="status-bar__left">
+            <svg
+              class="status-bar__icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span class="status-bar__duration" id="status-fight-time">--</span>
+            <svg
+              class="status-bar__icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M18 17V9" />
+              <path d="M13 17V5" />
+              <path d="M8 17v-3" />
+            </svg>
+            <span class="status-bar__dps" id="status-team-dps">--</span>
+          </div>
+          <div class="status-bar__right">
+            <svg
+              class="status-bar__icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 20h.01" />
+              <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+              <path d="M5 12.86a10 10 0 0 1 14 0" />
+              <path d="M1.5 8.94a16 16 0 0 1 21 0" />
+            </svg>
+            <span class="status-bar__ping" id="status-ping">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
