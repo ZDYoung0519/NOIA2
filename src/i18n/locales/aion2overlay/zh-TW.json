@@ -31,6 +31,7 @@
     "noRecordsToDelete": "沒有可刪除的記錄。",
     "deleteFailed": "刪除失敗。",
     "deletedCount": "已刪除 {{count}} 條記錄。",
+    "loginRequired": "請先在主介面登入後再上傳。",
     "noUnuploadedRecords": "沒有可上傳的記錄。",
     "noRecordToQueue": "沒有可上傳的記錄。"
   },

@@ -233,10 +233,21 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
   };
 }
 
+export async function isUserLoggedIn(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  return !!data?.session;
+}
+
 export async function uploadDpsDataBatch(
   records: BackendHistoryRecord[],
   options: UploadOptions = {}
 ) {
+  // Check login before uploading
+  const { data: session } = await supabase.auth.getSession();
+  if (!session?.session) {
+    throw new Error("Please log in first before uploading records.");
+  }
+
   const uploadedRecordIds: string[] = [];
   const skips: UploadSkip[] = [];
   const failures: UploadFailure[] = [];

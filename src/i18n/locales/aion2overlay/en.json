@@ -31,6 +31,7 @@
     "noRecordsToDelete": "No records to delete.",
     "deleteFailed": "Delete failed.",
     "deletedCount": "Deleted {{count}} record(s).",
+    "loginRequired": "Please log in first before uploading.",
     "noUnuploadedRecords": "No unuploaded records to queue.",
     "noRecordToQueue": "No record to queue."
   },

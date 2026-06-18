@@ -31,6 +31,7 @@
     "noRecordsToDelete": "삭제할 기록이 없습니다.",
     "deleteFailed": "삭제 실패.",
     "deletedCount": "{{count}}개 기록 삭제됨.",
+    "loginRequired": "먼저 로그인 후 업로드해 주세요.",
     "noUnuploadedRecords": "업로드할 기록이 없습니다.",
     "noRecordToQueue": "업로드할 기록이 없습니다."
   },

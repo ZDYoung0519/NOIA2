@@ -31,6 +31,7 @@
     "noRecordsToDelete": "没有可删除的记录。",
     "deleteFailed": "删除失败。",
     "deletedCount": "已删除 {{count}} 条记录。",
+    "loginRequired": "请先在主界面登录后再上传。",
     "noUnuploadedRecords": "没有可上传的记录。",
     "noRecordToQueue": "没有可上传的记录。"
   },

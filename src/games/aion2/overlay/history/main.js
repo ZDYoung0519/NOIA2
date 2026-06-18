@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { uploadDpsDataBatch } from "@/games/aion2/lib/upload-records-to-supbase";
+import { uploadDpsDataBatch, isUserLoggedIn } from "@/games/aion2/lib/upload-records-to-supbase";
 import { t, setLanguage } from "../../i18n.js";
 
 // ── DOM ──
@@ -111,6 +111,10 @@ document.getElementById("delete-all-btn").addEventListener("click", async () => 
 });
 
 $upload.addEventListener("click", async () => {
+  if (!(await isUserLoggedIn())) {
+    setUploadStatus(t("dps-history.loginRequired"), "error");
+    return;
+  }
   await uploadRecords(
     allRecords.filter((record) => !record.uploaded),
     t("dps-history.noUnuploadedRecords")
@@ -259,6 +263,10 @@ $list.addEventListener("click", async (e) => {
     const id = e.target.closest("[data-upload]").dataset.upload;
     const record = allRecords.find((r) => r.id === id);
     if (!record || record.uploaded) return;
+    if (!(await isUserLoggedIn())) {
+      setUploadStatus(t("dps-history.loginRequired"), "error");
+      return;
+    }
     await uploadRecords([record], t("dps-history.noRecordToQueue"));
     return;
   }
