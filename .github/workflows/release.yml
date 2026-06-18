@@ -68,6 +68,18 @@ jobs:
           echo "  1. ${PROXY_MANIFEST_URL}"
           echo "  2. ${RAW_MANIFEST_URL}"
 
+          # Verify pubkey was actually replaced
+          if grep -q "__TAURI_UPDATER_PUBKEY__" src-tauri/tauri.conf.json; then
+            echo "::error::PUBKEY PLACEHOLDER STILL PRESENT — secret TAURI_SIGNING_PUBLIC_KEY is empty or not set!"
+            exit 1
+          fi
+          if grep -q "__TAURI_UPDATER_ENDPOINT" src-tauri/tauri.conf.json; then
+            echo "::error::ENDPOINT PLACEHOLDER STILL PRESENT — sed replacement failed!"
+            exit 1
+          fi
+          echo "✓ Pubkey and endpoints verified — no placeholders remaining"
+          echo "Pubkey starts with: $(grep -o '"pubkey": "[^"]*"' src-tauri/tauri.conf.json | cut -c1-60)..."
+
       - name: Get release notes
         id: notes
         shell: bash
