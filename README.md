@@ -1,52 +1,78 @@
 <div align="center">
 
-# Tauri App Template
+<img src="./public/icon.png" alt="NOIA2" width="96" height="96" />
 
-English | [简体中文](./README.zh-CN.md)
+# NOIA2
 
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8DB?logo=tauri)](https://tauri.app/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+An elegant desktop companion for AION2 players, built around a lightweight real-time DPS overlay, battle history, rankings, and multi-window combat analysis.
 
-A modern desktop application template built with Tauri v2 + React 19 + TypeScript + shadcn/ui.
+[![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white)](https://tauri.app/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-backend-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/License-MIT-22C55E)](./LICENSE)
+
+[简体中文](./README.zh-CN.md) · English
 
 </div>
 
+---
+
+## What Is NOIA2?
+
+NOIA2 is a Windows desktop toolkit for AION2. It combines a Rust packet-capture backend with a polished Tauri + React interface, giving players a fast floating DPS meter, historical battle review, detail popups, and practical combat diagnostics without a heavy in-game UI.
+
+The project is designed for day-to-day play: open the meter, switch back to the game, and let the overlay follow your combat flow.
+
+## Highlights
+
+- **Lightweight floating DPS overlay** with two visual styles: Hunter Compact and Classic Bars.
+- **Real-time latency footer** with ping, CPU, memory, click-through lock, and ping history chart.
+- **Battle history and detail views** for reviewing target damage, skill breakdowns, and player contributions.
+- **Home dashboard** for recent characters, teammates, and battle target trends.
+- **Character scoring tools** for browsing equipment, stats, growth direction, and overall character strength.
+- **Damage rankings** for comparing personal and party performance across recorded encounters.
+- **Class statistics** for understanding class-level DPS distribution and combat trends.
+- **Multi-window workflow** for DPS, detail, settings, logs, guide dialog, and focused overlays.
+- **Rust capture pipeline** for packet capture, parsing, aggregation, diagnostics, and storage.
+- **User-tunable appearance** including opacity, scale, colors, nickname masking, target HP display, and class icon style.
+- **Global shortcuts, tray behavior, updater flow, and localization** built into the desktop app.
+
 ## Preview
 
-![App Screenshot](./screenshots/app.png)
+### Home Dashboard
 
-## Features
+![NOIA2 home dashboard](./docs/images/home.png)
 
-- ✨ **Modern Tech Stack** - Tauri v2 + React 19 + TypeScript + Vite
-- 🎨 **Beautiful UI Components** - Integrated shadcn/ui component library and Tailwind CSS v4
-- 🌓 **Dark Mode Support** - Built-in light/dark theme toggle
-- 🌍 **Internationalization** - i18next integration with English and Chinese support
-- 🖼️ **Custom Titlebar** - Frameless transparent window with drag, minimize, maximize, and close support
-- 🗂️ **Multi-Window Management** - Support for child windows, window lifecycle management, and delayed destruction
-- 🔔 **System Tray Integration** - Tray icon, menu, and window show/hide support
-- ⌨️ **Global Shortcuts** - Register global shortcuts that work even when app is not focused
-- 🔄 **Automated Release & Updates** - GitHub Actions build, GitHub Release publishing, and auto-update delivery based on `vX.Y.Z` tags
-- 📦 **Ready to Use** - Pre-configured with Prettier, ESLint, and TypeScript strict mode
-- 🚀 **Fast Development** - Vite HMR + Tauri hot reload
+### Lightweight DPS Overlay
 
-## Tech Stack
+![NOIA2 DPS overlay](./docs/images/dps.png)
 
-- **Desktop Framework**: [Tauri v2](https://tauri.app/)
-- **Frontend Framework**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **Build Tool**: [Vite](https://vite.dev/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Code Formatting**: [Prettier](https://prettier.io/)
+### DPS Detail View
 
-## Getting Started
+![NOIA2 DPS detail](./docs/images/dps_detail.png)
 
-### Prerequisites
+### Character Score
 
-- Node.js >= 18
-- pnpm >= 9
-- Rust >= 1.70
+![NOIA2 character score](./docs/images/character_score.png)
+
+### DPS Rankings
+
+![NOIA2 DPS rankings](./docs/images/dps_rank.png)
+
+### Class Statistics
+
+![NOIA2 class statistics](./docs/images/class_stats.png)
+
+## Quick Start
+
+### Requirements
+
+- Windows
+- Node.js 18+
+- pnpm 9+
+- Rust toolchain
+- Npcap for packet capture
 
 ### Install Dependencies
 
@@ -54,139 +80,97 @@ A modern desktop application template built with Tauri v2 + React 19 + TypeScrip
 pnpm install
 ```
 
-### Development Mode
+### Run In Development
 
 ```bash
-pnpm tauri dev
+pnpm tauri:dev
 ```
 
-### Build for Production
+### Build Installer
 
 ```bash
-pnpm tauri build
+pnpm tauri:build
 ```
 
-### Version Management
+## Usage Guide
 
-`pnpm release:version` is the release entrypoint.
+NOIA2 includes a built-in guide when you open the lightweight DPS meter. The flow is:
+
+1. Install Npcap and keep the WinPcap-compatible option enabled.
+2. Enter the game and teleport once so NOIA2 can identify your character.
+3. Start fighting in a training or dungeon scenario. DPS data appears automatically.
+
+<p align="center">
+  <img src="./public/guide1.png" alt="Npcap setup guide" width="30%" />
+  <img src="./public/guide2.png" alt="Character detection guide" width="30%" />
+  <img src="./public/guide3.png" alt="Combat data guide" width="30%" />
+</p>
+
+## Feature Tour
+
+| Area             | What It Does                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| DPS Overlay      | Shows live damage, DPS, contribution percentage, class icon, server tag, and target timer.     |
+| Ping Footer      | Shows latency, CPU, memory, and a lock button for click-through overlay mode.                  |
+| Detail Window    | Opens skill and player details without interrupting the main overlay.                          |
+| History          | Saves battle snapshots locally and supports later review and upload status tracking.           |
+| Character Score  | Helps inspect character equipment, stats, and progression strength in a dedicated rating page. |
+| Rankings         | Provides damage ranking views, personal DPS comparison, and party performance review.          |
+| Class Statistics | Summarizes class-level combat trends so players can compare DPS distribution by class.         |
+| Settings         | Controls overlay style, scale, opacity, colors, shortcuts, and backend capture behavior.       |
+
+## Architecture
+
+```text
+NOIA2
+├─ src/                     React + TypeScript frontend
+│  ├─ components/           UI, dashboard, DPS panels, guide dialog
+│  ├─ hooks/                settings, translation, updater, user state
+│  ├─ lib/                  window helpers, storage, uploads, AION2 utilities
+│  ├─ pages/                multi-window routes
+│  └─ types/                shared frontend types
+├─ src-tauri/               Tauri v2 desktop shell and Rust backend
+│  ├─ src/dps_meter/        capture, parsing, calculator, models, storage
+│  ├─ src/plugins/          tray, focus tracking, window tracking, HTTP helpers
+│  └─ tauri.conf.json       desktop configuration
+├─ public/                  app images, guide images, class/skill assets
+├─ docs/                    updater, shortcut, and i18n docs
+└─ screenshots/             legacy screenshots
+```
+
+## Scripts
+
+```bash
+pnpm dev              # Start Vite only
+pnpm tauri:dev        # Start the desktop app in development
+pnpm build            # Type-check and build frontend
+pnpm tauri:build      # Build Windows installer
+pnpm lint             # Run ESLint
+pnpm format           # Format source files
+pnpm check            # Format check, lint, and full build
+```
+
+## Release Flow
 
 ```bash
 pnpm release:version
-pnpm release:version --lang zh
-pnpm release:version --lang en
 ```
 
-It interactively handles the release preflight and version bump flow:
-- Ensures the working tree is clean
-- Requires the current branch to be `main`
-- Verifies `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` are in sync
-- Checks that the target tag does not already exist locally or on `origin`
-- Updates all three version files together
-- Creates the release commit and `vX.Y.Z` tag
-- Optionally pushes the branch and tag
+The release script checks repository state, validates version consistency, creates the release commit, and tags the build. GitHub Actions can then produce installer and updater artifacts from release tags.
 
-## Adding shadcn/ui Components
+## Notes
 
-```bash
-pnpm dlx shadcn@latest add <component-name>
-```
+- The current capture workflow is tuned for Windows desktop usage.
+- Npcap is required for packet capture.
+- Some data is intentionally displayed transparently, including unknown actors or distant summon-related entries, so users can see what the parser actually observes.
+- Local storage is used for UI settings, recent character history, and DPS history.
 
-Examples:
+## Documentation
 
-```bash
-pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add input
-pnpm dlx shadcn@latest add dialog
-```
-
-## Code Formatting
-
-```bash
-pnpm format        # Format code
-pnpm format:check  # Check code formatting
-```
-
-## Project Structure
-
-```
-.
-├── src/                    # Frontend source code
-│   ├── components/         # React components
-│   │   └── ui/            # shadcn/ui components
-│   ├── i18n/              # Internationalization
-│   │   ├── index.ts       # i18n configuration
-│   │   └── locales/       # Translation files
-│   ├── lib/               # Utility functions
-│   ├── pages/             # Page components
-│   │   ├── home.tsx       # Main window page
-│   │   ├── about.tsx      # About window page
-│   │   └── settings.tsx   # Settings window page
-│   └── main.tsx           # Frontend entry and pathname-based page selector
-├── src-tauri/             # Tauri/Rust backend
-│   ├── src/               # Rust source code
-│   └── tauri.conf.json    # Tauri configuration
-├── docs/                  # Documentation
-│   ├── AUTO_UPDATE.md     # Auto update guide
-│   ├── I18N.md            # Internationalization guide
-│   └── GLOBAL_SHORTCUT.md # Global shortcut guide
-├── components.json        # shadcn/ui configuration
-└── package.json
-```
-
-## CI/CD
-
-This project uses GitHub Actions for automated builds and releases.
-
-### Automated Release
-
-The workflow is triggered by pushing tags matching `v*` (for example `v0.1.0`).
-The recommended release path is to run `pnpm release:version`, which creates the matching `vX.Y.Z` tag for you.
-
-**Manual tag push example:**
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-### Build Outputs
-
-The workflow generates:
-- **NSIS Installer** - Windows installation package
-- **Updater Files** - `latest.json` for auto-update support
-
-### Auto Update Setup
-
-To enable automatic updates, you need to:
-
-1. Generate signing keys: `pnpm tauri signer generate -w ~/.tauri/myapp.key`
-2. Add GitHub secrets: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-
-**Note:** The public key and update endpoint placeholders in `src-tauri/tauri.conf.json` are replaced by GitHub Actions during the release build. Auto update depends on the published GitHub Release exposing `latest.json` from the latest release assets.
-
-See [Auto Update Configuration](./docs/AUTO_UPDATE.md) for detailed instructions.
-
-### Code Signing (Optional)
-
-To enable code signing, add these secrets in your GitHub repository settings:
-- `TAURI_SIGNING_PRIVATE_KEY` - Private key content
-- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - Private key password
-
-The build will work without these secrets, but the installer won't be signed.
-
-### Multi-Platform Support
-
-To enable macOS and Linux builds, uncomment the corresponding platform configurations in `.github/workflows/release.yml`.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/)
-- [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
-- [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=kitlib/tauri-app-template&type=Date)](https://star-history.com/#kitlib/tauri-app-template&Date)
+- [Auto Update](./docs/AUTO_UPDATE.md)
+- [Global Shortcut](./docs/GLOBAL_SHORTCUT.md)
+- [I18N](./docs/I18N.md)
 
 ## License
 
-MIT
+MIT. See [LICENSE](./LICENSE).

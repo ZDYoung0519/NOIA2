@@ -1,52 +1,78 @@
 <div align="center">
 
-# Tauri App Template
+<img src="./public/icon.png" alt="NOIA2" width="96" height="96" />
 
-[English](./README.md) | 简体中文
+# NOIA2
 
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8DB?logo=tauri)](https://tauri.app/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+面向 AION2 玩家的高性能桌面辅助工具：轻量 DPS 悬浮窗、战斗历史、角色评分、伤害排行、职业统计、多窗口详情分析，一站式完成。
 
-基于 Tauri v2 + React 19 + TypeScript + shadcn/ui 的桌面应用模板。
+[![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white)](https://tauri.app/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-Backend-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/License-MIT-22C55E)](./LICENSE)
+
+简体中文 · [English](./README.md)
 
 </div>
 
-## 预览
+---
 
-![应用截图](./screenshots/app.png)
+## 项目简介
 
-## 特点
+NOIA2 是一个为 AION2 设计的 Windows 桌面工具。它使用 Rust 后端完成网络数据捕获、解析、聚合和诊断，再通过 Tauri + React 提供轻量、清晰、可配置的桌面界面。
 
-- ✨ **现代化技术栈** - Tauri v2 + React 19 + TypeScript + Vite
-- 🎨 **精美 UI 组件** - 集成 shadcn/ui 组件库和 Tailwind CSS v4
-- 🌓 **暗色模式支持** - 内置亮色/暗色主题切换
-- 🌍 **国际化支持** - 集成 i18next，支持中英文切换
-- 🖼️ **自定义标题栏** - 无边框透明窗口，支持拖拽、最小化、最大化、关闭
-- 🗂️ **多窗口管理** - 支持创建子窗口、窗口生命周期管理、延迟销毁机制
-- 🔔 **系统托盘集成** - 支持托盘图标、菜单和窗口隐藏/显示
-- ⌨️ **全局快捷键** - 支持注册全局快捷键，应用未聚焦时也能响应
-- 🔄 **自动发布与更新** - 支持基于 `vX.Y.Z` 标签的 GitHub Actions 自动构建、Release 发布与自动更新
-- 📦 **开箱即用** - 预配置 Prettier、ESLint 和 TypeScript 严格模式
-- 🚀 **快速开发** - Vite HMR + Tauri 热重载
+它的目标很简单：打开水表，切回游戏，让悬浮窗自然跟随你的战斗节奏，同时提供战后复盘、排行对比和角色成长参考。
 
-## 技术栈
+## 核心亮点
 
-- **桌面框架**: [Tauri v2](https://tauri.app/)
-- **前端框架**: [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **构建工具**: [Vite](https://vite.dev/)
-- **UI 组件**: [shadcn/ui](https://ui.shadcn.com/)
-- **样式方案**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **代码格式化**: [Prettier](https://prettier.io/)
+- **轻量 DPS 悬浮窗**：支持 Hunter Compact 与 Classic Bars 两种视觉风格。
+- **实时延迟底栏**：显示 ping、CPU、内存，并支持点击穿透锁定和延迟曲线。
+- **战斗详情窗口**：查看玩家伤害、技能明细、目标信息和历史快照。
+- **本地战斗历史**：自动记录有效战斗，支持后续复盘与上传状态标记。
+- **角色评分工具**：集中查看角色装备、属性、成长方向和综合强度。
+- **伤害排行页面**：用于对比个人 DPS、队伍表现和历史战斗数据。
+- **职业统计分析**：展示不同职业的 DPS 分布和整体战斗趋势。
+- **首页数据看板**：展示最近角色、最近队友、目标 DPS 历史趋势。
+- **多窗口协作**：DPS、详情、设置、日志、指南窗口独立协同。
+- **高度可配置**：颜色、透明度、缩放、昵称打码、首领血条、职业图标样式等均可调整。
+- **桌面能力完整**：全局快捷键、系统托盘、自动更新、自定义标题栏和多语言支持。
 
-## 开始使用
+## 界面预览
+
+### 首页看板
+
+![NOIA2 首页看板](./public/home.png)
+
+### 轻量 DPS 悬浮窗
+
+![NOIA2 DPS 悬浮窗](./public/dps.png)
+
+### DPS 详情窗口
+
+![NOIA2 DPS 详情](./public/dps_detail.png)
+
+### 角色评分
+
+![NOIA2 角色评分](./public/character_score.png)
+
+### 伤害排行
+
+![NOIA2 伤害排行](./public/dps_rank.png)
+
+### 职业统计
+
+![NOIA2 职业统计](./public/class_stats.png)
+
+## 快速开始
 
 ### 环境要求
 
-- Node.js >= 18
-- pnpm >= 9
-- Rust >= 1.70
+- Windows
+- Node.js 18+
+- pnpm 9+
+- Rust toolchain
+- Npcap，用于网络数据捕获
 
 ### 安装依赖
 
@@ -54,139 +80,111 @@
 pnpm install
 ```
 
-### 开发模式
+### 开发运行
 
 ```bash
-pnpm tauri dev
+pnpm tauri:dev
 ```
 
-### 构建发布
+### 构建安装包
 
 ```bash
-pnpm tauri build
+pnpm tauri:build
 ```
 
-### 版本管理
+## 使用指引
 
-`pnpm release:version` 是版本发布的唯一入口。
+打开新版轻量水表时，应用内会显示完整使用指南。基本流程如下：
+
+1. 安装 Npcap，并保持 WinPcap 兼容选项勾选。
+2. 进入游戏后传送一次奇斯克，让 NOIA2 识别你的角色。
+3. 进行打桩或副本战斗，DPS 数据会自动显示。
+
+<p align="center">
+  <img src="./public/guide1.png" alt="Npcap 安装说明" width="30%" />
+  <img src="./public/guide2.png" alt="角色识别说明" width="30%" />
+  <img src="./public/guide3.png" alt="战斗数据显示说明" width="30%" />
+</p>
+
+## 功能一览
+
+| 模块 | 说明 |
+| --- | --- |
+| DPS 悬浮窗 | 展示实时伤害、秒伤、占比、职业图标、服务器信息和目标计时。 |
+| 延迟底栏 | 展示 ping、CPU、内存，并提供点击穿透锁定。 |
+| 详情窗口 | 查看玩家技能明细与战斗详情，不打断主水表显示。 |
+| 历史记录 | 保存本地战斗快照，支持后续查看和上传状态追踪。 |
+| 角色评分 | 查看角色装备、属性、养成方向和综合评分表现。 |
+| 伤害排行 | 对比个人 DPS、队伍输出和历史战斗表现。 |
+| 职业统计 | 汇总不同职业的 DPS 分布、平均表现和战斗趋势。 |
+| 设置页面 | 调整悬浮窗外观、快捷键、捕获参数和数据过滤规则。 |
+
+## 常见问题
+
+**wifi 图标没有延迟？**  
+请确保已经安装 Npcap，并勾选第三个选项。如果仍然没有延迟数据，通常是当前加速器不支持。
+
+**为什么打桩没数据？**  
+请确保已经安装 Npcap，并且传送识别到了自己的角色。
+
+**为什么副本中显示未知，或者出现多个角色？**  
+因为你离队友太远时，召唤物可能统计不到具体归属。这对你自己的数据没有影响，自己是召唤职业也不影响。收费水表通常默认隐藏这些数据，本软件为了保持严谨会公开显示。
+
+**其它异常如何处理？**  
+下载最新安装包。重新安装前建议先卸载旧版本，并清空所有数据。
+
+## 技术架构
+
+```text
+NOIA2
+├─ src/                     React + TypeScript 前端
+│  ├─ components/           UI、首页组件、DPS 面板、指南弹窗
+│  ├─ hooks/                设置、翻译、更新、用户状态
+│  ├─ lib/                  窗口工具、存储、上传、AION2 工具函数
+│  ├─ pages/                多窗口页面路由
+│  └─ types/                前端共享类型
+├─ src-tauri/               Tauri v2 桌面壳与 Rust 后端
+│  ├─ src/dps_meter/        捕获、解析、计算、模型、存储
+│  ├─ src/plugins/          托盘、焦点跟随、窗口跟随、HTTP 工具
+│  └─ tauri.conf.json       桌面端配置
+├─ public/                  应用图片、指南图片、职业/技能资源
+├─ docs/                    自动更新、快捷键、国际化文档
+└─ screenshots/             历史截图
+```
+
+## 常用脚本
+
+```bash
+pnpm dev              # 仅启动 Vite
+pnpm tauri:dev        # 启动桌面开发环境
+pnpm build            # 类型检查并构建前端
+pnpm tauri:build      # 构建 Windows 安装包
+pnpm lint             # 运行 ESLint
+pnpm format           # 格式化源码
+pnpm check            # 格式检查、lint 与完整构建
+```
+
+## 发布流程
 
 ```bash
 pnpm release:version
-pnpm release:version --lang zh
-pnpm release:version --lang en
 ```
 
-它会交互式完成发布前检查和版本更新流程：
-- 确保工作区干净
-- 强制要求当前分支为 `main`
-- 校验 `package.json`、`src-tauri/tauri.conf.json` 和 `src-tauri/Cargo.toml` 的版本一致
-- 检查目标 tag 是否已在本地或远端 `origin` 存在
-- 同步更新这三个版本文件
-- 创建发布提交和 `vX.Y.Z` tag
-- 可选地推送分支和 tag
+发布脚本会检查工作区状态、校验版本一致性、创建发布提交，并生成对应的 `vX.Y.Z` 标签。之后可由 GitHub Actions 构建安装包和自动更新产物。
 
-## 添加 shadcn/ui 组件
+## 补充说明
 
-```bash
-pnpm dlx shadcn@latest add <component-name>
-```
+- 当前捕获流程主要面向 Windows 桌面环境。
+- Npcap 是抓包必需依赖。
+- 本项目会尽量透明地显示解析结果，包括未知角色或远距离召唤物相关条目。
+- UI 设置、最近角色历史和 DPS 历史会保存在本地存储中。
 
-示例：
+## 相关文档
 
-```bash
-pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add input
-pnpm dlx shadcn@latest add dialog
-```
-
-## 代码格式化
-
-```bash
-pnpm format        # 格式化代码
-pnpm format:check  # 检查代码格式
-```
-
-## 项目结构
-
-```
-.
-├── src/                    # 前端源码
-│   ├── components/         # React 组件
-│   │   └── ui/            # shadcn/ui 组件
-│   ├── i18n/              # 国际化
-│   │   ├── index.ts       # i18n 配置
-│   │   └── locales/       # 翻译文件
-│   ├── lib/               # 工具函数
-│   ├── pages/             # 页面组件
-│   │   ├── home.tsx       # 主窗口页面
-│   │   ├── about.tsx      # 关于窗口页面
-│   │   └── settings.tsx   # 设置窗口页面
-│   └── main.tsx           # 前端入口和基于 pathname 的页面选择器
-├── src-tauri/             # Tauri/Rust 后端
-│   ├── src/               # Rust 源码
-│   └── tauri.conf.json    # Tauri 配置
-├── docs/                  # 文档
-│   ├── AUTO_UPDATE.zh-CN.md # 自动更新指南
-│   ├── I18N.zh-CN.md      # 国际化指南
-│   └── GLOBAL_SHORTCUT.zh-CN.md # 全局快捷键指南
-├── components.json        # shadcn/ui 配置
-└── package.json
-```
-
-## CI/CD
-
-本项目使用 GitHub Actions 实现自动化构建和发布。
-
-### 自动化发布
-
-工作流会在推送符合 `v*` 格式的标签时触发，例如 `v0.1.0`。
-推荐通过 `pnpm release:version` 发版，它会自动创建匹配的 `vX.Y.Z` tag。
-
-**手动创建并推送标签示例：**
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-### 构建产物
-
-工作流会生成：
-- **NSIS 安装包** - Windows 安装程序
-- **更新文件** - `latest.json` 用于自动更新支持
-
-### 自动更新配置
-
-要启用自动更新功能，需要：
-
-1. 生成签名密钥：`pnpm tauri signer generate -w ~/.tauri/myapp.key`
-2. 添加 GitHub Secrets：`TAURI_SIGNING_PRIVATE_KEY` 和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-
-**注意：** `src-tauri/tauri.conf.json` 中的公钥和更新端点占位符会在发布构建期间由 GitHub Actions 自动替换。自动更新依赖已发布的 GitHub Release 对外提供最新版本的 `latest.json` 资源。
-
-详细配置说明请查看 [自动更新配置文档](./docs/AUTO_UPDATE.zh-CN.md)。
-
-### 代码签名（可选）
-
-如需启用代码签名，在 GitHub 仓库设置中添加以下 Secrets：
-- `TAURI_SIGNING_PRIVATE_KEY` - 私钥内容
-- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - 私钥密码
-
-不配置这些 Secrets 也能正常构建，只是安装包不会被签名。
-
-### 多平台支持
-
-如需启用 macOS 和 Linux 构建，取消 `.github/workflows/release.yml` 中对应平台配置的注释即可。
-
-## IDE 推荐
-
-- [VS Code](https://code.visualstudio.com/)
-- [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
-- [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- [自动更新](./docs/AUTO_UPDATE.zh-CN.md)
+- [全局快捷键](./docs/GLOBAL_SHORTCUT.zh-CN.md)
+- [国际化](./docs/I18N.zh-CN.md)
 
 ## License
 
-MIT
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=kitlib/tauri-app-template&type=Date)](https://star-history.com/#kitlib/tauri-app-template&Date)
+MIT. See [LICENSE](./LICENSE).
