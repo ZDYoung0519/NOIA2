@@ -1,0 +1,136 @@
+name: "publish"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # - platform: "macos-latest"
+          #   args: "--target aarch64-apple-darwin"
+          # - platform: "macos-latest"
+          #   args: "--target x86_64-apple-darwin"
+          # - platform: "ubuntu-22.04"
+          #   args: ""
+          - platform: "windows-latest"
+            args: "--bundles nsis,updater"
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure updater
+        shell: bash
+        run: |
+          REPO="${{ github.repository }}"
+          RAW_MANIFEST_URL="https://github.com/${REPO}/releases/latest/download/latest.json"
+          PROXY_MANIFEST_RAW_URL="https://github.com/${REPO}/releases/latest/download/latest-proxy.json"
+          PROXY_MANIFEST_URL="https://gh-proxy.com/${PROXY_MANIFEST_RAW_URL}"
+          PUBKEY="${{ secrets.TAURI_SIGNING_PUBLIC_KEY }}"
+
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_1__|${PROXY_MANIFEST_URL}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_ENDPOINT_2__|${RAW_MANIFEST_URL}|g" src-tauri/tauri.conf.json
+          sed -i.bak "s|__TAURI_UPDATER_PUBKEY__|${PUBKEY}|g" src-tauri/tauri.conf.json
+
+          echo "Updater configured with endpoints:"
+          echo "  1. ${PROXY_MANIFEST_URL}"
+          echo "  2. ${RAW_MANIFEST_URL}"
+
+          # Verify pubkey was actually replaced
+          if grep -q "__TAURI_UPDATER_PUBKEY__" src-tauri/tauri.conf.json; then
+            echo "::error::PUBKEY PLACEHOLDER STILL PRESENT — secret TAURI_SIGNING_PUBLIC_KEY is empty or not set!"
+            exit 1
+          fi
+          if grep -q "__TAURI_UPDATER_ENDPOINT" src-tauri/tauri.conf.json; then
+            echo "::error::ENDPOINT PLACEHOLDER STILL PRESENT — sed replacement failed!"
+            exit 1
+          fi
+          echo "✓ Pubkey and endpoints verified — no placeholders remaining"
+          echo "Pubkey starts with: $(grep -o '"pubkey": "[^"]*"' src-tauri/tauri.conf.json | cut -c1-60)..."
+
+      - name: Get release notes
+        id: notes
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          NOTES=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
+
+          if [ -z "$NOTES" ]; then
+            NOTES="See assets to download."
+          fi
+
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build the project
+        uses: tauri-apps/tauri-action@v0
+        id: tauri-action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "App v__VERSION__"
+          releaseBody: ${{ steps.notes.outputs.notes }}
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+          retryAttempts: 3
+
+      - name: Generate proxy updater manifest
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p updater-manifest
+          gh release download "${GITHUB_REF_NAME}" --pattern "latest.json" --dir updater-manifest
+          node scripts/generate-proxy-updater-manifest.mjs "updater-manifest/latest.json" "https://gh-proxy.com/" | tee proxy-manifest-paths.txt
+
+      - name: Upload proxy updater manifest
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          while IFS= read -r manifest; do
+            if [ -n "$manifest" ]; then
+              gh release upload "${GITHUB_REF_NAME}" "$manifest" --clobber
+            fi
+          done < proxy-manifest-paths.txt

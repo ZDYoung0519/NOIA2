@@ -1,0 +1,3386 @@
+[
+  {
+    "boardId": 45,
+    "nodeId": 450054,
+    "name": "",
+    "row": 4,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450055,
+    "name": "首領傷害耐性",
+    "row": 4,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450052,
+    "name": "PVE命中、PVE迴避",
+    "row": 4,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450053,
+    "name": "",
+    "row": 4,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450050,
+    "name": "PVE攻擊力",
+    "row": 4,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450051,
+    "name": "首領防禦力",
+    "row": 4,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450048,
+    "name": "",
+    "row": 4,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450049,
+    "name": "PVE命中",
+    "row": 4,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450062,
+    "name": "首領防禦力",
+    "row": 5,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450063,
+    "name": "首領攻擊力",
+    "row": 5,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450060,
+    "name": "",
+    "row": 4,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450061,
+    "name": "PVE命中、PVE迴避",
+    "row": 5,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450058,
+    "name": "",
+    "row": 4,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450059,
+    "name": "PVE迴避",
+    "row": 4,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450056,
+    "name": "",
+    "row": 4,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450057,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 4,
+    "col": 12,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450070,
+    "name": "PVE防禦力",
+    "row": 5,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450071,
+    "name": "",
+    "row": 5,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450068,
+    "name": "",
+    "row": 5,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450069,
+    "name": "",
+    "row": 5,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450066,
+    "name": "",
+    "row": 5,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450067,
+    "name": "PVE防禦力",
+    "row": 5,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450064,
+    "name": "首領傷害耐性",
+    "row": 5,
+    "col": 4,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450065,
+    "name": "",
+    "row": 5,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450078,
+    "name": "",
+    "row": 6,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450079,
+    "name": "PVE迴避",
+    "row": 6,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450076,
+    "name": "PVE防禦力",
+    "row": 6,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450077,
+    "name": "",
+    "row": 6,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450074,
+    "name": "首領傷害增幅",
+    "row": 5,
+    "col": 14,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450075,
+    "name": "",
+    "row": 5,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450072,
+    "name": "PVE命中",
+    "row": 5,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450073,
+    "name": "首領防禦力",
+    "row": 5,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450086,
+    "name": "",
+    "row": 6,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450087,
+    "name": "PVE攻擊力",
+    "row": 6,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450084,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 6,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450085,
+    "name": "首領攻擊力",
+    "row": 6,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450082,
+    "name": "PVE迴避",
+    "row": 6,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450083,
+    "name": "最大生命力",
+    "row": 6,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450080,
+    "name": "",
+    "row": 6,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450081,
+    "name": "首領傷害增幅",
+    "row": 6,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450094,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 7,
+    "col": 4,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450095,
+    "name": "首領防禦力",
+    "row": 7,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450092,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 7,
+    "col": 2,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450093,
+    "name": "PVE命中",
+    "row": 7,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450090,
+    "name": "",
+    "row": 6,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450091,
+    "name": "最大精神力",
+    "row": 7,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450088,
+    "name": "",
+    "row": 6,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450089,
+    "name": "首領攻擊力",
+    "row": 6,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450102,
+    "name": "PVE迴避",
+    "row": 7,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450103,
+    "name": "PVE防禦力",
+    "row": 7,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450100,
+    "name": "首領防禦力",
+    "row": 7,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450101,
+    "name": "首領傷害耐性",
+    "row": 7,
+    "col": 11,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450098,
+    "name": "PVE攻擊力",
+    "row": 7,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450099,
+    "name": "",
+    "row": 7,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450096,
+    "name": "首領攻擊力",
+    "row": 7,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450097,
+    "name": "",
+    "row": 7,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450110,
+    "name": "",
+    "row": 8,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450111,
+    "name": "PVE命中",
+    "row": 8,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450108,
+    "name": "最大生命力",
+    "row": 8,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450109,
+    "name": "",
+    "row": 8,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450106,
+    "name": "PVE傷害耐性",
+    "row": 8,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450107,
+    "name": "",
+    "row": 8,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450104,
+    "name": "PVE命中、PVE迴避",
+    "row": 7,
+    "col": 14,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450105,
+    "name": "PVE攻擊力",
+    "row": 7,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450118,
+    "name": "最大精神力",
+    "row": 8,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450119,
+    "name": "",
+    "row": 8,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450116,
+    "name": "",
+    "row": 8,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450117,
+    "name": "",
+    "row": 8,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450114,
+    "name": "PVE防禦力",
+    "row": 8,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450115,
+    "name": "PVE命中",
+    "row": 8,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450112,
+    "name": "PVE防禦力",
+    "row": 8,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450113,
+    "name": "艾瑞爾 - 開始",
+    "row": 8,
+    "col": 8,
+    "grade": "None",
+    "type": "Start",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Start_Sprite.png",
+    "effectList": [
+      {
+        "desc": ""
+      }
+    ],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450126,
+    "name": "首領防禦力",
+    "row": 9,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450127,
+    "name": "",
+    "row": 9,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450124,
+    "name": "PVE迴避",
+    "row": 9,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450125,
+    "name": "首領傷害耐性",
+    "row": 9,
+    "col": 5,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450122,
+    "name": "PVE命中、PVE迴避",
+    "row": 9,
+    "col": 2,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450123,
+    "name": "PVE防禦力",
+    "row": 9,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450120,
+    "name": "PVE傷害耐性",
+    "row": 8,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450121,
+    "name": "PVE攻擊力",
+    "row": 9,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450134,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 9,
+    "col": 14,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450135,
+    "name": "最大生命力",
+    "row": 9,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450132,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 9,
+    "col": 12,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450133,
+    "name": "PVE命中",
+    "row": 9,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450130,
+    "name": "首領攻擊力",
+    "row": 9,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450131,
+    "name": "首領防禦力",
+    "row": 9,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450128,
+    "name": "PVE攻擊力",
+    "row": 9,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450129,
+    "name": "",
+    "row": 9,
+    "col": 9,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450142,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 10,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450143,
+    "name": "最大精神力",
+    "row": 10,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450140,
+    "name": "",
+    "row": 10,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450141,
+    "name": "首領攻擊力",
+    "row": 10,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450138,
+    "name": "",
+    "row": 10,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450139,
+    "name": "PVE攻擊力",
+    "row": 10,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450136,
+    "name": "",
+    "row": 10,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450137,
+    "name": "首領攻擊力",
+    "row": 10,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450150,
+    "name": "PVE防禦力",
+    "row": 10,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450151,
+    "name": "",
+    "row": 11,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450148,
+    "name": "",
+    "row": 10,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450149,
+    "name": "",
+    "row": 10,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450146,
+    "name": "",
+    "row": 10,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450147,
+    "name": "PVE迴避",
+    "row": 10,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450144,
+    "name": "PVE迴避",
+    "row": 10,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450145,
+    "name": "首領傷害增幅",
+    "row": 10,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450158,
+    "name": "",
+    "row": 11,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450159,
+    "name": "PVE防禦力",
+    "row": 11,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450156,
+    "name": "PVE防禦力",
+    "row": 11,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450157,
+    "name": "",
+    "row": 11,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450154,
+    "name": "PVE命中",
+    "row": 11,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450155,
+    "name": "",
+    "row": 11,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450152,
+    "name": "首領傷害增幅",
+    "row": 11,
+    "col": 2,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450153,
+    "name": "首領防禦力",
+    "row": 11,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450166,
+    "name": "",
+    "row": 12,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450167,
+    "name": "PVE迴避",
+    "row": 12,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450164,
+    "name": "首領防禦力",
+    "row": 11,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450165,
+    "name": "PVE命中、PVE迴避",
+    "row": 11,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450162,
+    "name": "首領傷害耐性",
+    "row": 11,
+    "col": 12,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450163,
+    "name": "首領攻擊力",
+    "row": 11,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450160,
+    "name": "",
+    "row": 11,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450161,
+    "name": "",
+    "row": 11,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450174,
+    "name": "PVE命中、PVE迴避",
+    "row": 12,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450175,
+    "name": "首領防禦力",
+    "row": 12,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450172,
+    "name": "",
+    "row": 12,
+    "col": 7,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450173,
+    "name": "",
+    "row": 12,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450170,
+    "name": "",
+    "row": 12,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450171,
+    "name": "首領傷害耐性",
+    "row": 12,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450168,
+    "name": "",
+    "row": 12,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450169,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 12,
+    "col": 4,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450182,
+    "name": "PVE命中",
+    "row": 13,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450183,
+    "name": "PVE防禦力",
+    "row": 13,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450180,
+    "name": "",
+    "row": 12,
+    "col": 15,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450181,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 13,
+    "col": 1,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450178,
+    "name": "",
+    "row": 12,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450179,
+    "name": "PVE攻擊力",
+    "row": 12,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450176,
+    "name": "PVE攻擊力",
+    "row": 12,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450177,
+    "name": "PVE命中",
+    "row": 12,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450190,
+    "name": "",
+    "row": 13,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450191,
+    "name": "",
+    "row": 13,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450188,
+    "name": "PVE迴避",
+    "row": 13,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450189,
+    "name": "首領攻擊力",
+    "row": 13,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450186,
+    "name": "首領防禦力",
+    "row": 13,
+    "col": 6,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450187,
+    "name": "PVE命中",
+    "row": 13,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450184,
+    "name": "PVE迴避",
+    "row": 13,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450185,
+    "name": "PVE攻擊力",
+    "row": 13,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450198,
+    "name": "首領傷害增幅",
+    "row": 14,
+    "col": 3,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450199,
+    "name": "",
+    "row": 14,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450196,
+    "name": "首領攻擊力",
+    "row": 14,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450197,
+    "name": "",
+    "row": 14,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450194,
+    "name": "首領傷害增幅",
+    "row": 13,
+    "col": 14,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450195,
+    "name": "PVE防禦力",
+    "row": 13,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450192,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 13,
+    "col": 12,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450193,
+    "name": "",
+    "row": 13,
+    "col": 13,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450206,
+    "name": "PVE防禦力",
+    "row": 14,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450207,
+    "name": "PVE迴避",
+    "row": 14,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450204,
+    "name": "PVE攻擊力",
+    "row": 14,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450205,
+    "name": "首領傷害耐性",
+    "row": 14,
+    "col": 10,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450202,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 14,
+    "col": 7,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450203,
+    "name": "",
+    "row": 14,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450200,
+    "name": "首領攻擊力",
+    "row": 14,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450201,
+    "name": "",
+    "row": 14,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450214,
+    "name": "首領防禦力",
+    "row": 15,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450215,
+    "name": "PVE命中、PVE迴避",
+    "row": 15,
+    "col": 5,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450212,
+    "name": "PVE攻擊力",
+    "row": 15,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450213,
+    "name": "PVE迴避",
+    "row": 15,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450210,
+    "name": "PVE命中",
+    "row": 14,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450211,
+    "name": "PVE傷害耐性",
+    "row": 15,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450208,
+    "name": "首領防禦力",
+    "row": 14,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450209,
+    "name": "",
+    "row": 14,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450222,
+    "name": "",
+    "row": 15,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450223,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 15,
+    "col": 13,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450220,
+    "name": "",
+    "row": 15,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450221,
+    "name": "",
+    "row": 15,
+    "col": 11,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450218,
+    "name": "PVE傷害增幅",
+    "row": 15,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450219,
+    "name": "PVE命中",
+    "row": 15,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450216,
+    "name": "",
+    "row": 15,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450217,
+    "name": "最大精神力",
+    "row": 15,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "精神力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450224,
+    "name": "首領攻擊力",
+    "row": 15,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450225,
+    "name": "PVE傷害增幅",
+    "row": 15,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450006,
+    "name": "",
+    "row": 1,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450007,
+    "name": "PVE命中",
+    "row": 1,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450004,
+    "name": "",
+    "row": 1,
+    "col": 4,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450005,
+    "name": "",
+    "row": 1,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450002,
+    "name": "首領攻擊力",
+    "row": 1,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450003,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 1,
+    "col": 3,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450001,
+    "name": "PVE傷害增幅",
+    "row": 1,
+    "col": 1,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450014,
+    "name": "PVE攻擊力",
+    "row": 1,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450015,
+    "name": "PVE傷害耐性",
+    "row": 1,
+    "col": 15,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害耐性 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450012,
+    "name": "首領防禦力",
+    "row": 1,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450013,
+    "name": "PVE迴避",
+    "row": 1,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450010,
+    "name": "",
+    "row": 1,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450011,
+    "name": "PVE命中、PVE迴避",
+    "row": 1,
+    "col": 11,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      },
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450008,
+    "name": "PVE傷害增幅",
+    "row": 1,
+    "col": 8,
+    "grade": "Unique",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Unique_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE傷害增幅 +2.5%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450009,
+    "name": "最大生命力",
+    "row": 1,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "生命力 +100"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450022,
+    "name": "PVE攻擊力",
+    "row": 2,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450023,
+    "name": "",
+    "row": 2,
+    "col": 8,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450020,
+    "name": "PVE防禦力",
+    "row": 2,
+    "col": 5,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450021,
+    "name": "首領傷害耐性",
+    "row": 2,
+    "col": 6,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害耐性 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450018,
+    "name": "首領防禦力",
+    "row": 2,
+    "col": 3,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450019,
+    "name": "PVE迴避",
+    "row": 2,
+    "col": 4,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450016,
+    "name": "PVE命中",
+    "row": 2,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450017,
+    "name": "",
+    "row": 2,
+    "col": 2,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450030,
+    "name": "首領攻擊力",
+    "row": 2,
+    "col": 15,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450031,
+    "name": "PVE防禦力",
+    "row": 3,
+    "col": 1,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450028,
+    "name": "首領傷害增幅",
+    "row": 2,
+    "col": 13,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450029,
+    "name": "",
+    "row": 2,
+    "col": 14,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450026,
+    "name": "首領攻擊力",
+    "row": 2,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450027,
+    "name": "",
+    "row": 2,
+    "col": 12,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450024,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 2,
+    "col": 9,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450025,
+    "name": "",
+    "row": 2,
+    "col": 10,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450038,
+    "name": "PVE迴避",
+    "row": 3,
+    "col": 8,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450039,
+    "name": "PVE命中",
+    "row": 3,
+    "col": 9,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450036,
+    "name": "",
+    "row": 3,
+    "col": 6,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450037,
+    "name": "首領攻擊力",
+    "row": 3,
+    "col": 7,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450034,
+    "name": "首領攻擊力、首領防禦力",
+    "row": 3,
+    "col": 4,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領攻擊力 +5"
+      },
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450035,
+    "name": "",
+    "row": 3,
+    "col": 5,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450032,
+    "name": "首領傷害增幅",
+    "row": 3,
+    "col": 2,
+    "grade": "Legend",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Legend_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領傷害增幅 +1%"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450033,
+    "name": "",
+    "row": 3,
+    "col": 3,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450046,
+    "name": "",
+    "row": 4,
+    "col": 1,
+    "grade": "None",
+    "type": "None",
+    "icon": "",
+    "effectList": [],
+    "open": 0
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450047,
+    "name": "PVE攻擊力",
+    "row": 4,
+    "col": 2,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450044,
+    "name": "PVE命中",
+    "row": 3,
+    "col": 14,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE命中 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450045,
+    "name": "PVE攻擊力、PVE防禦力",
+    "row": 3,
+    "col": 15,
+    "grade": "Rare",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Rare_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      },
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450042,
+    "name": "PVE迴避",
+    "row": 3,
+    "col": 12,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE迴避 +10"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450043,
+    "name": "PVE防禦力",
+    "row": 3,
+    "col": 13,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450040,
+    "name": "首領防禦力",
+    "row": 3,
+    "col": 10,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "首領防禦力 +50"
+      }
+    ],
+    "open": 1
+  },
+  {
+    "boardId": 45,
+    "nodeId": 450041,
+    "name": "PVE攻擊力",
+    "row": 3,
+    "col": 11,
+    "grade": "Common",
+    "type": "Stat",
+    "icon": "https://assets.playnccdn.com/static-aion2-gamedata/resources/UT_FWindow_Daevanion_Node_Common_Sprite.png",
+    "effectList": [
+      {
+        "desc": "PVE攻擊力 +5"
+      }
+    ],
+    "open": 1
+  }
+]

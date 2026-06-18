@@ -1,0 +1,269 @@
+{
+  "app": {
+    "title": "Tauri 应用模板",
+    "welcome": "欢迎使用 Tauri + React",
+    "description": "基于 Tauri v2、React 19 和 shadcn/ui 的现代桌面应用模板"
+  },
+  "greet": {
+    "title": "来自 Rust 的问候",
+    "description": "测试前端与 Tauri 后端的通信",
+    "placeholder": "输入你的名字...",
+    "button": "问候"
+  },
+  "about": {
+    "title": "关于",
+    "button": "关于",
+    "appName": "Tauri 应用模板",
+    "version": "版本",
+    "description": "基于 Tauri v2、React 19 和 shadcn/ui 构建的现代桌面应用模板。",
+    "features": "特性",
+    "feature1": "Tauri v2 - 轻量级桌面应用框架",
+    "feature2": "React 19 - 最新的 React 版本",
+    "feature3": "TypeScript - 类型安全",
+    "feature4": "Tailwind CSS v4 - 现代 CSS 框架",
+    "feature5": "shadcn/ui - 精美的 UI 组件",
+    "close": "关闭"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "language": {
+    "toggle": "切换语言",
+    "en": "English",
+    "zh": "中文"
+  },
+  "tray": {
+    "show": "显示窗口",
+    "quit": "退出"
+  },
+  "updater": {
+    "checkForUpdates": "检查更新",
+    "checking": "检查中...",
+    "checkFailed": "检查更新失败。",
+    "upToDate": "您正在使用最新版本！",
+    "updateAvailable": "发现新版本",
+    "downloading": "正在下载更新",
+    "installingVersion": "正在安装版本 {{version}}...",
+    "versionAvailable": "版本 {{version}} 可用。",
+    "releaseNotes": "更新说明：",
+    "later": "稍后",
+    "installNow": "立即安装"
+  },
+  "gameSelector": {
+    "selectGame": "切换游戏"
+  },
+  "dpsOverlay": {
+    "open": "打开 DPS 悬浮窗"
+  },
+  "settings": {
+    "title": "设置",
+    "button": "设置",
+    "close": "关闭",
+    "appearance": {
+      "title": "外观",
+      "description": "自定义应用的外观和语言",
+      "theme": "主题",
+      "themeDesc": "選擇淺色、深色或跟隨系統外觀，應用視窗會自動同步。",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "language": "语言",
+      "languageDesc": "切換介面語言，並同步到托盤選單和新開啟的視窗。"
+    },
+    "shortcut": {
+      "placeholder": "按下组合键设置",
+      "setSuccess": "已将快捷键设为 {{shortcut}}！",
+      "cleared": "已取消快捷键！"
+    },
+    "aion2": {
+      "title": "永恒之塔 2",
+      "description": "Aion 2 的 DPS 计量和悬浮窗设置",
+      "shortcuts": "快捷键",
+      "overlay": "悬浮窗",
+      "backend": "运行时",
+      "shortcutShowDpsOverlay": "显示/隐藏 DPS 悬浮窗",
+      "shortcutShowDpsOverlayDesc": "切换 DPS 悬浮窗的显示和隐藏",
+      "shortcutResetDpsMeter": "重置 DPS 统计",
+      "shortcutResetDpsMeterDesc": "重置所有战斗统计数据",
+      "overlayLocked": "锁定悬浮窗",
+      "overlayLockedDesc": "開啟後 DPS 面板會隱藏標題列並穿透滑鼠，方便遊戲內點擊；可透過設定或快捷鍵解除。",
+      "overlayAlwaysOnTop": "始終置頂",
+      "overlayAlwaysOnTopDesc": "開啟後 DPS 面板不會因遊戲失焦而自動隱藏，適合多螢幕或直播觀察情境。",
+      "overlayContentScale": "內容縮放",
+      "overlayContentScaleDesc": "只縮放 DPS 列表和底部狀態列，視窗高度會依縮放後內容重新計算。",
+      "overlayBackgroundOpacity": "背景透明度",
+      "overlayBackgroundOpacityDesc": "調整 DPS 面板內容區的背景透明度，數值越低越接近完全透明。",
+      "overlayMainPlayerColor": "自身角色颜色",
+      "overlayMainPlayerColorDesc": "用於標記自己的傷害條顏色，透明度會影響條形背景的明顯程度。",
+      "overlayOtherPlayerColor": "其他玩家颜色",
+      "overlayOtherPlayerColorDesc": "用於其他玩家的傷害條顏色，建議和自身角色顏色保持區分。",
+      "overlayShowPlayerName": "显示玩家名",
+      "overlayShowPlayerNameDesc": "關閉後列表中不顯示玩家名稱，只保留圖示、傷害和統計資訊。",
+      "overlayShowServer": "显示服务器",
+      "overlayShowServerDesc": "控制玩家名後方的伺服器標識，關閉後列表會更緊湊。",
+      "overlayShowDamage": "显示总伤害",
+      "overlayShowDamageDesc": "控制每行是否顯示累計總傷害，不影響 DPS 和百分比計算。",
+      "overlayShowDps": "显示秒伤",
+      "overlayShowDpsDesc": "控制每行是否顯示即時 DPS 數值，關閉後可以減少右側資訊密度。",
+      "overlayPctMode": "百分比模式",
+      "overlayPctModeDesc": "貢獻度按目前顯示列表計算，傷害占比按完整戰鬥總量計算。",
+      "overlayPctContribution": "贡献度",
+      "overlayPctShare": "伤害占比",
+      "overlayHideUnknownPlayers": "屏蔽未知角色",
+      "overlayHideUnknownPlayersDesc": "開啟後隱藏未識別到角色名的玩家，避免列表被 ID 記錄占滿。",
+      "overlayDetailWindowMode": "技能視窗顯示方式",
+      "overlayDetailWindowModeDesc": "點擊玩家查看技能詳情時，視窗跟隨懸浮窗或螢幕居中顯示。",
+      "overlayDetailWindowFollow": "跟隨",
+      "overlayDetailWindowCenter": "置中",
+      "autoHideEnabled": "跟随游戏自动隐藏",
+      "autoHideEnabledDesc": "開啟後只有 Aion2 或相關懸浮窗取得焦點時才顯示 DPS 面板。",
+      "bossOnly": "仅记录 Boss",
+      "bossOnlyDesc": "仅记录对 Boss 怪物的伤害",
+      "myMuzhuangOnly": "仅记录我的木桩",
+      "myMuzhuangOnlyDesc": "仅记录自己木桩的伤害数据",
+      "dpsSnapshotInterval": "快照間隔 (ms)",
+      "dpsSnapshotIntervalDesc": "控制 DPS 資料刷新頻率，間隔越短顯示越即時但開銷略高。",
+      "maxPacketSizeThreshold": "封包大小閾值",
+      "maxPacketSizeThresholdDesc": "忽略超過閾值的異常封包，減少解析錯誤或雜訊記錄。",
+      "enableResyncOnStall": "卡頓時自動重新同步",
+      "enableResyncOnStallDesc": "偵測到資料流停滯時嘗試重新同步，幫助恢復持續統計。"
+    }
+  },
+  "auth": {
+    "title": "登录",
+    "userFallback": "用户",
+    "signOut": "退出登录",
+    "membership": {
+      "loading": "正在加载会员状态",
+      "expiresAt": "订阅到期时间：{{date}}",
+      "permanent": "订阅到期时间：永久",
+      "inactive": "无订阅"
+    },
+    "signIn": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请输入密码",
+      "button": "登录",
+      "loadingButton": "登录中...",
+      "socialProviderText": "使用 {{provider}} 登录",
+      "linkText": "已经有账户？在此登录",
+      "description": "登录到你的个人账户（不登录注册也可以照常使用水表）"
+    },
+    "signUp": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "密码",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "请重复输入密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "passwordPlaceholder": "请设置密码",
+      "button": "注册",
+      "loadingButton": "注册中...",
+      "socialProviderText": "使用 {{provider}} 注册",
+      "linkText": "没有账号？去注册",
+      "confirmationText": "注册成功！请在本设备上检查并打开邮件中的链接，以激活账户",
+      "description": "注册一个新的账户来解锁云端功能和体验"
+    },
+    "forgottenPassword": {
+      "emailLabel": "邮箱地址",
+      "passwordLabel": "新密码",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送重置邮件",
+      "loadingButton": "发送中...",
+      "linkText": "忘记密码？",
+      "confirmationText": "请检查邮箱中的链接",
+      "description": "输入你的邮件地址，我们会给你发送一个重置密码的链接",
+      "backToSignIn": "返回登录"
+    },
+    "magicLink": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "button": "发送魔法链接",
+      "loadingButton": "发送中...",
+      "linkText": "使用魔法链接登录",
+      "confirmationText": "请检查邮箱中的登录链接"
+    },
+    "updatePassword": {
+      "passwordLabel": "新密码",
+      "passwordPlaceholder": "输入你的新密码",
+      "button": "设置新密码",
+      "loadingButton": "更新密码中...",
+      "confirmationText": "你的密码已经成功更新",
+      "description": "为你的账户设置一个新的密码",
+      "confirmPasswordLabel": "确认新密码",
+      "confirmPasswordPlaceholder": "重新输入你的密码"
+    },
+    "verifyOtp": {
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "请输入邮箱地址",
+      "phoneLabel": "手机号",
+      "phonePlaceholder": "请输入手机号",
+      "tokenLabel": "验证码",
+      "tokenPlaceholder": "请输入验证码",
+      "button": "验证",
+      "loadingButton": "验证中..."
+    },
+    "feedback": {
+      "deepLinkSuccess": "账号验证成功。",
+      "deepLinkFailed": "处理邮件链接失败，请重试。",
+      "recoveryReady": "验证完成，你现在可以设置新密码。",
+      "invalidCredentials": "邮箱或密码错误，或邮箱尚未验证。",
+      "userAlreadyExists": "该邮箱已注册，请直接登录。",
+      "resetEmailAlreadySent": "重置邮件已发送，请检查邮箱后稍后再试。",
+      "rateLimited": "短时间内操作过于频繁，请稍后再试。"
+    },
+    "validation": {
+      "invalidEmail": "请输入有效的邮箱地址。"
+    }
+  },
+  "releaseVersion": {
+    "options": {
+      "patch": "补丁版本",
+      "minor": "次版本",
+      "major": "主版本",
+      "promoteBeta": "将 beta 提升为正式版",
+      "nextBeta": "下一个 beta",
+      "nextPatchBeta": "下一个补丁 beta",
+      "custom": "自定义版本"
+    },
+    "prompts": {
+      "yesNoDefaultYes": " (Y/n): ",
+      "yesNoDefaultNo": " (y/N): ",
+      "enterChoice": "\n请输入选择 (1-{{max}}): ",
+      "enterCustomVersion": "请输入自定义版本号: ",
+      "confirmRelease": "是否继续更新版本并创建 tag？",
+      "pushNow": "是否立即推送提交和 tag 到远程仓库？"
+    },
+    "messages": {
+      "currentVersion": "当前版本：{{version}}",
+      "selectNextVersion": "请选择下一个版本：",
+      "invalidChoice": "选择无效，默认使用第一个候选版本。",
+      "summaryTitle": "发布摘要：",
+      "summaryBranch": "- 分支：{{branch}}",
+      "summaryCurrentVersion": "- 当前版本：{{version}}",
+      "summaryNextVersion": "- 新版本：{{version}}",
+      "summaryTag": "- Tag：{{tag}}",
+      "cancelled": "已取消。",
+      "createdCommitAndTag": "已成功创建提交和 tag。",
+      "pushCompleted": "推送完成。",
+      "pushSkipped": "已跳过推送，你之后可以执行：",
+      "pushBranchLater": "git push origin {{branch}}",
+      "pushTagLater": "git push origin {{tag}}"
+    },
+    "errors": {
+      "unsupportedVersion": "不支持的版本格式：{{version}}",
+      "cargoVersionNotFound": "未能在 Cargo.toml 中找到版本字段",
+      "cargoPackageNameNotFound": "未能在 Cargo.toml 中找到包名字段",
+      "cargoLockVersionNotFound": "未能在 Cargo.lock 中找到版本字段",
+      "releaseStagingIncomplete": "发布暂存文件不完整，当前已暂存：{{stagedFiles}}",
+      "workingTreeNotClean": "当前工作区不干净，请先提交或暂存现有改动。",
+      "tagExists": "Tag {{tag}} 已存在。",
+      "remoteTagExists": "远程 origin 上已存在 Tag {{tag}}。",
+      "branchNotMain": "只能在 main 分支创建发布，当前分支：{{branch}}",
+      "versionMismatch": "检测到版本不一致：package.json={{packageVersion}}，tauri.conf.json={{tauriVersion}}，Cargo.toml={{cargoVersion}}，Cargo.lock={{cargoLockVersion}}",
+      "packageVersionInvalid": "package.json 中的版本号缺失或无效",
+      "tauriVersionInvalid": "src-tauri/tauri.conf.json 中的版本号缺失或无效",
+      "invalidLang": "无效的 --lang 参数，请使用 zh 或 en。"
+    }
+  }
+}

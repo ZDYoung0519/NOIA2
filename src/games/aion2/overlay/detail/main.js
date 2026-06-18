@@ -1,0 +1,378 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { LogicalSize } from "@tauri-apps/api/dpi";
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { t, setLanguage } from "../../i18n.js";
+import skillsEn from "@/i18n/locales/aion2skills/en.json";
+import skillsZhCN from "@/i18n/locales/aion2skills/zh-CN.json";
+import skillsZhTW from "@/i18n/locales/aion2skills/zh-TW.json";
+import skillsKo from "@/i18n/locales/aion2skills/ko.json";
+import serversData from "@/games/aion2/data/servers.json";
+
+const SKILLS = { en: skillsEn, "zh-CN": skillsZhCN, "zh-TW": skillsZhTW, ko: skillsKo };
+let currentSkills = skillsEn;
+
+// ── Server name lookup ──
+const serverMap = new Map(serversData.map((s) => [s.serverId, s.serverName]));
+function getServerName(serverId) {
+  return serverMap.get(Number(serverId)) || serverId || "";
+}
+
+// ── DOM ──
+const $modeBadge = document.getElementById("mode-badge");
+const $content = document.getElementById("detail-content");
+const $titleBar = document.querySelector(".detail-titlebar");
+const $playerIcon = document.getElementById("player-icon");
+const $playerName = document.getElementById("player-name");
+const $playerServer = document.getElementById("player-server");
+
+document.getElementById("close-btn").addEventListener("click", async () => {
+  try {
+    await getCurrentWindow().close();
+  } catch (_) {
+    /* ignore */
+  }
+});
+
+document.getElementById("detail-drag-handle").addEventListener("mousedown", () => {
+  getCurrentWindow().startDragging();
+});
+
+// ── Auto-resize ──
+let lastDetailHeight = 0;
+async function autoResize() {
+  const h = ($titleBar?.offsetHeight || 0) + ($content?.offsetHeight || 0);
+  if (Math.abs(h - lastDetailHeight) > 1) {
+    lastDetailHeight = h;
+    try {
+      const win = getCurrentWindow();
+      const size = await win.innerSize();
+      const sf = await win.scaleFactor();
+      const w = size.width / sf;
+      await win.setSize(new LogicalSize(w, h));
+    } catch (_) {
+      /* ignore */
+    }
+  }
+}
+
+// ── State ──
+let mode = "live";
+let selectedActorId = null;
+let frozenRecord = null;
+let lastSnapshot = null;
+
+// ── Formatters ──
+function fmtDamage(n) {
+  if (!n) return "0";
+  if (n < 1e4) return String(n);
+  if (n < 1e6) return (n / 1e3).toFixed(1) + "K";
+  if (n < 1e9) return (n / 1e6).toFixed(2) + "M";
+  return (n / 1e9).toFixed(2) + "B";
+}
+function fmtFull(n) {
+  return Math.round(n || 0).toLocaleString("en-US");
+}
+function esc(s) {
+  if (!s) return "";
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+function fmtPct(n) {
+  return (n || 0).toFixed(1) + "%";
+}
+function fmtDuration(s) {
+  if (!s || s <= 0) return "--";
+  if (s < 60) return Math.floor(s) + "s";
+  const m = Math.floor(s / 60),
+    sec = Math.floor(s % 60);
+  return m + "m " + String(sec).padStart(2, "0") + "s";
+}
+function getClassIcon(c) {
+  return c ? "/aion2/class/" + c.toLowerCase() + ".png" : "";
+}
+function normalizeSkillId(id) {
+  return String(id).slice(0, 8);
+}
+function skillName(id) {
+  const k = normalizeSkillId(id);
+  return currentSkills[k] || currentSkills[k.slice(0, 4)] || "Skill #" + id;
+}
+function skillIcon(id) {
+  const base = String(id).slice(0, 4);
+  return base.length === 4 ? "/aion2/skill/" + base + ".png" : "";
+}
+function specDots(slots) {
+  const set = new Set((slots || []).filter((n) => n >= 1 && n <= 5));
+  return [1, 2, 3, 4, 5].map((s) => set.has(s));
+}
+function getSpecial(stats, key) {
+  return Number(stats?.specialCounts?.[key] ?? 0);
+}
+function mergeSkillStats(target, source) {
+  target.totalDamage += source.totalDamage || 0;
+  target.counts += source.counts || 0;
+  target.maxDamage = Math.max(target.maxDamage, source.maxDamage || 0);
+  target.minDamage = Math.min(target.minDamage, source.minDamage || 1e99);
+  for (const [k, v] of Object.entries(source.specialCounts || {})) {
+    target.specialCounts[k] = (target.specialCounts[k] || 0) + v;
+  }
+}
+function emptySkillStats() {
+  return {
+    totalDamage: 0,
+    counts: 0,
+    maxDamage: 0,
+    minDamage: 1e99,
+    specialCounts: {},
+  };
+}
+
+// ── Render ──
+function setMode(m) {
+  mode = m;
+  $modeBadge.textContent = mode === "history" ? t("dps-overlay.history") : t("dps-overlay.live");
+  $modeBadge.className = "titlebar__mode " + (mode === "history" ? "is-history" : "is-live");
+}
+
+function render() {
+  if (!selectedActorId) {
+    $playerName.textContent = "Player";
+    $playerServer.textContent = "";
+    $playerIcon.style.display = "none";
+    $content.innerHTML = `<div class="empty">${t("dps-detail.empty")}</div>`;
+    return;
+  }
+
+  // Gather data
+  let playerNameText = `ID:${selectedActorId}`,
+    playerClass = "",
+    playerServer = "",
+    iconSrc = "";
+  let totalDmg = 0,
+    skillMap = {},
+    targetInfo = null,
+    actorInfo = null,
+    playerStats = null;
+
+  // Unified data source: snapshot from live, or record from history
+  const dataSource = mode === "history" && frozenRecord ? frozenRecord : lastSnapshot;
+  if (!dataSource) {
+    $content.innerHTML = `<div class="empty">${t("dps-detail.noData")}</div>`;
+    return;
+  }
+
+  // ── Actor info ──
+  actorInfo = dataSource.combatInfos?.actorInfos?.[selectedActorId] || null;
+  playerNameText = actorInfo?.actorName || playerNameText;
+  playerClass = actorInfo?.actorClass || "";
+  playerServer = getServerName(actorInfo?.actorServerId);
+  iconSrc = playerClass ? getClassIcon(playerClass) : "";
+
+  // ── Target info (for fight duration) ──
+  if (mode === "history") {
+    targetInfo = dataSource.targetInfo || null;
+  } else {
+    const targetId = dataSource.combatInfos?.lastTargetByMainActor;
+    if (targetId != null) {
+      targetInfo =
+        dataSource.lastTargetInfo || dataSource.combatInfos?.targetInfos?.[targetId] || null;
+    }
+  }
+
+  // ── Player overview stats ──
+  if (mode === "history") {
+    playerStats = dataSource.playerStats?.[selectedActorId] || null;
+  } else {
+    playerStats =
+      (dataSource.lastTargetAllPlayersOverviewStats || []).find(
+        (p) => p.actorId === selectedActorId
+      ) || null;
+  }
+
+  // ── Skill stats ──
+  let rawSkillMap = {};
+  if (mode === "history") {
+    rawSkillMap = dataSource.playerSkillStats?.[selectedActorId] || {};
+  } else {
+    // Only show skills for the current boss target, not all targets merged together
+    const lastTargetId = dataSource.combatInfos?.lastTargetByMainActor;
+    const targetStats = dataSource.byTargetPlayerSkillStats || {};
+    const targetSkillStats =
+      (lastTargetId != null ? targetStats[lastTargetId] : null) || {};
+    rawSkillMap = targetSkillStats[selectedActorId] || {};
+  }
+  skillMap = {};
+  for (const [sid, st] of Object.entries(rawSkillMap)) {
+    const normalizedSid = normalizeSkillId(sid);
+    if (!skillMap[normalizedSid]) skillMap[normalizedSid] = emptySkillStats();
+    mergeSkillStats(skillMap[normalizedSid], st);
+  }
+  for (const s of Object.values(skillMap)) {
+    if (s.minDamage === 1e99) s.minDamage = 0;
+    totalDmg += s.totalDamage;
+  }
+
+  // Titlebar
+  setMode(mode);
+  $playerName.textContent = playerNameText;
+  $playerServer.textContent = playerServer ? `[${playerServer}]` : "";
+  if (iconSrc) {
+    $playerIcon.src = iconSrc;
+    $playerIcon.style.display = "";
+  } else {
+    $playerIcon.style.display = "none";
+  }
+
+  // Skills sorted
+  const skills = Object.entries(skillMap).map(([sid, s]) => ({ skillId: sid, ...s }));
+  skills.sort((a, b) => b.totalDamage - a.totalDamage);
+  const maxDmg = skills.length > 0 ? skills[0].totalDamage : 1;
+  const totalSkillDmg = skills.reduce((s, r) => s + r.totalDamage, 0);
+
+  // Summary
+  const totalHits = Math.max(1, playerStats?.counts || skills.reduce((s, r) => s + r.counts, 0));
+  const fightStart = targetInfo?.targetStartTime?.[selectedActorId] || 0;
+  const fightEnd = targetInfo?.targetLastTime?.[selectedActorId] || 0;
+  const fightDur = Math.max(1, fightEnd - fightStart);
+  const dps = totalDmg / fightDur;
+  const allSpecials = skills.reduce((acc, s) => {
+    for (const [k, v] of Object.entries(s.specialCounts || {})) acc[k] = (acc[k] || 0) + v;
+    return acc;
+  }, {});
+  const critR = totalHits > 0 ? fmtPct(((allSpecials["CRITICAL"] || 0) / totalHits) * 100) : "--";
+  const backR = totalHits > 0 ? fmtPct(((allSpecials["BACK"] || 0) / totalHits) * 100) : "--";
+  const doubleR = totalHits > 0 ? fmtPct(((allSpecials["DOUBLE"] || 0) / totalHits) * 100) : "--";
+  const perfectR = totalHits > 0 ? fmtPct(((allSpecials["PERFECT"] || 0) / totalHits) * 100) : "--";
+  const parryR = totalHits > 0 ? fmtPct(((allSpecials["PARRY"] || 0) / totalHits) * 100) : "--";
+  const multiR = totalHits > 0 ? fmtPct(((allSpecials["MULTIHIT"] || 0) / totalHits) * 100) : "--";
+
+  // Spec dots from actor info
+  const skillSpecMap = actorInfo?.actorSkillSpec || {};
+
+  let html = `<div class="summary-grid summary-row4">`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.damage")}</div><div class="summary-box__value">${fmtFull(totalDmg)}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.dps")}</div><div class="summary-box__value dps">${fmtFull(dps)}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.fight")}</div><div class="summary-box__value">${fmtDuration(fightDur)}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.hits")}</div><div class="summary-box__value">${totalHits}</div></div>`;
+  html += `</div><div class="summary-grid summary-row6">`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.critical")}</div><div class="summary-box__value crit">${critR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.back")}</div><div class="summary-box__value back">${backR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.double")}</div><div class="summary-box__value double">${doubleR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.perfect")}</div><div class="summary-box__value perfect">${perfectR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.parry")}</div><div class="summary-box__value parry">${parryR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.multi")}</div><div class="summary-box__value multi">${multiR}</div></div>`;
+  html += `</div>`;
+
+  // Skill table
+  if (skills.length > 0) {
+    html += `<div class="skill-table-wrap"><div class="skill-table-scroll"><div class="skill-table">`;
+    // Header
+    html += `<div class="skill-header"><span>${t("dps-detail.skill")}</span><span>${t("dps-detail.spec")}</span><span>${t("dps-detail.count")}</span><span>Cri%</span><span>Bak%</span><span>Dbl%</span><span>Prf%</span><span>Par%</span><span>Mul%</span><span>${t("dps-detail.total")}</span></div>`;
+    for (const s of skills) {
+      const sc = getSpecial(s, "CRITICAL");
+      const bk = getSpecial(s, "BACK");
+      const db = getSpecial(s, "DOUBLE");
+      const pf = getSpecial(s, "PERFECT");
+      const pa = getSpecial(s, "PARRY");
+      const mu = getSpecial(s, "MULTIHIT");
+      const avgDmg = s.counts > 0 ? Math.floor(s.totalDamage / s.counts) : 0;
+      const pct = totalSkillDmg > 0 ? ((s.totalDamage / totalSkillDmg) * 100).toFixed(1) : "0.0";
+      const dots = specDots(skillSpecMap[s.skillId]);
+      const icon = skillIcon(s.skillId);
+      const name = skillName(s.skillId);
+
+      html += `<div class="skill-row">`;
+      html += `<span class="skill-name-cell">${icon ? `<img class="skill-icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}<span class="skill-name-text">${esc(name)}</span></span>`;
+      html += `<span class="spec-dots">${dots.map((a) => `<span class="spec-dot${a ? " active" : ""}"></span>`).join("")}</span>`;
+      html += `<span class="color-slate">${s.counts}</span>`;
+      html += `<span class="color-rose">${s.counts > 0 ? fmtPct((sc / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-indigo">${s.counts > 0 ? fmtPct((bk / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-yellow">${s.counts > 0 ? fmtPct((db / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-emerald">${s.counts > 0 ? fmtPct((pf / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-slate">${s.counts > 0 ? fmtPct((pa / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-rose">${s.counts > 0 ? fmtPct((mu / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="skill-total-cell"><div class="skill-total-bar" style="width:${pct}%"></div><span class="color-amber" style="position:relative;z-index:1">${fmtFull(s.totalDamage)} (${pct}%)</span></span>`;
+      html += `</div>`;
+    }
+    html += `</div></div></div>`;
+  } else {
+    html += `<div class="empty">${t("dps-detail.noData")}</div>`;
+  }
+  $content.innerHTML = html;
+  // Resize after DOM update settles
+  requestAnimationFrame(() => requestAnimationFrame(autoResize));
+}
+
+// ── Init ──
+(async function init() {
+  try {
+    const lang = await invoke("get_language");
+    setLanguage(lang);
+    currentSkills = SKILLS[lang] || skillsEn;
+  } catch (e) {
+    console.error("[dps-detail] get_language failed:", e);
+  }
+
+  // Pull last snapshot as fallback (in case combat already ended)
+  try {
+    const snap = await invoke("get_last_snapshot");
+    if (snap) lastSnapshot = snap;
+  } catch (_) {
+    /* ignore */
+  }
+
+  // Pull pending selection (written before window was created)
+  try {
+    const selection = await invoke("get_detail_selection");
+    console.log("[dps-detail] init selection:", JSON.stringify(selection));
+    if (selection && selection.actorId) {
+      selectedActorId = selection.actorId;
+      mode = selection.mode || "live";
+      console.log("[dps-detail] init mode:", mode, "actorId:", selectedActorId);
+      if (mode === "history") {
+        frozenRecord = selection.record || null;
+      }
+      render();
+    }
+  } catch (_) {
+    /* ignore */
+  }
+
+  // Init titlebar + empty text (set before render() replaces the .empty element)
+  const $emptyEl = document.querySelector(".empty");
+  if ($emptyEl) $emptyEl.textContent = t("dps-detail.empty");
+  $modeBadge.textContent = t("dps-overlay.live");
+  $modeBadge.className = "titlebar__mode is-live";
+
+  listen("language-changed", (event) => {
+    setLanguage(event.payload.language);
+    currentSkills = SKILLS[event.payload.language] || skillsEn;
+    render();
+  });
+
+  listen("dps-snapshot", (event) => {
+    lastSnapshot = event.payload;
+    if (mode === "live" && selectedActorId) render();
+  });
+
+  listen("select-player-detail", async (event) => {
+    console.log("[dps-detail] event received:", JSON.stringify(event.payload));
+    let payload = event.payload;
+    if (!payload || !payload.actorId) {
+      try {
+        payload = await invoke("get_detail_selection");
+        console.log("[dps-detail] fallback get_detail_selection:", JSON.stringify(payload));
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    if (!payload || !payload.actorId) return;
+    selectedActorId = payload.actorId;
+    mode = payload.mode || "live";
+    console.log("[dps-detail] event mode:", mode, "actorId:", selectedActorId);
+    if (mode === "history") frozenRecord = payload.record || null;
+    render();
+  });
+})();
