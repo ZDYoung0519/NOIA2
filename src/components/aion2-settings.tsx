@@ -157,28 +157,6 @@ export function Aion2Settings() {
           </SettingRow>
 
           <SettingRow
-            title={t("settings.aion2.overlayMaxPlayerCount")}
-            description={t("settings.aion2.overlayMaxPlayerCountDesc")}
-          >
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="5"
-                max="20"
-                step="1"
-                value={config.aion2.backend.maxPlayerCount}
-                onChange={(e) =>
-                  updateSettings("aion2.backend.maxPlayerCount", Number(e.target.value))
-                }
-                className="w-24"
-              />
-              <span className="w-6 text-right text-sm tabular-nums">
-                {config.aion2.backend.maxPlayerCount}
-              </span>
-            </div>
-          </SettingRow>
-
-          <SettingRow
             title={t("settings.aion2.overlayContentScale")}
             description={t("settings.aion2.overlayContentScaleDesc")}
           >
@@ -344,16 +322,6 @@ export function Aion2Settings() {
           </SettingRow>
 
           <SettingRow
-            title={t("settings.aion2.overlayHideUnknownPlayers")}
-            description={t("settings.aion2.overlayHideUnknownPlayersDesc")}
-          >
-            <Switch
-              checked={config.aion2.backend.hideUnknownPlayers}
-              onCheckedChange={(v) => updateSettings("aion2.backend.hideUnknownPlayers", v)}
-            />
-          </SettingRow>
-
-          <SettingRow
             title={t("settings.aion2.overlayDamageFormat")}
             description={t("settings.aion2.overlayDamageFormatDesc")}
           >
@@ -442,6 +410,38 @@ export function Aion2Settings() {
               checked={config.aion2.backend.myMuzhuangOnly}
               onCheckedChange={(v) => updateSettings("aion2.backend.myMuzhuangOnly", v)}
             />
+          </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.overlayHideUnknownPlayers")}
+            description={t("settings.aion2.overlayHideUnknownPlayersDesc")}
+          >
+            <Switch
+              checked={config.aion2.backend.hideUnknownPlayers}
+              onCheckedChange={(v) => updateSettings("aion2.backend.hideUnknownPlayers", v)}
+            />
+          </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.overlayMaxPlayerCount")}
+            description={t("settings.aion2.overlayMaxPlayerCountDesc")}
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="5"
+                max="20"
+                step="1"
+                value={config.aion2.backend.maxPlayerCount}
+                onChange={(e) =>
+                  updateSettings("aion2.backend.maxPlayerCount", Number(e.target.value))
+                }
+                className="w-24"
+              />
+              <span className="w-6 text-right text-sm tabular-nums">
+                {config.aion2.backend.maxPlayerCount}
+              </span>
+            </div>
           </SettingRow>
 
           <SettingRow

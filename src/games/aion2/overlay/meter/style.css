@@ -481,6 +481,23 @@ body:not(.has-players) .player-list {
   color: #ef4444;
 }
 
+.status-bar__copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.status-bar__copy-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .status-bar__duration {
   color: rgba(255, 255, 255, 0.65);
   font-family: var(--font-family);
