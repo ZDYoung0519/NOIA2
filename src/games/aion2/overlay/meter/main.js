@@ -27,15 +27,13 @@ const DEFAULT_OVERLAY_CONFIG = {
   showDamage: true,
   showDps: true,
   pctMode: "contribution",
-  hideUnknownPlayers: false,
   contentScale: 1,
   detailWindowMode: "follow",
   autoResizeHeight: true,
   damageFormat: "万/亿",
 };
 let lastHeight = 0;
-let lastPlayerCount = -1;
-let lastVisiblePlayerCount = 0;
+let lastPlayerCount = 0;
 let contentScale = 1;
 
 function syncScaledOverlayLayout() {
@@ -48,7 +46,7 @@ function computeExpectedHeight() {
   const tbH = $titleBar ? $titleBar.offsetHeight : 0;
   const diagH = $diag?.textContent ? $diag.offsetHeight : 0;
   const bossH = lastBossVisible ? 30 : 0;
-  const playersH = lastVisiblePlayerCount > 0 ? 3 + lastVisiblePlayerCount * 28 : 0;
+  const playersH = lastPlayerCount > 0 ? 3 + lastPlayerCount * 28 : 0;
   const contentPad = 8;
   const statusH = 22;
   return tbH + diagH + bossH + playersH + contentPad + statusH;
@@ -688,6 +686,13 @@ function updatePlayerList(snap, fullRebuild) {
     playerRows.clear();
   }
 
+  // Toggle has-players based on player count (backend already filtered)
+  if (players && players.length > 0) {
+    document.body.classList.add("has-players");
+  } else {
+    document.body.classList.remove("has-players");
+  }
+
   // Hide all rows when no players
   if (!players || players.length === 0) {
     for (const [, entry] of playerRows) {
@@ -695,8 +700,6 @@ function updatePlayerList(snap, fullRebuild) {
       rowPool.push(entry.row);
     }
     playerRows.clear();
-    document.body.classList.remove("has-players");
-    lastVisiblePlayerCount = 0;
     if (lastPlayerCount !== 0) {
       lastPlayerCount = 0;
       autoResize();
@@ -704,8 +707,11 @@ function updatePlayerList(snap, fullRebuild) {
     return;
   }
 
-  document.body.classList.add("has-players");
-  lastVisiblePlayerCount = players.length;
+  // Trigger autoResize only when player count changes
+  if (players.length !== lastPlayerCount) {
+    lastPlayerCount = players.length;
+    autoResize();
+  }
 
   // Max totalDamage for background bar scaling
   let maxDamage = 0;
@@ -717,9 +723,6 @@ function updatePlayerList(snap, fullRebuild) {
 
   for (let i = 0; i < players.length; i++) {
     const p = players[i];
-
-    // Skip unknown players if configured
-    if (overlayConfig?.hideUnknownPlayers && !p.actorName) continue;
 
     seen.add(p.actorId);
 
@@ -751,11 +754,6 @@ function updatePlayerList(snap, fullRebuild) {
     }
   }
 
-  // Auto-resize window when player count changes
-  if (players.length !== lastPlayerCount) {
-    lastPlayerCount = players.length;
-    autoResize();
-  }
 }
 
 // =============================================================================

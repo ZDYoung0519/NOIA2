@@ -30,6 +30,10 @@ pub struct DpsMeterConfig {
     pub my_muzhuang_only: bool,
     #[serde(default)]
     pub output_debug_log: bool,
+    #[serde(default)]
+    pub hide_unknown_players: bool,
+    #[serde(default = "default_max_player_count")]
+    pub max_player_count: usize,
 }
 
 impl Default for DpsMeterConfig {
@@ -44,8 +48,14 @@ impl Default for DpsMeterConfig {
             show_possible_boss: false,
             my_muzhuang_only: false,
             output_debug_log: false,
+            hide_unknown_players: false,
+            max_player_count: 10,
         }
     }
+}
+
+fn default_max_player_count() -> usize {
+    10
 }
 
 impl DpsMeterConfig {

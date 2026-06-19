@@ -23,11 +23,18 @@ impl DpsCalculator {
         *self.last_total_damage.lock().unwrap() = None;
     }
 
-    pub fn get_dps_snapshot(&self, target_damage_threshold: u64) -> Option<CombatSnapshot> {
+    pub fn get_dps_snapshot(
+        &self,
+        target_damage_threshold: u64,
+        hide_unknown_players: bool,
+        max_player_count: usize,
+    ) -> Option<CombatSnapshot> {
         build_combat_snapshot(
             &self.data_storage,
             &self.last_total_damage,
             target_damage_threshold,
+            hide_unknown_players,
+            max_player_count,
         )
     }
 }
@@ -40,6 +47,8 @@ fn build_combat_snapshot(
     data_storage: &DataStorage,
     last_total_damage: &Mutex<Option<u64>>,
     target_damage_threshold: u64,
+    hide_unknown_players: bool,
+    max_player_count: usize,
 ) -> Option<CombatSnapshot> {
     if data_storage.start_time().is_none() {
         return None;
@@ -102,7 +111,18 @@ fn build_combat_snapshot(
         .map(|stats| {
             let mut sorted: Vec<_> = stats.values().cloned().collect();
             sorted.sort_by(|a, b| b.total_damage.cmp(&a.total_damage));
-            (target_infos.get(&last_target_id.unwrap()).cloned(), sorted)
+            // Filter unknown players if configured
+            let filtered: Vec<_> = if hide_unknown_players {
+                sorted.into_iter().filter(|p| !p.actor_name.is_empty()).collect()
+            } else {
+                sorted
+            };
+            // Truncate to max player count
+            let truncated: Vec<_> = filtered
+                .into_iter()
+                .take(max_player_count.max(5).min(20))
+                .collect();
+            (target_infos.get(&last_target_id.unwrap()).cloned(), truncated)
         })
         .unwrap_or((None, Vec::new()));
 

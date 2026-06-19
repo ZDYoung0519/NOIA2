@@ -154,6 +154,8 @@
       "overlayDetailWindowCenter": "Center",
       "overlayDamageFormat": "Total damage format",
       "overlayDamageFormatDesc": "Large number display: w/e (Chinese convention) or K/M/B (English convention).",
+      "overlayMaxPlayerCount": "Max displayed players",
+      "overlayMaxPlayerCountDesc": "Maximum number of players to display, range 5-20. Extra players will not be shown.",
       "overlayAutoResizeHeight": "Auto resize window height",
       "overlayAutoResizeHeightDesc": "Automatically adjusts the overlay height based on player count. Disable to keep a fixed height.",
       "autoHideEnabled": "Auto hide with game",

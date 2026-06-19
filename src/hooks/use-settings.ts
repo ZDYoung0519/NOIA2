@@ -29,6 +29,8 @@ interface BackendSettings {
   bossOnly: boolean;
   showPossibleBoss: boolean;
   myMuzhuangOnly: boolean;
+  hideUnknownPlayers: boolean;
+  maxPlayerCount: number;
 }
 
 interface OverlaySettings {
@@ -43,7 +45,6 @@ interface OverlaySettings {
   showDamage: boolean;
   showDps: boolean;
   pctMode: "contribution" | "share";
-  hideUnknownPlayers: boolean;
   showBossHp: boolean;
   maskNicknames: boolean;
   contentScale: number;
@@ -91,6 +92,8 @@ const DEFAULTS: AppConfig = {
       bossOnly: true,
       showPossibleBoss: false,
       myMuzhuangOnly: true,
+      hideUnknownPlayers: true,
+      maxPlayerCount: 10,
     },
     overlay: {
       fontFamily: "Consolas",
@@ -104,7 +107,6 @@ const DEFAULTS: AppConfig = {
       showDamage: false,
       showDps: true,
       pctMode: "contribution",
-      hideUnknownPlayers: true,
       showBossHp: false,
       maskNicknames: false,
       contentScale: 1,

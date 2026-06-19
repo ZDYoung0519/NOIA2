@@ -117,6 +117,8 @@
       "overlayDetailWindowCenter": "중앙",
       "overlayDamageFormat": "총 피해량 형식",
       "overlayDamageFormatDesc": "큰 숫자 표시: w/e (중국 방식) 또는 K/M/B (영어 방식).",
+      "overlayMaxPlayerCount": "최대 표시 플레이어 수",
+      "overlayMaxPlayerCountDesc": "표시할 최대 플레이어 수, 범위 5-20. 초과 시 표시되지 않습니다.",
       "overlayAutoResizeHeight": "창 높이 자동 조정",
       "overlayAutoResizeHeightDesc": "플레이어 수에 따라 오버레이 높이를 자동으로 조정합니다. 비활성화하면 고정 높이를 유지합니다.",
       "autoHideEnabled": "Auto hide with game",

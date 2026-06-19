@@ -154,6 +154,8 @@
       "overlayDetailWindowCenter": "居中",
       "overlayDamageFormat": "总伤害格式",
       "overlayDamageFormatDesc": "大数字显示方式：w/e（中文习惯）或 K/M/B（英文习惯）。",
+      "overlayMaxPlayerCount": "显示玩家数量上限",
+      "overlayMaxPlayerCountDesc": "最多显示多少名玩家，范围 5-20。超过的部分不会显示。",
       "overlayAutoResizeHeight": "自动调整窗口高度",
       "overlayAutoResizeHeightDesc": "根据玩家数量自动调整悬浮窗高度，关闭后保持固定高度。",
       "autoHideEnabled": "跟随游戏自动隐藏",

@@ -161,7 +161,7 @@ impl DpsMeter {
 
     pub fn reset_dps_meter(&self, emit_empty: bool) {
         // Capture before clearing
-        if let Some(snapshot) = self.calculator.get_dps_snapshot(0) {
+        if let Some(snapshot) = self.get_dps_snapshot(0) {
             let target_count = snapshot.by_target_player_stats.len();
             eprintln!(
                 "[dps_meter] reset: total_damage={} targets={} records_will_save={}",
@@ -250,7 +250,12 @@ impl DpsMeter {
     }
 
     pub fn get_dps_snapshot(&self, target_damage_threshold: u64) -> Option<CombatSnapshot> {
-        self.calculator.get_dps_snapshot(target_damage_threshold)
+        let cfg = self.config.read().unwrap();
+        self.calculator.get_dps_snapshot(
+            target_damage_threshold,
+            cfg.hide_unknown_players,
+            cfg.max_player_count,
+        )
     }
 
     fn start_snapshot_loop(&self) {
@@ -268,7 +273,11 @@ impl DpsMeter {
 
         let handle = thread::spawn(move || {
             while snapshot_running.load(Ordering::SeqCst) {
-                if let Some(snapshot) = calculator.get_dps_snapshot(0) {
+                let cfg = config.read().unwrap();
+                let hide_unknown = cfg.hide_unknown_players;
+                let max_count = cfg.max_player_count;
+                drop(cfg);
+                if let Some(snapshot) = calculator.get_dps_snapshot(0, hide_unknown, max_count) {
                     // Cache non-empty snapshots for detail window fallback
                     if snapshot.total_damage > 0 {
                         *last_snapshot.lock().unwrap() = Some(snapshot.clone());
