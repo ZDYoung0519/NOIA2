@@ -209,7 +209,7 @@ body {
 .skill-header,
 .skill-row {
   display: grid;
-  grid-template-columns: 180px 0.3fr 0.5fr 0.6fr 0.6fr 0.6fr 0.6fr 0.6fr 0.7fr 1fr;
+  grid-template-columns: 160px 0.3fr 0.35fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.45fr 0.5fr 0.5fr 1fr;
   gap: 6px;
   align-items: center;
 }
@@ -323,4 +323,28 @@ body {
   text-align: center;
   padding: 32px 0;
   font-size: 14px;
+}
+
+/* ── Custom tooltip ── */
+[data-tooltip] {
+  position: relative;
+  cursor: default;
+}
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: #111;
+  color: #eee;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  white-space: pre;
+  pointer-events: none;
+  z-index: 999;
 }

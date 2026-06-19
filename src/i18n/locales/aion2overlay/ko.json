@@ -48,9 +48,13 @@
     "perfect": "완벽",
     "parry": "막기",
     "multi": "연속",
+    "multiHitDmg": "연속 피해",
     "skill": "스킬",
     "spec": "강화",
     "count": "횟수",
+    "min": "최소",
+    "max": "최대",
+    "avg": "평균",
     "total": "합계"
   }
 }

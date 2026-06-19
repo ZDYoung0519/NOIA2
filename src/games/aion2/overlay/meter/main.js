@@ -30,9 +30,12 @@ const DEFAULT_OVERLAY_CONFIG = {
   hideUnknownPlayers: false,
   contentScale: 1,
   detailWindowMode: "follow",
+  autoResizeHeight: true,
+  damageFormat: "万/亿",
 };
 let lastHeight = 0;
 let lastPlayerCount = -1;
+let lastVisiblePlayerCount = 0;
 let contentScale = 1;
 
 function syncScaledOverlayLayout() {
@@ -41,12 +44,21 @@ function syncScaledOverlayLayout() {
   $scaledOverlay.style.setProperty("--overlay-scaled-height", `${scaledHeight}px`);
 }
 
-async function autoResize() {
-  syncScaledOverlayLayout();
+function computeExpectedHeight() {
   const tbH = $titleBar ? $titleBar.offsetHeight : 0;
-  const scaledH = $scaledOverlay ? $scaledOverlay.offsetHeight : 0;
-  const h = tbH + scaledH;
-  if (Math.abs(h - lastHeight) > 1) {
+  const diagH = $diag?.textContent ? $diag.offsetHeight : 0;
+  const bossH = lastBossVisible ? 30 : 0;
+  const playersH = lastVisiblePlayerCount > 0 ? 3 + lastVisiblePlayerCount * 28 : 0;
+  const contentPad = 8;
+  const statusH = 22;
+  return tbH + diagH + bossH + playersH + contentPad + statusH;
+}
+
+async function autoResize() {
+  if (overlayConfig?.autoResizeHeight === false) return;
+  syncScaledOverlayLayout();
+  const h = computeExpectedHeight();
+  if (Math.abs(h - lastHeight) > 5) {
     lastHeight = h;
     try {
       const win = getCurrentWindow();
@@ -168,7 +180,7 @@ function applyOverlayConfig(cfg) {
   if (lastSnapshot) {
     updatePlayerList(lastSnapshot);
   }
-  requestAnimationFrame(autoResize);
+  autoResize();
 }
 
 // =============================================================================
@@ -246,10 +258,18 @@ async function runDiagnostic() {
 // =============================================================================
 function fmtDamage(n) {
   if (n == null || n === 0) return "--";
+  if (overlayConfig?.damageFormat === "万/亿") return fmtDamageZh(n);
+  // K/M/B
   if (n < 10_000) return String(n);
   if (n < 1_000_000) return (n / 1_000).toFixed(1) + "K";
   if (n < 1_000_000_000) return (n / 1_000_000).toFixed(2) + "M";
   return (n / 1_000_000_000).toFixed(2) + "B";
+}
+
+function fmtDamageZh(n) {
+  if (n < 10_000) return String(n);
+  if (n < 100_000_000) return (n / 10_000).toFixed(1) + "w";
+  return (n / 100_000_000).toFixed(2) + "e";
 }
 
 function fmtDps(n) {
@@ -457,7 +477,10 @@ function buildRowTemplate() {
   // dps value + /s unit are separate text nodes so we only update the value
   const dpsVal = document.createTextNode("");
   dpsWrap.appendChild(dpsVal);
-  dpsWrap.appendChild(document.createTextNode("/s"));
+  const dpsUnit = document.createElement("span");
+  dpsUnit.className = "player-row__dps-unit";
+  dpsUnit.textContent = "/s";
+  dpsWrap.appendChild(dpsUnit);
 
   const share = document.createElement("span");
   share.className = "player-row__share";
@@ -672,12 +695,17 @@ function updatePlayerList(snap, fullRebuild) {
       rowPool.push(entry.row);
     }
     playerRows.clear();
+    document.body.classList.remove("has-players");
+    lastVisiblePlayerCount = 0;
     if (lastPlayerCount !== 0) {
       lastPlayerCount = 0;
       autoResize();
     }
     return;
   }
+
+  document.body.classList.add("has-players");
+  lastVisiblePlayerCount = players.length;
 
   // Max totalDamage for background bar scaling
   let maxDamage = 0;

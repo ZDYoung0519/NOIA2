@@ -269,7 +269,7 @@ function render() {
   if (skills.length > 0) {
     html += `<div class="skill-table-wrap"><div class="skill-table-scroll"><div class="skill-table">`;
     // Header
-    html += `<div class="skill-header"><span>${t("dps-detail.skill")}</span><span>${t("dps-detail.spec")}</span><span>${t("dps-detail.count")}</span><span>Cri%</span><span>Bak%</span><span>Dbl%</span><span>Prf%</span><span>Par%</span><span>Mul%</span><span>${t("dps-detail.total")}</span></div>`;
+    html += `<div class="skill-header"><span>${t("dps-detail.skill")}</span><span>${t("dps-detail.spec")}</span><span>${t("dps-detail.count")}</span><span>${t("dps-detail.critical")}%</span><span>${t("dps-detail.back")}%</span><span>${t("dps-detail.double")}%</span><span>${t("dps-detail.perfect")}%</span><span>${t("dps-detail.parry")}%</span><span>${t("dps-detail.multi")}%</span><span>${t("dps-detail.multiHitDmg")}</span><span>${t("dps-detail.min")}</span><span>${t("dps-detail.max")}</span><span>${t("dps-detail.avg")}</span><span>${t("dps-detail.total")}</span></div>`;
     for (const s of skills) {
       const sc = getSpecial(s, "CRITICAL");
       const bk = getSpecial(s, "BACK");
@@ -277,6 +277,22 @@ function render() {
       const pf = getSpecial(s, "PERFECT");
       const pa = getSpecial(s, "PARRY");
       const mu = getSpecial(s, "MULTIHIT");
+      const muDmg = getSpecial(s, "MULTIHITDMG");
+      // Build multi-hit tooltip: show each hit variant count & probability
+      let muTip = "";
+      if (muDmg > 0) {
+        const lines = Object.entries(s.specialCounts || {})
+          .filter(([k, v]) => k.startsWith("MULTIHIT") && k !== "MULTIHIT" && k !== "MULTIHITDMG" && v > 0)
+          .sort(([a], [b]) => parseInt(a.replace("MULTIHIT", "")) - parseInt(b.replace("MULTIHIT", "")))
+          .map(([k, v]) => {
+            const hits = k.replace("MULTIHIT", "");
+            const pct = s.counts > 0 ? fmtPct((v / s.counts) * 100) : "--";
+            return `${hits}hits: ${v} (${pct})`;
+          });
+        if (lines.length > 0) {
+          muTip = "Multi-hit\n" + lines.join("\n");
+        }
+      }
       const avgDmg = s.counts > 0 ? Math.floor(s.totalDamage / s.counts) : 0;
       const pct = totalSkillDmg > 0 ? ((s.totalDamage / totalSkillDmg) * 100).toFixed(1) : "0.0";
       const dots = specDots(skillSpecMap[s.skillId]);
@@ -293,6 +309,10 @@ function render() {
       html += `<span class="color-emerald">${s.counts > 0 ? fmtPct((pf / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-slate">${s.counts > 0 ? fmtPct((pa / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-rose">${s.counts > 0 ? fmtPct((mu / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-slate"${muTip ? ` data-tooltip="${esc(muTip)}"` : ""}>${muDmg > 0 ? fmtFull(muDmg) : "--"}</span>`;
+      html += `<span class="color-slate">${s.minDamage > 0 ? fmtFull(s.minDamage) : "--"}</span>`;
+      html += `<span class="color-slate">${fmtFull(s.maxDamage)}</span>`;
+      html += `<span class="color-slate">${fmtFull(avgDmg)}</span>`;
       html += `<span class="skill-total-cell"><div class="skill-total-bar" style="width:${pct}%"></div><span class="color-amber" style="position:relative;z-index:1">${fmtFull(s.totalDamage)} (${pct}%)</span></span>`;
       html += `</div>`;
     }

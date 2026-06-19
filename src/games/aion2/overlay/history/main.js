@@ -122,8 +122,21 @@ $upload.addEventListener("click", async () => {
 });
 
 // ── Formatters ──
+function getDamageFormat() {
+  try {
+    const raw = localStorage.getItem("app-config");
+    if (raw) return JSON.parse(raw)?.aion2?.overlay?.damageFormat ?? "万/亿";
+  } catch (_) {}
+  return "万/亿";
+}
+
 function fmtDamage(n) {
   if (!n) return "0";
+  if (getDamageFormat() === "万/亿") {
+    if (n < 1e4) return String(n);
+    if (n < 1e8) return (n / 1e4).toFixed(1) + "w";
+    return (n / 1e8).toFixed(2) + "e";
+  }
   if (n < 1e4) return String(n);
   if (n < 1e6) return (n / 1e3).toFixed(1) + "K";
   if (n < 1e9) return (n / 1e6).toFixed(2) + "M";

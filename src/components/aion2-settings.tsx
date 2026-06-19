@@ -106,7 +106,7 @@ export function Aion2Settings() {
             <select
               value={config.aion2.overlay.fontFamily}
               onChange={(e) => updateSettings("aion2.overlay.fontFamily", e.target.value)}
-              className="bg-background border rounded px-2 py-1 text-sm"
+              className="bg-background rounded border px-2 py-1 text-sm"
             >
               <option value="Consolas">Consolas</option>
               <option value="JetBrains Mono">JetBrains Mono</option>
@@ -143,6 +143,16 @@ export function Aion2Settings() {
             <Switch
               checked={config.aion2.autoHideEnabled}
               onCheckedChange={(v) => updateSettings("aion2.autoHideEnabled", v)}
+            />
+          </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.overlayAutoResizeHeight")}
+            description={t("settings.aion2.overlayAutoResizeHeightDesc")}
+          >
+            <Switch
+              checked={config.aion2.overlay.autoResizeHeight}
+              onCheckedChange={(v) => updateSettings("aion2.overlay.autoResizeHeight", v)}
             />
           </SettingRow>
 
@@ -319,6 +329,28 @@ export function Aion2Settings() {
               checked={config.aion2.overlay.hideUnknownPlayers}
               onCheckedChange={(v) => updateSettings("aion2.overlay.hideUnknownPlayers", v)}
             />
+          </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.overlayDamageFormat")}
+            description={t("settings.aion2.overlayDamageFormatDesc")}
+          >
+            <div className="flex gap-2">
+              <Button
+                variant={config.aion2.overlay.damageFormat === "万/亿" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSettings("aion2.overlay.damageFormat", "万/亿")}
+              >
+                w/e
+              </Button>
+              <Button
+                variant={config.aion2.overlay.damageFormat === "K/M/B" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSettings("aion2.overlay.damageFormat", "K/M/B")}
+              >
+                K/M/B
+              </Button>
+            </div>
           </SettingRow>
 
           <SettingRow

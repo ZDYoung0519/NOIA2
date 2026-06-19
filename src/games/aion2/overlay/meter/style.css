@@ -15,11 +15,13 @@
 html,
 body {
   width: 100%;
-  min-height: 0;
+  height: 100%;
   background: transparent;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Content area is click-through by default */
@@ -153,19 +155,41 @@ body {
 .scaled-overlay {
   height: var(--overlay-scaled-height, auto);
   transform-origin: top left;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .scaled-overlay__inner {
   width: calc(100% / var(--overlay-content-scale));
   transform: scale(var(--overlay-content-scale));
   transform-origin: top left;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--overlay-bg);
 }
 
 .content {
   padding: 4px 8px;
-  background: var(--overlay-bg);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 1;
+  min-height: 0;
+}
+
+/* Collapse content + center status bar when no visible players */
+body:not(.has-players) .scaled-overlay__inner {
+  justify-content: center;
+}
+body:not(.has-players) .content {
+  padding: 0;
+  border: none;
+  flex: 0;
+}
+body:not(.has-players) .player-list {
+  padding-top: 0;
 }
 
 /* ---- Stat rows ---- */
@@ -328,7 +352,7 @@ body {
   display: flex;
   width: 100%;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -358,7 +382,7 @@ body {
 
 .player-row__name-wrap {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0;
   min-width: 0;
   font-family: var(--font-family);
@@ -394,7 +418,6 @@ body {
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  min-width: 52px;
 }
 
 .player-row__dps {
@@ -404,7 +427,6 @@ body {
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  min-width: 48px;
 }
 
 .player-row__dps-unit {
@@ -418,7 +440,6 @@ body {
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  min-width: 42px;
 }
 
 /* ── Status bar ── */
@@ -428,11 +449,11 @@ body {
   justify-content: space-between;
   height: 22px;
   padding: 0 10px;
-  background: var(--overlay-bg, rgba(0, 0, 0, 0.4));
   border-radius: 0 0 8px 8px;
   pointer-events: auto;
   flex-shrink: 0;
 }
+
 .status-bar__left,
 .status-bar__right {
   display: flex;

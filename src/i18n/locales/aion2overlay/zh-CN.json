@@ -47,10 +47,14 @@
     "double": "强击",
     "perfect": "完美",
     "parry": "格挡",
-    "multi": "连击",
+    "multi": "多段",
+    "multiHitDmg": "多段伤害",
     "skill": "技能",
-    "spec": "强化",
+    "spec": "特化",
     "count": "次数",
+    "min": "最小",
+    "max": "最大",
+    "avg": "平均",
     "total": "总计"
   }
 }

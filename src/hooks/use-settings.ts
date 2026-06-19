@@ -48,6 +48,8 @@ interface OverlaySettings {
   maskNicknames: boolean;
   contentScale: number;
   detailWindowMode: "follow" | "center";
+  autoResizeHeight: boolean;
+  damageFormat: "万/亿" | "K/M/B";
 }
 
 interface Aion2Settings {
@@ -107,6 +109,8 @@ const DEFAULTS: AppConfig = {
       maskNicknames: false,
       contentScale: 1,
       detailWindowMode: "follow",
+      autoResizeHeight: true,
+      damageFormat: "万/亿",
     },
     autoHideEnabled: true,
     autoCloseMain: true,

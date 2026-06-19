@@ -48,9 +48,13 @@
     "perfect": "Perfect",
     "parry": "Parry",
     "multi": "Multi",
+    "multiHitDmg": "Multi DMG",
     "skill": "Skill",
     "spec": "Spec",
     "count": "Count",
+    "min": "Min",
+    "max": "Max",
+    "avg": "Avg",
     "total": "Total"
   }
 }
