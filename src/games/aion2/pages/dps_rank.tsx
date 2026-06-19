@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { LoaderCircle, RefreshCcw, Trophy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { supabase } from "@/lib/supabase";
 
@@ -464,6 +465,7 @@ function BossRankCard({
   mainActorsLoading: boolean;
   mainActorsError: string | null;
 }) {
+  const navigate = useNavigate();
   const [state, setState] = useState<BossRankState>({
     loading: true,
     error: null,
@@ -682,9 +684,16 @@ function BossRankCard({
                   <td className="px-0 py-2.5">
                     <div className="flex min-w-0 items-center gap-2">
                       <ClassIcon classCode={row.main_actor_class} />
-                      <span className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <a
+                        href={`/aion2/character/view?serverId=${row.main_actor_server_id || ""}&characterName=${encodeURIComponent(row.main_actor_name)}`}
+                        className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition hover:text-[#F4C06A] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/aion2/character/view?serverId=${row.main_actor_server_id || ""}&characterName=${encodeURIComponent(row.main_actor_name)}`);
+                        }}
+                      >
                         {row.main_actor_name}
-                      </span>
+                      </a>
                       <span className="shrink-0 text-xs text-white/45">
                         {formatServer(row.main_actor_server_id)}
                       </span>
@@ -750,9 +759,16 @@ function BossRankCard({
                     <td className="px-0 py-2.5">
                       <div className="flex min-w-0 items-center gap-2">
                         <ClassIcon classCode={myRank.actor.actorClass} />
-                        <span className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <a
+                          href={`/aion2/character/view?serverId=${myRank.actor.serverId}&characterName=${encodeURIComponent(myRank.actor.actorName)}`}
+                          className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition hover:text-[#F4C06A] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/aion2/character/view?serverId=${myRank.actor.serverId}&characterName=${encodeURIComponent(myRank.actor.actorName)}`);
+                          }}
+                        >
                           {myRank.actor.actorName}
-                        </span>
+                        </a>
                         <span className="shrink-0 text-xs text-white/45">
                           {formatServer(myRank.actor.serverId)}
                         </span>

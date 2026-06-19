@@ -233,7 +233,7 @@ export type MainStatType = keyof typeof templates;
 
 function calStatSecondList(stat: { type: string; value: number }) {
   const { type, value } = stat;
-  const validValue = Math.min(Math.max(value, 0), 200); // 限制在0-200范围内
+  const validValue = Math.min(Math.max(value, 0), 1000); // 限制在0-200范围内
 
   if (!(type in templates)) {
     console.warn(`未知类型: ${type}`);
@@ -270,6 +270,16 @@ export function getStatEntriesMap(character: CharacterProps): Record<string, Sta
     value: 61,
     minValue: 61,
     from: "人物基础",
+    icon: DEFAULT_ICON,
+    unit: "",
+  });
+
+  statsEntries.push({
+    type: "CoolTimeDecrease",
+    name: "冷却时间减少",
+    value: 4,
+    minValue: 4,
+    from: "石柱",
     icon: DEFAULT_ICON,
     unit: "",
   });

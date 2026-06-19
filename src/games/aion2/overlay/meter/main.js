@@ -373,7 +373,7 @@ function updateBossRow(targetInfo) {
   const showBossBar = hasTarget && overlayConfig?.showBossHp !== false;
 
   if (!hasTarget) {
-    $titleLabel.textContent = "DPS METER";
+    $titleLabel.textContent = "NoiA METER";
     $bossRow.style.display = "none";
     if (lastBossVisible) {
       lastBossVisible = false;

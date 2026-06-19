@@ -448,7 +448,7 @@ body:not(.has-players) .player-list {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 22px;
+  height: 20px;
   padding: 0 10px;
   border-radius: 0 0 8px 8px;
   pointer-events: auto;
