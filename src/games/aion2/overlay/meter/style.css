@@ -179,11 +179,12 @@ body {
   min-height: 0;
 }
 
-/* Collapse content + center status bar when no visible players */
+/* Collapse content + center status bar when no visible players
+   (keep content visible if diag message is shown) */
 body:not(.has-players) .scaled-overlay__inner {
   justify-content: center;
 }
-body:not(.has-players) .content {
+body:not(.has-players) .content:has(.diag-message:empty) {
   padding: 0;
   border: none;
   flex: 0;
