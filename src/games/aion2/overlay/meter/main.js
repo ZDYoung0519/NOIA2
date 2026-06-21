@@ -15,6 +15,7 @@ function getServerName(serverId) {
 // Auto-resize window height based on player count
 // =============================================================================
 const BASE_WIDTH = 320;
+const MIN_WINDOW_HEIGHT = 50;
 const STORAGE_KEY = "app-config";
 const DEFAULT_OVERLAY_CONFIG = {
   locked: false,
@@ -33,8 +34,9 @@ const DEFAULT_OVERLAY_CONFIG = {
   damageFormat: "万/亿",
 };
 let lastHeight = 0;
-let lastPlayerCount = 0;
 let contentScale = 1;
+let resizeRunning = false;
+let resizePending = false;
 
 function syncScaledOverlayLayout() {
   if (!$scaledOverlay || !$scaledOverlayInner) return 0;
@@ -54,6 +56,7 @@ function syncAutoResizeMode() {
 
   if (!autoResizeEnabled) {
     $scaledOverlay?.style.removeProperty("--overlay-scaled-height");
+    lastHeight = 0;
   }
 }
 
@@ -61,18 +64,38 @@ async function autoResize() {
   if (overlayConfig?.autoResizeHeight === false) return;
   const scaledOverlayHeight = syncScaledOverlayLayout();
   const titleBarHeight = $titleBar ? Math.max($titleBar.offsetHeight, $titleBar.scrollHeight) : 0;
-  const height = Math.ceil(titleBarHeight + scaledOverlayHeight);
-  if (Math.abs(height - lastHeight) > 1) {
+  const height = Math.max(MIN_WINDOW_HEIGHT, Math.ceil(titleBarHeight + scaledOverlayHeight));
+
+  if (Math.abs(height - lastHeight) <= 1) return;
+
+  try {
+    const win = getCurrentWindow();
+    const currentSize = await win.innerSize();
+    const scaleFactor = await win.scaleFactor();
+    const width = currentSize.width / scaleFactor;
+    await win.setSize(new LogicalSize(width, height));
     lastHeight = height;
-    try {
-      const win = getCurrentWindow();
-      const currentSize = await win.innerSize();
-      const scaleFactor = await win.scaleFactor();
-      const w = currentSize.width / scaleFactor;
-      await win.setSize(new LogicalSize(w, height));
-    } catch (err) {
-      console.error("[dps-overlay] autoResize failed:", err);
-    }
+  } catch (err) {
+    console.error("[dps-overlay] autoResize failed:", err);
+  }
+}
+
+async function requestAutoResizeCheck() {
+  if (overlayConfig?.autoResizeHeight === false) return;
+
+  if (resizeRunning) {
+    resizePending = true;
+    return;
+  }
+
+  resizeRunning = true;
+  try {
+    do {
+      resizePending = false;
+      await autoResize();
+    } while (resizePending && overlayConfig?.autoResizeHeight !== false);
+  } finally {
+    resizeRunning = false;
   }
 }
 
@@ -104,7 +127,6 @@ const $bossRowIcon = document.getElementById("boss-row-icon");
 let mainActorName = null;
 let overlayConfig = null;
 let lastSnapshot = null;
-let lastBossVisible = false;
 
 function rgbaStr([r, g, b, a]) {
   return `rgba(${r},${g},${b},${(a / 255).toFixed(2)})`;
@@ -185,7 +207,7 @@ function applyOverlayConfig(cfg) {
   if (lastSnapshot) {
     updatePlayerList(lastSnapshot);
   }
-  autoResize();
+  void requestAutoResizeCheck();
 }
 
 // =============================================================================
@@ -436,10 +458,6 @@ function updateBossRow(targetInfo) {
   if (!hasTarget) {
     $titleLabel.textContent = "NoiA METER";
     $bossRow.style.display = "none";
-    if (lastBossVisible) {
-      lastBossVisible = false;
-      autoResize();
-    }
     return;
   }
 
@@ -451,10 +469,6 @@ function updateBossRow(targetInfo) {
   $bossRow.style.display = showBossBar ? "" : "none";
 
   if (!showBossBar) {
-    if (lastBossVisible) {
-      lastBossVisible = false;
-      autoResize();
-    }
     return;
   }
 
@@ -473,11 +487,6 @@ function updateBossRow(targetInfo) {
   $bossRowHp.textContent = hpText;
   $bossRowPct.textContent = fmtHpPct(currentHp, maxHp);
   $bossRowBar.style.setProperty("--bar-scale", hpScale);
-
-  if (!lastBossVisible) {
-    lastBossVisible = true;
-    autoResize();
-  }
 }
 
 // =============================================================================
@@ -763,15 +772,8 @@ function updatePlayerList(snap, fullRebuild) {
       rowPool.push(entry.row);
     }
     playerRows.clear();
-    if (lastPlayerCount !== 0) {
-      lastPlayerCount = 0;
-      autoResize();
-    }
     return;
   }
-
-  const playerCountChanged = players.length !== lastPlayerCount;
-  lastPlayerCount = players.length;
 
   // Max totalDamage for background bar scaling
   let maxDamage = 0;
@@ -813,10 +815,6 @@ function updatePlayerList(snap, fullRebuild) {
       playerRows.delete(id);
     }
   }
-
-  if (playerCountChanged) {
-    autoResize();
-  }
 }
 
 // =============================================================================
@@ -845,15 +843,15 @@ function updatePlayerList(snap, fullRebuild) {
       allOk = await runDiagnostic();
       if (allOk) {
         clearInterval(poll);
-        autoResize();
+        void requestAutoResizeCheck();
       }
     }, 2000);
   } else {
-    autoResize();
+    void requestAutoResizeCheck();
   }
 
   // Initial resize to fit current content
-  autoResize();
+  void requestAutoResizeCheck();
 
   // Pull language + config on startup
   try {
@@ -874,7 +872,7 @@ function updatePlayerList(snap, fullRebuild) {
     if (!locked && titleBar) {
       titleBar.style.pointerEvents = "auto";
     }
-    autoResize();
+    void requestAutoResizeCheck();
   });
 
   // Language sync
@@ -911,6 +909,7 @@ function updatePlayerList(snap, fullRebuild) {
       lastSnapshot = snap;
       updateOverview(snap);
       updatePlayerList(snap);
+      void requestAutoResizeCheck();
     });
   } catch (err) {
     console.error("[dps-overlay] listen failed:", err);
