@@ -37,33 +37,39 @@ let lastPlayerCount = 0;
 let contentScale = 1;
 
 function syncScaledOverlayLayout() {
-  if (!$scaledOverlay || !$scaledOverlayInner) return;
-  const scaledHeight = $scaledOverlayInner.offsetHeight * contentScale;
+  if (!$scaledOverlay || !$scaledOverlayInner) return 0;
+  const unscaledHeight = Math.max(
+    $scaledOverlayInner.offsetHeight,
+    $scaledOverlayInner.scrollHeight
+  );
+  const scaledHeight = Math.ceil(unscaledHeight * contentScale);
   $scaledOverlay.style.setProperty("--overlay-scaled-height", `${scaledHeight}px`);
+  return scaledHeight;
 }
 
-function computeExpectedHeight() {
-  const tbH = $titleBar ? $titleBar.offsetHeight : 0;
-  const diagH = $diag?.textContent ? $diag.offsetHeight : 0;
-  const bossH = lastBossVisible ? 30 : 0;
-  const playersH = lastPlayerCount > 0 ? 3 + lastPlayerCount * 28 : 0;
-  const contentPad = 8;
-  const statusH = 22;
-  return tbH + diagH + bossH + playersH + contentPad + statusH;
+function syncAutoResizeMode() {
+  const autoResizeEnabled = overlayConfig?.autoResizeHeight !== false;
+  document.body.classList.toggle("auto-resize-height", autoResizeEnabled);
+  document.body.classList.toggle("fixed-height", !autoResizeEnabled);
+
+  if (!autoResizeEnabled) {
+    $scaledOverlay?.style.removeProperty("--overlay-scaled-height");
+  }
 }
 
 async function autoResize() {
   if (overlayConfig?.autoResizeHeight === false) return;
-  syncScaledOverlayLayout();
-  const h = computeExpectedHeight();
-  if (Math.abs(h - lastHeight) > 5) {
-    lastHeight = h;
+  const scaledOverlayHeight = syncScaledOverlayLayout();
+  const titleBarHeight = $titleBar ? Math.max($titleBar.offsetHeight, $titleBar.scrollHeight) : 0;
+  const height = Math.ceil(titleBarHeight + scaledOverlayHeight);
+  if (Math.abs(height - lastHeight) > 1) {
+    lastHeight = height;
     try {
       const win = getCurrentWindow();
       const currentSize = await win.innerSize();
       const scaleFactor = await win.scaleFactor();
       const w = currentSize.width / scaleFactor;
-      await win.setSize(new LogicalSize(w, h));
+      await win.setSize(new LogicalSize(w, height));
     } catch (err) {
       console.error("[dps-overlay] autoResize failed:", err);
     }
@@ -171,6 +177,7 @@ function applyOverlayConfig(cfg) {
   root.style.setProperty("--color-main-bar", rgbaStr(overlayConfig.mainPlayerColor));
   root.style.setProperty("--color-other-bar", rgbaStr(overlayConfig.otherPlayerColor));
   root.style.setProperty("--font-family", overlayConfig.fontFamily || "Consolas");
+  syncAutoResizeMode();
   updatePinButton();
   syncLockedToBackend(overlayConfig.locked === true);
   syncAlwaysOnTopToBackend(overlayConfig.alwaysOnTop === true);
@@ -227,17 +234,35 @@ function buildBattleReport(snap) {
   const players = snap.lastTargetAllPlayersOverviewStats || [];
   const targetInfo = snap.lastTargetInfo;
   const allDmg = players.reduce((s, p) => s + p.totalDamage, 0);
-  const fightStart = targetInfo?.targetStartTime ? Math.min(...Object.values(targetInfo.targetStartTime)) : 0;
-  const fightEnd = targetInfo?.targetLastTime ? Math.max(...Object.values(targetInfo.targetLastTime)) : 0;
+  const fightStart = targetInfo?.targetStartTime
+    ? Math.min(...Object.values(targetInfo.targetStartTime))
+    : 0;
+  const fightEnd = targetInfo?.targetLastTime
+    ? Math.max(...Object.values(targetInfo.targetLastTime))
+    : 0;
   const dur = Math.max(0, fightEnd - fightStart);
   const teamDps = dur > 0 ? allDmg / dur : 0;
 
-  const fmtDmg = (n) => (n >= 1e8 ? (n / 1e8).toFixed(2) + "e" : n >= 1e4 ? (n / 1e4).toFixed(1) + "w" : String(n));
-  const fmtTime = (s) => { const m = Math.floor(s / 60), sec = Math.floor(s % 60); return m + "m" + String(sec).padStart(2, "0") + "s"; };
+  const fmtDmg = (n) =>
+    n >= 1e8 ? (n / 1e8).toFixed(2) + "e" : n >= 1e4 ? (n / 1e4).toFixed(1) + "w" : String(n);
+  const fmtTime = (s) => {
+    const m = Math.floor(s / 60),
+      sec = Math.floor(s % 60);
+    return m + "m" + String(sec).padStart(2, "0") + "s";
+  };
 
   let report = `战斗时长：${fmtTime(dur)}，总计伤害：${fmtDmg(allDmg)}，秒伤：${Math.round(teamDps).toLocaleString("en-US")}\n`;
   const classes = ["剑星", "守护星", "杀星", "弓星", "魔道星", "精灵星", "治愈星", "护法星"];
-  const classMap = { GLADIATOR: "剑星", TEMPLAR: "守护星", ASSASSIN: "杀星", RANGER: "弓星", SORCERER: "魔道星", ELEMENTALIST: "精灵星", CLERIC: "治愈星", CHANTER: "护法星" };
+  const classMap = {
+    GLADIATOR: "剑星",
+    TEMPLAR: "守护星",
+    ASSASSIN: "杀星",
+    RANGER: "弓星",
+    SORCERER: "魔道星",
+    ELEMENTALIST: "精灵星",
+    CLERIC: "治愈星",
+    CHANTER: "护法星",
+  };
   for (const cls of classes) {
     const p = players.find((p) => classMap[p.actorClass] === cls);
     if (!p) continue;
@@ -745,11 +770,8 @@ function updatePlayerList(snap, fullRebuild) {
     return;
   }
 
-  // Trigger autoResize only when player count changes
-  if (players.length !== lastPlayerCount) {
-    lastPlayerCount = players.length;
-    autoResize();
-  }
+  const playerCountChanged = players.length !== lastPlayerCount;
+  lastPlayerCount = players.length;
 
   // Max totalDamage for background bar scaling
   let maxDamage = 0;
@@ -792,6 +814,9 @@ function updatePlayerList(snap, fullRebuild) {
     }
   }
 
+  if (playerCountChanged) {
+    autoResize();
+  }
 }
 
 // =============================================================================

@@ -41,6 +41,7 @@ body {
   background: var(--titlebar-bg, rgba(0, 0, 0, 0.6));
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
 }
 
 .title-bar__label {
@@ -155,10 +156,7 @@ body {
 .scaled-overlay {
   height: var(--overlay-scaled-height, auto);
   transform-origin: top left;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  flex: 0 0 auto;
 }
 
 .scaled-overlay__inner {
@@ -167,7 +165,6 @@ body {
   transform-origin: top left;
   display: flex;
   flex-direction: column;
-  flex: 1;
   background: var(--overlay-bg);
 }
 
@@ -175,22 +172,40 @@ body {
   padding: 4px 8px;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  flex: 1;
+}
+
+/* Fixed-height mode fills the current window and pins the status bar to the bottom. */
+body.fixed-height .scaled-overlay {
+  height: auto;
   min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+body.fixed-height .scaled-overlay__inner {
+  height: calc(100% / var(--overlay-content-scale));
+  min-height: 0;
+}
+
+body.fixed-height .content {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 /* Collapse content + center status bar when no visible players
    (keep content visible if diag message is shown) */
-body:not(.has-players) .scaled-overlay__inner {
+body.auto-resize-height:not(.has-players) .scaled-overlay__inner {
   justify-content: center;
 }
-body:not(.has-players) .content:has(.diag-message:empty) {
+body.auto-resize-height:not(.has-players) .content:has(.diag-message:empty) {
   padding: 0;
   border: none;
   flex: 0;
 }
+
 body:not(.has-players) .player-list {
-  padding-top: 0;
+  display: none;
 }
 
 /* ---- Stat rows ---- */
