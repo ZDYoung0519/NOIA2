@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -13,9 +14,13 @@ import { CardTitle } from "@/components/ui/card";
 import { Search, Loader2, X, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { CharacterSearchResult } from "@/games/aion2/types/character";
+import type { CharacterSearchResult } from "@/games/aion2/types/character";
 import { fetchFengwoSearchCharacter } from "@/games/aion2/lib/fetchFengwo";
 import { Aion2SearchHistory } from "@/games/aion2/lib/localStorageHistory";
+import { getRaceIds, getServerById, getServerOptions, RACE_NAMES } from "@/games/aion2/lib/servers";
+
+const ALL_RACES = "all";
+const ALL_SERVERS = "all";
 
 const CharacterCard = ({
   character,
@@ -126,20 +131,28 @@ const CharacterCard = ({
 
 const handleSearch = async (
   characterName: string,
-
-  serverID: string | null,
+  raceID: string,
+  serverID: string,
   setIsLoading: (loading: boolean) => void,
-  setSearchResults: (results: CharacterSearchResult[]) => void
+  setSearchResults: (results: CharacterSearchResult[]) => void,
+  setHasSearched: (searched: boolean) => void
 ): Promise<void> => {
   setIsLoading(true);
+  setHasSearched(true);
   setSearchResults([]);
   try {
     const results = await fetchFengwoSearchCharacter(
       characterName.trim(),
-      serverID ? parseInt(serverID) : null
+      serverID === ALL_SERVERS ? null : Number(serverID)
     );
-    setSearchResults((results?.results || []) as CharacterSearchResult[]);
-  } catch {
+    const searchResults = (results?.results || []) as CharacterSearchResult[];
+    setSearchResults(
+      raceID === ALL_RACES
+        ? searchResults
+        : searchResults.filter((character) => character.raceId === Number(raceID))
+    );
+  } catch (error) {
+    console.error("Failed to search Aion2 character:", error);
   } finally {
     setIsLoading(false);
   }
@@ -147,20 +160,56 @@ const handleSearch = async (
 
 export default function CharacterSearchPage() {
   const [characterName, setCharacterName] = useState<string>("");
-  // const [raceID, setRaceID] = useState<string | null>(null);
-  // const [serverID, setServerID] = useState<string | null>(null);
-  // const [availableServers, setAvailableServers] = useState<any[]>([]);
-  const raceID = null;
-  const serverID = null;
-  const availableServers = Array();
-
+  const [raceID, setRaceID] = useState(ALL_RACES);
+  const [serverID, setServerID] = useState(ALL_SERVERS);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [searchResults, setSearchResults] = useState<CharacterSearchResult[]>([]);
   const [searchHistory, setSearchHistory] = useState<CharacterSearchResult[]>([]);
+
+  const raceIDs = useMemo(() => getRaceIds(), []);
+  const availableServers = useMemo(
+    () => getServerOptions(raceID === ALL_RACES ? undefined : Number(raceID)),
+    [raceID]
+  );
 
   useEffect(() => {
     setSearchHistory(Aion2SearchHistory.get());
   }, []);
+
+  const resetSearchResult = () => {
+    setHasSearched(false);
+    setSearchResults([]);
+  };
+
+  const handleRaceSelect = (value: string) => {
+    setRaceID(value);
+    resetSearchResult();
+
+    if (value === ALL_RACES || serverID === ALL_SERVERS) return;
+
+    const selectedServer = getServerById(Number(serverID));
+    if (selectedServer?.raceId !== Number(value)) {
+      setServerID(ALL_SERVERS);
+    }
+  };
+
+  const handleServerSelect = (value: string) => {
+    setServerID(value);
+    resetSearchResult();
+  };
+
+  const runSearch = () => {
+    if (isLoading || !characterName.trim()) return;
+    void handleSearch(
+      characterName,
+      raceID,
+      serverID,
+      setIsLoading,
+      setSearchResults,
+      setHasSearched
+    );
+  };
 
   const handleRemoveFromHistory = (characterId: string) => {
     Aion2SearchHistory.remove(characterId);
@@ -182,8 +231,13 @@ export default function CharacterSearchPage() {
               <Input
                 placeholder="输入角色名称"
                 value={characterName}
-                onChange={(e) => setCharacterName(e.target.value)}
-                // onKeyPress={handleKeyPress}
+                onChange={(e) => {
+                  setCharacterName(e.target.value);
+                  resetSearchResult();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") runSearch();
+                }}
                 disabled={isLoading}
                 className="w-full"
               />
@@ -192,42 +246,38 @@ export default function CharacterSearchPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">种族</label>
-                <Select
-                  value={raceID || undefined}
-                  //   onValueChange={handleRaceSelect}
-                  disabled={isLoading}
-                >
+                <Select value={raceID} onValueChange={handleRaceSelect} disabled={isLoading}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="请选择种族" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="天族">天族</SelectItem>
-                    <SelectItem value="魔族">魔族</SelectItem>
+                    <SelectGroup>
+                      <SelectItem value={ALL_RACES}>全部种族</SelectItem>
+                      {raceIDs.map((id) => (
+                        <SelectItem key={id} value={String(id)}>
+                          {RACE_NAMES[id]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">服务器</label>
-                <Select
-                  value={serverID || undefined}
-                  //   onValueChange={handleServerSelect}
-                  disabled={!raceID || isLoading}
-                >
+                <Select value={serverID} onValueChange={handleServerSelect} disabled={isLoading}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={raceID ? "请选择服务器" : "请先选择种族"} />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableServers.map((serverInfo) => (
-                      <SelectItem key={serverInfo.serverId} value={serverInfo.serverId}>
-                        <div className="flex w-full justify-between">
-                          <span>{serverInfo.serverName}</span>
-                          <span className="text-muted-foreground ml-2 text-sm">
-                            ({serverInfo.serverShortName})
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectItem value={ALL_SERVERS}>全部服务器</SelectItem>
+                      {availableServers.map((server) => (
+                        <SelectItem key={server.value} value={String(server.value)}>
+                          {server.label}（{server.shortName}）
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -236,7 +286,7 @@ export default function CharacterSearchPage() {
 
           <div className="flex gap-2">
             <Button
-              onClick={() => handleSearch(characterName, serverID, setIsLoading, setSearchResults)}
+              onClick={runSearch}
               disabled={isLoading || !characterName.trim()}
               className="flex-1"
             >
@@ -288,7 +338,7 @@ export default function CharacterSearchPage() {
         </div>
       )}
 
-      {searchResults.length === 0 && !isLoading && characterName && raceID && serverID && (
+      {hasSearched && searchResults.length === 0 && !isLoading && (
         <div className="mt-8 text-center">
           <p className="text-muted-foreground">未找到相关角色信息</p>
         </div>

@@ -12,10 +12,10 @@ function getServerName(serverId) {
 }
 
 // =============================================================================
-// Auto-resize window height based on player count
+// Reconcile the overlay window height with the rendered content
 // =============================================================================
-const BASE_WIDTH = 320;
 const MIN_WINDOW_HEIGHT = 50;
+const AUTO_RESIZE_POLL_MS = 500;
 const STORAGE_KEY = "app-config";
 const DEFAULT_OVERLAY_CONFIG = {
   locked: false,
@@ -33,21 +33,7 @@ const DEFAULT_OVERLAY_CONFIG = {
   autoResizeHeight: true,
   damageFormat: "万/亿",
 };
-let lastHeight = 0;
 let contentScale = 1;
-let resizeRunning = false;
-let resizePending = false;
-
-function syncScaledOverlayLayout() {
-  if (!$scaledOverlay || !$scaledOverlayInner) return 0;
-  const unscaledHeight = Math.max(
-    $scaledOverlayInner.offsetHeight,
-    $scaledOverlayInner.scrollHeight
-  );
-  const scaledHeight = Math.ceil(unscaledHeight * contentScale);
-  $scaledOverlay.style.setProperty("--overlay-scaled-height", `${scaledHeight}px`);
-  return scaledHeight;
-}
 
 function syncAutoResizeMode() {
   const autoResizeEnabled = overlayConfig?.autoResizeHeight !== false;
@@ -56,47 +42,41 @@ function syncAutoResizeMode() {
 
   if (!autoResizeEnabled) {
     $scaledOverlay?.style.removeProperty("--overlay-scaled-height");
-    lastHeight = 0;
   }
 }
 
-async function autoResize() {
+async function reconcileAutoHeight() {
   if (overlayConfig?.autoResizeHeight === false) return;
-  const scaledOverlayHeight = syncScaledOverlayLayout();
-  const titleBarHeight = $titleBar ? Math.max($titleBar.offsetHeight, $titleBar.scrollHeight) : 0;
-  const height = Math.max(MIN_WINDOW_HEIGHT, Math.ceil(titleBarHeight + scaledOverlayHeight));
+  if (!$scaledOverlayInner) return;
 
-  if (Math.abs(height - lastHeight) <= 1) return;
+  const scaledContentHeight = Math.ceil($scaledOverlayInner.scrollHeight * contentScale);
+  $scaledOverlay.style.setProperty("--overlay-scaled-height", `${scaledContentHeight}px`);
+
+  const titleBarHeight = $titleBar ? $titleBar.offsetHeight : 0;
+  const targetHeight = Math.max(MIN_WINDOW_HEIGHT, Math.ceil(titleBarHeight + scaledContentHeight));
 
   try {
     const win = getCurrentWindow();
     const currentSize = await win.innerSize();
     const scaleFactor = await win.scaleFactor();
+    const currentHeight = currentSize.height / scaleFactor;
+
+    if (Math.abs(targetHeight - currentHeight) <= 1) return;
+
     const width = currentSize.width / scaleFactor;
-    await win.setSize(new LogicalSize(width, height));
-    lastHeight = height;
+    await win.setSize(new LogicalSize(width, targetHeight));
   } catch (err) {
     console.error("[dps-overlay] autoResize failed:", err);
   }
 }
 
-async function requestAutoResizeCheck() {
-  if (overlayConfig?.autoResizeHeight === false) return;
+function startAutoHeightPolling() {
+  const poll = async () => {
+    await reconcileAutoHeight();
+    window.setTimeout(poll, AUTO_RESIZE_POLL_MS);
+  };
 
-  if (resizeRunning) {
-    resizePending = true;
-    return;
-  }
-
-  resizeRunning = true;
-  try {
-    do {
-      resizePending = false;
-      await autoResize();
-    } while (resizePending && overlayConfig?.autoResizeHeight !== false);
-  } finally {
-    resizeRunning = false;
-  }
+  void poll();
 }
 
 // =============================================================================
@@ -207,7 +187,6 @@ function applyOverlayConfig(cfg) {
   if (lastSnapshot) {
     updatePlayerList(lastSnapshot);
   }
-  void requestAutoResizeCheck();
 }
 
 // =============================================================================
@@ -843,15 +822,9 @@ function updatePlayerList(snap, fullRebuild) {
       allOk = await runDiagnostic();
       if (allOk) {
         clearInterval(poll);
-        void requestAutoResizeCheck();
       }
     }, 2000);
-  } else {
-    void requestAutoResizeCheck();
   }
-
-  // Initial resize to fit current content
-  void requestAutoResizeCheck();
 
   // Pull language + config on startup
   try {
@@ -872,7 +845,6 @@ function updatePlayerList(snap, fullRebuild) {
     if (!locked && titleBar) {
       titleBar.style.pointerEvents = "auto";
     }
-    void requestAutoResizeCheck();
   });
 
   // Language sync
@@ -909,12 +881,13 @@ function updatePlayerList(snap, fullRebuild) {
       lastSnapshot = snap;
       updateOverview(snap);
       updatePlayerList(snap);
-      void requestAutoResizeCheck();
     });
   } catch (err) {
     console.error("[dps-overlay] listen failed:", err);
     $diag.textContent = "Event listener error — check console";
   }
+
+  startAutoHeightPolling();
 
   // Player row click → open detail window
   $playerList.addEventListener("click", async (e) => {

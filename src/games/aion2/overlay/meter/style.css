@@ -174,7 +174,7 @@ body {
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Fixed-height mode fills the current window and pins the status bar to the bottom. */
+/* Fixed-height mode fills the existing window and keeps the status bar at the bottom. */
 body.fixed-height .scaled-overlay {
   height: auto;
   min-height: 0;
@@ -193,11 +193,11 @@ body.fixed-height .content {
   overflow: hidden;
 }
 
-/* Collapse content + center status bar when no visible players
-   (keep content visible if diag message is shown) */
-body.auto-resize-height:not(.has-players) .scaled-overlay__inner {
-  justify-content: center;
+body.fixed-height .status-bar {
+  margin-top: auto;
 }
+
+/* Auto-height mode can collapse empty content because the window follows its natural height. */
 body.auto-resize-height:not(.has-players) .content:has(.diag-message:empty) {
   padding: 0;
   border: none;
