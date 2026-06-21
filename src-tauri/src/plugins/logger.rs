@@ -1,50 +1,55 @@
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{
+    plugin::{Builder, TauriPlugin},
+    AppHandle, Emitter, Manager, Runtime,
+};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DpsLogEvent {
+pub struct LogEvent {
     pub level: String,
     pub message: String,
     pub line: String,
     pub timestamp: f64,
 }
 
-#[derive(Debug)]
-pub struct DpsLogger {
-    app: AppHandle,
+pub struct AppLogger {
+    emit: Box<dyn Fn(LogEvent) + Send + Sync>,
     file_path: PathBuf,
-    output_debug_log: Mutex<bool>,
+    debug_enabled: Mutex<bool>,
     write_lock: Mutex<()>,
 }
 
-impl DpsLogger {
-    pub fn new(app: &AppHandle, output_debug_log: bool) -> Self {
+impl AppLogger {
+    fn new<R: Runtime>(app: &AppHandle<R>) -> Self {
         let file_path = resolve_log_path(app);
         if let Some(parent) = file_path.parent() {
             let _ = create_dir_all(parent);
         }
+        let app = app.clone();
 
         Self {
-            app: app.clone(),
+            emit: Box::new(move |event| {
+                let _ = app.emit("app-logger", event);
+            }),
             file_path,
-            output_debug_log: Mutex::new(output_debug_log),
+            debug_enabled: Mutex::new(false),
             write_lock: Mutex::new(()),
         }
     }
 
-    pub fn set_output_debug_log(&self, enabled: bool) {
-        *self.output_debug_log.lock().unwrap() = enabled;
+    pub fn set_debug_enabled(&self, enabled: bool) {
+        *self.debug_enabled.lock().unwrap() = enabled;
     }
 
     pub fn debug(&self, message: impl AsRef<str>) {
-        if *self.output_debug_log.lock().unwrap() {
+        if *self.debug_enabled.lock().unwrap() {
             self.write_line("DEBUG", message.as_ref());
         }
     }
@@ -75,24 +80,30 @@ impl DpsLogger {
 
         let line = format!("[{timestamp:.3}] [{level}] {message}");
         let _ = writeln!(file, "{line}");
-        let _ = self.app.emit(
-            "dps-logger",
-            DpsLogEvent {
-                level: level.to_string(),
-                message: message.to_string(),
-                line,
-                timestamp,
-            },
-        );
+        (self.emit)(LogEvent {
+            level: level.to_string(),
+            message: message.to_string(),
+            line,
+            timestamp,
+        });
     }
 }
 
-fn resolve_log_path(app: &AppHandle) -> PathBuf {
+fn resolve_log_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
     if let Ok(dir) = app.path().app_log_dir() {
-        return dir.join("dps-meter.log");
+        return dir.join("noia.log");
     }
     if let Ok(dir) = app.path().app_data_dir() {
-        return dir.join("logs").join("dps-meter.log");
+        return dir.join("logs").join("noia.log");
     }
-    std::env::temp_dir().join("noia2").join("dps-meter.log")
+    std::env::temp_dir().join("noia2").join("noia.log")
+}
+
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    Builder::new("logger")
+        .setup(|app, _| {
+            app.manage(Arc::new(AppLogger::new(app.app_handle())));
+            Ok(())
+        })
+        .build()
 }

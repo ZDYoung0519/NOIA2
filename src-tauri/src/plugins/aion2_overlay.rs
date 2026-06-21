@@ -11,12 +11,7 @@ use crate::dps_meter::engine::meter::DpsMeter;
 const DPS_OVERLAY_LABEL: &str = "dps-overlay";
 
 /// Create the DPS overlay window and start the DPS meter.
-///
 /// If the window already exists, it will be shown instead of creating a new one.
-/// The window is transparent, always-on-top, and decoration-less.
-/// Interaction is controlled via CSS `pointer-events` on the frontend side:
-/// - Title bar: interactive (draggable)
-/// - Content area: click-through via CSS
 #[tauri::command]
 pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     // Enable auto-show for future focus events

@@ -3,6 +3,5 @@ pub mod capture;
 pub mod config;
 pub mod engine;
 pub mod history;
-pub mod logging;
 pub mod models;
 pub mod storage;

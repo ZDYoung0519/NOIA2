@@ -13,7 +13,7 @@ use libloading::{Library, Symbol};
 use serde::Serialize;
 
 use crate::dps_meter::capture::channel::Channel;
-use crate::dps_meter::logging::DpsLogger;
+use crate::plugins::logger::AppLogger;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -228,7 +228,7 @@ unsafe impl Sync for NpcapLib {}
 #[derive(Clone)]
 pub struct PcapCapturer {
     channel: Channel<CapturedPacket>,
-    logger: Arc<DpsLogger>,
+    logger: Arc<AppLogger>,
     running: Arc<AtomicBool>,
     detector_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
@@ -239,7 +239,7 @@ pub struct PcapCapturer {
 }
 
 impl PcapCapturer {
-    pub fn new(channel: Channel<CapturedPacket>, logger: Arc<DpsLogger>) -> Self {
+    pub fn new(channel: Channel<CapturedPacket>, logger: Arc<AppLogger>) -> Self {
         Self {
             channel,
             logger,

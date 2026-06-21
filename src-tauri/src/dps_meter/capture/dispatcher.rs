@@ -11,8 +11,8 @@ use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::plugins::logger::AppLogger;
 
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
@@ -79,7 +79,7 @@ impl TrackedAssembler {
 impl DispatcherState {
     fn new(
         data_storage: Arc<DataStorage>,
-        _logger: Arc<DpsLogger>,
+        _logger: Arc<AppLogger>,
         config: SharedDpsMeterConfig,
     ) -> Self {
         Self {
@@ -108,7 +108,7 @@ impl DispatcherState {
 #[derive(Clone)]
 pub struct CaptureDispatcher {
     channel: Channel<CapturedPacket>,
-    logger: Arc<DpsLogger>,
+    logger: Arc<AppLogger>,
     ping_tracker: Arc<PingTracker>,
     running: Arc<AtomicBool>,
     thread: Arc<Mutex<Option<JoinHandle<()>>>>,
@@ -120,7 +120,7 @@ impl CaptureDispatcher {
     pub fn new(
         channel: Channel<CapturedPacket>,
         data_storage: Arc<DataStorage>,
-        logger: Arc<DpsLogger>,
+        logger: Arc<AppLogger>,
         ping_tracker: Arc<PingTracker>,
         config: SharedDpsMeterConfig,
     ) -> Self {

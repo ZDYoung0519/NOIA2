@@ -56,10 +56,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(plugins::logger::init())
         .plugin(plugins::shortcut::global_shortcut_plugin())
         .plugin(plugins::shortcut::init())
         .plugin(plugins::system_tray::init())
-        .plugin(plugins::dps_overlay::init())
+        .plugin(plugins::aion2_overlay::init())
         .plugin(plugins::aion2_focus::init())
         .plugin(plugins::window_tracking::init())
         .invoke_handler(tauri::generate_handler![
@@ -82,28 +83,32 @@ pub fn run() {
             dps_meter::api::commands::delete_history_record,
             dps_meter::api::commands::mark_history_records_uploaded,
             dps_meter::api::commands::check_npcap_available,
-            plugins::dps_overlay::create_dps_overlay,
-            plugins::dps_overlay::destroy_dps_overlay,
-            plugins::dps_overlay::create_dps_history,
-            plugins::dps_overlay::toggle_dps_overlay_locked,
-            plugins::dps_overlay::set_dps_overlay_locked,
-            plugins::dps_overlay::create_dps_log,
-            plugins::dps_overlay::create_dps_detail,
-            plugins::dps_overlay::create_dps_settings,
+            plugins::aion2_overlay::create_dps_overlay,
+            plugins::aion2_overlay::destroy_dps_overlay,
+            plugins::aion2_overlay::create_dps_history,
+            plugins::aion2_overlay::toggle_dps_overlay_locked,
+            plugins::aion2_overlay::set_dps_overlay_locked,
+            plugins::aion2_overlay::create_dps_log,
+            plugins::aion2_overlay::create_dps_detail,
+            plugins::aion2_overlay::create_dps_settings,
             plugins::window_tracking::ensure_tracked_window,
-            plugins::dps_overlay::get_overlay_config,
-            plugins::dps_overlay::set_overlay_config,
-            plugins::dps_overlay::get_language,
-            plugins::dps_overlay::set_language,
-            plugins::dps_overlay::get_detail_selection,
-            plugins::dps_overlay::set_detail_selection,
+            plugins::aion2_overlay::get_overlay_config,
+            plugins::aion2_overlay::set_overlay_config,
+            plugins::aion2_overlay::get_language,
+            plugins::aion2_overlay::set_language,
+            plugins::aion2_overlay::get_detail_selection,
+            plugins::aion2_overlay::set_detail_selection,
             plugins::aion2_focus::set_dps_manual_hidden,
             plugins::aion2_focus::set_auto_hide_enabled,
             plugins::aion2_focus::set_dps_always_on_top,
             plugins::shortcut::sync_shortcuts,
         ])
         .setup(|app| {
-            let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone());
+            let logger = app
+                .state::<std::sync::Arc<plugins::logger::AppLogger>>()
+                .inner()
+                .clone();
+            let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone(), logger);
             app.manage(meter);
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();

@@ -9,7 +9,9 @@ let logLines = [];
 
 document.getElementById("close-btn").addEventListener("click", async () => {
   const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  try { await getCurrentWindow().close(); } catch (_) {}
+  try {
+    await getCurrentWindow().close();
+  } catch (_) {}
 });
 
 document.getElementById("clear-btn").addEventListener("click", () => {
@@ -28,7 +30,8 @@ function render() {
       <span class="log-line__msg">${esc(line.text)}</span>
     </div>`;
   }
-  $content.innerHTML = html || `<div class="log-empty">${filter ? "No matches" : "Waiting for log events..."}</div>`;
+  $content.innerHTML =
+    html || `<div class="log-empty">${filter ? "No matches" : "Waiting for log events..."}</div>`;
   $content.scrollTop = $content.scrollHeight;
 }
 
@@ -45,7 +48,7 @@ function fmtTime(ts) {
   return d.toLocaleTimeString("en-US", { hour12: false });
 }
 
-listen("dps-logger", (event) => {
+listen("app-logger", (event) => {
   const { level, message, timestamp } = event.payload;
   logLines.push({ time: fmtTime(timestamp), level, text: message });
   if (logLines.length > MAX_LINES) logLines.shift();

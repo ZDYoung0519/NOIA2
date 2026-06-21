@@ -16,17 +16,17 @@ use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
-use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::models::combat::CombatSnapshot;
 use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
 use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::plugins::logger::AppLogger;
 
 const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
 
 pub struct DpsMeter {
     app: AppHandle,
     config: SharedDpsMeterConfig,
-    logger: Arc<DpsLogger>,
+    logger: Arc<AppLogger>,
     data_storage: Arc<DataStorage>,
     calculator: Arc<DpsCalculator>,
     ping_tracker: Arc<PingTracker>,
@@ -44,9 +44,8 @@ pub struct DpsMeter {
 }
 
 impl DpsMeter {
-    pub fn new(app: AppHandle) -> Self {
+    pub fn new(app: AppHandle, logger: Arc<AppLogger>) -> Self {
         let config = Arc::new(RwLock::new(DpsMeterConfig::default()));
-        let logger = Arc::new(DpsLogger::new(&app, false));
         let data_storage = Arc::new(DataStorage::new(app.clone(), Arc::clone(&config)));
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
@@ -108,7 +107,7 @@ impl DpsMeter {
     pub fn apply_config(&self, config: DpsMeterConfig) -> DpsMeterConfig {
         let config = config.normalized();
         *self.config.write().unwrap() = config.clone();
-        self.logger.set_output_debug_log(config.output_debug_log);
+        self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
             "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} enable_resync_on_stall={} resync_delay_ms={} boss_only={} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,

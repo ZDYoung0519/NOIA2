@@ -8,6 +8,8 @@ pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 8 * 1024;
 pub const DEFAULT_ENABLE_RESYNC_ON_STALL: bool = true;
 pub const DEFAULT_RESYNC_DELAY_MS: u64 = 500;
 pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
+pub const DEFAULT_HIDE_KNOWN_PLAYERS: bool = false;
+pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +32,7 @@ pub struct DpsMeterConfig {
     pub my_muzhuang_only: bool,
     #[serde(default)]
     pub output_debug_log: bool,
-    #[serde(default)]
+    #[serde(default = "default_hide_unknown_players")]
     pub hide_unknown_players: bool,
     #[serde(default = "default_max_player_count")]
     pub max_player_count: usize,
@@ -52,10 +54,6 @@ impl Default for DpsMeterConfig {
             max_player_count: 10,
         }
     }
-}
-
-fn default_max_player_count() -> usize {
-    10
 }
 
 impl DpsMeterConfig {
@@ -95,6 +93,14 @@ fn default_enable_resync_on_stall() -> bool {
 
 fn default_resync_delay_ms() -> u64 {
     DEFAULT_RESYNC_DELAY_MS
+}
+
+fn default_max_player_count() -> usize {
+    DEFAULT_MAX_PLAYER_COUNT
+}
+
+fn default_hide_unknown_players() -> bool {
+    DEFAULT_HIDE_KNOWN_PLAYERS
 }
 
 fn normalize_max_packet_size_threshold(value: u64) -> u64 {

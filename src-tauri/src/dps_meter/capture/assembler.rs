@@ -3,8 +3,8 @@ use std::sync::Arc;
 use crate::dps_meter::capture::accumulator::PacketAccumulator;
 use crate::dps_meter::capture::processor::StreamProcessor;
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::plugins::logger::AppLogger;
 
 pub struct StreamAssembler {
     accumulator: PacketAccumulator,
@@ -14,7 +14,7 @@ pub struct StreamAssembler {
 impl StreamAssembler {
     pub fn new(
         data_storage: Arc<DataStorage>,
-        logger: Arc<DpsLogger>,
+        logger: Arc<AppLogger>,
         port: String,
         config: SharedDpsMeterConfig,
     ) -> Self {

@@ -10,7 +10,7 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutEvent, ShortcutState};
 
-use super::{aion2_focus, dps_overlay};
+use super::{aion2_focus, aion2_overlay};
 use crate::dps_meter::engine::meter::DpsMeter;
 
 // =============================================================================
@@ -75,12 +75,12 @@ fn toggle_dps_overlay<R: Runtime>(app: &AppHandle<R>) {
 
     if should_hide {
         aion2_focus::set_dps_manual_hidden_for_app(app, true);
-        dps_overlay::hide_dps_v2_windows_for_app(app.clone());
+        aion2_overlay::hide_dps_v2_windows_for_app(app.clone());
     } else {
         aion2_focus::set_dps_manual_hidden_for_app(app, false);
         let app = app.clone();
         tauri::async_runtime::spawn(async move {
-            let _ = dps_overlay::create_dps_overlay(app).await;
+            let _ = aion2_overlay::create_dps_overlay(app).await;
         });
     }
 }
@@ -94,7 +94,7 @@ fn exec_reset_dps_meter<R: Runtime>(app: &AppHandle<R>) {
 fn toggle_lock<R: Runtime>(app: &AppHandle<R>) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        let _ = dps_overlay::toggle_dps_overlay_locked(app).await;
+        let _ = aion2_overlay::toggle_dps_overlay_locked(app).await;
     });
 }
 

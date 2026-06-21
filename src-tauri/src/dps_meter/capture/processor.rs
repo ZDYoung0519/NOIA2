@@ -4,9 +4,9 @@ use std::time::{Duration, Instant};
 use lz4_flex::block::decompress;
 
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::logging::DpsLogger;
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::plugins::logger::AppLogger;
 
 #[derive(Debug)]
 struct DamagePacketReader<'a> {
@@ -64,7 +64,7 @@ fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPr
 
 pub struct StreamProcessor {
     data_storage: Arc<DataStorage>,
-    logger: Arc<DpsLogger>,
+    logger: Arc<AppLogger>,
     port: String,
     config: SharedDpsMeterConfig,
     stalled_since: Option<Instant>,
@@ -73,7 +73,7 @@ pub struct StreamProcessor {
 impl StreamProcessor {
     pub fn new(
         data_storage: Arc<DataStorage>,
-        logger: Arc<DpsLogger>,
+        logger: Arc<AppLogger>,
         port: String,
         config: SharedDpsMeterConfig,
     ) -> Self {
