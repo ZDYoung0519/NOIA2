@@ -270,6 +270,16 @@ impl DataStorage {
         special_counts.insert("MULTIHITDMG".to_string(), packet.multi_hit_damage as u32);
 
         let total_damage = packet.damage + packet.multi_hit_damage;
+        let mut stats_skill_code = if (10_000_000..=99_999_999).contains(&packet.ori_skill_code) {
+            packet.skill_code
+        } else {
+            packet.ori_skill_code
+        };
+        if (100_010..=100_059).contains(&stats_skill_code)
+            && (10001..=10005).contains(&(stats_skill_code / 10))
+        {
+            stats_skill_code = (stats_skill_code / 10) * 10;
+        }
 
         let skill_stats = inner
             .dps_stats
@@ -277,7 +287,7 @@ impl DataStorage {
             .or_default()
             .entry(actor_id)
             .or_default()
-            .entry(packet.skill_code)
+            .entry(stats_skill_code)
             .or_insert_with(SkillStats::new);
 
         skill_stats.counts += 1;

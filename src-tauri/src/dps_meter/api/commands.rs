@@ -57,10 +57,7 @@ pub fn get_last_snapshot(meter: State<'_, DpsMeter>) -> Option<CombatSnapshot> {
 }
 
 #[tauri::command]
-pub fn delete_all_history(
-    app: AppHandle,
-    meter: State<'_, DpsMeter>,
-) -> Result<usize, String> {
+pub fn delete_all_history(app: AppHandle, meter: State<'_, DpsMeter>) -> Result<usize, String> {
     let count = meter.delete_all_history();
     if count > 0 {
         let _ = app.emit("history-updated", ());

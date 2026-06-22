@@ -97,11 +97,13 @@ function normalizeSkillId(id) {
 }
 function skillName(id) {
   const k = normalizeSkillId(id);
-  return currentSkills[k] || currentSkills[k.slice(0, 4)] || "Skill #" + id;
+  return currentSkills[k] || currentSkills[k.slice(0, 8)] || "Skill #" + id;
 }
 function skillIcon(id) {
-  const base = String(id).slice(0, 4);
-  return base.length === 4 ? "/aion2/skill/" + base + ".png" : "";
+  const base = String(id);
+  return base.length === 6
+    ? "/aion2/skill/" + base + ".png"
+    : "/aion2/skill/" + base.slice(0, 4) + ".png";
 }
 function specDots(slots) {
   const set = new Set((slots || []).filter((n) => n >= 1 && n <= 5));
@@ -199,8 +201,7 @@ function render() {
     // Only show skills for the current boss target, not all targets merged together
     const lastTargetId = dataSource.combatInfos?.lastTargetByMainActor;
     const targetStats = dataSource.byTargetPlayerSkillStats || {};
-    const targetSkillStats =
-      (lastTargetId != null ? targetStats[lastTargetId] : null) || {};
+    const targetSkillStats = (lastTargetId != null ? targetStats[lastTargetId] : null) || {};
     rawSkillMap = targetSkillStats[selectedActorId] || {};
   }
   skillMap = {};
@@ -282,8 +283,12 @@ function render() {
       let muTip = "";
       if (muDmg > 0) {
         const lines = Object.entries(s.specialCounts || {})
-          .filter(([k, v]) => k.startsWith("MULTIHIT") && k !== "MULTIHIT" && k !== "MULTIHITDMG" && v > 0)
-          .sort(([a], [b]) => parseInt(a.replace("MULTIHIT", "")) - parseInt(b.replace("MULTIHIT", "")))
+          .filter(
+            ([k, v]) => k.startsWith("MULTIHIT") && k !== "MULTIHIT" && k !== "MULTIHITDMG" && v > 0
+          )
+          .sort(
+            ([a], [b]) => parseInt(a.replace("MULTIHIT", "")) - parseInt(b.replace("MULTIHIT", ""))
+          )
           .map(([k, v]) => {
             const hits = k.replace("MULTIHIT", "");
             const pct = s.counts > 0 ? fmtPct((v / s.counts) * 100) : "--";

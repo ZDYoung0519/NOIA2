@@ -560,11 +560,12 @@ impl StreamProcessor {
 
             self.data_storage.append_damage(parsed);
             self.logger.debug(format!(
-                "[{}] damage target={} actor={} skill={} damage={} multi_hit_count={} multi_hit_damage={}",
+                "[{}] damage target={} actor={} skill={} ori_code={} damage={} multi_hit_count={} multi_hit_damage={}",
                 self.port,
                 target_id,
                 actor_id,
                 resolved_skill_code,
+                exact_skill_code,
                 final_damage,
                 multi_hit_count,
                 multi_hit_damage
@@ -639,8 +640,13 @@ impl StreamProcessor {
         let log_damage = parsed.damage;
         self.data_storage.append_damage(parsed);
         self.logger.debug(format!(
-            "[{}] dot target={} actor={} skill={} damage={}",
-            self.port, log_target_id, log_actor_id, log_skill_code, log_damage
+            "[{}] dot target={} actor={} skill={} ori_code={}, damage={}",
+            self.port,
+            log_target_id,
+            log_actor_id,
+            log_skill_code,
+            skill_code_candidate,
+            log_damage
         ));
         true
     }

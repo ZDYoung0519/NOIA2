@@ -8,7 +8,11 @@
   </head>
   <body>
     <div class="log-titlebar">
-      <span>DPS Log</span>
+      <span class="log-titlebar__title" data-tauri-drag-region>DPS Log</span>
+      <label class="log-titlebar__debug" title="Enable debug logs">
+        <input type="checkbox" id="debug-toggle" />
+        <span>Debug</span>
+      </label>
       <button class="log-titlebar__clear" id="clear-btn" title="Clear">&empty;</button>
       <button class="log-titlebar__close" id="close-btn" title="Close">&times;</button>
     </div>

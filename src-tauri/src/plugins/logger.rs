@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde::Serialize;
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Emitter, Manager, Runtime, State,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -46,6 +46,10 @@ impl AppLogger {
 
     pub fn set_debug_enabled(&self, enabled: bool) {
         *self.debug_enabled.lock().unwrap() = enabled;
+    }
+
+    pub fn is_debug_enabled(&self) -> bool {
+        *self.debug_enabled.lock().unwrap()
     }
 
     pub fn debug(&self, message: impl AsRef<str>) {
@@ -97,6 +101,17 @@ fn resolve_log_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
         return dir.join("logs").join("noia.log");
     }
     std::env::temp_dir().join("noia2").join("noia.log")
+}
+
+#[tauri::command]
+pub fn get_app_logger_debug_enabled(logger: State<'_, Arc<AppLogger>>) -> bool {
+    logger.is_debug_enabled()
+}
+
+#[tauri::command]
+pub fn set_app_logger_debug_enabled(logger: State<'_, Arc<AppLogger>>, enabled: bool) -> bool {
+    logger.set_debug_enabled(enabled);
+    logger.is_debug_enabled()
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {

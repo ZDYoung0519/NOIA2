@@ -3,7 +3,10 @@ html{width:100%;height:100%;background:transparent;overflow:hidden;}
 body{width:100%;height:100vh;min-height:0;background:transparent;overflow:hidden;user-select:none;-webkit-user-select:none;font-family:"Consolas","Monaco",monospace;font-size:12px;display:flex;flex-direction:column;}
 
 .log-titlebar{display:flex;align-items:center;gap:6px;height:26px;padding:0 6px;background:rgba(0,0,0,0.7);border-bottom:1px solid rgba(255,255,255,0.04);color:#ffd700;font-weight:bold;font-size:12px;flex-shrink:0;}
-.log-titlebar span{flex:1;}
+.log-titlebar__title{flex:1;min-width:0;cursor:grab;}
+.log-titlebar__debug{display:flex;align-items:center;gap:4px;color:#aaa;font-size:11px;font-weight:600;cursor:pointer;}
+.log-titlebar__debug input{width:11px;height:11px;margin:0;accent-color:#ffd700;cursor:pointer;}
+.log-titlebar__debug:hover{color:#ffd700;}
 .log-titlebar__clear,.log-titlebar__close{cursor:pointer;background:none;border:none;color:#999;font-size:13px;line-height:1;padding:2px 4px;border-radius:3px;transition:color .15s,background .15s;}
 .log-titlebar__clear:hover{color:#ffd700;background:rgba(255,215,0,0.1);}
 .log-titlebar__close:hover{color:#fff;background:rgba(239,68,68,0.3);}

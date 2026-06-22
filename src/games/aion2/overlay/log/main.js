@@ -1,8 +1,9 @@
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 const $content = document.getElementById("log-content");
 const $search = document.getElementById("search-input");
-const $empty = document.querySelector(".log-empty");
+const $debugToggle = document.getElementById("debug-toggle");
 const MAX_LINES = 500;
 
 let logLines = [];
@@ -19,14 +20,27 @@ document.getElementById("clear-btn").addEventListener("click", () => {
   $content.innerHTML = `<div class="log-empty">Cleared</div>`;
 });
 
+$debugToggle.addEventListener("change", async () => {
+  const enabled = $debugToggle.checked;
+  $debugToggle.disabled = true;
+  try {
+    $debugToggle.checked = await invoke("set_app_logger_debug_enabled", { enabled });
+  } catch (_) {
+    $debugToggle.checked = !enabled;
+  } finally {
+    $debugToggle.disabled = false;
+  }
+});
+
 function render() {
   const filter = ($search.value || "").toLowerCase();
   let html = "";
   for (const line of logLines) {
     if (filter && !line.text.toLowerCase().includes(filter)) continue;
+    const level = String(line.level || "").toLowerCase();
     html += `<div class="log-line">
       <span class="log-line__time">${line.time}</span>
-      <span class="log-line__level ${line.level}">${line.level.toUpperCase()}</span>
+      <span class="log-line__level ${level}">${level.toUpperCase()}</span>
       <span class="log-line__msg">${esc(line.text)}</span>
     </div>`;
   }
@@ -50,10 +64,24 @@ function fmtTime(ts) {
 
 listen("app-logger", (event) => {
   const { level, message, timestamp } = event.payload;
-  logLines.push({ time: fmtTime(timestamp), level, text: message });
+  logLines.push({
+    time: fmtTime(timestamp),
+    level: String(level || "").toLowerCase(),
+    text: message,
+  });
   if (logLines.length > MAX_LINES) logLines.shift();
   render();
 });
+
+async function initDebugToggle() {
+  try {
+    $debugToggle.checked = await invoke("get_app_logger_debug_enabled");
+  } catch (_) {
+    $debugToggle.checked = false;
+  }
+}
+
+initDebugToggle();
 
 // Footer: capture info from dps-memory
 listen("dps-memory", (event) => {

@@ -68,6 +68,8 @@ pub fn run() {
             update_tray_menu,
             show_system_notification,
             plugins::system_tray::quit_application,
+            plugins::logger::get_app_logger_debug_enabled,
+            plugins::logger::set_app_logger_debug_enabled,
             plugins::http::http_request,
             dps_meter::api::commands::apply_dps_meter_config,
             dps_meter::api::commands::get_dps_meter_config,

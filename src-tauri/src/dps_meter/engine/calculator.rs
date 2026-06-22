@@ -113,7 +113,10 @@ fn build_combat_snapshot(
             sorted.sort_by(|a, b| b.total_damage.cmp(&a.total_damage));
             // Filter unknown players if configured
             let filtered: Vec<_> = if hide_unknown_players {
-                sorted.into_iter().filter(|p| !p.actor_name.is_empty()).collect()
+                sorted
+                    .into_iter()
+                    .filter(|p| !p.actor_name.is_empty())
+                    .collect()
             } else {
                 sorted
             };
@@ -122,7 +125,10 @@ fn build_combat_snapshot(
                 .into_iter()
                 .take(max_player_count.max(5).min(20))
                 .collect();
-            (target_infos.get(&last_target_id.unwrap()).cloned(), truncated)
+            (
+                target_infos.get(&last_target_id.unwrap()).cloned(),
+                truncated,
+            )
         })
         .unwrap_or((None, Vec::new()));
 
