@@ -270,11 +270,15 @@ impl DataStorage {
         special_counts.insert("MULTIHITDMG".to_string(), packet.multi_hit_damage as u32);
 
         let total_damage = packet.damage + packet.multi_hit_damage;
+
+        // 如果是 8 位的技能id，那么是常规技能，使用normalize后的code
+        // 如果>8位的技能id (通常是10位，代表dot类型技能)，那么使用原始code，和8位区分开
         let mut stats_skill_code = if (10_000_000..=99_999_999).contains(&packet.ori_skill_code) {
             packet.skill_code
         } else {
             packet.ori_skill_code
         };
+        // 精灵星召唤物的普通攻击归类
         if (100_010..=100_059).contains(&stats_skill_code)
             && (10001..=10005).contains(&(stats_skill_code / 10))
         {

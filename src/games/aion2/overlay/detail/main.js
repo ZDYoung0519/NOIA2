@@ -206,9 +206,8 @@ function render() {
   }
   skillMap = {};
   for (const [sid, st] of Object.entries(rawSkillMap)) {
-    const normalizedSid = normalizeSkillId(sid);
-    if (!skillMap[normalizedSid]) skillMap[normalizedSid] = emptySkillStats();
-    mergeSkillStats(skillMap[normalizedSid], st);
+    if (!skillMap[sid]) skillMap[sid] = emptySkillStats();
+    mergeSkillStats(skillMap[sid], st);
   }
   for (const s of Object.values(skillMap)) {
     if (s.minDamage === 1e99) s.minDamage = 0;
