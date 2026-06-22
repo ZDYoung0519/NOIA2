@@ -93,6 +93,9 @@ function getClassIcon(c) {
   return c ? "/aion2/class/" + c.toLowerCase() + ".png" : "";
 }
 function normalizeSkillId(id) {
+  // 取前8位，不足8位只保留已有的位数，只有使用技能名称才需要normalize，
+  // 技能已经在后端分组，
+  // 前端不需要任何实际的合并操作
   return String(id).slice(0, 8);
 }
 function skillName(id) {
