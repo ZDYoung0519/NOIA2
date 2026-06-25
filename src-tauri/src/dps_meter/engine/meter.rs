@@ -16,7 +16,7 @@ use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
-use crate::dps_meter::models::combat::CombatSnapshot;
+use crate::dps_meter::models::combat::{CombatSnapshot, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -109,13 +109,15 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} enable_resync_on_stall={} resync_delay_ms={} boss_only={} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} enable_resync_on_stall={} resync_delay_ms={} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
             config.max_packet_size_threshold,
             config.enable_resync_on_stall,
             config.resync_delay_ms,
             config.boss_only,
+            config.pvp_mode_on,
+            config.pvp_overlay_position,
             config.show_possible_boss,
             config.my_muzhuang_only,
             config.output_debug_log
@@ -226,6 +228,7 @@ impl DpsMeter {
             },
             last_target_info: None,
             last_target_all_players_overview_stats: Vec::new(),
+            main_actor_received_player_overview_stats: Vec::new(),
         };
         let _ = self.app.emit("dps-snapshot", empty);
     }
@@ -255,6 +258,10 @@ impl DpsMeter {
             cfg.hide_unknown_players,
             cfg.max_player_count,
         )
+    }
+
+    pub fn get_pvp_watch_info(&self, names: &[String]) -> PvpWatchInfoResponse {
+        self.data_storage.get_pvp_watch_info(names)
     }
 
     fn start_snapshot_loop(&self) {
@@ -298,7 +305,7 @@ impl DpsMeter {
                 }
 
                 let interval_ms = config.read().unwrap().dps_snapshot_interval_ms;
-                logger.debug(format!("snapshot loop sleep {}ms", interval_ms));
+                // logger.debug(format!("snapshot loop sleep {}ms", interval_ms));
                 thread::sleep(Duration::from_millis(interval_ms));
             }
         });
@@ -361,7 +368,7 @@ impl DpsMeter {
                 }
 
                 let interval_ms = config.read().unwrap().memory_snapshot_interval_ms;
-                logger.debug(format!("memory snapshot loop sleep {}ms", interval_ms));
+                // logger.debug(format!("memory snapshot loop sleep {}ms", interval_ms));
                 thread::sleep(Duration::from_millis(interval_ms));
             }
         });

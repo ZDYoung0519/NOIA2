@@ -13,6 +13,59 @@ pub struct SkillStats {
     pub special_counts: HashMap<String, u32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DetailPlayerInfo {
+    pub server_id: u16,
+    pub name: String,
+    pub class_or_role: u32,
+    pub level: u32,
+    pub flag: u8,
+    pub character_uid: u64,
+    pub unknown_1: u32,
+    pub item_level: u32,
+    pub combat_power: u64,
+    pub unknown_2: u64,
+    pub unknown_3: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PvpWatchInfo {
+    pub query_name: String,
+    pub actor_id: Option<u32>,
+    pub actor_name: Option<String>,
+    pub server_id: Option<String>,
+    pub actor_class: Option<String>,
+    pub current_hp: Option<u32>,
+    pub max_hp: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PvpKnownPlayer {
+    pub actor_id: u32,
+    pub actor_name: String,
+    pub server_id: Option<String>,
+    pub actor_class: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PvpWatchInfoResponse {
+    pub watch_info: Vec<PvpWatchInfo>,
+    pub known_players: Vec<PvpKnownPlayer>,
+    pub last_dealt_player: Option<PvpWatchInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerHpInfo {
+    pub actor_id: u32,
+    pub current_hp: u32,
+    pub max_observed_hp: u32,
+}
+
 impl SkillStats {
     pub fn new() -> Self {
         Self {
@@ -94,4 +147,6 @@ pub struct CombatSnapshot {
     pub last_target_info: Option<TargetInfo>,
     #[serde(default)]
     pub last_target_all_players_overview_stats: Vec<PlayerOverviewStat>,
+    #[serde(default)]
+    pub main_actor_received_player_overview_stats: Vec<PlayerOverviewStat>,
 }

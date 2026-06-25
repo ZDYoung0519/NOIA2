@@ -14,7 +14,7 @@ function getServerName(serverId) {
 // =============================================================================
 // Reconcile the overlay window height with the rendered content
 // =============================================================================
-const MIN_WINDOW_HEIGHT = 50;
+const MIN_WINDOW_HEIGHT = 10;
 const AUTO_RESIZE_POLL_MS = 500;
 const STORAGE_KEY = "app-config";
 const DEFAULT_OVERLAY_CONFIG = {
@@ -149,6 +149,47 @@ function syncLockedToBackend(locked) {
   });
 }
 
+async function enablePvpMode() {
+  let backendConfig = null;
+
+  try {
+    backendConfig = await invoke("get_dps_meter_config");
+  } catch (err) {
+    console.error("[dps-overlay] get backend config failed:", err);
+  }
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const appConfig = JSON.parse(raw);
+      appConfig.aion2 = appConfig.aion2 || {};
+      appConfig.aion2.backend = {
+        ...(backendConfig || {}),
+        ...(appConfig.aion2.backend || {}),
+        pvpModeOn: true,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appConfig));
+      window.dispatchEvent(new CustomEvent("app-config-changed", { detail: appConfig }));
+      backendConfig = appConfig.aion2.backend;
+    } else if (backendConfig) {
+      backendConfig = { ...backendConfig, pvpModeOn: true };
+    }
+  } catch (err) {
+    console.error("[dps-overlay] persist pvp mode failed:", err);
+    if (backendConfig) {
+      backendConfig = { ...backendConfig, pvpModeOn: true };
+    }
+  }
+
+  if (!backendConfig) return;
+
+  try {
+    await invoke("apply_dps_meter_config", { config: backendConfig });
+  } catch (err) {
+    console.error("[dps-overlay] enable pvp mode failed:", err);
+  }
+}
+
 async function setAlwaysOnTop(enabled) {
   const nextConfig = {
     ...DEFAULT_OVERLAY_CONFIG,
@@ -226,6 +267,20 @@ document.getElementById("reset-btn").addEventListener("click", async () => {
 document.getElementById("history-btn").addEventListener("click", async () => {
   try {
     await invoke("create_dps_history");
+  } catch (_) {
+    /* ignore */
+  }
+});
+
+const $pvpBtn = document.getElementById("pvp-btn");
+$pvpBtn.addEventListener("mousedown", (event) => {
+  event.stopPropagation();
+});
+$pvpBtn.addEventListener("click", async (event) => {
+  event.stopPropagation();
+  try {
+    await enablePvpMode();
+    await invoke("create_pvp_overlay");
   } catch (_) {
     /* ignore */
   }
@@ -878,6 +933,10 @@ function updatePlayerList(snap, fullRebuild) {
 
     await listen("dps-snapshot", (event) => {
       const snap = event.payload;
+      const targetInfo = getLastTargetInfo(snap);
+      if (targetInfo != null && targetInfo.targetMobCode == null) {
+        return;
+      }
       lastSnapshot = snap;
       updateOverview(snap);
       updatePlayerList(snap);

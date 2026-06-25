@@ -59,6 +59,7 @@ async function autoResize() {
 // ── State ──
 let mode = "live";
 let selectedActorId = null;
+let selectedTargetId = null;
 let frozenRecord = null;
 let lastSnapshot = null;
 
@@ -179,10 +180,10 @@ function render() {
   if (mode === "history") {
     targetInfo = dataSource.targetInfo || null;
   } else {
-    const targetId = dataSource.combatInfos?.lastTargetByMainActor;
+    const targetId = selectedTargetId ?? dataSource.combatInfos?.lastTargetByMainActor;
     if (targetId != null) {
       targetInfo =
-        dataSource.lastTargetInfo || dataSource.combatInfos?.targetInfos?.[targetId] || null;
+        dataSource.combatInfos?.targetInfos?.[targetId] || dataSource.lastTargetInfo || null;
     }
   }
 
@@ -191,9 +192,11 @@ function render() {
     playerStats = dataSource.playerStats?.[selectedActorId] || null;
   } else {
     playerStats =
-      (dataSource.lastTargetAllPlayersOverviewStats || []).find(
-        (p) => p.actorId === selectedActorId
-      ) || null;
+      (
+        (selectedTargetId != null
+          ? Object.values(dataSource.byTargetPlayerStats?.[selectedTargetId] || {})
+          : dataSource.lastTargetAllPlayersOverviewStats) || []
+      ).find((p) => p.actorId === selectedActorId) || null;
   }
 
   // ── Skill stats ──
@@ -202,7 +205,7 @@ function render() {
     rawSkillMap = dataSource.playerSkillStats?.[selectedActorId] || {};
   } else {
     // Only show skills for the current boss target, not all targets merged together
-    const lastTargetId = dataSource.combatInfos?.lastTargetByMainActor;
+    const lastTargetId = selectedTargetId ?? dataSource.combatInfos?.lastTargetByMainActor;
     const targetStats = dataSource.byTargetPlayerSkillStats || {};
     const targetSkillStats = (lastTargetId != null ? targetStats[lastTargetId] : null) || {};
     rawSkillMap = targetSkillStats[selectedActorId] || {};
@@ -356,6 +359,7 @@ function render() {
     console.log("[dps-detail] init selection:", JSON.stringify(selection));
     if (selection && selection.actorId) {
       selectedActorId = selection.actorId;
+      selectedTargetId = selection.targetId ?? null;
       mode = selection.mode || "live";
       console.log("[dps-detail] init mode:", mode, "actorId:", selectedActorId);
       if (mode === "history") {
@@ -397,6 +401,7 @@ function render() {
     }
     if (!payload || !payload.actorId) return;
     selectedActorId = payload.actorId;
+    selectedTargetId = payload.targetId ?? null;
     mode = payload.mode || "live";
     console.log("[dps-detail] event mode:", mode, "actorId:", selectedActorId);
     if (mode === "history") frozenRecord = payload.record || null;

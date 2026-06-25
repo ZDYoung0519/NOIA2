@@ -175,12 +175,12 @@ impl CaptureDispatcher {
                 }
 
                 if looks_like_tls_payload(&packet.data) {
-                    logger.debug(format!(
-                        "dispatcher skip tls-like payload src={} dst={} len={}",
-                        packet.src_port,
-                        packet.dst_port,
-                        packet.data.len()
-                    ));
+                    // logger.debug(format!(
+                    //     "dispatcher skip tls-like payload src={} dst={} len={}",
+                    //     packet.src_port,
+                    //     packet.dst_port,
+                    //     packet.data.len()
+                    // ));
                     continue;
                 }
 
@@ -191,12 +191,12 @@ impl CaptureDispatcher {
                     .any(|window| window == MAGIC);
 
                 if contains_magic && state.logged_magic_packets < 20 {
-                    logger.debug(format!(
-                        "dispatcher magic packet key={} payload_len={} head={}",
-                        key,
-                        packet.data.len(),
-                        format_packet_prefix(&packet.data, 24)
-                    ));
+                    // logger.debug(format!(
+                    //     "dispatcher magic packet key={} payload_len={} head={}",
+                    //     key,
+                    //     packet.data.len(),
+                    //     format_packet_prefix(&packet.data, 24)
+                    // ));
                     state.logged_magic_packets += 1;
                 }
 

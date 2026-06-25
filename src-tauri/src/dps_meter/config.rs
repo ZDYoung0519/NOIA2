@@ -11,6 +11,20 @@ pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
 pub const DEFAULT_HIDE_KNOWN_PLAYERS: bool = false;
 pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum PvpOverlayPosition {
+    Bottom,
+    Right,
+    Free,
+}
+
+impl Default for PvpOverlayPosition {
+    fn default() -> Self {
+        Self::Bottom
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DpsMeterConfig {
@@ -26,6 +40,10 @@ pub struct DpsMeterConfig {
     pub resync_delay_ms: u64,
     #[serde(default)]
     pub boss_only: bool,
+    #[serde(default)]
+    pub pvp_mode_on: bool,
+    #[serde(default)]
+    pub pvp_overlay_position: PvpOverlayPosition,
     #[serde(default)]
     pub show_possible_boss: bool,
     #[serde(default)]
@@ -47,6 +65,8 @@ impl Default for DpsMeterConfig {
             enable_resync_on_stall: DEFAULT_ENABLE_RESYNC_ON_STALL,
             resync_delay_ms: DEFAULT_RESYNC_DELAY_MS,
             boss_only: false,
+            pvp_mode_on: false,
+            pvp_overlay_position: PvpOverlayPosition::Bottom,
             show_possible_boss: false,
             my_muzhuang_only: false,
             output_debug_log: false,

@@ -403,6 +403,51 @@ export function Aion2Settings() {
           </SettingRow>
 
           <SettingRow
+            title={t("settings.aion2.pvpModeOn")}
+            description={t("settings.aion2.pvpModeOnDesc")}
+          >
+            <Switch
+              checked={config.aion2.backend.pvpModeOn}
+              onCheckedChange={(v) => updateSettings("aion2.backend.pvpModeOn", v)}
+            />
+          </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.pvpOverlayPosition")}
+            description={t("settings.aion2.pvpOverlayPositionDesc")}
+          >
+            <div className="flex gap-2">
+              <Button
+                variant={
+                  config.aion2.backend.pvpOverlayPosition === "bottom" ? "default" : "outline"
+                }
+                size="sm"
+                onClick={() => updateSettings("aion2.backend.pvpOverlayPosition", "bottom")}
+              >
+                {t("settings.aion2.pvpOverlayPositionBottom")}
+              </Button>
+              <Button
+                variant={
+                  config.aion2.backend.pvpOverlayPosition === "right" ? "default" : "outline"
+                }
+                size="sm"
+                onClick={() => updateSettings("aion2.backend.pvpOverlayPosition", "right")}
+              >
+                {t("settings.aion2.pvpOverlayPositionRight")}
+              </Button>
+              <Button
+                variant={
+                  config.aion2.backend.pvpOverlayPosition === "free" ? "default" : "outline"
+                }
+                size="sm"
+                onClick={() => updateSettings("aion2.backend.pvpOverlayPosition", "free")}
+              >
+                {t("settings.aion2.pvpOverlayPositionFree")}
+              </Button>
+            </div>
+          </SettingRow>
+
+          <SettingRow
             title={t("settings.aion2.myMuzhuangOnly")}
             description={t("settings.aion2.myMuzhuangOnlyDesc")}
           >

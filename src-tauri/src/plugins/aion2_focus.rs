@@ -7,7 +7,8 @@ use tauri::{
 };
 
 const AION2_PROCESS_NAME: &str = "Aion2.exe";
-const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 1] = ["dps-overlay"];
+const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 2] = ["dps-overlay", "dps-overlay-pvp"];
+const DPS_OVERLAY_LABEL: &str = "dps-overlay";
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -56,9 +57,11 @@ pub fn set_dps_always_on_top<R: Runtime>(
 ) {
     state.dps_always_on_top.store(enabled, Ordering::Relaxed);
     if enabled && !state.dps_manual_hidden.load(Ordering::Relaxed) {
-        if let Some(window) = app.get_webview_window("dps-overlay") {
-            let _ = window.show();
-            let _ = window.unminimize();
+        for label in FOLLOW_FOCUS_WINDOW_LABELS {
+            if let Some(window) = app.get_webview_window(label) {
+                let _ = window.show();
+                let _ = window.unminimize();
+            }
         }
     }
 }
@@ -113,7 +116,8 @@ mod windows_impl {
     };
 
     use super::{
-        Aion2FocusChangedPayload, Aion2FocusState, AION2_PROCESS_NAME, FOLLOW_FOCUS_WINDOW_LABELS,
+        Aion2FocusChangedPayload, Aion2FocusState, AION2_PROCESS_NAME, DPS_OVERLAY_LABEL,
+        FOLLOW_FOCUS_WINDOW_LABELS,
     };
 
     static FOREGROUND_SENDER: OnceLock<Mutex<Option<Sender<isize>>>> = OnceLock::new();
@@ -178,7 +182,9 @@ mod windows_impl {
                             if dps_manual_hidden {
                                 continue;
                             }
-                            let _ = window.set_focusable(false);
+                            if label == DPS_OVERLAY_LABEL {
+                                let _ = window.set_focusable(false);
+                            }
                             let _ = window.show();
                             let _ = window.unminimize();
                         } else {
@@ -257,7 +263,9 @@ mod windows_impl {
                 if let Some(window) = app_for_poller.get_webview_window(label) {
                     let current_visible = window.is_visible().unwrap_or(false);
                     if should_show && !current_visible {
-                        let _ = window.set_focusable(false);
+                        if label == DPS_OVERLAY_LABEL {
+                            let _ = window.set_focusable(false);
+                        }
                         let _ = window.show();
                         let _ = window.unminimize();
                     } else if !should_show && current_visible {

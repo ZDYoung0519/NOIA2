@@ -6,11 +6,14 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
-use crate::dps_meter::models::combat::SkillStats;
+use crate::dps_meter::models::combat::{
+    DetailPlayerInfo, PlayerHpInfo, PvpKnownPlayer, PvpWatchInfo, PvpWatchInfoResponse, SkillStats,
+};
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
 
 const ACTOR_METADATA_CAPACITY: usize = 2_000;
+const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
 const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 1] = ["11340000"];
@@ -92,8 +95,10 @@ struct DataStorageInner {
     actor_id_server_map: BoundedMap<u32, String>,
     actor_id_class_map: BoundedMap<u32, String>,
     actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
+    detail_player_info_map: BoundedMap<String, DetailPlayerInfo>,
     mob_id_code_map: BoundedMap<u32, u32>,
     mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
+    player_hp_map: BoundedMap<u32, PlayerHpInfo>,
     possible_boss_codes: HashSet<u32>,
     summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
@@ -104,6 +109,7 @@ struct DataStorageInner {
     main_actor_name: Option<String>,
     last_target: Option<u32>,
     last_target_by_main_actor: Option<u32>,
+    last_player_target_by_main_actor: Option<u32>,
 }
 
 impl Default for DataStorageInner {
@@ -114,8 +120,10 @@ impl Default for DataStorageInner {
             actor_id_server_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            detail_player_info_map: BoundedMap::new(DETAIL_PLAYER_INFO_CAPACITY),
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             mob_id_hp_map: BoundedMap::new(MOB_METADATA_CAPACITY),
+            player_hp_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             possible_boss_codes: HashSet::new(),
             summon_owner_map: BoundedMap::new(SUMMON_METADATA_CAPACITY),
             start_time: None,
@@ -126,6 +134,7 @@ impl Default for DataStorageInner {
             main_actor_name: None,
             last_target: None,
             last_target_by_main_actor: None,
+            last_player_target_by_main_actor: None,
         }
     }
 }
@@ -171,8 +180,10 @@ impl DataStorage {
         let actor_id_server_map = inner.actor_id_server_map.clone();
         let actor_id_class_map = inner.actor_id_class_map.clone();
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
+        let detail_player_info_map = inner.detail_player_info_map.clone();
         let mob_id_code_map = inner.mob_id_code_map.clone();
         let mob_id_hp_map = inner.mob_id_hp_map.clone();
+        let player_hp_map = inner.player_hp_map.clone();
         // let summon_owner_map = inner.summon_owner_map.clone();
         let dot_skill_list = inner.dot_skill_list.clone();
 
@@ -183,8 +194,10 @@ impl DataStorage {
         inner.actor_id_server_map = actor_id_server_map;
         inner.actor_id_class_map = actor_id_class_map;
         inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
+        inner.detail_player_info_map = detail_player_info_map;
         inner.mob_id_code_map = mob_id_code_map;
         inner.mob_id_hp_map = mob_id_hp_map;
+        inner.player_hp_map = player_hp_map;
         // inner.summon_owner_map = summon_owner_map;
         inner.dot_skill_list = dot_skill_list;
     }
@@ -215,8 +228,10 @@ impl DataStorage {
                     || (config.show_possible_boss && inner.possible_boss_codes.contains(&mob_code))
             })
             .unwrap_or(false);
+        let is_target_player = inner.actor_id_name_map.contains_key(&packet.target_id)
+            && !inner.mob_id_code_map.contains_key(&packet.target_id);
 
-        if config.boss_only && !is_target_boss {
+        if config.boss_only && !is_target_boss && !(config.pvp_mode_on && is_target_player) {
             return;
         }
 
@@ -309,6 +324,9 @@ impl DataStorage {
             inner.last_target = Some(packet.target_id);
             if inner.main_actor_id == Some(actor_id) {
                 inner.last_target_by_main_actor = Some(packet.target_id);
+                if is_target_player {
+                    inner.last_player_target_by_main_actor = Some(packet.target_id);
+                }
             }
         }
     }
@@ -322,6 +340,15 @@ impl DataStorage {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
         }
         inner.summon_owner_map.map.remove(&actor_id);
+    }
+
+    pub fn upsert_detail_player_info(&self, info: DetailPlayerInfo) {
+        let key = detail_player_info_key(info.server_id, &info.name);
+        self.inner
+            .write()
+            .unwrap()
+            .detail_player_info_map
+            .insert(key, info);
     }
 
     pub fn append_mob(&self, target_id: u32, mob_code: u32) {
@@ -343,6 +370,19 @@ impl DataStorage {
         if current_hp > entry.1 {
             entry.1 = current_hp;
         }
+    }
+
+    pub fn append_player_hp(&self, actor_id: u32, current_hp: u32) {
+        let mut inner = self.inner.write().unwrap();
+        let entry = inner
+            .player_hp_map
+            .get_mut_or_insert_with(actor_id, || PlayerHpInfo {
+                actor_id,
+                current_hp,
+                max_observed_hp: current_hp,
+            });
+        entry.current_hp = current_hp;
+        entry.max_observed_hp = entry.max_observed_hp.max(current_hp);
     }
 
     pub fn append_summon(&self, owner_id: u32, summon_id: u32) {
@@ -450,6 +490,79 @@ impl DataStorage {
             .as_hash_map()
     }
 
+    #[allow(dead_code)]
+    pub fn detail_player_info_snapshot(&self) -> HashMap<String, DetailPlayerInfo> {
+        self.inner
+            .read()
+            .unwrap()
+            .detail_player_info_map
+            .as_hash_map()
+    }
+
+    pub fn get_pvp_watch_info(&self, names: &[String]) -> PvpWatchInfoResponse {
+        let inner = self.inner.read().unwrap();
+        let mut watch_info = Vec::new();
+        let mut known_players = Vec::new();
+
+        for (actor_id, actor_name) in &inner.actor_id_name_map.map {
+            if actor_name.trim().is_empty() || inner.mob_id_code_map.contains_key(actor_id) {
+                continue;
+            }
+
+            known_players.push(PvpKnownPlayer {
+                actor_id: *actor_id,
+                actor_name: actor_name.clone(),
+                server_id: inner.actor_id_server_map.get(actor_id).cloned(),
+                actor_class: inner.actor_id_class_map.get(actor_id).cloned(),
+            });
+        }
+        known_players.sort_by(|a, b| {
+            a.actor_name
+                .cmp(&b.actor_name)
+                .then_with(|| a.server_id.cmp(&b.server_id))
+                .then_with(|| a.actor_id.cmp(&b.actor_id))
+        });
+
+        for raw_name in names {
+            let query_name = raw_name.trim();
+            if query_name.is_empty() {
+                continue;
+            }
+
+            let mut matched = false;
+            for (actor_id, actor_name) in &inner.actor_id_name_map.map {
+                if actor_name != query_name {
+                    continue;
+                }
+
+                watch_info.push(build_pvp_watch_info_for_actor(
+                    &inner, *actor_id, query_name,
+                ));
+                matched = true;
+            }
+
+            if !matched {
+                watch_info.push(PvpWatchInfo {
+                    query_name: query_name.to_string(),
+                    actor_id: None,
+                    actor_name: None,
+                    server_id: None,
+                    actor_class: None,
+                    current_hp: None,
+                    max_hp: None,
+                });
+            }
+        }
+
+        PvpWatchInfoResponse {
+            watch_info,
+            known_players,
+            last_dealt_player: inner
+                .last_player_target_by_main_actor
+                .map(|actor_id| build_pvp_watch_info_for_actor(&inner, actor_id, "last_dealt")),
+        }
+    }
+
     pub fn summon_owner_snapshot(&self) -> HashMap<u32, u32> {
         self.inner.read().unwrap().summon_owner_map.as_hash_map()
     }
@@ -548,4 +661,26 @@ fn current_timestamp_seconds() -> f64 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs_f64())
         .unwrap_or_default()
+}
+
+fn detail_player_info_key(server_id: u16, name: &str) -> String {
+    format!("{server_id}:{name}")
+}
+
+fn build_pvp_watch_info_for_actor(
+    inner: &DataStorageInner,
+    actor_id: u32,
+    query_name: &str,
+) -> PvpWatchInfo {
+    let hp = inner.player_hp_map.get(&actor_id);
+
+    PvpWatchInfo {
+        query_name: query_name.to_string(),
+        actor_id: Some(actor_id),
+        actor_name: inner.actor_id_name_map.get(&actor_id).cloned(),
+        server_id: inner.actor_id_server_map.get(&actor_id).cloned(),
+        actor_class: inner.actor_id_class_map.get(&actor_id).cloned(),
+        current_hp: hp.map(|value| value.current_hp),
+        max_hp: hp.map(|value| value.max_observed_hp),
+    }
 }

@@ -13,6 +13,9 @@
         <input type="checkbox" id="debug-toggle" />
         <span>Debug</span>
       </label>
+      <button class="log-titlebar__copy-all" id="copy-all-btn" title="Copy all logs">
+        Copy all
+      </button>
       <button class="log-titlebar__clear" id="clear-btn" title="Clear">&empty;</button>
       <button class="log-titlebar__close" id="close-btn" title="Close">&times;</button>
     </div>
@@ -23,8 +26,12 @@
       <div class="log-empty">Waiting for log events...</div>
     </div>
     <div class="log-footer" id="log-footer">
-      <span class="log-footer__item">Device: <span class="log-footer__val" id="footer-device">--</span></span>
-      <span class="log-footer__item">Port: <span class="log-footer__val" id="footer-port">--</span></span>
+      <span class="log-footer__item"
+        >Device: <span class="log-footer__val" id="footer-device">--</span></span
+      >
+      <span class="log-footer__item"
+        >Port: <span class="log-footer__val" id="footer-port">--</span></span
+      >
       <span class="log-footer__sizes" id="footer-sizes"></span>
     </div>
     <script type="module" src="./main.js"></script>

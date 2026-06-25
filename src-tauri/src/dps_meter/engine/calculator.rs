@@ -132,6 +132,28 @@ fn build_combat_snapshot(
         })
         .unwrap_or((None, Vec::new()));
 
+    let main_actor_received_overview = data_storage
+        .main_actor_id()
+        .and_then(|main_actor_id| {
+            per_target_overview
+                .get(&main_actor_id)
+                .map(|stats| (main_actor_id, stats))
+        })
+        .map(|(main_actor_id, stats)| {
+            let mut sorted: Vec<_> = stats.values().cloned().collect();
+            sorted.retain(|p| p.actor_id != main_actor_id);
+            sorted.sort_by(|a, b| b.total_damage.cmp(&a.total_damage));
+            if hide_unknown_players {
+                sorted
+                    .into_iter()
+                    .filter(|p| !p.actor_name.is_empty())
+                    .collect()
+            } else {
+                sorted
+            }
+        })
+        .unwrap_or_default();
+
     Some(CombatSnapshot {
         total_damage,
         by_target_player_skill_stats: filtered_skill_stats,
@@ -147,6 +169,7 @@ fn build_combat_snapshot(
         },
         last_target_info,
         last_target_all_players_overview_stats: last_target_overview,
+        main_actor_received_player_overview_stats: main_actor_received_overview,
     })
 }
 

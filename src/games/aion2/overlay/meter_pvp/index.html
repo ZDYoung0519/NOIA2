@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NoiA PVP Overlay</title>
+    <link rel="stylesheet" href="../meter/style.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="meter-pvp">
+    <div class="title-bar">
+      <div class="title-bar__drag" id="drag-handle" data-tauri-drag-region>
+        <span class="title-bar__label">NoiA PVP</span>
+      </div>
+      <button class="title-bar__close" id="close-btn" title="Close overlay">&times;</button>
+    </div>
+    <div class="pvp-content" id="pvp-content">
+      <div class="pvp-section-title">受到伤害</div>
+      <div class="pvp-empty" id="pvp-empty">暂无受到伤害</div>
+      <div class="player-list" id="pvp-player-list"></div>
+      <div class="player-hp-panel">
+        <div class="pvp-section-title">
+          <span>玩家血量监控</span>
+          <span
+            class="pvp-help"
+            tabindex="0"
+            aria-label="目标在附近时才会生效，首名玩家是我最后攻击的玩家"
+          >
+            ?
+          </span>
+        </div>
+        <div class="player-hp-list" id="player-hp-list"></div>
+        <form class="player-hp-form" id="player-hp-form">
+          <input
+            class="player-hp-input"
+            id="player-hp-input"
+            type="text"
+            list="player-hp-suggestions"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="添加监控玩家"
+          />
+          <datalist id="player-hp-suggestions"></datalist>
+          <button class="player-hp-add" type="submit">+</button>
+        </form>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

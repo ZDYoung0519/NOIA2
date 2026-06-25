@@ -9,6 +9,7 @@ use tauri::{
 use crate::dps_meter::engine::meter::DpsMeter;
 
 const DPS_OVERLAY_LABEL: &str = "dps-overlay";
+const PVP_OVERLAY_LABEL: &str = "dps-overlay-pvp";
 
 /// Create the DPS overlay window and start the DPS meter.
 /// If the window already exists, it will be shown instead of creating a new one.
@@ -61,6 +62,57 @@ pub fn destroy_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> 
     if let Some(window) = app.get_webview_window(DPS_OVERLAY_LABEL) {
         window.destroy().map_err(|e| e.to_string())?;
     }
+    if let Some(window) = app.get_webview_window(PVP_OVERLAY_LABEL) {
+        window.destroy().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Create the PVP overlay window and make sure the DPS meter backend is running.
+#[tauri::command]
+pub async fn create_pvp_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    super::aion2_focus::set_dps_manual_hidden_for_app(&app, false);
+
+    let meter = app.state::<DpsMeter>();
+    if !meter.is_running() {
+        meter.start_dps_meter()?;
+    }
+
+    if let Some(window) = app.get_webview_window(PVP_OVERLAY_LABEL) {
+        window.set_focusable(true).map_err(|e| e.to_string())?;
+        window
+            .set_ignore_cursor_events(false)
+            .map_err(|e| e.to_string())?;
+        window.show().map_err(|e| e.to_string())?;
+        window.unminimize().map_err(|e| e.to_string())?;
+        let _ = window.eval("location.reload()");
+        return Ok(());
+    }
+
+    let window = WebviewWindowBuilder::new(
+        &app,
+        PVP_OVERLAY_LABEL,
+        WebviewUrl::App("src/games/aion2/overlay/meter_pvp/index.html".into()),
+    )
+    .title("NoiA | PVP Overlay")
+    .decorations(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .inner_size(320.0, 100.0)
+    .min_inner_size(200.0, 50.0)
+    .resizable(true)
+    .focused(false)
+    .focusable(true)
+    .visible(false)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focusable(true).map_err(|e| e.to_string())?;
+    window
+        .set_ignore_cursor_events(false)
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 

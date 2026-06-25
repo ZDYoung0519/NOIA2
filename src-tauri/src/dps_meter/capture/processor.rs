@@ -4,6 +4,7 @@ use std::time::{Duration, Instant};
 use lz4_flex::block::decompress;
 
 use crate::dps_meter::config::SharedDpsMeterConfig;
+use crate::dps_meter::models::combat::DetailPlayerInfo;
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -264,9 +265,28 @@ impl StreamProcessor {
             return false;
         }
 
+        // let search_target_hex = "E7 87 83 E7 83 A7 E7 9A 84 E6 B5 85 E8 93 9D";
+        // if let Some(search_target) = parse_hex_bytes(search_target_hex) {
+        //     if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
+        //         let context_start = hit_offset.saturating_sub(256);
+        //         let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
+        //         self.logger.info(format!(
+        //             "[{}] hard search hit opcode={:02X} {:02X} offset={} target_hex={} context_hex={}, full_hex={}",
+        //             self.port,
+        //             payload[0],
+        //             payload[1],
+        //             hit_offset,
+        //             bytes_to_hex(&search_target),
+        //             bytes_to_hex(&payload[context_start..context_end]),
+        //             bytes_to_hex(&payload),
+        //         ));
+        //     }
+        // }
+
         match (payload[0], payload[1]) {
             (0x33, 0x36) => self.parse_main_nickname(payload),
             (0x45, 0x36) => self.parse_other_nickname(payload),
+            (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
             (0x41, 0x36) => self.parse_summon_packet(payload),
             (0x04, 0x38) => self.parse_damage_packet(payload),
             (0x05, 0x38) => self.parse_dot_packet(payload),
@@ -541,6 +561,10 @@ impl StreamProcessor {
             }
 
             let resolved_skill_code = normalize_skill_id(exact_skill_code);
+            let special_names: Vec<String> = specials
+                .iter()
+                .map(|special| special.as_str().to_string())
+                .collect();
 
             let parsed = ParsedDamagePacket {
                 target_id,
@@ -552,15 +576,12 @@ impl StreamProcessor {
                 is_crit: specials.contains(&SpecialDamage::Critical),
                 multi_hit_damage,
                 multi_hit_count,
-                specials: specials
-                    .into_iter()
-                    .map(|special| special.as_str().to_string())
-                    .collect(),
+                specials: special_names.clone(),
             };
 
             self.data_storage.append_damage(parsed);
             self.logger.debug(format!(
-                "[{}] damage target={} actor={} skill={} ori_code={} damage={} multi_hit_count={} multi_hit_damage={}",
+                "[{}] damage target={} actor={} skill={} ori_code={} damage={} multi_hit_count={} multi_hit_damage={} specials={:?}",
                 self.port,
                 target_id,
                 actor_id,
@@ -568,7 +589,8 @@ impl StreamProcessor {
                 exact_skill_code,
                 final_damage,
                 multi_hit_count,
-                multi_hit_damage
+                multi_hit_damage,
+                special_names
             ));
             parsed_any = true;
         }
@@ -835,13 +857,13 @@ impl StreamProcessor {
             return false;
         }
 
-        let mob_id_info = read_varint(packet, offset);
-        if !mob_id_info.is_valid() || mob_id_info.value < 100 {
+        let target_id_info = read_varint(packet, offset);
+        if !target_id_info.is_valid() || target_id_info.value < 100 {
             return false;
         }
-        offset += mob_id_info.length;
+        offset += target_id_info.length;
 
-        let mob_id = mob_id_info.value as u32;
+        let target_id = target_id_info.value as u32;
         let skip_1 = read_varint(packet, offset);
         if !skip_1.is_valid() {
             return false;
@@ -864,25 +886,72 @@ impl StreamProcessor {
             return false;
         }
 
-        let mob_hp = parse_u32_le(packet, offset);
-        if mob_hp > 1_000_000_000 {
+        let target_hp = parse_u32_le(packet, offset);
+        if target_hp > 1_000_000_000 {
             return false;
         }
 
         // Mark as possible boss if HP exceeds threshold
         const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 10_000_000;
         let show_possible_boss = self.config.read().unwrap().show_possible_boss;
-        if show_possible_boss && mob_hp > POSSIBLE_BOSS_HP_THRESHOLD {
-            if let Some(mob_code) = self.data_storage.get_mob_code(mob_id) {
+        if show_possible_boss && target_hp > POSSIBLE_BOSS_HP_THRESHOLD {
+            if let Some(mob_code) = self.data_storage.get_mob_code(target_id) {
                 self.data_storage.add_possible_boss(mob_code);
             }
         }
+
+        let is_target_player = self
+            .data_storage
+            .actor_id_name_snapshot()
+            .contains_key(&target_id)
+            && self.data_storage.get_mob_code(target_id).is_none();
+
+        if is_target_player {
+            if !self.config.read().unwrap().pvp_mode_on {
+                self.logger.debug(format!(
+                    "[{}] player remain hp skipped pvp_mode_off actor={} current_hp={}",
+                    self.port, target_id, target_hp
+                ));
+                return true;
+            }
+            if self.data_storage.main_actor_id() == Some(target_id) {
+                self.logger.debug(format!(
+                    "[{}] player remain hp skipped main_actor actor={} current_hp={}",
+                    self.port, target_id, target_hp
+                ));
+                return true;
+            }
+
+            self.data_storage.append_player_hp(target_id, target_hp);
+            let actor_name = self
+                .data_storage
+                .actor_id_name_snapshot()
+                .get(&target_id)
+                .cloned()
+                .unwrap_or_else(|| "Unknown".to_string());
+            self.logger.info(format!(
+                "[{}] player remain hp actor={} name={} current_hp={}",
+                self.port, target_id, actor_name, target_hp
+            ));
+            return true;
+        }
+
+        self.logger.debug(format!(
+            "[{}] remain hp target not player target={} current_hp={} known_actor={} mob_code={:?}",
+            self.port,
+            target_id,
+            target_hp,
+            self.data_storage
+                .actor_id_name_snapshot()
+                .contains_key(&target_id),
+            self.data_storage.get_mob_code(target_id)
+        ));
 
         // Skip non-boss targets hp changes when boss_only is enabled
         {
             let config = self.config.read().unwrap();
             if config.boss_only {
-                let mob_code = self.data_storage.get_mob_code(mob_id);
+                let mob_code = self.data_storage.get_mob_code(target_id);
                 let is_known =
                     mob_code.is_some_and(|code| self.data_storage.is_known_boss_code(code));
                 let is_possible =
@@ -893,28 +962,34 @@ impl StreamProcessor {
             }
         }
 
-        let is_first_hp_detection = !self.data_storage.mob_id_hp_snapshot().contains_key(&mob_id);
-        self.data_storage.append_mob_hp(mob_id, mob_hp);
+        let is_first_hp_detection = !self
+            .data_storage
+            .mob_id_hp_snapshot()
+            .contains_key(&target_id);
+        self.data_storage.append_mob_hp(target_id, target_hp);
         if is_first_hp_detection {
-            if let Some((current_hp, max_hp)) =
-                self.data_storage.mob_id_hp_snapshot().get(&mob_id).copied()
+            if let Some((current_hp, max_hp)) = self
+                .data_storage
+                .mob_id_hp_snapshot()
+                .get(&target_id)
+                .copied()
             {
                 let mob_id_code_map = self.data_storage.mob_id_code_snapshot();
                 let mob_code_name_map = self.data_storage.mob_code_name_snapshot();
 
-                if let Some(mob_code) = mob_id_code_map.get(&mob_id).copied() {
+                if let Some(mob_code) = mob_id_code_map.get(&target_id).copied() {
                     let mob_name = mob_code_name_map
                         .get(&mob_code)
                         .cloned()
                         .unwrap_or_else(|| "Unknown Boss".to_string());
                     self.logger.info(format!(
                         "[{}] first remain hp mob_id={} mob_code={} name={} current_hp={} max_hp={}",
-                        self.port, mob_id, mob_code, mob_name, current_hp, max_hp
+                        self.port, target_id, mob_code, mob_name, current_hp, max_hp
                     ));
                 } else {
                     self.logger.info(format!(
                         "[{}] first remain hp mob_id={} current_hp={} max_hp={}",
-                        self.port, mob_id, current_hp, max_hp
+                        self.port, target_id, current_hp, max_hp
                     ));
                 }
             }
@@ -1014,6 +1089,11 @@ impl StreamProcessor {
     }
 
     fn parse_main_nickname(&mut self, payload: &[u8]) -> bool {
+        self.parse_main_nickname_standard(payload) || self.parse_main_nickname_fallback(payload)
+    }
+
+    // Normal maps use a 0x07 separator before the name length.
+    fn parse_main_nickname_standard(&mut self, payload: &[u8]) -> bool {
         let mut offset = 2usize;
         let aid_info = read_varint(payload, offset);
         if !aid_info.is_valid() || aid_info.value <= 0 {
@@ -1047,7 +1127,11 @@ impl StreamProcessor {
             return false;
         }
 
-        let Ok(name) = std::str::from_utf8(&payload[offset..offset + name_len]) else {
+        let name_start = offset;
+        let name_end = offset + name_len;
+        let name_hex = bytes_to_hex(&payload[name_start..name_end]);
+
+        let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
             return false;
         };
         let Some(name) = sanitize_nickname(name) else {
@@ -1075,16 +1159,16 @@ impl StreamProcessor {
                     Some(&sid.to_string()),
                 );
                 self.logger.info(format!(
-                    "[{}] main actor actor={} name={} sid={}",
-                    self.port, aid_info.value, name, sid
+                    "[{}] main actor actor={} name={} name_hex={} sid={}",
+                    self.port, aid_info.value, name, name_hex, sid
                 ));
             }
             None => {
                 self.data_storage
                     .append_actor(aid_info.value as u32, &name, None);
                 self.logger.info(format!(
-                    "[{}] main actor actor={} name={} sid=none",
-                    self.port, aid_info.value, name
+                    "[{}] main actor actor={} name={} name_hex={} sid=none",
+                    self.port, aid_info.value, name, name_hex
                 ));
             }
         }
@@ -1092,6 +1176,118 @@ impl StreamProcessor {
         self.data_storage
             .set_main_actor(aid_info.value as u32, &name);
         true
+    }
+
+    // Some special maps still use opcode 33 36, but store the nickname as
+    // actor_id + several fields + name_len + name + sid, without the 0x07 separator.
+    fn parse_main_nickname_fallback(&mut self, payload: &[u8]) -> bool {
+        let mut offset = 2usize;
+        let aid_info = read_varint(payload, offset);
+        if !aid_info.is_valid() || aid_info.value <= 0 {
+            return false;
+        }
+
+        offset += aid_info.length;
+        let search_end = payload.len().min(offset + 32);
+
+        // Search only near the actor id to avoid matching names from later list data.
+        for name_len_offset in offset..search_end {
+            let name_len = usize::from(payload[name_len_offset]);
+            if name_len == 0 || name_len > 71 {
+                continue;
+            }
+
+            let name_start = name_len_offset + 1;
+            let name_end = name_start + name_len;
+            if name_end + 2 > payload.len() {
+                continue;
+            }
+
+            let sid = u16::from_le_bytes([payload[name_end], payload[name_end + 1]]) as u32;
+            if !is_available_server_id(sid) {
+                continue;
+            }
+
+            let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
+                continue;
+            };
+            let Some(name) = sanitize_nickname(name) else {
+                continue;
+            };
+
+            let name_hex = bytes_to_hex(&payload[name_start..name_end]);
+            self.data_storage
+                .append_actor(aid_info.value as u32, &name, Some(&sid.to_string()));
+            self.logger.info(format!(
+                "[{}] main actor fallback actor={} name={} name_hex={} sid={} name_len_offset={}",
+                self.port, aid_info.value, name, name_hex, sid, name_len_offset
+            ));
+            self.data_storage
+                .set_main_actor(aid_info.value as u32, &name);
+            return true;
+        }
+
+        false
+    }
+
+    fn parse_detail_player_info_packet_058a(&mut self, payload: &[u8]) -> bool {
+        if payload.len() < 8 || payload[0] != 0x05 || payload[1] != 0x8A {
+            return false;
+        }
+
+        let expected_count = if payload.len() >= 6 {
+            u16::from_le_bytes([payload[4], payload[5]]) as usize
+        } else {
+            0
+        };
+        let mut offset = 2usize;
+        let mut parsed_count = 0usize;
+
+        while offset < payload.len() {
+            let Some(entry_offset) =
+                find_next_detail_player_info_entry(payload, offset, payload.len())
+            else {
+                break;
+            };
+            let Some((info, next_offset)) = parse_detail_player_info_entry(payload, entry_offset)
+            else {
+                offset = entry_offset + 1;
+                continue;
+            };
+
+            self.logger.debug(format!(
+                "[{}] detail player info name={} server={} item_level={} combat_power={} unknown_1={} unknown_2={} unknown_3={}",
+                self.port,
+                info.name,
+                info.server_id,
+                info.item_level,
+                info.combat_power,
+                info.unknown_1,
+                info.unknown_2,
+                info.unknown_3
+            ));
+            self.data_storage.upsert_detail_player_info(info);
+            parsed_count += 1;
+
+            if expected_count > 0 && parsed_count >= expected_count {
+                break;
+            }
+            if next_offset <= entry_offset {
+                offset = entry_offset + 1;
+            } else {
+                offset = next_offset;
+            }
+        }
+
+        if parsed_count > 0 {
+            self.logger.info(format!(
+                "[{}] detail player info parsed count={} expected={}",
+                self.port, parsed_count, expected_count
+            ));
+            return true;
+        }
+
+        false
     }
 
     fn parse_other_nickname(&mut self, payload: &[u8]) -> bool {
@@ -1244,6 +1440,117 @@ fn parse_u32_le(packet: &[u8], offset: usize) -> u32 {
     ])
 }
 
+fn parse_u64_le(packet: &[u8], offset: usize) -> u64 {
+    if offset + 8 > packet.len() {
+        return 0;
+    }
+    u64::from_le_bytes([
+        packet[offset],
+        packet[offset + 1],
+        packet[offset + 2],
+        packet[offset + 3],
+        packet[offset + 4],
+        packet[offset + 5],
+        packet[offset + 6],
+        packet[offset + 7],
+    ])
+}
+
+fn parse_detail_player_info_entry(
+    payload: &[u8],
+    offset: usize,
+) -> Option<(DetailPlayerInfo, usize)> {
+    if !looks_like_detail_player_info_entry(payload, offset) {
+        return None;
+    }
+
+    let server_id = u16::from_le_bytes([payload[offset], payload[offset + 1]]);
+    let class_or_role = parse_u32_le(payload, offset + 2);
+    let name_len = payload[offset + 6] as usize;
+    let name_start = offset + 7;
+    let name_end = name_start + name_len;
+    let name = std::str::from_utf8(&payload[name_start..name_end]).ok()?;
+    let name = sanitize_nickname(name)?;
+
+    let mut cursor = name_end;
+    let level = parse_u32_le(payload, cursor);
+    cursor += 4;
+    let flag = *payload.get(cursor)?;
+    cursor += 1;
+    let character_uid = parse_u64_le(payload, cursor);
+    cursor += 8;
+    let unknown_1 = parse_u32_le(payload, cursor);
+    cursor += 4;
+    let item_level = parse_u32_le(payload, cursor);
+    cursor += 4;
+    let combat_power = parse_u64_le(payload, cursor);
+    cursor += 8;
+    let unknown_2 = parse_u64_le(payload, cursor);
+    cursor += 8;
+    let unknown_3 = parse_u32_le(payload, cursor);
+    cursor += 4;
+
+    // Records may have a few padding bytes, so find the next plausible record
+    // instead of assuming a fixed stride.
+    let next_offset = find_next_detail_player_info_entry(payload, cursor, payload.len())
+        .unwrap_or(cursor.min(payload.len()));
+
+    Some((
+        DetailPlayerInfo {
+            server_id,
+            name,
+            class_or_role,
+            level,
+            flag,
+            character_uid,
+            unknown_1,
+            item_level,
+            combat_power,
+            unknown_2,
+            unknown_3,
+        },
+        next_offset,
+    ))
+}
+
+fn find_next_detail_player_info_entry(payload: &[u8], start: usize, end: usize) -> Option<usize> {
+    let end = end.min(payload.len());
+    (start..end).find(|offset| looks_like_detail_player_info_entry(payload, *offset))
+}
+
+fn looks_like_detail_player_info_entry(payload: &[u8], offset: usize) -> bool {
+    if offset + 48 > payload.len() {
+        return false;
+    }
+
+    let server_id = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
+    if !is_available_server_id(server_id) {
+        return false;
+    }
+
+    let name_len = payload[offset + 6] as usize;
+    if !(1..=71).contains(&name_len) {
+        return false;
+    }
+
+    let name_start = offset + 7;
+    let name_end = name_start + name_len;
+    let min_end = name_end + 41;
+    if min_end > payload.len() {
+        return false;
+    }
+
+    let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
+        return false;
+    };
+    if sanitize_nickname(name).is_none() {
+        return false;
+    }
+
+    let level = parse_u32_le(payload, name_end);
+    (1..=100).contains(&level)
+}
+
 fn normalize_skill_id(raw: u32) -> u32 {
     if (30_000_000..=30_999_999).contains(&raw) {
         raw
@@ -1302,6 +1609,29 @@ fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Opti
     data.get(start..end)
         .and_then(|slice| slice.iter().position(|byte| *byte == target))
         .map(|pos| start + pos)
+}
+
+fn bytes_to_hex(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|byte| format!("{byte:02X}"))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn parse_hex_bytes(hex: &str) -> Option<Vec<u8>> {
+    let compact: String = hex.chars().filter(|ch| !ch.is_whitespace()).collect();
+    if compact.is_empty() || compact.len() % 2 != 0 {
+        return None;
+    }
+
+    let mut bytes = Vec::with_capacity(compact.len() / 2);
+    for index in (0..compact.len()).step_by(2) {
+        let byte = u8::from_str_radix(&compact[index..index + 2], 16).ok()?;
+        bytes.push(byte);
+    }
+
+    Some(bytes)
 }
 
 fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {

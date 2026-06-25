@@ -8,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 type Theme = "light" | "dark" | "system";
 type Language = "en" | "zh-CN" | "zh-TW" | "ko";
 type RGBA = [number, number, number, number];
+type PvpOverlayPosition = "bottom" | "right" | "free";
 
 interface AppSettings {
   theme: Theme;
@@ -27,6 +28,8 @@ interface BackendSettings {
   enableResyncOnStall: boolean;
   resyncDelayMs: number;
   bossOnly: boolean;
+  pvpModeOn: boolean;
+  pvpOverlayPosition: PvpOverlayPosition;
   showPossibleBoss: boolean;
   myMuzhuangOnly: boolean;
   hideUnknownPlayers: boolean;
@@ -90,6 +93,8 @@ const DEFAULTS: AppConfig = {
       enableResyncOnStall: true,
       resyncDelayMs: 500,
       bossOnly: true,
+      pvpModeOn: false,
+      pvpOverlayPosition: "bottom",
       showPossibleBoss: false,
       myMuzhuangOnly: true,
       hideUnknownPlayers: true,
@@ -327,6 +332,37 @@ export function useSettings() {
   useEffect(() => {
     applyAndSync(config);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const reloadFromStorage = () => {
+      const nextConfig = loadConfig();
+      setConfig(nextConfig);
+      configRef.current = nextConfig;
+    };
+
+    const handleCustomConfigChanged = (event: Event) => {
+      const nextConfig = (event as CustomEvent<AppConfig>).detail;
+      if (!nextConfig) {
+        reloadFromStorage();
+        return;
+      }
+      setConfig(nextConfig);
+      configRef.current = nextConfig;
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        reloadFromStorage();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("app-config-changed", handleCustomConfigChanged);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("app-config-changed", handleCustomConfigChanged);
+    };
   }, []);
 
   return {

@@ -3,7 +3,7 @@ use tauri::{AppHandle, Emitter, State};
 use crate::dps_meter::config::DpsMeterConfig;
 use crate::dps_meter::engine::meter::DpsMeter;
 use crate::dps_meter::history::HistoryRecord;
-use crate::dps_meter::models::combat::CombatSnapshot;
+use crate::dps_meter::models::combat::{CombatSnapshot, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::DpsMeterState;
 
 #[tauri::command]
@@ -27,6 +27,14 @@ pub fn start_dps_meter(meter: State<'_, DpsMeter>) -> Result<(), String> {
 #[tauri::command]
 pub fn get_dps_snapshot(meter: State<'_, DpsMeter>) -> Result<Option<CombatSnapshot>, String> {
     Ok(meter.get_dps_snapshot(0))
+}
+
+#[tauri::command]
+pub fn get_pvp_watch_info(
+    meter: State<'_, DpsMeter>,
+    names: Vec<String>,
+) -> Result<PvpWatchInfoResponse, String> {
+    Ok(meter.get_pvp_watch_info(&names))
 }
 
 #[tauri::command]

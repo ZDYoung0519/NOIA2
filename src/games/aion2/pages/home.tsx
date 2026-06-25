@@ -84,7 +84,9 @@ export default function HomePage() {
             className="flex h-4 w-4 items-center justify-center rounded-sm border-2 border-white"
             aria-label="启动软件后自动关闭主窗口（减少负担）"
           >
-            {config.aion2.autoCloseMain ? <span className="text-[11px] leading-none text-white">✓</span> : null}
+            {config.aion2.autoCloseMain ? (
+              <span className="text-[11px] leading-none text-white">✓</span>
+            ) : null}
           </button>
           启动水表悬浮窗后，自动关闭主窗口（减少运行负担）
         </label>
