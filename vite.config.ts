@@ -52,7 +52,7 @@ export default defineConfig(async () => ({
         ),
         "src/games/aion2/overlay/log/index": path.resolve(
           __dirname,
-          "src/games/aion2/overlay/log/index.html",
+          "src/games/aion2/overlay/log/index.html"
         ),
         "src/games/aion2/overlay/history/index": path.resolve(
           __dirname,
