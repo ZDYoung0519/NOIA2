@@ -46,6 +46,10 @@ export default defineConfig(async () => ({
           __dirname,
           "src/games/aion2/overlay/meter/index.html"
         ),
+        "src/games/aion2/overlay/meter_pvp/index": path.resolve(
+          __dirname,
+          "src/games/aion2/overlay/meter_pvp/index.html"
+        ),
         "src/games/aion2/overlay/log/index": path.resolve(
           __dirname,
           "src/games/aion2/overlay/log/index.html",
