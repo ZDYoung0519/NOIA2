@@ -9,80 +9,99 @@ body {
   width: 100%;
   height: 100%;
   min-height: 0;
-  background: #000;
+  background: transparent;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
-  font-family: "Consolas", "Monaco", monospace;
-  font-size: 13px;
+  font-family: "Inter", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "Consolas", sans-serif;
+  font-size: 12px;
 }
 
 .container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.88);
+  padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(21, 18, 13, 0.96), rgba(5, 6, 8, 0.94)), rgba(0, 0, 0, 0.9);
   color: #e5e7eb;
 }
 
 .history-titlebar {
-  color: #f8d98a;
-  font-size: 14px;
-  font-weight: bold;
-  min-height: 38px;
-  margin-bottom: 8px;
-  padding: 0 4px 10px;
+  color: #f5d78a;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 32px;
+  margin-bottom: 7px;
+  padding: 0 2px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
 }
 
 .header__count {
-  color: #9ca3af;
-  font-weight: normal;
-  font-size: 12px;
+  color: #9aa3af;
+  font-weight: 500;
+  font-size: 11px;
   margin-left: auto;
   white-space: nowrap;
 }
 
 /* ── Footer ── */
 .history-footer {
-  display: flex; justify-content: space-between; gap: 8px;
-  flex-shrink: 0; padding: 6px 0 0;
-  border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 7px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 3px;
 }
 .history-footer__btn {
   flex: 1;
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid rgba(74, 222, 128, 0.2);
+  background: rgba(74, 222, 128, 0.09);
+  border: 1px solid rgba(74, 222, 128, 0.18);
   color: #86efac;
-  padding: 5px 0; border-radius: 4px; cursor: pointer;
-  font-size: 11px; font-family: inherit; font-weight: 600;
-  transition: background 0.15s;
+  padding: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 700;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   text-align: center;
 }
-.history-footer__btn:hover:not(:disabled) { background: rgba(74, 222, 128, 0.2); }
-.history-footer__btn:disabled { opacity: 0.3; cursor: default; }
+.history-footer__btn:hover:not(:disabled) {
+  background: rgba(74, 222, 128, 0.2);
+}
+.history-footer__btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
 .history-footer__btn.is-danger {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
 }
-.history-footer__btn.is-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.2); }
+.history-footer__btn.is-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+}
 
 .header__close {
   cursor: pointer;
   background: none;
   border: none;
   color: #9ca3af;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   transition:
     color 0.15s,
@@ -96,22 +115,26 @@ body {
 .upload-status {
   display: none;
   flex-shrink: 0;
-  margin: 0 0 10px;
-  padding: 7px 9px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.045);
   color: #cbd5e1;
-  font-family: "Consolas","Monaco",monospace;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.35;
 }
 .upload-status.is-uploading {
   animation: statusPulse 1.2s ease-in-out infinite;
 }
 @keyframes statusPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 .upload-status.is-success {
   color: #86efac;
@@ -130,10 +153,10 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
-  padding: 0 2px 8px 0;
+  padding: 0 2px 7px 0;
 }
 
 .record-list::-webkit-scrollbar {
@@ -149,72 +172,79 @@ body {
 
 .record-row {
   position: relative;
-  padding: 10px;
-  padding-right: 34px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px;
+  padding-right: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+    rgba(10, 12, 16, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.075);
   border-radius: 6px;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   transition:
     background 0.1s,
-    border-color 0.1s;
+    border-color 0.1s,
+    transform 0.1s;
   flex-shrink: 0;
 }
 .record-row:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 215, 0, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.036)),
+    rgba(12, 14, 18, 0.78);
+  border-color: rgba(245, 215, 138, 0.22);
+  transform: translateY(-1px);
 }
 
 .record-row__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 6px;
+  margin-bottom: 5px;
 }
 
 .record-row__name {
   color: #f3f4f6;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .record-row__boss {
-  font-size: 11px;
-  padding: 2px 6px;
+  font-size: 10px;
+  padding: 2px 5px;
   border-radius: 4px;
   flex-shrink: 0;
+  font-weight: 700;
 }
 .record-row__boss.is-boss {
-  color: #ff6b6b;
-  background: rgba(255, 107, 107, 0.12);
-  border: none;
+  color: #ffb4a8;
+  background: rgba(255, 107, 107, 0.11);
+  border: 1px solid rgba(255, 107, 107, 0.16);
 }
 .record-row__boss.is-not-boss {
-  color: #888;
-  background: rgba(255, 255, 255, 0.06);
-  border: none;
+  color: #a0a8b3;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .record-row__delete {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 5px;
+  right: 5px;
   z-index: 3;
   cursor: pointer;
   background: none;
   border: none;
   color: #666;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
   transition:
     color 0.1s,
@@ -229,41 +259,65 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  margin-bottom: 4px;
+  gap: 6px;
+  font-size: 11px;
+  margin-bottom: 5px;
 }
 
 .record-row__damage {
-  color: #e5e7eb;
-  font-size: 13px;
-  font-weight: 600;
+  color: #f5d78a;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .record-row__time {
-  color: #8f9aaa;
+  color: #87909d;
+  font-family: "Consolas", "Cascadia Mono", monospace;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
+.record-row__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .record-row__players {
-  color: #9ca3af;
-  font-size: 12px;
+  color: #8d96a3;
+  font-size: 11px;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.record-row__main-player {
+  color: #f5d78a;
+  max-width: 118px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
 }
 
 .record-row__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 7px;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
 }
 
 .record-row__uploaded {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
+  white-space: nowrap;
 }
 .record-row__uploaded.is-uploaded {
   color: #86efac;
@@ -274,14 +328,15 @@ body {
 
 .record-row__upload {
   cursor: pointer;
-  height: 22px;
-  padding: 0 8px;
+  height: 20px;
+  padding: 0 7px;
   border: 1px solid rgba(74, 222, 128, 0.28);
   border-radius: 4px;
   background: rgba(74, 222, 128, 0.08);
   color: #86efac;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
   transition:
     color 0.15s,
     background 0.15s,
@@ -302,29 +357,29 @@ body {
   color: #6b7280;
   font-style: italic;
   text-align: center;
-  padding: 24px 0;
-  font-size: 13px;
+  padding: 22px 8px;
+  font-size: 12px;
 }
 
 /* ── Expanded player list ── */
 .record-row__detail {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 7px;
+  padding-top: 7px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .detail-player-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .detail-player-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 28px;
-  padding: 4px 6px;
+  gap: 5px;
+  min-height: 25px;
+  padding: 3px 5px;
   border-radius: 4px;
   cursor: pointer;
   background: transparent;
@@ -335,15 +390,15 @@ body {
 }
 
 .detail-player-row__icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   flex-shrink: 0;
 }
 
 .detail-player-row__name {
   color: #e5e7eb;
-  font-size: 13px;
+  font-size: 12px;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -353,7 +408,8 @@ body {
 
 .detail-player-row__damage {
   color: #e5e7eb;
-  font-size: 13px;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-align: right;
   min-width: 60px;
@@ -361,7 +417,8 @@ body {
 
 .detail-player-row__dps {
   color: #86efac;
-  font-size: 13px;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-align: right;
   min-width: 52px;
@@ -369,7 +426,8 @@ body {
 
 .detail-player-row__share {
   color: #9ca3af;
-  font-size: 12px;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   text-align: right;
   min-width: 40px;

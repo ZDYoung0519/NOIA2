@@ -71,7 +71,7 @@ async function uploadRecords(records, emptyMessage) {
             skipped: progress.skipped,
             failed: progress.failed,
           }),
-          "uploading",
+          "uploading"
         );
       },
     });
@@ -177,6 +177,23 @@ function getRecognizedPlayers(record) {
 function getAllPlayers(record) {
   return Object.values(record.playerStats || {}).sort((a, b) => b.totalDamage - a.totalDamage);
 }
+function getMainPlayerName(record) {
+  const mainActorId = record.combatInfos?.mainActorId;
+  const mainActorName = record.combatInfos?.mainActorName;
+  if (typeof mainActorName === "string" && mainActorName.trim()) {
+    return mainActorName.trim();
+  }
+
+  const mainPlayer =
+    mainActorId != null
+      ? record.playerStats?.[String(mainActorId)] || record.playerStats?.[mainActorId]
+      : null;
+  if (hasActorName(mainPlayer)) {
+    return mainPlayer.actorName.trim();
+  }
+
+  return getRecognizedPlayers(record)[0]?.actorName?.trim() || "";
+}
 
 // ── Render record list ──
 function render(records) {
@@ -200,6 +217,7 @@ function render(records) {
     const name = getTargetName(r);
     const isBoss = r.targetInfo?.isBoss;
     const playerCount = getRecognizedPlayers(r).length;
+    const mainPlayerName = getMainPlayerName(r);
     const uploaded = r.uploaded === true;
     html += `
       <div class="record-row" data-id="${r.id}">
@@ -212,10 +230,15 @@ function render(records) {
           <span class="record-row__damage">${fmtDamage(r.totalDamage)}</span>
           <span class="record-row__time">${fmtTime(r.createdAt)}</span>
         </div>
-        <div class="record-row__players">${playerCount} ${playerCount === 1 ? t("dps-history.player") : t("dps-history.players")}</div>
-        <div class="record-row__actions">
-          <span class="record-row__uploaded ${uploaded ? "is-uploaded" : "is-pending"}">${uploaded ? t("dps-history.uploaded") : t("dps-history.notUploaded")}</span>
-          <button class="record-row__upload" data-upload="${r.id}" data-uploaded="${uploaded}" ${uploaded ? "disabled" : ""}>${uploaded ? t("dps-history.uploaded") : t("dps-history.upload")}</button>
+        <div class="record-row__footer">
+          <div class="record-row__players">
+            ${mainPlayerName ? `<span class="record-row__main-player">${esc(mainPlayerName)}</span>` : ""}
+            <span>${playerCount} ${playerCount === 1 ? t("dps-history.player") : t("dps-history.players")}</span>
+          </div>
+          <div class="record-row__actions">
+            <span class="record-row__uploaded ${uploaded ? "is-uploaded" : "is-pending"}">${uploaded ? t("dps-history.uploaded") : t("dps-history.notUploaded")}</span>
+            <button class="record-row__upload" data-upload="${r.id}" data-uploaded="${uploaded}" ${uploaded ? "disabled" : ""}>${uploaded ? t("dps-history.uploaded") : t("dps-history.upload")}</button>
+          </div>
         </div>
         <div class="record-row__detail" id="detail-${r.id}" style="display:none"></div>
       </div>`;

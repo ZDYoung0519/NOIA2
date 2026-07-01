@@ -164,6 +164,8 @@
       "autoHideEnabledDesc": "开启后只有 Aion2 或相关悬浮窗获得焦点时才显示 DPS 面板。",
       "bossOnly": "仅记录 Boss",
       "bossOnlyDesc": "仅记录对 Boss 怪物的伤害",
+      "showPossibleBoss": "识别可能的 Boss",
+      "showPossibleBossDesc": "开启后，后端会把血量很高但不在已知 Boss 表中的怪物临时视为 Boss，适合新副本或名称表未收录的目标。",
       "pvpModeOn": "记录 PVP 伤害",
       "pvpModeOnDesc": "开启后会额外记录玩家受到的伤害，可与仅记录 Boss 同时使用。",
       "pvpOverlayPosition": "PVP 窗口位置",

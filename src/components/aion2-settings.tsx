@@ -403,6 +403,16 @@ export function Aion2Settings() {
           </SettingRow>
 
           <SettingRow
+            title={t("settings.aion2.showPossibleBoss")}
+            description={t("settings.aion2.showPossibleBossDesc")}
+          >
+            <Switch
+              checked={config.aion2.backend.showPossibleBoss}
+              onCheckedChange={(v) => updateSettings("aion2.backend.showPossibleBoss", v)}
+            />
+          </SettingRow>
+
+          {/* <SettingRow
             title={t("settings.aion2.pvpModeOn")}
             description={t("settings.aion2.pvpModeOnDesc")}
           >
@@ -436,16 +446,14 @@ export function Aion2Settings() {
                 {t("settings.aion2.pvpOverlayPositionRight")}
               </Button>
               <Button
-                variant={
-                  config.aion2.backend.pvpOverlayPosition === "free" ? "default" : "outline"
-                }
+                variant={config.aion2.backend.pvpOverlayPosition === "free" ? "default" : "outline"}
                 size="sm"
                 onClick={() => updateSettings("aion2.backend.pvpOverlayPosition", "free")}
               >
                 {t("settings.aion2.pvpOverlayPositionFree")}
               </Button>
             </div>
-          </SettingRow>
+          </SettingRow> */}
 
           <SettingRow
             title={t("settings.aion2.myMuzhuangOnly")}

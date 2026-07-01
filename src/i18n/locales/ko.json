@@ -125,6 +125,8 @@
       "autoHideEnabledDesc": "Shows the DPS panel only while Aion2 or a related overlay window is focused.",
       "bossOnly": "Boss only",
       "bossOnlyDesc": "Only record damage against boss monsters",
+      "showPossibleBoss": "Detect possible bosses",
+      "showPossibleBossDesc": "Treats very high-HP monsters that are not in the known boss table as temporary bosses. Useful for new dungeons or missing name data.",
       "pvpModeOn": "Record PVP damage",
       "pvpModeOnDesc": "Also records damage against players. Can be used together with Boss only.",
       "pvpOverlayPosition": "PVP window position",
