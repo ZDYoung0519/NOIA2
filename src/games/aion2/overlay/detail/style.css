@@ -140,6 +140,9 @@ body {
 .summary-row6 {
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
 }
+.summary-row7 {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
 .summary-box {
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -166,6 +169,9 @@ body {
 }
 .summary-box__value.back {
   color: #a5b4fc;
+}
+.summary-box__value.front {
+  color: #67e8f9;
 }
 .summary-box__value.double {
   color: #fde047;
@@ -204,12 +210,12 @@ body {
   border-radius: 3px;
 }
 .skill-table {
-  min-width: 1000px;
+  min-width: 1060px;
 }
 .skill-header,
 .skill-row {
   display: grid;
-  grid-template-columns: 160px 0.3fr 0.35fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.45fr 0.5fr 0.5fr 1fr;
+  grid-template-columns: 160px 0.3fr 0.35fr 0.48fr 0.48fr 0.48fr 0.48fr 0.48fr 0.48fr 0.48fr 0.5fr 0.45fr 0.5fr 0.5fr 1fr;
   gap: 6px;
   align-items: center;
 }
@@ -302,6 +308,9 @@ body {
 }
 .color-indigo {
   color: #a5b4fc;
+}
+.color-cyan {
+  color: #67e8f9;
 }
 .color-yellow {
   color: #fde047;

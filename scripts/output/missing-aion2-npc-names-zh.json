@@ -1,0 +1,1953 @@
+{
+  "mobsTotal": 6442,
+  "uniqueMobCodes": 6442,
+  "npcNamesTotal": 6397,
+  "missingTotal": 324,
+  "missingBossTotal": 68,
+  "missing": [
+    {
+      "code": "2000895",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": true
+    },
+    {
+      "code": "2090773",
+      "name": "훈련용 허수아비 (표본)",
+      "suggestedZhName": "訓練用稻草人(樣本)",
+      "boss": true
+    },
+    {
+      "code": "2300162",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300188",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": false
+    },
+    {
+      "code": "2300189",
+      "name": "현명한 바움누트",
+      "suggestedZhName": "賢明的巴溫努特",
+      "boss": true
+    },
+    {
+      "code": "2300190",
+      "name": "팽창하는 자이르페",
+      "suggestedZhName": "膨脹的札伊爾佩",
+      "boss": true
+    },
+    {
+      "code": "2300191",
+      "name": "푸른 숨의 우르서스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300192",
+      "name": "푸른 숨의 우르서스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300193",
+      "name": "크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300194",
+      "name": "자이프",
+      "suggestedZhName": "野狼",
+      "boss": false
+    },
+    {
+      "code": "2300195",
+      "name": "푸른 크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300196",
+      "name": "푸른 숨의 우르서스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300198",
+      "name": "펑거스",
+      "suggestedZhName": "波克斯",
+      "boss": false
+    },
+    {
+      "code": "2300200",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": true
+    },
+    {
+      "code": "2300233",
+      "name": "크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300234",
+      "name": "자이프",
+      "suggestedZhName": "野狼",
+      "boss": false
+    },
+    {
+      "code": "2300235",
+      "name": "푸른 크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300237",
+      "name": "펑기",
+      "suggestedZhName": "波奇",
+      "boss": false
+    },
+    {
+      "code": "2300238",
+      "name": "펑거스",
+      "suggestedZhName": "波克斯",
+      "boss": false
+    },
+    {
+      "code": "2300248",
+      "name": "크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300249",
+      "name": "자이프",
+      "suggestedZhName": "野狼",
+      "boss": false
+    },
+    {
+      "code": "2300250",
+      "name": "푸른 크레스틀리치",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300252",
+      "name": "펑기",
+      "suggestedZhName": "波奇",
+      "boss": false
+    },
+    {
+      "code": "2300253",
+      "name": "펑거스",
+      "suggestedZhName": "波克斯",
+      "boss": false
+    },
+    {
+      "code": "2300262",
+      "name": "수면풀",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300263",
+      "name": "수면풀",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300264",
+      "name": "수면풀",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300265",
+      "name": "케네이르",
+      "suggestedZhName": "凱尼爾",
+      "boss": false
+    },
+    {
+      "code": "2300266",
+      "name": "스파키",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300267",
+      "name": "암흑 정령",
+      "suggestedZhName": "暗黑精靈",
+      "boss": false
+    },
+    {
+      "code": "2300269",
+      "name": "케네이르",
+      "suggestedZhName": "凱尼爾",
+      "boss": false
+    },
+    {
+      "code": "2300270",
+      "name": "스파키",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300271",
+      "name": "암흑 정령",
+      "suggestedZhName": "暗黑精靈",
+      "boss": false
+    },
+    {
+      "code": "2300273",
+      "name": "케네이르",
+      "suggestedZhName": "凱尼爾",
+      "boss": false
+    },
+    {
+      "code": "2300274",
+      "name": "스파키",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300275",
+      "name": "암흑 정령",
+      "suggestedZhName": "暗黑精靈",
+      "boss": false
+    },
+    {
+      "code": "2300282",
+      "name": "이격의라후",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300283",
+      "name": "심연의날개케투",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300284",
+      "name": "중상심연융합로",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300290",
+      "name": "영겁의루드라",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300356",
+      "name": "우두머리 자이프",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300357",
+      "name": "우두머리 자이프",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300358",
+      "name": "우두머리 자이프",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2300359",
+      "name": "스타터틀",
+      "suggestedZhName": "星龜",
+      "boss": false
+    },
+    {
+      "code": "2300360",
+      "name": "스타터틀",
+      "suggestedZhName": "星龜",
+      "boss": false
+    },
+    {
+      "code": "2300361",
+      "name": "스타터틀",
+      "suggestedZhName": "星龜",
+      "boss": false
+    },
+    {
+      "code": "2300362",
+      "name": "펑기",
+      "suggestedZhName": "波奇",
+      "boss": false
+    },
+    {
+      "code": "2300363",
+      "name": "펑기",
+      "suggestedZhName": "波奇",
+      "boss": false
+    },
+    {
+      "code": "2300473",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300474",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300475",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300491",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300492",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300493",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300527",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300528",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300529",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300544",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300545",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300546",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301201",
+      "name": "오염된 수라 마도사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301202",
+      "name": "오염된 수라 병사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301203",
+      "name": "변질된 독혈",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301204",
+      "name": "변질된 수라 대장",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301205",
+      "name": "오염된 슬라임",
+      "suggestedZhName": "被汙染的史萊姆",
+      "boss": false
+    },
+    {
+      "code": "2301206",
+      "name": "오염된 쥐",
+      "suggestedZhName": "被汙染的老鼠",
+      "boss": false
+    },
+    {
+      "code": "2301210",
+      "name": "독성 가스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301211",
+      "name": "독성 가스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301212",
+      "name": "오폐수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301213",
+      "name": "오폐수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301214",
+      "name": "오염된 독주머니",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301215",
+      "name": "변질된 독주머니",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301217",
+      "name": "변질된 수라 대장",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301218",
+      "name": "역류하는 오염 정화기",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301404",
+      "name": "환영의 수호성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301405",
+      "name": "환영의 궁성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301406",
+      "name": "회랑의 집행자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301407",
+      "name": "잊혀진 수라 기사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301408",
+      "name": "잊혀진 수라 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301409",
+      "name": "잊혀진 수라 전사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301410",
+      "name": "환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301411",
+      "name": "분열된 환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301412",
+      "name": "회랑의 감시자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301413",
+      "name": "환영 장막",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2301601",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301602",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301603",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301701",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301702",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301703",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301721",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301722",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301723",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2310519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311101",
+      "name": "에몬",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311102",
+      "name": "파이디온",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311103",
+      "name": "엘라이드",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311404",
+      "name": "환영의 수호성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311405",
+      "name": "환영의 궁성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311406",
+      "name": "회랑의 집행자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311407",
+      "name": "잊혀진 수라 기사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311408",
+      "name": "잊혀진 수라 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311409",
+      "name": "잊혀진 수라 전사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311410",
+      "name": "환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311411",
+      "name": "분열된 환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311412",
+      "name": "회랑의 감시자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311413",
+      "name": "환영의 템페르 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311414",
+      "name": "환영 장막",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2311418",
+      "name": "혼령 폭탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2320519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321404",
+      "name": "환영의 수호성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321405",
+      "name": "환영의 궁성 영혼",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321406",
+      "name": "회랑의 집행자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321407",
+      "name": "잊혀진 수라 기사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321408",
+      "name": "잊혀진 수라 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321409",
+      "name": "잊혀진 수라 전사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321410",
+      "name": "환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321411",
+      "name": "분열된 환영 유령",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321412",
+      "name": "회랑의 감시자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321413",
+      "name": "환영의 템페르 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321414",
+      "name": "환영 장막",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321418",
+      "name": "혼령 폭탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2321519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2322519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2323519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2324519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2325519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2326519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2327519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2328519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2329519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2340516",
+      "name": "팡",
+      "suggestedZhName": "球",
+      "boss": false
+    },
+    {
+      "code": "2600095",
+      "name": "영혼 깃든 갑주",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600096",
+      "name": "집행자 타마사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600097",
+      "name": "정령왕 아그로",
+      "suggestedZhName": "精靈王阿格羅",
+      "boss": true
+    },
+    {
+      "code": "2600098",
+      "name": "감시자 카이라",
+      "suggestedZhName": "監視者卡伊拉",
+      "boss": true
+    },
+    {
+      "code": "2600157",
+      "name": "죽음을 거부한 기사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600401",
+      "name": "어비스 스웜",
+      "suggestedZhName": "深淵蟲子",
+      "boss": false
+    },
+    {
+      "code": "2600402",
+      "name": "어비스 뉴트",
+      "suggestedZhName": "深淵紐特",
+      "boss": false
+    },
+    {
+      "code": "2600403",
+      "name": "어비스 은빛칼날 로탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600404",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600405",
+      "name": "어비스 드라칸 정찰병",
+      "suggestedZhName": "深淵德拉坎偵察兵",
+      "boss": false
+    },
+    {
+      "code": "2600406",
+      "name": "어비스 크랄 궁수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600407",
+      "name": "어비스 드라칸 수색병",
+      "suggestedZhName": "深淵德拉坎搜索兵",
+      "boss": false
+    },
+    {
+      "code": "2600408",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600409",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600411",
+      "name": "어비스 스웜",
+      "suggestedZhName": "深淵蟲子",
+      "boss": false
+    },
+    {
+      "code": "2600412",
+      "name": "어비스 뉴트",
+      "suggestedZhName": "深淵紐特",
+      "boss": false
+    },
+    {
+      "code": "2600413",
+      "name": "어비스 은빛칼날 로탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600414",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600415",
+      "name": "어비스 드라칸 정찰병",
+      "suggestedZhName": "深淵德拉坎偵察兵",
+      "boss": false
+    },
+    {
+      "code": "2600416",
+      "name": "어비스 크랄 궁수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600417",
+      "name": "어비스 드라칸 수색병",
+      "suggestedZhName": "深淵德拉坎搜索兵",
+      "boss": false
+    },
+    {
+      "code": "2600418",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600419",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600421",
+      "name": "어비스 스웜",
+      "suggestedZhName": "深淵蟲子",
+      "boss": false
+    },
+    {
+      "code": "2600422",
+      "name": "어비스 스웜 군체",
+      "suggestedZhName": "深淵蟲子群體",
+      "boss": false
+    },
+    {
+      "code": "2600423",
+      "name": "어비스 유황 슬라임",
+      "suggestedZhName": "深淵硫磺史萊姆",
+      "boss": false
+    },
+    {
+      "code": "2600424",
+      "name": "어비스 유황 스카마",
+      "suggestedZhName": "深淵硫磺斯卡馬",
+      "boss": false
+    },
+    {
+      "code": "2600425",
+      "name": "어비스 유황 식인충",
+      "suggestedZhName": "深淵硫磺食人蟲",
+      "boss": false
+    },
+    {
+      "code": "2600426",
+      "name": "어비스 늪지 타르곤",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600427",
+      "name": "유황 어그린트",
+      "suggestedZhName": "硫磺奧格林特",
+      "boss": false
+    },
+    {
+      "code": "2600428",
+      "name": "앙상한 유황 어그린트",
+      "suggestedZhName": "茂盛的硫磺奧格林特",
+      "boss": false
+    },
+    {
+      "code": "2600429",
+      "name": "어비스 변이 뉴트",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600430",
+      "name": "어비스 드라나 변이체",
+      "suggestedZhName": "深淵德拉那變異體",
+      "boss": false
+    },
+    {
+      "code": "2600431",
+      "name": "어비스 드라코뉴트 저격병",
+      "suggestedZhName": "深淵德拉克紐特狙擊兵",
+      "boss": false
+    },
+    {
+      "code": "2600432",
+      "name": "어비스 거대 변이체",
+      "suggestedZhName": "深淵巨大變異體",
+      "boss": false
+    },
+    {
+      "code": "2600433",
+      "name": "어비스 드라코뉴트 분대장",
+      "suggestedZhName": "深淵德拉克紐特分隊長",
+      "boss": false
+    },
+    {
+      "code": "2600436",
+      "name": "어비스 나가란트 투사",
+      "suggestedZhName": "深淵納迦蘭特鬥士",
+      "boss": false
+    },
+    {
+      "code": "2600437",
+      "name": "어비스 나가 암흑 법사",
+      "suggestedZhName": "深淵納迦暗黑法師",
+      "boss": false
+    },
+    {
+      "code": "2600438",
+      "name": "심연의 고대 전사",
+      "suggestedZhName": "深淵古代戰士",
+      "boss": false
+    },
+    {
+      "code": "2600439",
+      "name": "심연의 고대 파괴자",
+      "suggestedZhName": "深淵古代破壞者",
+      "boss": false
+    },
+    {
+      "code": "2600440",
+      "name": "심연의 변이된 고대 파괴자",
+      "suggestedZhName": "深淵變異的古代破壞者",
+      "boss": false
+    },
+    {
+      "code": "2600441",
+      "name": "어비스 나가란트 투사",
+      "suggestedZhName": "深淵納迦蘭特鬥士",
+      "boss": false
+    },
+    {
+      "code": "2600442",
+      "name": "어비스 나가 암흑 법사",
+      "suggestedZhName": "深淵納迦暗黑法師",
+      "boss": false
+    },
+    {
+      "code": "2600443",
+      "name": "어비스 드라칸 척살부대원",
+      "suggestedZhName": "深淵德拉坎刺殺部隊員",
+      "boss": false
+    },
+    {
+      "code": "2600444",
+      "name": "어비스 드라칸 척살부대장",
+      "suggestedZhName": "深淵德拉坎刺殺部隊長",
+      "boss": false
+    },
+    {
+      "code": "2600445",
+      "name": "어비스 드라나 변이 벌레",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600446",
+      "name": "어비스 오드 변이 벌레",
+      "suggestedZhName": "深淵奧德變異蟲",
+      "boss": false
+    },
+    {
+      "code": "2600447",
+      "name": "어비스 어린 레피스마",
+      "suggestedZhName": "深淵年幼的蜥蜴",
+      "boss": false
+    },
+    {
+      "code": "2600448",
+      "name": "어비스 레피스마",
+      "suggestedZhName": "深淵蜥蜴",
+      "boss": false
+    },
+    {
+      "code": "2600449",
+      "name": "어비스 고약한 네펜데스",
+      "suggestedZhName": "深淵噁心的豬籠草",
+      "boss": false
+    },
+    {
+      "code": "2600450",
+      "name": "어비스 제르피",
+      "suggestedZhName": "深淵純淨的精靈",
+      "boss": false
+    },
+    {
+      "code": "2600451",
+      "name": "어비스 푸른 칼크겔름",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600452",
+      "name": "길들인 자이프",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600453",
+      "name": "바르그 전사",
+      "suggestedZhName": "座狼戰士",
+      "boss": false
+    },
+    {
+      "code": "2600454",
+      "name": "분노한 숲의 수호자",
+      "suggestedZhName": "憤怒的森林守護者",
+      "boss": false
+    },
+    {
+      "code": "2600455",
+      "name": "바르그 광전사",
+      "suggestedZhName": "座狼狂戰士",
+      "boss": false
+    },
+    {
+      "code": "2600456",
+      "name": "어비스 진화한 영혼석",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600457",
+      "name": "어비스 드라나 변이체",
+      "suggestedZhName": "深淵德拉那變異體",
+      "boss": false
+    },
+    {
+      "code": "2600458",
+      "name": "어비스 드라나 변이체",
+      "suggestedZhName": "深淵德拉那變異體",
+      "boss": false
+    },
+    {
+      "code": "2600459",
+      "name": "어비스 드라칸 정찰병",
+      "suggestedZhName": "深淵德拉坎偵察兵",
+      "boss": false
+    },
+    {
+      "code": "2600460",
+      "name": "어비스 드라칸 수색병",
+      "suggestedZhName": "深淵德拉坎搜索兵",
+      "boss": false
+    },
+    {
+      "code": "2600461",
+      "name": "어비스 영원의 코라돈",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600462",
+      "name": "어비스 드라칸 투사",
+      "suggestedZhName": "深淵德拉坎鬥士",
+      "boss": false
+    },
+    {
+      "code": "2600463",
+      "name": "영혼 없는 데바 검성",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600464",
+      "name": "심연의 고대 원혼",
+      "suggestedZhName": "深淵古代冤魂",
+      "boss": false
+    },
+    {
+      "code": "2600465",
+      "name": "영혼 없는 데바 정예병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600466",
+      "name": "정령왕의 호위 전사",
+      "suggestedZhName": "精靈王護衛戰士",
+      "boss": false
+    },
+    {
+      "code": "2600468",
+      "name": "정령왕 아그로",
+      "suggestedZhName": "精靈王阿格羅",
+      "boss": true
+    },
+    {
+      "code": "2600469",
+      "name": "어비스 타락한 정령",
+      "suggestedZhName": "深淵墮落的精靈",
+      "boss": false
+    },
+    {
+      "code": "2600470",
+      "name": "어비스 칼크겔름",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600471",
+      "name": "어비스 어그린트",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600472",
+      "name": "어비스 영원의 전투병",
+      "suggestedZhName": "深淵永恆戰鬥兵",
+      "boss": false
+    },
+    {
+      "code": "2600473",
+      "name": "심연의 고대 원혼",
+      "suggestedZhName": "深淵古代冤魂",
+      "boss": false
+    },
+    {
+      "code": "2600474",
+      "name": "파편 수호자 방패병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600475",
+      "name": "파편 수호자 정예 검병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600476",
+      "name": "심연의 고대 원혼",
+      "suggestedZhName": "深淵古代冤魂",
+      "boss": false
+    },
+    {
+      "code": "2600477",
+      "name": "파편 수호자 정예 방패병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600478",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600479",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600480",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600481",
+      "name": "어비스 은빛칼날 로탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600482",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600483",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600484",
+      "name": "어비스 드라칸 정찰병",
+      "suggestedZhName": "深淵德拉坎偵察兵",
+      "boss": false
+    },
+    {
+      "code": "2600485",
+      "name": "어비스 크랄 궁수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600486",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600487",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600488",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600489",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600491",
+      "name": "어비스 은빛칼날 로탄",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600492",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600493",
+      "name": "어비스 수색대 칼니프",
+      "suggestedZhName": "深淵搜索隊劍齒豹",
+      "boss": false
+    },
+    {
+      "code": "2600494",
+      "name": "어비스 드라칸 정찰병",
+      "suggestedZhName": "深淵德拉坎偵察兵",
+      "boss": false
+    },
+    {
+      "code": "2600495",
+      "name": "어비스 크랄 궁수",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600496",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600497",
+      "name": "어비스 타락한 전사",
+      "suggestedZhName": "深淵修羅戰士",
+      "boss": false
+    },
+    {
+      "code": "2600498",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600499",
+      "name": "어비스 불사의 경비병",
+      "suggestedZhName": "深淵不死警備兵",
+      "boss": false
+    },
+    {
+      "code": "2600501",
+      "name": "어비스 스웜 군체",
+      "suggestedZhName": "深淵蟲子群體",
+      "boss": false
+    },
+    {
+      "code": "2600502",
+      "name": "어비스 늪지 타르곤",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600503",
+      "name": "앙상한 유황 어그린트",
+      "suggestedZhName": "茂盛的硫磺奧格林特",
+      "boss": false
+    },
+    {
+      "code": "2600504",
+      "name": "어비스 변이 뉴트",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600505",
+      "name": "어비스 드라나 변이체",
+      "suggestedZhName": "深淵德拉那變異體",
+      "boss": false
+    },
+    {
+      "code": "2600506",
+      "name": "어비스 드라코뉴트 저격병",
+      "suggestedZhName": "深淵德拉克紐特狙擊兵",
+      "boss": false
+    },
+    {
+      "code": "2600507",
+      "name": "심연의 고대 파괴자",
+      "suggestedZhName": "深淵古代破壞者",
+      "boss": false
+    },
+    {
+      "code": "2600508",
+      "name": "심연의 고대 파괴자",
+      "suggestedZhName": "深淵古代破壞者",
+      "boss": false
+    },
+    {
+      "code": "2600511",
+      "name": "어비스 고약한 네펜데스",
+      "suggestedZhName": "深淵噁心的豬籠草",
+      "boss": false
+    },
+    {
+      "code": "2600512",
+      "name": "어비스 제르피",
+      "suggestedZhName": "深淵純淨的精靈",
+      "boss": false
+    },
+    {
+      "code": "2600513",
+      "name": "어비스 푸른 칼크겔름",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2600514",
+      "name": "바르그 전사",
+      "suggestedZhName": "座狼戰士",
+      "boss": false
+    },
+    {
+      "code": "2600515",
+      "name": "바르그 광전사",
+      "suggestedZhName": "座狼狂戰士",
+      "boss": false
+    },
+    {
+      "code": "2600516",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600517",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600518",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600519",
+      "name": "고대 원혼 기사",
+      "suggestedZhName": "古代冤魂騎士",
+      "boss": false
+    },
+    {
+      "code": "2600520",
+      "name": "처형관 드라모스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600521",
+      "name": "반역자 듀칼",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600522",
+      "name": "파멸자 마라카",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702359",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702372",
+      "name": "깃털포화 두두리",
+      "suggestedZhName": "羽毛砲火杜杜里",
+      "boss": true
+    },
+    {
+      "code": "2702373",
+      "name": "눈 뜬 맹조 도도리",
+      "suggestedZhName": "睜開眼的猛禽多多里",
+      "boss": true
+    },
+    {
+      "code": "2702374",
+      "name": "절망의 경비대장",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702375",
+      "name": "절망의 상급 드라칸",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702376",
+      "name": "절망의 드라칸 지휘관",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702377",
+      "name": "절망의 용족 전사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702378",
+      "name": "절망의 용족 궁병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702379",
+      "name": "절망의 심연 스웜",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702380",
+      "name": "절망의 드라칸 무장병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702381",
+      "name": "절망의 드라칸 마력사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702382",
+      "name": "절망의 정예 투사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702383",
+      "name": "절망의 정예 감시자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702384",
+      "name": "깃털포화 두두리",
+      "suggestedZhName": "羽毛砲火杜杜里",
+      "boss": true
+    },
+    {
+      "code": "2702385",
+      "name": "눈 뜬 맹조 도도리",
+      "suggestedZhName": "睜開眼的猛禽多多里",
+      "boss": true
+    },
+    {
+      "code": "2702386",
+      "name": "파멸의 경비대장",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702387",
+      "name": "파멸의 상급 드라칸",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702388",
+      "name": "파멸의 드라칸 지휘관",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702389",
+      "name": "파멸의 용족 전사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702390",
+      "name": "파멸의 용족 궁병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702391",
+      "name": "파멸의 심연 스웜",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702392",
+      "name": "파멸의 드라칸 무장병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702393",
+      "name": "파멸의 드라칸 마력사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702394",
+      "name": "파멸의 정예 투사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702395",
+      "name": "파멸의 정예 감시자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702396",
+      "name": "분열체 아포노스",
+      "suggestedZhName": "分裂體阿布諾斯",
+      "boss": true
+    },
+    {
+      "code": "2702397",
+      "name": "절망의 수호병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702398",
+      "name": "절망의 감시병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702399",
+      "name": "절망의 데바 순찰자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702400",
+      "name": "절망의 정예 방패병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702401",
+      "name": "절망의 정예 돌격병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702402",
+      "name": "절망의 흑마법사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702403",
+      "name": "고문서 수호 장치",
+      "suggestedZhName": "古籍守護裝置",
+      "boss": false
+    },
+    {
+      "code": "2702404",
+      "name": "고문서 수호 장치",
+      "suggestedZhName": "古籍守護裝置",
+      "boss": false
+    },
+    {
+      "code": "2702405",
+      "name": "절망의 감시병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702406",
+      "name": "절망의 데바 순찰자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702407",
+      "name": "절망의 정예 돌격병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702408",
+      "name": "절망의 흑마법사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702409",
+      "name": "분열체 아포노스",
+      "suggestedZhName": "分裂體阿布諾斯",
+      "boss": true
+    },
+    {
+      "code": "2702410",
+      "name": "파멸의 수호병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702411",
+      "name": "파멸의 감시병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702412",
+      "name": "파멸의 데바 순찰자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702413",
+      "name": "파멸의 정예 방패병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702414",
+      "name": "파멸의 정예 돌격병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702415",
+      "name": "파멸의 흑마법사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702416",
+      "name": "고문서 수호 장치",
+      "suggestedZhName": "古籍守護裝置",
+      "boss": false
+    },
+    {
+      "code": "2702417",
+      "name": "고문서 수호 장치",
+      "suggestedZhName": "古籍守護裝置",
+      "boss": false
+    },
+    {
+      "code": "2702418",
+      "name": "파멸의 감시병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702419",
+      "name": "파멸의 데바 순찰자",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702420",
+      "name": "파멸의 정예 돌격병",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702421",
+      "name": "파멸의 흑마법사",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2702461",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702462",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702475",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702488",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702501",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702611",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702623",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702648",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702659",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702670",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702681",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702692",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702703",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2920663",
+      "name": "바크론의 가시속박",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2920908",
+      "name": "유압 프레스",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2920973",
+      "name": "뉴트",
+      "suggestedZhName": "紐特",
+      "boss": false
+    },
+    {
+      "code": "2921014",
+      "name": "펑기",
+      "suggestedZhName": "波奇",
+      "boss": false
+    },
+    {
+      "code": "2921015",
+      "name": "작은 버섯 자란 펑기",
+      "suggestedZhName": "長小蘑菇的波奇",
+      "boss": false
+    },
+    {
+      "code": "2921016",
+      "name": "달팽이 얹은 펑기",
+      "suggestedZhName": "放著蝸牛的波奇",
+      "boss": false
+    },
+    {
+      "code": "2921031",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": false
+    },
+    {
+      "code": "2921167",
+      "name": "환영의 템페르 사제",
+      "suggestedZhName": "",
+      "boss": false
+    },
+    {
+      "code": "2921168",
+      "name": "환영의 템페르 사제",
+      "suggestedZhName": "",
+      "boss": false
+    }
+  ]
+}

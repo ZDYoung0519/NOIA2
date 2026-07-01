@@ -511,15 +511,20 @@ resolved_skill_code = normalize_skill_id(exact_skill_code)
 | `6` | 10 |
 | `7` | 14 |
 
-当前 Rust 只直接读取 special 区第一个字节来推断：
+当前 Rust 会读取 special 区的第一个字节来推断命中特殊类型：
 
 | bit | 当前含义 |
 | ---: | --- |
-| `0x01` | `BACK` |
-| `0x04` | `PARRY` |
-| `0x08` | `PERFECT` |
-| `0x10` | `DOUBLE` |
+| `0x04` | `PERFECT` |
+| `0x08` | `DOUBLE` |
 | `0x40` | `SMITE` |
+
+方位命中从 special 区第三个字节推断：
+
+| special_area[2] | 当前含义 |
+| ---: | --- |
+| `0x01` | `BACK` |
+| `0x02` | `FRONT` |
 
 此外：
 

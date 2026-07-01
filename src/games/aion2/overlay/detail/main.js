@@ -249,6 +249,7 @@ function render() {
   }, {});
   const critR = totalHits > 0 ? fmtPct(((allSpecials["CRITICAL"] || 0) / totalHits) * 100) : "--";
   const backR = totalHits > 0 ? fmtPct(((allSpecials["BACK"] || 0) / totalHits) * 100) : "--";
+  const frontR = totalHits > 0 ? fmtPct(((allSpecials["FRONT"] || 0) / totalHits) * 100) : "--";
   const doubleR = totalHits > 0 ? fmtPct(((allSpecials["DOUBLE"] || 0) / totalHits) * 100) : "--";
   const perfectR = totalHits > 0 ? fmtPct(((allSpecials["PERFECT"] || 0) / totalHits) * 100) : "--";
   const parryR = totalHits > 0 ? fmtPct(((allSpecials["PARRY"] || 0) / totalHits) * 100) : "--";
@@ -262,9 +263,10 @@ function render() {
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.dps")}</div><div class="summary-box__value dps">${fmtFull(dps)}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.fight")}</div><div class="summary-box__value">${fmtDuration(fightDur)}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.hits")}</div><div class="summary-box__value">${totalHits}</div></div>`;
-  html += `</div><div class="summary-grid summary-row6">`;
+  html += `</div><div class="summary-grid summary-row7">`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.critical")}</div><div class="summary-box__value crit">${critR}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.back")}</div><div class="summary-box__value back">${backR}</div></div>`;
+  html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.front")}</div><div class="summary-box__value front">${frontR}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.double")}</div><div class="summary-box__value double">${doubleR}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.perfect")}</div><div class="summary-box__value perfect">${perfectR}</div></div>`;
   html += `<div class="summary-box"><div class="summary-box__label">${t("dps-detail.parry")}</div><div class="summary-box__value parry">${parryR}</div></div>`;
@@ -275,10 +277,11 @@ function render() {
   if (skills.length > 0) {
     html += `<div class="skill-table-wrap"><div class="skill-table-scroll"><div class="skill-table">`;
     // Header
-    html += `<div class="skill-header"><span>${t("dps-detail.skill")}</span><span>${t("dps-detail.spec")}</span><span>${t("dps-detail.count")}</span><span>${t("dps-detail.critical")}%</span><span>${t("dps-detail.back")}%</span><span>${t("dps-detail.double")}%</span><span>${t("dps-detail.perfect")}%</span><span>${t("dps-detail.parry")}%</span><span>${t("dps-detail.multi")}%</span><span>${t("dps-detail.multiHitDmg")}</span><span>${t("dps-detail.min")}</span><span>${t("dps-detail.max")}</span><span>${t("dps-detail.avg")}</span><span>${t("dps-detail.total")}</span></div>`;
+    html += `<div class="skill-header"><span>${t("dps-detail.skill")}</span><span>${t("dps-detail.spec")}</span><span>${t("dps-detail.count")}</span><span>${t("dps-detail.critical")}%</span><span>${t("dps-detail.perfect")}%</span><span>${t("dps-detail.double")}%</span><span>${t("dps-detail.front")}%</span><span>${t("dps-detail.back")}%</span><span>${t("dps-detail.parry")}%</span><span>${t("dps-detail.multi")}%</span><span>${t("dps-detail.multiHitDmg")}</span><span>${t("dps-detail.min")}</span><span>${t("dps-detail.max")}</span><span>${t("dps-detail.avg")}</span><span>${t("dps-detail.total")}</span></div>`;
     for (const s of skills) {
       const sc = getSpecial(s, "CRITICAL");
       const bk = getSpecial(s, "BACK");
+      const fr = getSpecial(s, "FRONT");
       const db = getSpecial(s, "DOUBLE");
       const pf = getSpecial(s, "PERFECT");
       const pa = getSpecial(s, "PARRY");
@@ -314,9 +317,10 @@ function render() {
       html += `<span class="spec-dots">${dots.map((a) => `<span class="spec-dot${a ? " active" : ""}"></span>`).join("")}</span>`;
       html += `<span class="color-slate">${s.counts}</span>`;
       html += `<span class="color-rose">${s.counts > 0 ? fmtPct((sc / s.counts) * 100) : "--"}</span>`;
-      html += `<span class="color-indigo">${s.counts > 0 ? fmtPct((bk / s.counts) * 100) : "--"}</span>`;
-      html += `<span class="color-yellow">${s.counts > 0 ? fmtPct((db / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-emerald">${s.counts > 0 ? fmtPct((pf / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-yellow">${s.counts > 0 ? fmtPct((db / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-cyan">${s.counts > 0 ? fmtPct((fr / s.counts) * 100) : "--"}</span>`;
+      html += `<span class="color-indigo">${s.counts > 0 ? fmtPct((bk / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-slate">${s.counts > 0 ? fmtPct((pa / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-rose">${s.counts > 0 ? fmtPct((mu / s.counts) * 100) : "--"}</span>`;
       html += `<span class="color-slate"${muTip ? ` data-tooltip="${esc(muTip)}"` : ""}>${muDmg > 0 ? fmtFull(muDmg) : "--"}</span>`;

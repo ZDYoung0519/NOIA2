@@ -2,7 +2,11 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { uploadDpsDataBatch, isUserLoggedIn } from "@/games/aion2/lib/upload-records-to-supbase";
-import { t, setLanguage } from "../../i18n.js";
+import {
+  getDungeonDifficultyByMobCode,
+  getDungeonNameByMobCode,
+} from "@/games/aion2/lib/npc-names";
+import { t, setLanguage, getLanguage } from "../../i18n.js";
 
 // ── DOM ──
 const $list = document.getElementById("record-list");
@@ -160,8 +164,40 @@ function esc(s) {
   d.textContent = s;
   return d.innerHTML;
 }
+function getTargetInfo(r) {
+  if (r.targetInfo) return r.targetInfo;
+  return (
+    r.combatInfos?.targetInfos?.[String(r.targetId)] ||
+    r.combatInfos?.targetInfos?.[r.targetId] ||
+    null
+  );
+}
+function getTargetMobCode(r) {
+  return getTargetInfo(r)?.targetMobCode ?? null;
+}
 function getTargetName(r) {
-  return r.targetInfo?.targetName || `Target #${r.targetId}`;
+  const targetInfo = getTargetInfo(r);
+  const targetName = targetInfo?.targetName?.trim();
+  if (targetName) return targetName;
+
+  const mobCode = getTargetMobCode(r);
+  const targetLabel = `Target #${r.targetId}`;
+  return mobCode ? `${targetLabel} (${mobCode})` : targetLabel;
+}
+function getDungeonInfo(r) {
+  const mobCode = getTargetMobCode(r);
+  if (!mobCode) {
+    return {
+      name: "未知副本",
+      difficulty: "未知难度",
+    };
+  }
+
+  const language = getLanguage();
+  return {
+    name: getDungeonNameByMobCode(mobCode, language) || "未知副本",
+    difficulty: getDungeonDifficultyByMobCode(mobCode, language) || "未知难度",
+  };
 }
 function getClassIcon(c) {
   return c ? "/aion2/class/" + c.toLowerCase() + ".png" : "";
@@ -215,7 +251,9 @@ function render(records) {
   let html = "";
   for (const r of records) {
     const name = getTargetName(r);
-    const isBoss = r.targetInfo?.isBoss;
+    const targetInfo = getTargetInfo(r);
+    const isBoss = targetInfo?.isBoss;
+    const dungeonInfo = getDungeonInfo(r);
     const playerCount = getRecognizedPlayers(r).length;
     const mainPlayerName = getMainPlayerName(r);
     const uploaded = r.uploaded === true;
@@ -225,6 +263,10 @@ function render(records) {
         <div class="record-row__header">
           <span class="record-row__name">${esc(name)}</span>
           <span class="record-row__boss ${isBoss ? "is-boss" : "is-not-boss"}">${isBoss ? t("dps-history.boss") : t("dps-history.mob")}</span>
+        </div>
+        <div class="record-row__dungeon">
+          <span class="record-row__dungeon-name">${esc(dungeonInfo.name)}</span>
+          <span class="record-row__dungeon-difficulty">${esc(dungeonInfo.difficulty)}</span>
         </div>
         <div class="record-row__meta">
           <span class="record-row__damage">${fmtDamage(r.totalDamage)}</span>

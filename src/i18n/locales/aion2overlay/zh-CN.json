@@ -44,6 +44,7 @@
     "hits": "命中次数",
     "critical": "暴击",
     "back": "背击",
+    "front": "头击",
     "double": "强击",
     "perfect": "完美",
     "parry": "格挡",

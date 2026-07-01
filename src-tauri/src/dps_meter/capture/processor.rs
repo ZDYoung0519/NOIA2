@@ -379,22 +379,27 @@ impl StreamProcessor {
             };
 
             let mut specials = Vec::new();
-            if matches!(and_result, 5..=7) && reader.remaining_bytes() > 0 {
-                let special_byte = packet[reader.offset];
-                if special_byte & 0x01 != 0 {
-                    specials.push(SpecialDamage::Back);
-                }
+            if matches!(and_result, 5..=7) && reader.offset + temp_v <= packet.len() {
+                let special_area = &packet[reader.offset..reader.offset + temp_v];
+                let special_byte = special_area[0];
                 if special_byte & 0x04 != 0 {
-                    specials.push(SpecialDamage::Parry);
-                }
-                if special_byte & 0x08 != 0 {
                     specials.push(SpecialDamage::Perfect);
                 }
-                if special_byte & 0x10 != 0 {
+                if special_byte & 0x08 != 0 {
                     specials.push(SpecialDamage::Double);
                 }
+                // if special_byte & 0x10 != 0 {
+                //     // Keep the old DOUBLE bit as a fallback, but do not count the same
+                //     // special twice when both 0x08 and 0x10 are present in one packet.
+                //     specials.push(SpecialDamage::Double);
+                // }
                 if special_byte & 0x40 != 0 {
                     specials.push(SpecialDamage::Smite);
+                }
+                match special_area.get(2).copied() {
+                    Some(0x01) => specials.push(SpecialDamage::Back),
+                    Some(0x02) => specials.push(SpecialDamage::Front),
+                    _ => {}
                 }
             }
 

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SpecialDamage {
     Back,
+    Front,
     Parry,
     Perfect,
     Double,
@@ -14,6 +15,7 @@ impl SpecialDamage {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Back => "BACK",
+            Self::Front => "FRONT",
             Self::Parry => "PARRY",
             Self::Perfect => "PERFECT",
             Self::Double => "DOUBLE",

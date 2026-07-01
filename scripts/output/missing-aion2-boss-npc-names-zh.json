@@ -1,0 +1,417 @@
+{
+  "mobsTotal": 6442,
+  "uniqueMobCodes": 6442,
+  "npcNamesTotal": 6397,
+  "missingTotal": 68,
+  "missingBossTotal": 68,
+  "missing": [
+    {
+      "code": "2000895",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": true
+    },
+    {
+      "code": "2090773",
+      "name": "훈련용 허수아비 (표본)",
+      "suggestedZhName": "訓練用稻草人(樣本)",
+      "boss": true
+    },
+    {
+      "code": "2300189",
+      "name": "현명한 바움누트",
+      "suggestedZhName": "賢明的巴溫努特",
+      "boss": true
+    },
+    {
+      "code": "2300190",
+      "name": "팽창하는 자이르페",
+      "suggestedZhName": "膨脹的札伊爾佩",
+      "boss": true
+    },
+    {
+      "code": "2300200",
+      "name": "깨어난 알투라돈",
+      "suggestedZhName": "甦醒的艾圖拉頓",
+      "boss": true
+    },
+    {
+      "code": "2300282",
+      "name": "이격의라후",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300283",
+      "name": "심연의날개케투",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300284",
+      "name": "중상심연융합로",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300290",
+      "name": "영겁의루드라",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300473",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300474",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300475",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300491",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300492",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300493",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300527",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300528",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300529",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300544",
+      "name": "어미잃은 변견 카푸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300545",
+      "name": "대강령술사 다칸",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2300546",
+      "name": "돌아온 추방자 가르가움",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301601",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301602",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301603",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301701",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301702",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301703",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301721",
+      "name": "의지의 투르겐",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301722",
+      "name": "금기의 마수 그리오사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2301723",
+      "name": "바실루스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2310519",
+      "name": "두르바티의 독액",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311101",
+      "name": "에몬",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311102",
+      "name": "파이디온",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2311103",
+      "name": "엘라이드",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600096",
+      "name": "집행자 타마사",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600097",
+      "name": "정령왕 아그로",
+      "suggestedZhName": "精靈王阿格羅",
+      "boss": true
+    },
+    {
+      "code": "2600098",
+      "name": "감시자 카이라",
+      "suggestedZhName": "監視者卡伊拉",
+      "boss": true
+    },
+    {
+      "code": "2600468",
+      "name": "정령왕 아그로",
+      "suggestedZhName": "精靈王阿格羅",
+      "boss": true
+    },
+    {
+      "code": "2600478",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600479",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600480",
+      "name": "분노한 수호신장 나흐마",
+      "suggestedZhName": "憤怒的守護神將納赫瑪",
+      "boss": true
+    },
+    {
+      "code": "2600516",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600517",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600518",
+      "name": "차원핵",
+      "suggestedZhName": "次元核",
+      "boss": true
+    },
+    {
+      "code": "2600520",
+      "name": "처형관 드라모스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600521",
+      "name": "반역자 듀칼",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2600522",
+      "name": "파멸자 마라카",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702359",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702372",
+      "name": "깃털포화 두두리",
+      "suggestedZhName": "羽毛砲火杜杜里",
+      "boss": true
+    },
+    {
+      "code": "2702373",
+      "name": "눈 뜬 맹조 도도리",
+      "suggestedZhName": "睜開眼的猛禽多多里",
+      "boss": true
+    },
+    {
+      "code": "2702384",
+      "name": "깃털포화 두두리",
+      "suggestedZhName": "羽毛砲火杜杜里",
+      "boss": true
+    },
+    {
+      "code": "2702385",
+      "name": "눈 뜬 맹조 도도리",
+      "suggestedZhName": "睜開眼的猛禽多多里",
+      "boss": true
+    },
+    {
+      "code": "2702396",
+      "name": "분열체 아포노스",
+      "suggestedZhName": "分裂體阿布諾斯",
+      "boss": true
+    },
+    {
+      "code": "2702409",
+      "name": "분열체 아포노스",
+      "suggestedZhName": "分裂體阿布諾斯",
+      "boss": true
+    },
+    {
+      "code": "2702461",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702462",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702475",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702488",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702501",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702611",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702623",
+      "name": "칼릭스",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702648",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702659",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702670",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702681",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702692",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    },
+    {
+      "code": "2702703",
+      "name": "엘로엔",
+      "suggestedZhName": "",
+      "boss": true
+    }
+  ]
+}

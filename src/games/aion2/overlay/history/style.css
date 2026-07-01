@@ -232,6 +232,38 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.record-row__dungeon {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  margin: -1px 0 6px;
+  color: #aeb7c3;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.record-row__dungeon-name {
+  min-width: 0;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #cfd6df;
+  font-weight: 650;
+}
+
+.record-row__dungeon-difficulty {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #f5d78a;
+  background: rgba(245, 215, 138, 0.08);
+  border: 1px solid rgba(245, 215, 138, 0.12);
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .record-row__delete {
   position: absolute;
   top: 5px;
