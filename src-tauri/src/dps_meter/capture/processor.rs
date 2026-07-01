@@ -310,17 +310,12 @@ impl StreamProcessor {
         let mut parsed_any = false;
         while reader.remaining_bytes() > 0 {
             let checkpoint = reader.offset;
-
-            let mut is_chained_hit_marker = false;
             if reader.remaining_bytes() >= 2
                 && packet[reader.offset] == 0x01
                 && packet[reader.offset + 1] == 0x00
             {
                 reader.offset += 2;
-                is_chained_hit_marker = true;
-            }
-
-            if parsed_any && !is_chained_hit_marker {
+            } else if parsed_any {
                 break;
             }
 
@@ -328,10 +323,6 @@ impl StreamProcessor {
                 reader.offset = checkpoint;
                 break;
             };
-            // if target_id < 100 {
-            //     reader.offset = checkpoint;
-            //     break;
-            // }
 
             let Some(switch_value) = reader.try_read_var_int() else {
                 reader.offset = checkpoint;
@@ -352,10 +343,6 @@ impl StreamProcessor {
                 reader.offset = checkpoint;
                 break;
             };
-            // if actor_id < 100 {
-            //     reader.offset = checkpoint;
-            //     break;
-            // }
 
             if reader.offset + 4 > packet.len() {
                 reader.offset = checkpoint;
@@ -415,149 +402,51 @@ impl StreamProcessor {
                 specials.push(SpecialDamage::Critical);
             }
 
+            // Damage tail versions share the same varint stream:
+            //   old: [unknown][damage][hit_count][per-hit...]
+            //   new: [0][legacy_damage][damage][hit_count][per-hit...]
+            // When the first value is 0, damage/hit_count shift right by one varint.
             reader.offset = reader.offset.saturating_add(temp_v);
-            if reader.offset >= packet.len() {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            let Some(first_value) = reader.try_read_var_int() else {
+            let tail_values = collect_varints(packet, reader.offset, 12);
+            let Some(unknown) = read_varint_u32(packet, reader.offset) else {
                 reader.offset = checkpoint;
                 break;
             };
-            let after_first_value_offset = reader.offset;
-            let Some(second_value) = reader.try_read_var_int() else {
+            reader.offset += read_varint(packet, reader.offset).length;
+
+            let Some(legacy_damage) = read_varint_u32(packet, reader.offset) else {
                 reader.offset = checkpoint;
                 break;
             };
+            reader.offset += read_varint(packet, reader.offset).length;
 
-            let mut final_damage = if should_treat_first_value_as_damage(
-                first_value,
-                second_value,
-                and_result,
-                damage_type,
-            ) {
-                reader.offset = after_first_value_offset;
-                first_value
-            } else {
-                second_value
-            };
+            let mut tail_mode = "old";
+            let mut damage = legacy_damage;
 
-            if (switch_value & 0x30) == 0x30 && reader.remaining_bytes() > 0 {
-                let _ = reader.try_read_var_int();
-            }
-
-            let pre_hit_offset = reader.offset;
-            let mut hit_count = 0u32;
-            if reader.remaining_bytes() > 0 {
-                let is_marker_next = reader.remaining_bytes() >= 2
-                    && packet[reader.offset + 1] == 0x00
-                    && (1..=7).contains(&packet[reader.offset]);
-
-                if !is_marker_next {
-                    if let Some(peek_val) = reader.try_read_var_int() {
-                        if peek_val <= 25 {
-                            hit_count = peek_val;
-                        } else {
-                            let is_marker_after_hp = reader.remaining_bytes() >= 2
-                                && packet[reader.offset + 1] == 0x00
-                                && (1..=7).contains(&packet[reader.offset]);
-                            if !is_marker_after_hp {
-                                if let Some(actual_hit_count) = reader.try_read_var_int() {
-                                    if actual_hit_count <= 25 {
-                                        hit_count = actual_hit_count;
-                                    } else {
-                                        reader.offset = pre_hit_offset;
-                                    }
-                                } else {
-                                    reader.offset = pre_hit_offset;
-                                }
-                            }
-                        }
-                    }
+            if unknown == 0 {
+                let Some(shifted_damage) = read_varint_u32(packet, reader.offset) else {
+                    reader.offset = checkpoint;
+                    break;
+                };
+                let shifted_len = read_varint(packet, reader.offset).length;
+                let hit_count_info = read_varint(packet, reader.offset + shifted_len);
+                if shifted_damage > 0
+                    && hit_count_info.is_valid()
+                    && (1..=25).contains(&hit_count_info.value)
+                {
+                    tail_mode = "shifted";
+                    damage = shifted_damage;
+                    reader.offset += shifted_len;
                 }
             }
 
-            if final_damage > 99_999_999 {
+            let tail_hit_count = read_varint_u32(packet, reader.offset).unwrap_or(0);
+            let multi_hit = parse_repeated_multi_hit(packet, reader.offset);
+            reader.offset = multi_hit.next_offset;
+
+            if damage > 99_999_999 {
                 reader.offset = checkpoint;
                 break;
-            }
-
-            let mut multi_hit_count = 0u32;
-            let mut multi_hit_damage = 0u64;
-            let mut first_multi_hit_value = None;
-            let mut all_multi_hits_match = true;
-
-            if hit_count > 0 && reader.remaining_bytes() > 0 {
-                let mut hit_sum = 0u64;
-                let mut hits_read = 0u32;
-                let safe_max_hits = hit_count.min(25);
-                let multi_hit_cap = final_damage.max(500_000);
-
-                while hits_read < safe_max_hits && reader.remaining_bytes() > 0 {
-                    let is_marker_next = reader.remaining_bytes() >= 2
-                        && packet[reader.offset + 1] == 0x00
-                        && (1..=7).contains(&packet[reader.offset]);
-                    let is_next_packet = reader.remaining_bytes() >= 2
-                        && packet[reader.offset] == 0x04
-                        && packet[reader.offset + 1] == 0x38;
-                    if is_marker_next || is_next_packet {
-                        break;
-                    }
-
-                    let Some(hit_value) = reader.try_read_var_int() else {
-                        break;
-                    };
-                    if hit_value > multi_hit_cap || hit_value < 50 {
-                        hit_sum = 0;
-                        hits_read = 0;
-                        first_multi_hit_value = None;
-                        all_multi_hits_match = true;
-                        break;
-                    }
-
-                    if let Some(first_hit) = first_multi_hit_value {
-                        if first_hit != hit_value {
-                            all_multi_hits_match = false;
-                        }
-                    } else {
-                        first_multi_hit_value = Some(hit_value);
-                    }
-
-                    hit_sum += u64::from(hit_value);
-                    hits_read += 1;
-                }
-
-                multi_hit_count = hits_read;
-                multi_hit_damage = hit_sum;
-            }
-
-            if switch_value == 54
-                && hit_count > multi_hit_count
-                && multi_hit_count == 1
-                && first_multi_hit_value.is_some()
-                && all_multi_hits_match
-            {
-                multi_hit_count = hit_count;
-                multi_hit_damage = u64::from(first_multi_hit_value.unwrap()) * u64::from(hit_count);
-            }
-
-            if should_use_repeated_hit_damage(
-                switch_value,
-                second_value,
-                multi_hit_count,
-                first_multi_hit_value,
-                all_multi_hits_match,
-            ) {
-                final_damage = first_multi_hit_value.unwrap_or(final_damage);
-            }
-
-            if multi_hit_count > 0
-                && multi_hit_damage > 0
-                && u64::from(final_damage) > multi_hit_damage
-            {
-                final_damage = u32::try_from(u64::from(final_damage) - multi_hit_damage)
-                    .unwrap_or(final_damage);
             }
 
             let resolved_skill_code = normalize_skill_id(exact_skill_code);
@@ -571,26 +460,35 @@ impl StreamProcessor {
                 actor_id,
                 skill_code: resolved_skill_code,
                 ori_skill_code: exact_skill_code,
-                damage: u64::from(final_damage),
+                damage: u64::from(damage),
                 is_dot: false,
                 is_crit: specials.contains(&SpecialDamage::Critical),
-                multi_hit_damage,
-                multi_hit_count,
+                multi_hit_damage: multi_hit.damage,
+                multi_hit_count: multi_hit.count,
                 specials: special_names.clone(),
             };
 
             self.data_storage.append_damage(parsed);
             self.logger.debug(format!(
-                "[{}] damage target={} actor={} skill={} ori_code={} damage={} multi_hit_count={} multi_hit_damage={} specials={:?}",
+                "[{}] damage target={} actor={} skill={} ori_code={} damage={} tail_mode={} unknown={} legacy_damage={} raw_damage={} tail_values={:?} tail_hit_count={} multi_hit_count={} multi_hit_damage={} per_hits={:?} specials={:?} packet_len={} packet_hex={}",
                 self.port,
                 target_id,
                 actor_id,
                 resolved_skill_code,
                 exact_skill_code,
-                final_damage,
-                multi_hit_count,
-                multi_hit_damage,
-                special_names
+                damage,
+                tail_mode,
+                unknown,
+                legacy_damage,
+                damage,
+                tail_values,
+                tail_hit_count,
+                multi_hit.count,
+                multi_hit.damage,
+                multi_hit.per_hit_values,
+                special_names,
+                packet.len(),
+                bytes_to_hex(packet)
             ));
             parsed_any = true;
         }
@@ -1559,39 +1457,83 @@ fn normalize_skill_id(raw: u32) -> u32 {
     }
 }
 
-fn should_use_repeated_hit_damage(
-    switch_value: u32,
-    encoded_damage: u32,
-    multi_hit_count: u32,
-    first_multi_hit_value: Option<u32>,
-    all_multi_hits_match: bool,
-) -> bool {
-    let Some(repeated_damage) = first_multi_hit_value else {
-        return false;
-    };
-    if switch_value != 54 || multi_hit_count == 0 || !all_multi_hits_match {
-        return false;
-    }
-
-    let main_hit_component =
-        i64::from(encoded_damage) - (i64::from(multi_hit_count) * i64::from(repeated_damage));
-    if main_hit_component > i64::from(repeated_damage) {
-        return false;
-    }
-
-    encoded_damage / 10 == repeated_damage
+#[derive(Debug, Default)]
+struct RepeatedMultiHit {
+    count: u32,
+    damage: u64,
+    per_hit_values: Vec<u32>,
+    next_offset: usize,
 }
 
-fn should_treat_first_value_as_damage(
-    first_value: u32,
-    second_value: u32,
-    and_result: u32,
-    damage_type: u8,
-) -> bool {
-    (1_000..=5_000_000).contains(&first_value)
-        && second_value <= 25
-        && and_result == 6
-        && damage_type == 3
+fn parse_repeated_multi_hit(packet: &[u8], offset: usize) -> RepeatedMultiHit {
+    let Some(count) = read_varint_u32(packet, offset) else {
+        return RepeatedMultiHit {
+            next_offset: offset,
+            ..Default::default()
+        };
+    };
+    if !(1..=25).contains(&count) {
+        return RepeatedMultiHit {
+            next_offset: offset,
+            ..Default::default()
+        };
+    }
+
+    let mut cursor = offset + read_varint(packet, offset).length;
+    let mut per_hit_values = Vec::with_capacity(count as usize);
+    let mut first_hit = None;
+
+    for _ in 0..count {
+        let Some(hit) = read_varint_u32(packet, cursor) else {
+            return RepeatedMultiHit {
+                next_offset: offset,
+                ..Default::default()
+            };
+        };
+        if hit == 0 || first_hit.is_some_and(|first| first != hit) {
+            return RepeatedMultiHit {
+                next_offset: offset,
+                ..Default::default()
+            };
+        }
+
+        first_hit = Some(hit);
+        per_hit_values.push(hit);
+        cursor += read_varint(packet, cursor).length;
+    }
+
+    RepeatedMultiHit {
+        count,
+        damage: per_hit_values.iter().map(|value| u64::from(*value)).sum(),
+        per_hit_values,
+        next_offset: cursor,
+    }
+}
+
+fn read_varint_u32(data: &[u8], offset: usize) -> Option<u32> {
+    let out = read_varint(data, offset);
+    if !out.is_valid() {
+        return None;
+    }
+
+    u32::try_from(out.value).ok()
+}
+
+fn collect_varints(data: &[u8], start: usize, max_count: usize) -> Vec<i64> {
+    let mut values = Vec::new();
+    let mut offset = start;
+
+    while offset < data.len() && values.len() < max_count {
+        let out = read_varint(data, offset);
+        if !out.is_valid() {
+            break;
+        }
+
+        values.push(out.value);
+        offset += out.length;
+    }
+
+    values
 }
 
 fn find_bytes(haystack: &[u8], start: usize, needle: &[u8]) -> Option<usize> {

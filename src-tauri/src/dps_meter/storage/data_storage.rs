@@ -284,7 +284,7 @@ impl DataStorage {
         }
         special_counts.insert("MULTIHITDMG".to_string(), packet.multi_hit_damage as u32);
 
-        let total_damage = packet.damage + packet.multi_hit_damage;
+        let total_damage = packet.damage;
 
         // 如果是 8 位的技能id，那么是常规技能，使用normalize后的code
         // 如果>8位的技能id (通常是10位，代表dot类型技能)，那么使用原始code，和8位区分开

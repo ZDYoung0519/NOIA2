@@ -361,7 +361,74 @@ summon_id -> owner_id
 
 ## 7. 0438：直接伤害包
 
-### 7.1 当前 payload 推断结构
+### 7.1 入口与范围
+
+`04 38` 是直接伤害包。当前 `parse_damage_packet()` 拿到的不是 TCP 原始包，而是已经去掉：
+
+- 外层 `length varint`
+- 可选 `extraFlag`
+
+之后的完整业务 payload。
+
+因此日志里的：
+
+```text
+packet_hex=04 38 ...
+```
+
+代表完整 `04 38` 业务包，但不包含外层长度字段。
+
+当前实现见：
+
+- `src-tauri/src/dps_meter/capture/processor.rs`
+- `parse_damage_packet()`
+- `read_varint()`
+- `normalize_skill_id()`
+
+### 7.2 旧版 Kotlin 参考结构
+
+旧 Kotlin 解析逻辑可以概括为：
+
+```text
+[length varint]
+[optional extraFlag]
+[04 38]
+[target_id varint]
+[switch varint]
+[flag varint]
+[actor_id varint]
+[skill_code u32 le]
+[1 unknown byte]
+[type varint]
+[special bytes]
+[unknown varint]
+[damage varint]
+[multihit tail]
+```
+
+关键规则：
+
+```text
+and_result = switch & mask
+
+and_result == 4 -> special bytes length = 8
+and_result == 5 -> special bytes length = 12
+and_result == 6 -> special bytes length = 10
+and_result == 7 -> special bytes length = 14
+```
+
+旧 Kotlin 在 special 区之后明确读取：
+
+```text
+unknownInfo = readVarInt(...)
+damageInfo = readVarInt(...)
+```
+
+也就是说，旧逻辑认为 special 区后面的第 1 个 varint 是未知字段，第 2 个 varint 是伤害。
+
+### 7.3 当前 Rust 解析结构
+
+当前 Rust 按 Kotlin 风格顺序读取前半段字段：
 
 ```text
 [04 38]
@@ -369,30 +436,287 @@ summon_id -> owner_id
 [switch varint]
 [flag varint]
 [actor_id varint]
-[skill_code u32 le + 1 unknown byte]
+[skill_code u32 le]
+[1 unknown byte]
 [type varint]
-[special / damage flags bytes]
-[unknown varint]
-[damage varint]
-[multihit tail ...]
+[special bytes]
+[tail varints...]
 ```
 
-### 7.2 当前解析关注点
+其中 special 区后的 tail 统一看成一个 varint 序列：
 
-当前实现见 [parse_damage_packet](d:/NOIA-Workspace/noia2-app/src-tauri/src/dps_meter/capture/processor.rs:283)。
+```text
+v0, v1, v2, v3...
+```
 
-当前已知关键点：
+旧版 tail：
 
-1. `switch & 0x0F` 决定 special bytes 的长度
-2. `skill_code` 后紧跟 1 个未知字节
-3. 后续存在 `unknown -> damage -> multihit` 结构
-4. 同一个 payload 中可能包含 chained hit
+```text
+v0 = unknown
+v1 = damage
+v2 = hit_count
+v3.. = per-hit values
+```
 
-### 7.3 当前未完全稳定的点
+新版 tail：
 
-1. `Restoration` 对 offset 的影响是否完全还原
-2. multi-hit 的各类边界包是否都已经覆盖
-3. 某些极端小 actor id 是否应直接过滤
+```text
+v0 = 0
+v1 = legacy_or_aux_damage
+v2 = damage
+v3 = hit_count
+v4.. = per-hit values
+```
+
+因此新版不是整包整体偏移，而是 tail 中 `damage / hit_count / per-hit` 从 `v1 / v2 / v3` 右移到 `v2 / v3 / v4`。
+
+### 7.4 skillCode 规则
+
+旧 Kotlin 逻辑：
+
+```kotlin
+skillCode = parseUInt32le(packet, offset)
+if (DataManager.skill(skillCode.toLong()) == null) {
+    skillCode = (skillCode / 10) * 10
+}
+offset = temp + 5
+```
+
+当前 Rust 逻辑：
+
+```text
+exact_skill_code = u32 le
+consume 1 unknown byte
+resolved_skill_code = normalize_skill_id(exact_skill_code)
+```
+
+其中：
+
+```text
+30_000_000..=30_999_999 -> 保持原值
+其他 -> raw - raw % 10_000
+```
+
+注意：这个规则和旧 Kotlin 不完全一致。  
+如果后续发现“技能次数准、技能归类也准”，可以暂时不动；如果出现技能被错误合并，再回头调整这里。
+
+### 7.5 special 区
+
+当前 special 区长度仍按 `switch & 0x0F` 决定：
+
+| and_result | special 区长度 |
+| --- | ---: |
+| `4` | 8 |
+| `5` | 12 |
+| `6` | 10 |
+| `7` | 14 |
+
+当前 Rust 只直接读取 special 区第一个字节来推断：
+
+| bit | 当前含义 |
+| ---: | --- |
+| `0x01` | `BACK` |
+| `0x04` | `PARRY` |
+| `0x08` | `PERFECT` |
+| `0x10` | `DOUBLE` |
+| `0x40` | `SMITE` |
+
+此外：
+
+```text
+damage_type == 3 -> CRITICAL
+```
+
+旧 Kotlin 里存在 `Restoration` 会额外影响 offset 的逻辑：
+
+```kotlin
+if (specials contains Restoration) {
+    offset += 2
+}
+```
+
+当前 Rust 尚未明确还原这一点。  
+如果遇到治疗、吸血、恢复类伤害包错位，优先检查这里。
+
+### 7.6 新版样本：tail 右移一格
+
+新版单段样本：
+
+```text
+tail bytes: 00 8C 91 01 CD FC 09 01 00
+```
+
+按 varint 解码：
+
+```text
+v0 = 0
+v1 = 18572
+v2 = 163405
+v3 = 1
+v4 = 0
+```
+
+按新版规则：
+
+```text
+damage = v2 = 163405
+hit_count = v3 = 1
+```
+
+旧逻辑会错误地把 `v1 = 18572` 当成 damage。
+
+### 7.7 旧版样本：不右移
+
+旧版多段样本：
+
+```text
+v0 = 14150
+v1 = 7312
+v2 = 2
+v3 = 149
+v4 = 149
+v5 = 1
+v6 = 0
+```
+
+按旧版规则：
+
+```text
+damage = v1 = 7312
+hit_count = v2 = 2
+per_hits = [149, 149]
+```
+
+当前语义约定：
+
+```text
+packet.damage = 总伤害
+packet.multi_hit_damage = 尾部 per-hit 伤害之和，仅作多段明细
+```
+
+所以旧版多段写入时为：
+
+```text
+packet.damage = 7312
+packet.multi_hit_damage = 149 * 2 = 298
+```
+
+最终总伤害直接使用 `packet.damage`，也就是 `7312`。
+
+### 7.8 新版多段样本
+
+多段样本：
+
+```text
+damage target=41105 actor=2593 skill=13300000 ori_code=13300040
+damage=338097 tail_mode=shifted unknown=0 legacy_damage=18572 raw_damage=338097
+tail_values=[0, 18572, 338097, 4, 6935, 6935, 6935, 6935, 1, 0]
+tail_hit_count=4 multi_hit_count=4 multi_hit_damage=27740
+packet_hex=04 38 91 C1 02 26 00 A1 14 48 F1 CA 00 20 02 0C 00 01 2C 40 46 4F 01 00 00 00 8C 91 01 B1 D1 14 04 97 36 97 36 97 36 97 36 01 00
+```
+
+其中：
+
+```text
+B1 D1 14 -> 338097
+04       -> 4
+97 36    -> 6935
+97 36    -> 6935
+97 36    -> 6935
+97 36    -> 6935
+```
+
+按新版规则：
+
+```text
+damage = 338097
+hit_count = 4
+per_hits = [6935, 6935, 6935, 6935]
+```
+
+新版的 `damage` 已经是总伤害，`multi_hit_damage` 仍保留尾部明细：
+
+```text
+packet.damage = 338097
+packet.multi_hit_damage = 6935 * 4 = 27740
+```
+
+统计层只用 `packet.damage` 作为总伤害，不再额外加 `multi_hit_damage`。
+
+### 7.9 当前代码策略
+
+当前实现先读取 tail varint 序列，再根据 `v0` 决定索引：
+
+```text
+if v0 == 0:
+  mode = shifted
+  damage = v2
+  hit_count = v3
+  per_hits = v4..
+else:
+  mode = old
+  damage = v1
+  hit_count = v2
+  per_hits = v3..
+```
+
+无论旧版还是新版，写入语义都一样：
+
+```text
+packet.damage = damage
+packet.multi_hit_damage = sum(per_hits)
+```
+
+也就是说，`damage` 永远是总伤害，`multi_hit_damage` 永远是尾部多段伤害明细。
+
+日志会输出：
+
+```text
+tail_mode
+unknown
+legacy_damage
+raw_damage
+tail_values
+tail_hit_count
+per_hits
+multi_hit_damage
+```
+
+### 7.10 后续需要继续抓的样本
+
+为了确认新版 `04 38` 的完整结构，建议继续收集以下几类日志：
+
+1. 普通非暴击单段伤害。
+2. 暴击单段伤害。
+3. 多段技能伤害。
+4. DoT 以外的持续/追加触发伤害。
+5. 背击、招架、完美、Smite 等 special 标记不同的样本。
+6. 伤害明显较小和明显较大的样本。
+7. 召唤物造成的直接伤害样本。
+
+每条样本最好同时记录：
+
+```text
+游戏内实际伤害
+日志里的 damage
+tail_mode
+unknown
+legacy_damage
+raw_damage
+tail_values
+multi_hit_count
+multi_hit_damage
+packet_hex
+```
+
+重点确认：
+
+```text
+v0 == 0 的 shifted 包是否始终为 damage = v2
+v0 != 0 的 old 包是否始终为 damage = v1
+```
+
+如果发现例外，再单独补充该技能或该 damage_type 的特殊规则。
 
 ## 8. 0538：DoT 伤害包
 
@@ -461,14 +785,56 @@ unknown_bit_flag & 0x02
 
 这会影响召唤物归属的过滤策略。
 
+### 10.5 0438 tail 偏移规则仍需继续验证边界
+
+2026-07 的样本目前支持这个规则：
+
+```text
+v0 == 0:
+  damage = v2
+  hit_count = v3
+
+v0 != 0:
+  damage = v1
+  hit_count = v2
+```
+
+当前代码已经按这个结构落地。  
+例如 shifted 多段：
+
+```text
+v0=0, v1=18572, v2=338097, v3=4, v4..=[6935, 6935, 6935, 6935]
+actual_damage = 338097
+hit_count = 4
+```
+
+old 多段：
+
+```text
+v0=14150, v1=7312, v2=2, v3..=[149, 149]
+actual_damage = 7312
+hit_count = 2
+```
+
+目前仍需继续验证边界技能和召唤物伤害。
+
+当前最需要继续确认的是：
+
+1. `v0 == 0` 是否总是代表 shifted 模式。
+2. shifted 模式下 `v1` 的真实含义是什么。
+3. 暴击、背击、多段、召唤物伤害是否都遵循同样索引规则。
+4. 是否存在同一个技能在不同场景下混用 old / shifted 的情况。
+
 ## 11. 建议的后续分析顺序
 
 当前最适合继续推进的顺序：
 
-1. 继续抓 `3336` 的真实样本，确认 `nickname_len` 是否始终为 varint
-2. 补 `4536` 的真实样本，确认 opcode 与 server 区段
-3. 统计 `4136` 中 Kotlin 风格 owner 路径与 fallback 的命中比例
-4. 再回头针对 `0438` 的特殊伤害包做单独专项分析
+1. 优先继续抓 `0438` 的真实伤害样本，确认 tail damage 是否稳定。
+2. 对每条 `0438` 样本记录游戏内实际伤害和日志中的 `tail_mode`、`unknown`、`legacy_damage`、`raw_damage`、`tail_values`、`tail_hit_count`。
+3. 分别覆盖普通、暴击、多段、背击、召唤物伤害。
+4. 继续抓 `3336` 的真实样本，确认 `nickname_len` 是否始终为 varint。
+5. 补 `4536` 的真实样本，确认 opcode 与 server 区段。
+6. 统计 `4136` 中 Kotlin 风格 owner 路径与 fallback 的命中比例。
 
 ## 12. 小结
 
