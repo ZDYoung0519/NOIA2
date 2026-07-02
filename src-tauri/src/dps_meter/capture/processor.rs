@@ -286,7 +286,7 @@ impl StreamProcessor {
         match (payload[0], payload[1]) {
             (0x33, 0x36) => self.parse_main_nickname(payload),
             (0x45, 0x36) => self.parse_other_nickname(payload),
-            (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
+            // (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
             (0x41, 0x36) => self.parse_summon_packet(payload),
             (0x04, 0x38) => self.parse_damage_packet(payload),
             (0x05, 0x38) => self.parse_dot_packet(payload),
@@ -1050,32 +1050,31 @@ impl StreamProcessor {
             None
         };
 
-        if offset < payload.len() {
-            let _job = payload[offset];
-        }
+        let job = payload.get(offset).copied();
+        let job_text = job
+            .map(|job| job.to_string())
+            .unwrap_or_else(|| "none".to_string());
+        let actor_class = job.and_then(job_to_actor_class);
 
-        match sid {
-            Some(sid) => {
-                self.data_storage.append_actor(
-                    aid_info.value as u32,
-                    &name,
-                    Some(&sid.to_string()),
-                );
-                self.logger.info(format!(
-                    "[{}] main actor actor={} name={} name_hex={} sid={}",
-                    self.port, aid_info.value, name, name_hex, sid
-                ));
-            }
-            None => {
-                self.data_storage
-                    .append_actor(aid_info.value as u32, &name, None);
-                self.logger.info(format!(
-                    "[{}] main actor actor={} name={} name_hex={} sid=none",
-                    self.port, aid_info.value, name, name_hex
-                ));
-            }
-        }
+        let sid_string = sid.map(|sid| sid.to_string());
+        let sid_text = sid_string.as_deref().unwrap_or("none");
+        self.data_storage
+            .append_actor(aid_info.value as u32, &name, sid_string.as_deref());
+        self.logger.info(format!(
+            "[{}] main actor actor={} name={} name_hex={} sid={} job={} class={}",
+            self.port,
+            aid_info.value,
+            name,
+            name_hex,
+            sid_text,
+            job_text,
+            actor_class.unwrap_or("none")
+        ));
 
+        if let Some(actor_class) = actor_class {
+            self.data_storage
+                .set_actor_class(aid_info.value as u32, actor_class);
+        }
         self.data_storage
             .set_main_actor(aid_info.value as u32, &name);
         true
@@ -1119,11 +1118,27 @@ impl StreamProcessor {
             };
 
             let name_hex = bytes_to_hex(&payload[name_start..name_end]);
+            let job = payload.get(name_end + 2).copied();
+            let job_text = job
+                .map(|job| job.to_string())
+                .unwrap_or_else(|| "none".to_string());
+            let actor_class = job.and_then(job_to_actor_class);
             self.data_storage
                 .append_actor(aid_info.value as u32, &name, Some(&sid.to_string()));
+            if let Some(actor_class) = actor_class {
+                self.data_storage
+                    .set_actor_class(aid_info.value as u32, actor_class);
+            }
             self.logger.info(format!(
-                "[{}] main actor fallback actor={} name={} name_hex={} sid={} name_len_offset={}",
-                self.port, aid_info.value, name, name_hex, sid, name_len_offset
+                "[{}] main actor fallback actor={} name={} name_hex={} sid={} job={} class={} name_len_offset={}",
+                self.port,
+                aid_info.value,
+                name,
+                name_hex,
+                sid,
+                job_text,
+                actor_class.unwrap_or("none"),
+                name_len_offset
             ));
             self.data_storage
                 .set_main_actor(aid_info.value as u32, &name);
@@ -1276,28 +1291,27 @@ impl StreamProcessor {
             return false;
         }
 
-        let _job: u8 = payload[actor_name_end];
+        let job = payload[actor_name_end];
+        let actor_class = job_to_actor_class(job);
         let server_base = actor_name_end + 1;
         let sid = find_server_id(payload, server_base);
 
-        match sid {
-            Some(sid) => {
-                let sid_string = sid.to_string();
-                self.data_storage
-                    .append_actor(actor_id, &actor_name, Some(&sid_string));
-                self.logger.info(format!(
-                    "[{}] actor actor={} name={} sid={}",
-                    self.port, actor_id, actor_name, sid
-                ));
-            }
-            None => {
-                self.data_storage.append_actor(actor_id, &actor_name, None);
-                self.logger.info(format!(
-                    "[{}] actor actor={} name={} sid=none",
-                    self.port, actor_id, actor_name
-                ));
-            }
+        let sid_string = sid.map(|sid| sid.to_string());
+        let sid_text = sid_string.as_deref().unwrap_or("none");
+        self.data_storage
+            .append_actor(actor_id, &actor_name, sid_string.as_deref());
+        if let Some(actor_class) = actor_class {
+            self.data_storage.set_actor_class(actor_id, actor_class);
         }
+        self.logger.info(format!(
+            "[{}] actor actor={} name={} sid={} job={} class={}",
+            self.port,
+            actor_id,
+            actor_name,
+            sid_text,
+            job,
+            actor_class.unwrap_or("none")
+        ));
 
         true
     }
@@ -1414,6 +1428,21 @@ fn parse_detail_player_info_entry(
         },
         next_offset,
     ))
+}
+
+fn job_to_actor_class(job: u8) -> Option<&'static str> {
+    match job {
+        5..=8 => Some("GLADIATOR"),
+        9..=12 => Some("TEMPLAR"),
+        13..=16 => Some("RANGER"),
+        17..=20 => Some("ASSASSIN"),
+        21..=24 => Some("ELEMENTALIST"),
+        25..=28 => Some("SORCERER"),
+        29..=32 => Some("CLERIC"),
+        33..=36 => Some("CHANTER"),
+        45..=48 => Some("FIGHTER"),
+        _ => None,
+    }
 }
 
 fn find_next_detail_player_info_entry(payload: &[u8], start: usize, end: usize) -> Option<usize> {

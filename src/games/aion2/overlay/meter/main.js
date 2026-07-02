@@ -15,7 +15,7 @@ function getServerName(serverId) {
 // Reconcile the overlay window height with the rendered content
 // =============================================================================
 const MIN_WINDOW_HEIGHT = 10;
-const AUTO_RESIZE_POLL_MS = 500;
+const AUTO_RESIZE_FALLBACK_POLL_MS = 5000;
 const STORAGE_KEY = "app-config";
 const DEFAULT_OVERLAY_CONFIG = {
   locked: false,
@@ -34,6 +34,8 @@ const DEFAULT_OVERLAY_CONFIG = {
   damageFormat: "万/亿",
 };
 let contentScale = 1;
+let autoHeightReconcileScheduled = false;
+let lastAutoResizePlayerCount = null;
 
 function syncAutoResizeMode() {
   const autoResizeEnabled = overlayConfig?.autoResizeHeight !== false;
@@ -70,13 +72,26 @@ async function reconcileAutoHeight() {
   }
 }
 
-function startAutoHeightPolling() {
+function scheduleAutoHeightReconcile() {
+  if (overlayConfig?.autoResizeHeight === false) return;
+  if (autoHeightReconcileScheduled) return;
+
+  autoHeightReconcileScheduled = true;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {
+      autoHeightReconcileScheduled = false;
+      await reconcileAutoHeight();
+    });
+  });
+}
+
+function startAutoHeightFallbackPolling() {
   const poll = async () => {
     await reconcileAutoHeight();
-    window.setTimeout(poll, AUTO_RESIZE_POLL_MS);
+    window.setTimeout(poll, AUTO_RESIZE_FALLBACK_POLL_MS);
   };
 
-  void poll();
+  window.setTimeout(poll, AUTO_RESIZE_FALLBACK_POLL_MS);
 }
 
 // =============================================================================
@@ -228,6 +243,7 @@ function applyOverlayConfig(cfg) {
   if (lastSnapshot) {
     updatePlayerList(lastSnapshot);
   }
+  scheduleAutoHeightReconcile();
 }
 
 // =============================================================================
@@ -779,6 +795,12 @@ function updatePlayerRow(entry, p, maxDamage) {
 
 function updatePlayerList(snap, fullRebuild) {
   const players = snap.lastTargetAllPlayersOverviewStats;
+  const playerCount = players?.length ?? 0;
+  const shouldResize =
+    fullRebuild === true ||
+    lastAutoResizePlayerCount === null ||
+    playerCount !== lastAutoResizePlayerCount;
+  lastAutoResizePlayerCount = playerCount;
 
   // Track main actor for .is-main class
   mainActorName = snap.combatInfos?.mainActorName ?? null;
@@ -806,6 +828,9 @@ function updatePlayerList(snap, fullRebuild) {
       rowPool.push(entry.row);
     }
     playerRows.clear();
+    if (shouldResize) {
+      scheduleAutoHeightReconcile();
+    }
     return;
   }
 
@@ -848,6 +873,10 @@ function updatePlayerList(snap, fullRebuild) {
       rowPool.push(entry.row);
       playerRows.delete(id);
     }
+  }
+
+  if (shouldResize) {
+    scheduleAutoHeightReconcile();
   }
 }
 
@@ -900,6 +929,7 @@ function updatePlayerList(snap, fullRebuild) {
     if (!locked && titleBar) {
       titleBar.style.pointerEvents = "auto";
     }
+    scheduleAutoHeightReconcile();
   });
 
   // Language sync
@@ -946,7 +976,7 @@ function updatePlayerList(snap, fullRebuild) {
     $diag.textContent = "Event listener error — check console";
   }
 
-  startAutoHeightPolling();
+  startAutoHeightFallbackPolling();
 
   // Player row click → open detail window
   $playerList.addEventListener("click", async (e) => {

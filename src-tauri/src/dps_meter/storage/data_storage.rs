@@ -16,7 +16,7 @@ const ACTOR_METADATA_CAPACITY: usize = 2_000;
 const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
-const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 1] = ["11340000"];
+const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 2] = ["11340000", "1740"];
 const FIGHTER_SKILLID_MAP: &[(u32, u32)] = &[
     (19_080_000, 19_070_000), // 疾风击[暴走] -> 疾风击
     (19_100_000, 19_090_000), // 地面强击[暴走] -> 地面强击
@@ -263,8 +263,10 @@ impl DataStorage {
             inner.dot_skill_list.push(packet.skill_code);
         }
 
-        if let Some(actor_class) = infer_actor_class(packet.skill_code) {
-            inner.actor_id_class_map.insert(actor_id, actor_class);
+        if !inner.actor_id_class_map.contains_key(&actor_id) {
+            if let Some(actor_class) = infer_actor_class(packet.skill_code) {
+                inner.actor_id_class_map.insert(actor_id, actor_class);
+            }
         }
 
         if inner.start_time.is_none() {
@@ -364,6 +366,14 @@ impl DataStorage {
             inner.actor_id_server_map.insert(actor_id, sid.to_string());
         }
         inner.summon_owner_map.map.remove(&actor_id);
+    }
+
+    pub fn set_actor_class(&self, actor_id: u32, actor_class: &str) {
+        self.inner
+            .write()
+            .unwrap()
+            .actor_id_class_map
+            .insert(actor_id, actor_class.to_string());
     }
 
     pub fn upsert_detail_player_info(&self, info: DetailPlayerInfo) {
@@ -661,7 +671,10 @@ fn infer_actor_class(skill_code: u32) -> Option<String> {
     if skill_code.len() < 2 {
         return None;
     }
-    if ACTOR_CLASS_SKILL_IGNORE_LIST.contains(&skill_code.as_str()) {
+    if ACTOR_CLASS_SKILL_IGNORE_LIST
+        .iter()
+        .any(|ignored_prefix| skill_code.starts_with(ignored_prefix))
+    {
         return None;
     }
 
