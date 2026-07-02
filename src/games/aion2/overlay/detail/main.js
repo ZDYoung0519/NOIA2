@@ -62,6 +62,7 @@ let selectedActorId = null;
 let selectedTargetId = null;
 let frozenRecord = null;
 let lastSnapshot = null;
+let isBuffPanelOpen = false;
 
 // ── Formatters ──
 function fmtDamage(n) {
@@ -99,12 +100,28 @@ function normalizeSkillId(id) {
   // 前端不需要任何实际的合并操作
   return String(id).slice(0, 8);
 }
+function skillLookupCandidates(id) {
+  const raw = String(id);
+  const candidates = [raw, normalizeSkillId(raw)];
+  if (raw.length > 8) {
+    candidates.push(raw.slice(0, 8).replace(/\d$/, "0"));
+  }
+  if (raw.length > 6) {
+    candidates.push(raw.slice(0, 6).padEnd(8, "0"));
+  }
+  return [...new Set(candidates)];
+}
+function resolveSkillId(id) {
+  return (
+    skillLookupCandidates(id).find((candidate) => currentSkills[candidate]) || normalizeSkillId(id)
+  );
+}
 function skillName(id) {
-  const k = normalizeSkillId(id);
-  return currentSkills[k] || currentSkills[k.slice(0, 8)] || "Skill #" + id;
+  const k = resolveSkillId(id);
+  return currentSkills[k] || "Skill #" + id;
 }
 function skillIcon(id) {
-  const base = String(id);
+  const base = resolveSkillId(id);
   return base.length === 6
     ? "/aion2/skill/" + base + ".png"
     : "/aion2/skill/" + base.slice(0, 4) + ".png";
@@ -115,6 +132,59 @@ function specDots(slots) {
 }
 function getSpecial(stats, key) {
   return Number(stats?.specialCounts?.[key] ?? 0);
+}
+function fmtTimelineTime(seconds) {
+  if (!Number.isFinite(seconds)) return "--";
+  return seconds < 60 ? `${seconds.toFixed(1)}s` : fmtDuration(seconds);
+}
+function getTargetBuffs(dataSource, targetId) {
+  if (targetId == null) return [];
+  return (
+    dataSource?.useBuffsByTarget?.[String(targetId)] ||
+    dataSource?.useBuffsByTarget?.[targetId] ||
+    []
+  );
+}
+function renderBuffTimeline(buffs, fightStart, fightEnd) {
+  const fightStartMs = Math.floor(fightStart * 1000);
+  const fightEndMs = Math.floor(fightEnd * 1000);
+  const fightDurationMs = Math.max(1, fightEndMs - fightStartMs);
+  const rows = (buffs || [])
+    .map((buff) => {
+      const startMs = Number(buff.localStartMs);
+      const endMs = Number(buff.localEndMs);
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return null;
+      const visibleStart = Math.max(startMs, fightStartMs);
+      const visibleEnd = Math.min(endMs, fightEndMs);
+      if (visibleEnd <= visibleStart) return null;
+      const left = ((visibleStart - fightStartMs) / fightDurationMs) * 100;
+      const width = ((visibleEnd - visibleStart) / fightDurationMs) * 100;
+      const startSec = (visibleStart - fightStartMs) / 1000;
+      const endSec = (visibleEnd - fightStartMs) / 1000;
+      const name = skillName(buff.skillCode);
+      const icon = skillIcon(buff.skillCode);
+      const label = `${name} ${fmtTimelineTime(startSec)}-${fmtTimelineTime(endSec)}`;
+      return `
+        <div class="buff-timeline__row">
+          <div class="buff-timeline__name">
+            ${icon ? `<img class="buff-timeline__icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}
+            <span>${esc(name)}</span>
+          </div>
+          <div class="buff-timeline__track">
+            <div class="buff-timeline__bar" style="left:${left.toFixed(2)}%;width:${Math.max(width, 0.8).toFixed(2)}%" title="${esc(label)}"></div>
+          </div>
+        </div>`;
+    })
+    .filter(Boolean);
+
+  return `
+    <div class="buff-timeline">
+      ${
+        rows.length > 0
+          ? rows.join("")
+          : `<div class="buff-timeline__empty">${t("dps-detail.noBuffs")}</div>`
+      }
+    </div>`;
 }
 function mergeSkillStats(target, source) {
   target.totalDamage += source.totalDamage || 0;
@@ -159,6 +229,7 @@ function render() {
   let totalDmg = 0,
     skillMap = {},
     targetInfo = null,
+    currentTargetId = null,
     actorInfo = null,
     playerStats = null;
 
@@ -179,8 +250,10 @@ function render() {
   // ── Target info (for fight duration) ──
   if (mode === "history") {
     targetInfo = dataSource.targetInfo || null;
+    currentTargetId = dataSource.targetId ?? targetInfo?.id ?? null;
   } else {
     const targetId = selectedTargetId ?? dataSource.combatInfos?.lastTargetByMainActor;
+    currentTargetId = targetId ?? null;
     if (targetId != null) {
       targetInfo =
         dataSource.combatInfos?.targetInfos?.[targetId] || dataSource.lastTargetInfo || null;
@@ -334,7 +407,21 @@ function render() {
   } else {
     html += `<div class="empty">${t("dps-detail.noData")}</div>`;
   }
+  html += `
+    <details class="buff-panel" ${isBuffPanelOpen ? "open" : ""}>
+      <summary class="buff-panel__summary">
+        <span>${t("dps-detail.playerBuffs")}</span>
+        <span class="buff-panel__chevron">▾</span>
+      </summary>
+      <div class="buff-panel__body">
+        ${renderBuffTimeline(getTargetBuffs(dataSource, selectedActorId), fightStart, fightEnd)}
+      </div>
+    </details>`;
   $content.innerHTML = html;
+  $content.querySelector(".buff-panel")?.addEventListener("toggle", (event) => {
+    isBuffPanelOpen = event.currentTarget.open;
+    requestAnimationFrame(() => requestAnimationFrame(autoResize));
+  });
   // Resize after DOM update settles
   requestAnimationFrame(() => requestAnimationFrame(autoResize));
 }

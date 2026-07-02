@@ -265,22 +265,20 @@ impl StreamProcessor {
             return false;
         }
 
-        // let search_target_hex = "E7 87 83 E7 83 A7 E7 9A 84 E6 B5 85 E8 93 9D";
-        // if let Some(search_target) = parse_hex_bytes(search_target_hex) {
-        //     if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
-        //         let context_start = hit_offset.saturating_sub(256);
-        //         let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
-        //         self.logger.info(format!(
-        //             "[{}] hard search hit opcode={:02X} {:02X} offset={} target_hex={} context_hex={}, full_hex={}",
-        //             self.port,
-        //             payload[0],
-        //             payload[1],
-        //             hit_offset,
-        //             bytes_to_hex(&search_target),
-        //             bytes_to_hex(&payload[context_start..context_end]),
-        //             bytes_to_hex(&payload),
-        //         ));
-        //     }
+        // let search_target = 191_301_301u32.to_le_bytes();
+        // if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
+        //     let context_start = hit_offset.saturating_sub(256);
+        //     let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
+        //     self.logger.info(format!(
+        //         "[{}] hard search skill=191301301 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
+        //         self.port,
+        //         payload[0],
+        //         payload[1],
+        //         hit_offset,
+        //         bytes_to_hex(&search_target),
+        //         bytes_to_hex(&payload[context_start..context_end]),
+        //         bytes_to_hex(payload),
+        //     ));
         // }
 
         match (payload[0], payload[1]) {
@@ -290,6 +288,7 @@ impl StreamProcessor {
             (0x41, 0x36) => self.parse_summon_packet(payload),
             (0x04, 0x38) => self.parse_damage_packet(payload),
             (0x05, 0x38) => self.parse_dot_packet(payload),
+            (0x2A, 0x38) | (0x2B, 0x38) => self.parse_buff_packet(payload),
             (0x04, 0x8D) => self.parse_summon_packet_048d(payload),
             (0x00, 0x8D) => self.parse_remain_hp_packet(payload),
             _ => false,
@@ -572,6 +571,106 @@ impl StreamProcessor {
             log_skill_code,
             skill_code_candidate,
             log_damage
+        ));
+        true
+    }
+
+    fn parse_buff_packet(&mut self, packet: &[u8]) -> bool {
+        if packet.len() < 2 || !matches!(packet[0], 0x2A | 0x2B) || packet[1] != 0x38 {
+            return false;
+        }
+
+        let opcode = packet[0];
+        let mut offset = 2usize;
+
+        let target_info = read_varint(packet, offset);
+        if !target_info.is_valid() {
+            return false;
+        }
+        offset += target_info.length + 2;
+        if offset >= packet.len() {
+            return false;
+        }
+
+        let unknown_info = read_varint(packet, offset);
+        if !unknown_info.is_valid() {
+            return false;
+        }
+        offset += unknown_info.length;
+
+        if offset + 4 > packet.len() {
+            return false;
+        }
+        let skill_code = parse_u32_le(packet, offset);
+        offset += 4;
+
+        if skill_code < 110_000_000 || skill_code > 200_000_000 {
+            if !(20_000_000..30_000_000).contains(&skill_code) {
+                self.logger.debug(format!(
+                    "[{}] buff skipped target={} skill={} opcode={:02X}38 packet_len={} packet_hex={}",
+                    self.port,
+                    target_info.value,
+                    skill_code,
+                    opcode,
+                    packet.len(),
+                    bytes_to_hex(packet)
+                ));
+                return true;
+            }
+        }
+
+        if offset + 16 > packet.len() {
+            return false;
+        }
+        let duration = parse_u32_le(packet, offset) as u64;
+        offset += 8;
+        let server_time = parse_u64_le(packet, offset);
+        offset += 8;
+
+        let actor_info = read_varint(packet, offset);
+        if !actor_info.is_valid() {
+            return false;
+        }
+
+        if duration == u32::MAX as u64 {
+            self.logger.debug(format!(
+                "[{}] buff skipped permanent target={} actor={} skill={} duration={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
+                self.port,
+                target_info.value,
+                actor_info.value,
+                skill_code,
+                duration,
+                server_time,
+                opcode,
+                packet.len(),
+                bytes_to_hex(packet)
+            ));
+            return true;
+        }
+
+        let server_start_ms = server_time.saturating_sub(duration);
+        let buff = self.data_storage.save_buff(
+            target_info.value as u32,
+            actor_info.value as u32,
+            skill_code,
+            server_start_ms,
+            duration,
+        );
+        self.logger.debug(format!(
+            "[{}] buff detected target={} actor={} skill={} duration_ms={} server_start_ms={} local_start_ms={} local_end_ms={} latency_ms={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
+            self.port,
+            buff.target_id,
+            buff.actor_id,
+            buff.skill_code,
+            buff.duration_ms,
+            buff.server_start_ms,
+            buff.local_start_ms,
+            buff.local_end_ms,
+            buff.latency_ms,
+            server_time,
+            opcode,
+            packet.len(),
+            bytes_to_hex(packet)
         ));
         true
     }

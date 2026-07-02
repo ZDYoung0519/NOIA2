@@ -8,6 +8,7 @@ use tauri::{AppHandle, Emitter};
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
 use crate::dps_meter::models::combat::{
     DetailPlayerInfo, PlayerHpInfo, PvpKnownPlayer, PvpWatchInfo, PvpWatchInfoResponse, SkillStats,
+    UseBuff,
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
@@ -16,6 +17,8 @@ const ACTOR_METADATA_CAPACITY: usize = 2_000;
 const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
+const BUFF_TARGET_CAPACITY: usize = 1_000;
+const BUFF_RECORDS_PER_TARGET_CAPACITY: usize = 300;
 const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 2] = ["11340000", "1740"];
 const FIGHTER_SKILLID_MAP: &[(u32, u32)] = &[
     (19_080_000, 19_070_000), // 疾风击[暴走] -> 疾风击
@@ -116,6 +119,7 @@ struct DataStorageInner {
     mob_id_code_map: BoundedMap<u32, u32>,
     mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
     player_hp_map: BoundedMap<u32, PlayerHpInfo>,
+    use_buffs_by_target: BoundedMap<u32, VecDeque<UseBuff>>,
     possible_boss_codes: HashSet<u32>,
     summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
@@ -141,6 +145,7 @@ impl Default for DataStorageInner {
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             mob_id_hp_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             player_hp_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            use_buffs_by_target: BoundedMap::new(BUFF_TARGET_CAPACITY),
             possible_boss_codes: HashSet::new(),
             summon_owner_map: BoundedMap::new(SUMMON_METADATA_CAPACITY),
             start_time: None,
@@ -221,6 +226,42 @@ impl DataStorage {
 
     pub fn append_damage(&self, packet: ParsedDamagePacket) {
         self.append_damage_at(packet, current_timestamp_seconds());
+    }
+
+    pub fn save_buff(
+        &self,
+        target_id: u32,
+        actor_id: u32,
+        skill_code: u32,
+        server_start_ms: u64,
+        duration_ms: u64,
+    ) -> UseBuff {
+        let local_start_ms = current_timestamp_millis();
+        let local_end_ms = local_start_ms.saturating_add(duration_ms);
+        let latency_ms = local_start_ms as i64 - server_start_ms as i64;
+        let buff = UseBuff {
+            target_id,
+            actor_id,
+            skill_code,
+            server_start_ms,
+            local_start_ms,
+            local_end_ms,
+            duration_ms,
+            latency_ms,
+        };
+
+        {
+            let mut inner = self.inner.write().unwrap();
+            let target_buffs = inner
+                .use_buffs_by_target
+                .get_mut_or_insert_with(target_id, VecDeque::new);
+            target_buffs.push_back(buff.clone());
+            while target_buffs.len() > BUFF_RECORDS_PER_TARGET_CAPACITY {
+                target_buffs.pop_front();
+            }
+        }
+
+        buff
     }
 
     pub fn append_damage_at(&self, packet: ParsedDamagePacket, timestamp: f64) {
@@ -533,6 +574,17 @@ impl DataStorage {
             .as_hash_map()
     }
 
+    pub fn use_buffs_by_target_snapshot(&self) -> HashMap<u32, Vec<UseBuff>> {
+        self.inner
+            .read()
+            .unwrap()
+            .use_buffs_by_target
+            .as_hash_map()
+            .into_iter()
+            .map(|(target_id, buffs)| (target_id, buffs.into_iter().collect()))
+            .collect()
+    }
+
     pub fn get_pvp_watch_info(&self, names: &[String]) -> PvpWatchInfoResponse {
         let inner = self.inner.read().unwrap();
         let mut watch_info = Vec::new();
@@ -698,6 +750,15 @@ fn current_timestamp_seconds() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs_f64())
+        .unwrap_or_default()
+}
+
+fn current_timestamp_millis() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as u64)
         .unwrap_or_default()
 }
 

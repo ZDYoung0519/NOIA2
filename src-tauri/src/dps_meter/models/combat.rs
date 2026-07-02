@@ -66,6 +66,19 @@ pub struct PlayerHpInfo {
     pub max_observed_hp: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UseBuff {
+    pub target_id: u32,
+    pub actor_id: u32,
+    pub skill_code: u32,
+    pub server_start_ms: u64,
+    pub local_start_ms: u64,
+    pub local_end_ms: u64,
+    pub duration_ms: u64,
+    pub latency_ms: i64,
+}
+
 impl SkillStats {
     pub fn new() -> Self {
         Self {
@@ -143,6 +156,8 @@ pub struct CombatSnapshot {
     pub total_damage: u64,
     pub by_target_player_skill_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
     pub by_target_player_stats: HashMap<u32, HashMap<u32, PlayerOverviewStat>>,
+    #[serde(default)]
+    pub use_buffs_by_target: HashMap<u32, Vec<UseBuff>>,
     pub combat_infos: CombatInfos,
     pub last_target_info: Option<TargetInfo>,
     #[serde(default)]

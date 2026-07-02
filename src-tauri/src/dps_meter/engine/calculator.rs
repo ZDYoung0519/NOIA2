@@ -158,6 +158,7 @@ fn build_combat_snapshot(
         total_damage,
         by_target_player_skill_stats: filtered_skill_stats,
         by_target_player_stats: per_target_overview,
+        use_buffs_by_target: data_storage.use_buffs_by_target_snapshot(),
         combat_infos: CombatInfos {
             actor_infos,
             target_infos,

@@ -907,6 +907,7 @@ function updatePlayerList(snap, fullRebuild) {
       if (allOk) {
         clearInterval(poll);
       }
+      scheduleAutoHeightReconcile();
     }, 2000);
   }
 

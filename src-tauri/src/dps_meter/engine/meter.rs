@@ -217,6 +217,7 @@ impl DpsMeter {
             total_damage: 0,
             by_target_player_skill_stats: HashMap::new(),
             by_target_player_stats: HashMap::new(),
+            use_buffs_by_target: HashMap::new(),
             combat_infos: CombatInfos {
                 actor_infos: HashMap::new(),
                 target_infos: HashMap::new(),
