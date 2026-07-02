@@ -17,6 +17,23 @@ const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
 const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 1] = ["11340000"];
+const FIGHTER_SKILLID_MAP: &[(u32, u32)] = &[
+    (19_080_000, 19_070_000), // 疾风击[暴走] -> 疾风击
+    (19_100_000, 19_090_000), // 地面强击[暴走] -> 地面强击
+    (19_120_000, 19_110_000), // 不知道叫啥的技能[暴走] -> 不知道叫啥的技能
+    (19_150_000, 19_160_000), // 升天拳[暴走] -> 升天拳
+    (19_180_000, 19_170_000), // 回旋脚[暴走] -> 回旋脚
+    (19_190_000, 19_200_000), // 爆裂拳[暴走] -> 爆裂拳
+    (19_260_000, 19_250_000), // 台风连击[暴走] -> 台风连击
+    (19_430_000, 19_420_000), // 连环拳[暴走] -> 连环拳
+    (19_470_000, 19_460_000), // 瞬步[暴走] -> 瞬步
+    (19_510_000, 19_010_000), // 连攻[暴走] -> 连攻
+    (19_520_000, 19_020_000), // 重击[暴走] -> 重击
+    (19_530_000, 19_030_000), // 重锤[暴走] -> 重锤
+    (19_540_000, 19_040_000), // 飞脚[暴走] -> 飞脚
+    (19_550_000, 19_050_000), // 升降拳[暴走] -> 升降拳
+    (19_560_000, 19_060_000), // 冲拳[暴走] -> 冲拳
+];
 
 #[derive(Debug, Clone)]
 struct BoundedMap<K, V> {
@@ -293,6 +310,13 @@ impl DataStorage {
         } else {
             packet.ori_skill_code
         };
+        // FIGHTER的暴走技能归类到普通技能上
+        if let Some((_, mapped_skill_code)) = FIGHTER_SKILLID_MAP
+            .iter()
+            .find(|(from_skill_code, _)| *from_skill_code == stats_skill_code)
+        {
+            stats_skill_code = *mapped_skill_code;
+        }
         // 精灵星召唤物的普通攻击归类
         if (100_010..=100_059).contains(&stats_skill_code)
             && (10001..=10005).contains(&(stats_skill_code / 10))
@@ -650,6 +674,7 @@ fn infer_actor_class(skill_code: u32) -> Option<String> {
         "16" => Some("ELEMENTALIST".to_string()),
         "17" => Some("CLERIC".to_string()),
         "18" => Some("CHANTER".to_string()),
+        "19" => Some("FIGHTER".to_string()),
         _ => None,
     }
 }
