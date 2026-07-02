@@ -44639,14 +44639,7 @@
     "mainCategory": "monster"
   },
   "2300219": {
-    "name": "甦醒的艾圖拉頓",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300200": {
-    "name": "贤明的巴温努特",
+    "name": "賢明的巴溫努特",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -44780,6 +44773,132 @@
   },
   "2301090": {
     "name": "凱德利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300473": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300474": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300475": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300491": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300492": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300493": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300527": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300528": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300529": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300544": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300545": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300546": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301701": {
+    "name": "意志圖勒根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301702": {
+    "name": "禁忌魔手格里歐薩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301703": {
+    "name": "僞惡巴席路人斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301721": {
+    "name": "意志圖勒根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301722": {
+    "name": "禁忌魔手格里歐薩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301723": {
+    "name": "僞惡巴席路人斯",
     "level": 0,
     "npcType": "",
     "npcSubType": "",

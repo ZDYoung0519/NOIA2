@@ -5,6 +5,7 @@ import { uploadDpsDataBatch, isUserLoggedIn } from "@/games/aion2/lib/upload-rec
 import {
   getDungeonDifficultyByMobCode,
   getDungeonNameByMobCode,
+  getNpcName,
 } from "@/games/aion2/lib/npc-names";
 import { t, setLanguage, getLanguage } from "../../i18n.js";
 
@@ -176,27 +177,33 @@ function getTargetMobCode(r) {
   return getTargetInfo(r)?.targetMobCode ?? null;
 }
 function getTargetName(r) {
-  const targetInfo = getTargetInfo(r);
-  const targetName = targetInfo?.targetName?.trim();
-  if (targetName) return targetName;
+  // const targetInfo = getTargetInfo(r);
+  // const targetName = targetInfo?.targetName?.trim();
+  // if (targetName) return targetName;
 
   const mobCode = getTargetMobCode(r);
-  const targetLabel = `Target #${r.targetId}`;
+  const npcName = mobCode ? getNpcName(mobCode) : null;
+  if (npcName) {
+    return `${npcName} (${mobCode})`;
+  }
+
+  const targetLabel = t("dps-history.unknownTarget", { id: r.targetId });
   return mobCode ? `${targetLabel} (${mobCode})` : targetLabel;
 }
 function getDungeonInfo(r) {
   const mobCode = getTargetMobCode(r);
   if (!mobCode) {
     return {
-      name: "未知副本",
-      difficulty: "未知难度",
+      name: t("dps-history.unknownDungeon"),
+      difficulty: t("dps-history.unknownDifficulty"),
     };
   }
 
   const language = getLanguage();
   return {
-    name: getDungeonNameByMobCode(mobCode, language) || "未知副本",
-    difficulty: getDungeonDifficultyByMobCode(mobCode, language) || "未知难度",
+    name: getDungeonNameByMobCode(mobCode, language) || t("dps-history.unknownDungeon"),
+    difficulty:
+      getDungeonDifficultyByMobCode(mobCode, language) || t("dps-history.unknownDifficulty"),
   };
 }
 function getClassIcon(c) {
