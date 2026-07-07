@@ -9,6 +9,8 @@ use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarInt
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
+const MIN_IMPLAUSIBLE_RESYNC_BUFFER_SIZE: usize = 128;
+
 #[derive(Debug)]
 struct DamagePacketReader<'a> {
     packet: &'a [u8],
@@ -42,6 +44,8 @@ impl<'a> DamagePacketReader<'a> {
 struct PacketPrefixInfo {
     /// 真实业务 payload 的起始偏移（也就是 opcode 开始的位置）
     payload_offset: usize,
+    /// 长度字段后是否存在 extraFlag。
+    has_extra_flag: bool,
 }
 
 /// 解析长度字段后面的传输层前缀。
@@ -60,7 +64,37 @@ fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPr
         return None;
     }
 
-    Some(PacketPrefixInfo { payload_offset })
+    Some(PacketPrefixInfo {
+        payload_offset,
+        has_extra_flag,
+    })
+}
+
+fn peek_packet_opcode(buffer: &[u8], offset: usize, length_len: usize) -> Option<(u8, u8)> {
+    let prefix_info = resolve_packet_prefix(&buffer[offset..], length_len)?;
+    let opcode_offset = offset + prefix_info.payload_offset;
+    Some((*buffer.get(opcode_offset)?, *buffer.get(opcode_offset + 1)?))
+}
+
+fn is_plausible_stream_opcode(op0: u8, op1: u8) -> bool {
+    matches!(
+        (op0, op1),
+        (0xFF, 0xFF)
+            | (0x33, 0x36)
+            | (0x45, 0x36)
+            | (0x41, 0x36)
+            | (0x04, 0x38)
+            | (0x05, 0x38)
+            | (0x2A, 0x38)
+            | (0x2B, 0x38)
+            | (0x04, 0x8D)
+            | (0x00, 0x8D)
+    )
+}
+
+fn find_nearby_damage_opcode(buffer: &[u8], offset: usize) -> Option<usize> {
+    let search_end = (offset + 64).min(buffer.len());
+    find_bytes(buffer, offset, &[0x04, 0x38]).filter(|hit| *hit < search_end)
 }
 
 pub struct StreamProcessor {
@@ -87,6 +121,97 @@ impl StreamProcessor {
         }
     }
 
+    fn log_stream_frame_debug(
+        &self,
+        reason: &str,
+        buffer: &[u8],
+        offset: usize,
+        length_info: &VarIntOutput,
+        total_packet_bytes: Option<usize>,
+    ) {
+        let remaining = buffer.len().saturating_sub(offset);
+        let after_length_offset = offset + length_info.length;
+        let after_length_end = (after_length_offset + 16).min(buffer.len());
+        let after_length_hex = if after_length_offset < buffer.len() {
+            bytes_to_hex(&buffer[after_length_offset..after_length_end])
+        } else {
+            String::from("<eof>")
+        };
+
+        let prefix_info = resolve_packet_prefix(&buffer[offset..], length_info.length);
+        let (extra_flag, opcode_text, opcode_offset_text, known_opcode) =
+            if let Some(prefix_info) = prefix_info {
+                let opcode_offset = offset + prefix_info.payload_offset;
+                let opcode = buffer
+                    .get(opcode_offset)
+                    .zip(buffer.get(opcode_offset + 1))
+                    .map(|(op0, op1)| (*op0, *op1));
+                let opcode_text = opcode
+                    .map(|(op0, op1)| format!("{op0:02X}{op1:02X}"))
+                    .unwrap_or_else(|| String::from("<missing>"));
+                let known_opcode = opcode
+                    .map(|(op0, op1)| is_plausible_stream_opcode(op0, op1))
+                    .unwrap_or(false);
+
+                (
+                    prefix_info.has_extra_flag,
+                    opcode_text,
+                    opcode_offset.to_string(),
+                    known_opcode,
+                )
+            } else {
+                (
+                    false,
+                    String::from("<missing>"),
+                    String::from("<missing>"),
+                    false,
+                )
+            };
+
+        let raw_head_end = (offset + 32).min(buffer.len());
+        let raw_head_hex = bytes_to_hex(&buffer[offset..raw_head_end]);
+        let nearby_damage = find_nearby_damage_opcode(buffer, offset)
+            .map(|hit| {
+                let rel_to_offset = hit as isize - offset as isize;
+                let rel_to_opcode = opcode_offset_text
+                    .parse::<usize>()
+                    .map(|opcode_offset| hit as isize - opcode_offset as isize)
+                    .unwrap_or(rel_to_offset);
+                format!("04 38 at +{rel_to_offset} from_offset, {rel_to_opcode:+} from_opcode")
+            })
+            .unwrap_or_else(|| String::from("none"));
+
+        self.logger.debug(format!(
+            "[{}] stream frame {} offset={} remaining={} length_len={} length_value={} total_packet_bytes={} after_length_hex={} extra_flag={} opcode={} opcode_offset={} known_opcode={} nearby_0438={} raw_head={}",
+            self.port,
+            reason,
+            offset,
+            remaining,
+            length_info.length,
+            length_info.value,
+            total_packet_bytes
+                .map(|value| value.to_string())
+                .unwrap_or_else(|| String::from("<invalid>")),
+            after_length_hex,
+            extra_flag,
+            opcode_text,
+            opcode_offset_text,
+            known_opcode,
+            nearby_damage,
+            raw_head_hex,
+        ));
+    }
+
+    fn should_log_stream_frame(
+        &self,
+        buffer: &[u8],
+        offset: usize,
+        length_info: &VarIntOutput,
+    ) -> bool {
+        let opcode = peek_packet_opcode(buffer, offset, length_info.length);
+        matches!(opcode, Some((0x04, 0x38))) || find_nearby_damage_opcode(buffer, offset).is_some()
+    }
+
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
         let (max_packet_size_threshold, enable_resync_on_stall, resync_delay_ms) = {
@@ -106,6 +231,15 @@ impl StreamProcessor {
 
             let length_info = read_varint(buffer, offset);
             if !length_info.is_valid() || length_info.value <= 0 {
+                if find_nearby_damage_opcode(buffer, offset).is_some() {
+                    self.log_stream_frame_debug(
+                        "invalid-length-near-0438",
+                        buffer,
+                        offset,
+                        &length_info,
+                        None,
+                    );
+                }
                 if offset + 5 > buffer.len() {
                     break;
                 }
@@ -120,24 +254,96 @@ impl StreamProcessor {
             };
 
             if total_packet_bytes == 0 || total_packet_bytes > 65_535 {
+                self.log_stream_frame_debug(
+                    "invalid-total-size",
+                    buffer,
+                    offset,
+                    &length_info,
+                    Some(total_packet_bytes),
+                );
                 offset += 1;
                 continue;
             }
 
             if offset + total_packet_bytes > buffer.len() {
                 if total_packet_bytes > max_packet_size_threshold {
+                    self.log_stream_frame_debug(
+                        "incomplete-too-large",
+                        buffer,
+                        offset,
+                        &length_info,
+                        Some(total_packet_bytes),
+                    );
                     offset += 1;
                     continue;
+                }
+                if buffer.len().saturating_sub(offset) >= MIN_IMPLAUSIBLE_RESYNC_BUFFER_SIZE {
+                    if let Some((op0, op1)) = peek_packet_opcode(buffer, offset, length_info.length)
+                    {
+                        if !is_plausible_stream_opcode(op0, op1) {
+                            if self.should_log_stream_frame(buffer, offset, &length_info) {
+                                self.log_stream_frame_debug(
+                                    "incomplete-implausible-opcode",
+                                    buffer,
+                                    offset,
+                                    &length_info,
+                                    Some(total_packet_bytes),
+                                );
+                            }
+                            offset += 1;
+                            continue;
+                        }
+                    }
+                }
+                if self.should_log_stream_frame(buffer, offset, &length_info) {
+                    self.log_stream_frame_debug(
+                        "incomplete-wait",
+                        buffer,
+                        offset,
+                        &length_info,
+                        Some(total_packet_bytes),
+                    );
                 }
                 break;
             }
 
             let current_packet = &buffer[offset..offset + total_packet_bytes];
+            if self.should_log_stream_frame(buffer, offset, &length_info) {
+                self.log_stream_frame_debug(
+                    "complete-candidate",
+                    buffer,
+                    offset,
+                    &length_info,
+                    Some(total_packet_bytes),
+                );
+            }
             let Some(prefix_info) = resolve_packet_prefix(current_packet, length_info.length)
             else {
+                self.log_stream_frame_debug(
+                    "missing-prefix",
+                    buffer,
+                    offset,
+                    &length_info,
+                    Some(total_packet_bytes),
+                );
                 offset += 1;
                 continue;
             };
+            if let Some((op0, op1)) = peek_packet_opcode(buffer, offset, length_info.length) {
+                if !is_plausible_stream_opcode(op0, op1) {
+                    if self.should_log_stream_frame(buffer, offset, &length_info) {
+                        self.log_stream_frame_debug(
+                            "complete-implausible-opcode",
+                            buffer,
+                            offset,
+                            &length_info,
+                            Some(total_packet_bytes),
+                        );
+                    }
+                    offset += 1;
+                    continue;
+                }
+            }
             let payload_start = prefix_info.payload_offset;
             let is_bundle = payload_start + 1 < current_packet.len()
                 && current_packet[payload_start] == 0xFF

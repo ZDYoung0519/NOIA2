@@ -13,6 +13,7 @@ use libloading::{Library, Symbol};
 use serde::Serialize;
 
 use crate::dps_meter::capture::channel::Channel;
+use crate::dps_meter::config::{CaptureDeviceDetectionMode, SharedDpsMeterConfig};
 use crate::plugins::logger::AppLogger;
 
 #[derive(Debug, Clone, Serialize)]
@@ -22,6 +23,7 @@ pub struct CapturedPacket {
     pub dst_port: u16,
     pub data: Vec<u8>,
     pub captured_at: f64,
+    pub device_name: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -229,6 +231,7 @@ unsafe impl Sync for NpcapLib {}
 pub struct PcapCapturer {
     channel: Channel<CapturedPacket>,
     logger: Arc<AppLogger>,
+    config: SharedDpsMeterConfig,
     running: Arc<AtomicBool>,
     detector_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
@@ -239,10 +242,15 @@ pub struct PcapCapturer {
 }
 
 impl PcapCapturer {
-    pub fn new(channel: Channel<CapturedPacket>, logger: Arc<AppLogger>) -> Self {
+    pub fn new(
+        channel: Channel<CapturedPacket>,
+        logger: Arc<AppLogger>,
+        config: SharedDpsMeterConfig,
+    ) -> Self {
         Self {
             channel,
             logger,
+            config,
             running: Arc::new(AtomicBool::new(false)),
             detector_thread: Arc::new(Mutex::new(None)),
             capture_threads: Arc::new(Mutex::new(Vec::new())),
@@ -260,6 +268,7 @@ impl PcapCapturer {
 
         let channel = self.channel.clone();
         let logger = Arc::clone(&self.logger);
+        let config = Arc::clone(&self.config);
         let running = Arc::clone(&self.running);
         let capture_threads = Arc::clone(&self.capture_threads);
         let target_device = Arc::clone(&self.target_device);
@@ -313,6 +322,29 @@ impl PcapCapturer {
                     }
                     last_device_inventory = inventory;
                 }
+                let mode = config.read().unwrap().capture_device_detection_mode.clone();
+                if mode == CaptureDeviceDetectionMode::All {
+                    let should_restart_all = target_device.read().unwrap().as_deref()
+                        != Some("all")
+                        || capture_threads.lock().unwrap().is_empty();
+                    if should_restart_all {
+                        logger.info("capture device detection mode: all devices");
+                        stop_capture_threads(&capture_threads);
+                        *target_device.write().unwrap() = Some("all".to_string());
+                        *target_port.write().unwrap() = Some("all".to_string());
+                        start_all_capture_threads(
+                            Arc::clone(&npcap),
+                            devices,
+                            channel.clone(),
+                            Arc::clone(&logger),
+                            Arc::clone(&running),
+                            Arc::clone(&capture_threads),
+                        );
+                    }
+                    sleep_while_running(&running, detection_interval);
+                    continue;
+                }
+
                 let mut detected_target: Option<CaptureTarget> = None;
 
                 for device in devices {
@@ -357,6 +389,7 @@ impl PcapCapturer {
                         stop_capture_threads(&capture_threads);
                         start_capture_thread(
                             Arc::clone(&npcap),
+                            target.device_name.clone(),
                             target.device_name,
                             channel.clone(),
                             Arc::clone(&running),
@@ -487,6 +520,7 @@ fn inspect_device_for_magic(
 fn start_capture_thread(
     npcap: Arc<NpcapLib>,
     device_name: String,
+    device_label: String,
     channel: Channel<CapturedPacket>,
     running: Arc<AtomicBool>,
     capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
@@ -500,9 +534,11 @@ fn start_capture_thread(
             }
         };
 
+        let packet_device_name = device_label;
         while running.load(Ordering::SeqCst) {
             match next_captured_packet(&npcap, capture_handle) {
-                CaptureRead::Packet(packet) => {
+                CaptureRead::Packet(mut packet) => {
+                    packet.device_name = Some(packet_device_name.clone());
                     let _ = channel.try_send(packet);
                 }
                 CaptureRead::Timeout => continue,
@@ -512,6 +548,81 @@ fn start_capture_thread(
         }
 
         unsafe { (npcap.close)(capture_handle) };
+    });
+
+    capture_threads.lock().unwrap().push(handle);
+}
+
+fn start_all_capture_threads(
+    npcap: Arc<NpcapLib>,
+    devices: Vec<DeviceInfo>,
+    channel: Channel<CapturedPacket>,
+    logger: Arc<AppLogger>,
+    running: Arc<AtomicBool>,
+    capture_threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
+) {
+    let devices: Vec<_> = devices
+        .into_iter()
+        .filter(|device| device.has_addresses)
+        .collect();
+    let virtual_devices: Vec<_> = devices
+        .iter()
+        .filter(|device| device.is_virtual())
+        .cloned()
+        .collect();
+    let physical_devices: Vec<_> = devices
+        .iter()
+        .filter(|device| !device.is_virtual())
+        .cloned()
+        .collect();
+
+    for device in &virtual_devices {
+        logger.info(format!("capture active requested on {}", device.label()));
+        start_capture_thread(
+            Arc::clone(&npcap),
+            device.name.clone(),
+            device.label().to_string(),
+            channel.clone(),
+            Arc::clone(&running),
+            Arc::clone(&capture_threads),
+        );
+    }
+
+    if virtual_devices.is_empty() {
+        for device in &physical_devices {
+            logger.info(format!("capture active requested on {}", device.label()));
+            start_capture_thread(
+                Arc::clone(&npcap),
+                device.name.clone(),
+                device.label().to_string(),
+                channel.clone(),
+                Arc::clone(&running),
+                Arc::clone(&capture_threads),
+            );
+        }
+        return;
+    }
+
+    let delayed_capture_threads = Arc::clone(&capture_threads);
+    let handle = thread::spawn(move || {
+        thread::sleep(Duration::from_millis(1500));
+        if !running.load(Ordering::SeqCst) {
+            return;
+        }
+        for device in &physical_devices {
+            logger.info(format!(
+                "starting capture on physical device: {}",
+                device.label()
+            ));
+            start_capture_thread(
+                Arc::clone(&npcap),
+                device.name.clone(),
+                device.label().to_string(),
+                channel.clone(),
+                Arc::clone(&running),
+                Arc::clone(&delayed_capture_threads),
+            );
+        }
     });
 
     capture_threads.lock().unwrap().push(handle);
@@ -594,6 +705,7 @@ fn parse_captured_packet(frame: &[u8], header: &PcapPkthdr) -> Option<CapturedPa
         dst_port,
         data: payload.to_vec(),
         captured_at: pcap_header_timestamp_seconds(header),
+        device_name: None,
     })
 }
 

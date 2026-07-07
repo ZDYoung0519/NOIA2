@@ -393,6 +393,38 @@ export function Aion2Settings() {
       {tab === "backend" && (
         <SettingsGroup title={t("settings.aion2.backend")}>
           <SettingRow
+            title={t("settings.aion2.captureDeviceDetectionMode")}
+            description={t("settings.aion2.captureDeviceDetectionModeDesc")}
+          >
+            <div className="flex gap-2">
+              <Button
+                variant={
+                  config.aion2.backend.captureDeviceDetectionMode === "auto"
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() =>
+                  updateSettings("aion2.backend.captureDeviceDetectionMode", "auto")
+                }
+              >
+                {t("settings.aion2.captureDeviceDetectionModeAuto")}
+              </Button>
+              <Button
+                variant={
+                  config.aion2.backend.captureDeviceDetectionMode === "all"
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => updateSettings("aion2.backend.captureDeviceDetectionMode", "all")}
+              >
+                {t("settings.aion2.captureDeviceDetectionModeAll")}
+              </Button>
+            </div>
+          </SettingRow>
+
+          <SettingRow
             title={t("settings.aion2.bossOnly")}
             description={t("settings.aion2.bossOnlyDesc")}
           >

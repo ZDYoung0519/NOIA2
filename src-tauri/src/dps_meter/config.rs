@@ -25,6 +25,19 @@ impl Default for PvpOverlayPosition {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CaptureDeviceDetectionMode {
+    Auto,
+    All,
+}
+
+impl Default for CaptureDeviceDetectionMode {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DpsMeterConfig {
@@ -38,6 +51,8 @@ pub struct DpsMeterConfig {
     pub enable_resync_on_stall: bool,
     #[serde(default = "default_resync_delay_ms")]
     pub resync_delay_ms: u64,
+    #[serde(default)]
+    pub capture_device_detection_mode: CaptureDeviceDetectionMode,
     #[serde(default)]
     pub boss_only: bool,
     #[serde(default)]
@@ -64,6 +79,7 @@ impl Default for DpsMeterConfig {
             max_packet_size_threshold: DEFAULT_MAX_PACKET_SIZE_THRESHOLD,
             enable_resync_on_stall: DEFAULT_ENABLE_RESYNC_ON_STALL,
             resync_delay_ms: DEFAULT_RESYNC_DELAY_MS,
+            capture_device_detection_mode: CaptureDeviceDetectionMode::Auto,
             boss_only: false,
             pvp_mode_on: false,
             pvp_overlay_position: PvpOverlayPosition::Bottom,

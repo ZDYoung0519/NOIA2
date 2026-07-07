@@ -9,6 +9,7 @@ type Theme = "light" | "dark" | "system";
 type Language = "en" | "zh-CN" | "zh-TW" | "ko";
 type RGBA = [number, number, number, number];
 type PvpOverlayPosition = "bottom" | "right" | "free";
+type CaptureDeviceDetectionMode = "auto" | "all";
 
 interface AppSettings {
   theme: Theme;
@@ -27,6 +28,7 @@ interface BackendSettings {
   maxPacketSizeThreshold: number;
   enableResyncOnStall: boolean;
   resyncDelayMs: number;
+  captureDeviceDetectionMode: CaptureDeviceDetectionMode;
   bossOnly: boolean;
   pvpModeOn: boolean;
   pvpOverlayPosition: PvpOverlayPosition;
@@ -92,6 +94,7 @@ const DEFAULTS: AppConfig = {
       maxPacketSizeThreshold: 8192,
       enableResyncOnStall: true,
       resyncDelayMs: 500,
+      captureDeviceDetectionMode: "auto",
       bossOnly: true,
       pvpModeOn: false,
       pvpOverlayPosition: "bottom",

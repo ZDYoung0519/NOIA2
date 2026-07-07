@@ -49,8 +49,12 @@ impl DpsMeter {
         let data_storage = Arc::new(DataStorage::new(app.clone(), Arc::clone(&config)));
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
-        let packet_channel = Channel::new(2000);
-        let capturer = PcapCapturer::new(packet_channel.clone(), Arc::clone(&logger));
+        let packet_channel = Channel::new(100000);
+        let capturer = PcapCapturer::new(
+            packet_channel.clone(),
+            Arc::clone(&logger),
+            Arc::clone(&config),
+        );
         let dispatcher = CaptureDispatcher::new(
             packet_channel.clone(),
             Arc::clone(&data_storage),
@@ -109,12 +113,13 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} enable_resync_on_stall={} resync_delay_ms={} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} enable_resync_on_stall={} resync_delay_ms={} capture_device_detection_mode={:?} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
             config.max_packet_size_threshold,
             config.enable_resync_on_stall,
             config.resync_delay_ms,
+            config.capture_device_detection_mode,
             config.boss_only,
             config.pvp_mode_on,
             config.pvp_overlay_position,
