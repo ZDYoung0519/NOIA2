@@ -198,7 +198,7 @@ impl StreamProcessor {
                 StallResyncMode::Delayed => {
                     let delay_ms = {
                         let config = self.config.read().unwrap();
-                        config.stall_resync_delay_ms.clamp(200, 2000)
+                        config.stall_resync_delay_ms.clamp(50, 2000)
                     };
                     let now = Instant::now();
                     if let Some(stalled_since) = self.stalled_since {
