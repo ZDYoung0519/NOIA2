@@ -544,9 +544,9 @@ export function Aion2Settings() {
             <div className="flex items-center gap-2">
               <input
                 type="range"
-                min="200"
+                min="50"
                 max="2000"
-                step="100"
+                step="50"
                 value={config.aion2.backend.stallResyncDelayMs}
                 onChange={(e) =>
                   updateSettings("aion2.backend.stallResyncDelayMs", Number(e.target.value))
@@ -558,7 +558,6 @@ export function Aion2Settings() {
               </span>
             </div>
           </SettingRow>
-
         </SettingsGroup>
       )}
     </div>

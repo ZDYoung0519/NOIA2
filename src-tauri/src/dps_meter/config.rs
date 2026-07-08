@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub const DEFAULT_DPS_SNAPSHOT_INTERVAL_MS: u64 = 100;
 pub const DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS: u64 = 2000;
 pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 8 * 1024;
-pub const DEFAULT_STALL_RESYNC_DELAY_MS: u64 = 1000;
+pub const DEFAULT_STALL_RESYNC_DELAY_MS: u64 = 200;
 pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
 pub const DEFAULT_HIDE_KNOWN_PLAYERS: bool = false;
 pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
@@ -84,7 +84,7 @@ impl DpsMeterConfig {
         self.memory_snapshot_interval_ms = self.memory_snapshot_interval_ms.clamp(100, 10_000);
         self.max_packet_size_threshold =
             normalize_max_packet_size_threshold(self.max_packet_size_threshold);
-        self.stall_resync_delay_ms = self.stall_resync_delay_ms.clamp(200, 2000);
+        self.stall_resync_delay_ms = self.stall_resync_delay_ms.clamp(50, 2000);
         self
     }
 }

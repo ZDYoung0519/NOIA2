@@ -89,7 +89,7 @@ const DEFAULTS: AppConfig = {
       dpsSnapshotIntervalMs: 200,
       memorySnapshotIntervalMs: 2000,
       maxPacketSizeThreshold: 8192,
-      stallResyncDelayMs: 1000,
+      stallResyncDelayMs: 200,
       bossOnly: true,
       pvpModeOn: false,
       pvpOverlayPosition: "bottom",
