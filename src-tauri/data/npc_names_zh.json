@@ -44617,6 +44617,27 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2300188": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300189": {
+    "name": "贤明的巴温努特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300190": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2300243": {
     "name": "甦醒的艾圖拉頓",
     "level": 0,
@@ -44647,6 +44668,13 @@
   },
   "2300230": {
     "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300200": {
+    "name": "甦醒的艾圖拉頓",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -44899,6 +44927,356 @@
   },
   "2301723": {
     "name": "僞惡巴席路人斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980260": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980261": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980262": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980263": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980264": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980265": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980266": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980267": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980268": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980269": {
+    "name": "克羅梅德欲望",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980270": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980271": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980272": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980273": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980274": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980275": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980276": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980277": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980278": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980279": {
+    "name": "完整的帕頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980280": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980281": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980282": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980283": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980284": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980285": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980286": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980287": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980288": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980289": {
+    "name": "覺醒阿特隆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980290": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980291": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980292": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980293": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980294": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980295": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980296": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980297": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980298": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980299": {
+    "name": "搜索隊長凱德",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980300": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980301": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980302": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980303": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980304": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980305": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980306": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980307": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980308": {
+    "name": "副官希夫蘭",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2980309": {
+    "name": "副官希夫蘭",
     "level": 0,
     "npcType": "",
     "npcSubType": "",

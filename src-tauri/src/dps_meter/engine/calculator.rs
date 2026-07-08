@@ -238,6 +238,9 @@ fn build_actor_infos(
     let id_name = data_storage.actor_id_name_snapshot();
     let id_server = data_storage.actor_id_server_snapshot();
     let id_class = data_storage.actor_id_class_snapshot();
+    let id_combat_power = data_storage.actor_id_combat_power_snapshot();
+    let main_actor_id = data_storage.main_actor_id();
+    let main_actor_combat_power = data_storage.main_actor_combat_power();
     let id_skill_spec =
         merge_actor_skill_specs(&data_storage.actor_skill_spec_snapshot(), summon_owner_map);
 
@@ -259,6 +262,11 @@ fn build_actor_infos(
                     actor_name: id_name.get(&aid).cloned(),
                     actor_server_id: id_server.get(&aid).cloned(),
                     actor_class: id_class.get(&aid).cloned(),
+                    combat_power: if Some(aid) == main_actor_id {
+                        main_actor_combat_power.or_else(|| id_combat_power.get(&aid).copied())
+                    } else {
+                        id_combat_power.get(&aid).copied()
+                    },
                     actor_skill_spec: id_skill_spec.get(&aid).cloned().unwrap_or_default(),
                 },
             )
@@ -352,6 +360,7 @@ fn build_per_target_overview_stats(
                             actor_class: info
                                 .and_then(|a| a.actor_class.clone())
                                 .unwrap_or_default(),
+                            combat_power: info.and_then(|a| a.combat_power),
                             counts: stats.counts,
                             total_damage: stats.total_damage,
                             min_damage: stats.min_damage,

@@ -57,6 +57,27 @@ body {
   font-size: 12px;
   flex-shrink: 0;
 }
+.detail-titlebar__power {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px 0 5px;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  background: rgba(34, 211, 238, 0.08);
+  color: #67e8f9;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.detail-titlebar__power-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 .detail-titlebar__right {
   display: flex;
   align-items: center;

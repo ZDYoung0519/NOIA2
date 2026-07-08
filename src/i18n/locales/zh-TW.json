@@ -81,10 +81,6 @@
       "shortcuts": "快捷键",
       "overlay": "悬浮窗",
       "backend": "运行时",
-      "captureDeviceDetectionMode": "封包裝置偵測邏輯",
-      "captureDeviceDetectionModeDesc": "自動偵測會保持目前單裝置偵測鏈路；全部探測會同時監聽多個網路裝置，再根據穩定戰鬥特徵鎖定遊戲流，適合直連或複雜網路環境。",
-      "captureDeviceDetectionModeAuto": "自動偵測",
-      "captureDeviceDetectionModeAll": "全部探測",
       "shortcutShowDpsOverlay": "显示/隐藏 DPS 悬浮窗",
       "shortcutShowDpsOverlayDesc": "切换 DPS 悬浮窗的显示和隐藏",
       "shortcutResetDpsMeter": "重置 DPS 统计",
@@ -144,8 +140,8 @@
       "dpsSnapshotIntervalDesc": "控制 DPS 資料刷新頻率，間隔越短顯示越即時但開銷略高。",
       "maxPacketSizeThreshold": "封包大小閾值",
       "maxPacketSizeThresholdDesc": "忽略超過閾值的異常封包，減少解析錯誤或雜訊記錄。",
-      "enableResyncOnStall": "卡頓時自動重新同步",
-      "enableResyncOnStallDesc": "偵測到資料流停滯時嘗試重新同步，幫助恢復持續統計。"
+      "stallResyncDelay": "暱稱重同步延遲",
+      "stallResyncDelayDesc": "僅影響暱稱偵測流。遇到疑似不完整的暱稱封包時，等待多久後再後移 1 位元組重同步。"
     }
   },
   "auth": {

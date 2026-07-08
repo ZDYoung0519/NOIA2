@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { LoaderCircle, RefreshCcw, Trophy } from "lucide-react";
+import { BarChart3, LoaderCircle, RefreshCcw, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "@/lib/supabase";
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import dungeonsData from "@/games/aion2/data/dungeons.json";
 import type { HistoryRecord, PlayerOverviewStat } from "@/games/aion2/types/aion2dps";
@@ -29,6 +30,7 @@ const ACTOR_CLASS_NAME_MAP: Record<string, string> = {
   ELEMENTALIST: "精灵星",
   CLERIC: "治愈星",
   CHANTER: "护法星",
+  FIGHTER: "拳星",
 };
 
 export function getActorClassName(actorClass: string | null | undefined) {
@@ -80,6 +82,27 @@ type BossRankState = {
   rows: RankRow[];
 };
 
+type ClassBoxStatRow = {
+  id: number;
+  target_mob_code: number;
+  target_name: string | null;
+  main_actor_class: string;
+  sample_count: number;
+  min_dps: number | null;
+  q1_dps: number | null;
+  median_dps: number | null;
+  q3_dps: number | null;
+  max_dps: number | null;
+  avg_dps: number | null;
+  refreshed_at: string | null;
+};
+
+type ClassBoxStatsState = {
+  loading: boolean;
+  error: string | null;
+  rows: ClassBoxStatRow[];
+};
+
 type MainActorIdentity = {
   key: string;
   actorName: string;
@@ -125,7 +148,10 @@ const ACTOR_CLASSES = [
   "ELEMENTALIST",
   "CLERIC",
   "CHANTER",
+  "FIGHTER",
 ];
+
+const CLASS_BOX_ORDER = ACTOR_CLASSES.filter((actorClass) => actorClass !== "ALL");
 
 function getDungeonGroup(dungeonId: string): DungeonGroup {
   if (dungeonId.startsWith("0")) return "expedition";
@@ -686,10 +712,12 @@ function BossRankCard({
                       <ClassIcon classCode={row.main_actor_class} />
                       <a
                         href={`/aion2/character/view?serverId=${row.main_actor_server_id || ""}&characterName=${encodeURIComponent(row.main_actor_name)}`}
-                        className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition hover:text-[#F4C06A] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition [scrollbar-width:none] hover:text-[#F4C06A] [&::-webkit-scrollbar]:hidden"
                         onClick={(e) => {
                           e.preventDefault();
-                          navigate(`/aion2/character/view?serverId=${row.main_actor_server_id || ""}&characterName=${encodeURIComponent(row.main_actor_name)}`);
+                          navigate(
+                            `/aion2/character/view?serverId=${row.main_actor_server_id || ""}&characterName=${encodeURIComponent(row.main_actor_name)}`
+                          );
                         }}
                       >
                         {row.main_actor_name}
@@ -761,10 +789,12 @@ function BossRankCard({
                         <ClassIcon classCode={myRank.actor.actorClass} />
                         <a
                           href={`/aion2/character/view?serverId=${myRank.actor.serverId}&characterName=${encodeURIComponent(myRank.actor.actorName)}`}
-                          className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition hover:text-[#F4C06A] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                          className="max-w-14 min-w-0 overflow-x-auto font-semibold whitespace-nowrap text-white transition [scrollbar-width:none] hover:text-[#F4C06A] [&::-webkit-scrollbar]:hidden"
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/aion2/character/view?serverId=${myRank.actor.serverId}&characterName=${encodeURIComponent(myRank.actor.actorName)}`);
+                            navigate(
+                              `/aion2/character/view?serverId=${myRank.actor.serverId}&characterName=${encodeURIComponent(myRank.actor.actorName)}`
+                            );
                           }}
                         >
                           {myRank.actor.actorName}
@@ -798,6 +828,231 @@ function BossRankCard({
           </table>
         </div>
       )}
+    </section>
+  );
+}
+
+function getFiniteDps(value: number | null | undefined) {
+  const numericValue = Number(value ?? 0);
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 0;
+}
+
+function ClassBoxPlot({ row, maxDps }: { row: ClassBoxStatRow; maxDps: number }) {
+  const min = getFiniteDps(row.min_dps);
+  const q1 = getFiniteDps(row.q1_dps);
+  const median = getFiniteDps(row.median_dps);
+  const q3 = getFiniteDps(row.q3_dps);
+  const max = getFiniteDps(row.max_dps);
+  const scale = Math.max(1, maxDps);
+
+  const pct = (value: number) => `${Math.max(0, Math.min(100, (value / scale) * 100))}%`;
+  const boxLeft = pct(q1);
+  const boxWidth = `${Math.max(1, ((q3 - q1) / scale) * 100)}%`;
+
+  return (
+    <div className="relative h-9 min-w-[220px] flex-1">
+      <div className="absolute top-1/2 right-0 left-0 h-px -translate-y-1/2 bg-white/10" />
+      <div
+        className="absolute top-1/2 h-px -translate-y-1/2 bg-white/35"
+        style={{ left: pct(min), width: `${Math.max(1, ((max - min) / scale) * 100)}%` }}
+      />
+      <div
+        className="absolute top-1/2 h-5 -translate-y-1/2 rounded-sm border border-[#F4C06A]/45 bg-[#F4C06A]/18"
+        style={{ left: boxLeft, width: boxWidth }}
+      />
+      <div
+        className="absolute top-1/2 h-7 w-px -translate-y-1/2 bg-[#F4C06A]"
+        style={{ left: pct(median) }}
+      />
+      {[min, max].map((value, index) => (
+        <div
+          key={`${row.main_actor_class}-${index}-${value}`}
+          className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-white/45"
+          style={{ left: pct(value) }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function BossClassBoxStatsCard({ bossId, refreshKey }: { bossId: string; refreshKey: number }) {
+  const [state, setState] = useState<ClassBoxStatsState>({
+    loading: true,
+    error: null,
+    rows: [],
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setState((current) => ({
+      ...current,
+      loading: true,
+      error: null,
+    }));
+
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("aion2_dps_class_box_stats")
+          .select(
+            [
+              "id",
+              "target_mob_code",
+              "target_name",
+              "main_actor_class",
+              "sample_count",
+              "min_dps",
+              "q1_dps",
+              "median_dps",
+              "q3_dps",
+              "max_dps",
+              "avg_dps",
+              "refreshed_at",
+            ].join(",")
+          )
+          .eq("target_mob_code", Number(bossId))
+          .order("median_dps", { ascending: false, nullsFirst: false })
+          .order("sample_count", { ascending: false, nullsFirst: false });
+
+        if (error) throw error;
+
+        const classOrder = new Map(CLASS_BOX_ORDER.map((actorClass, index) => [actorClass, index]));
+        const rows = ((data ?? []) as unknown as ClassBoxStatRow[]).sort((left, right) => {
+          const medianDiff = getFiniteDps(right.median_dps) - getFiniteDps(left.median_dps);
+          if (medianDiff !== 0) return medianDiff;
+          return (
+            (classOrder.get(left.main_actor_class) ?? 999) -
+            (classOrder.get(right.main_actor_class) ?? 999)
+          );
+        });
+
+        if (!cancelled) {
+          setState({
+            loading: false,
+            error: null,
+            rows,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setState({
+            loading: false,
+            error: getErrorMessage(error),
+            rows: [],
+          });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bossId, refreshKey]);
+
+  const bossName = state.rows[0]?.target_name || getNpcDisplayName(bossId);
+  const maxDps = Math.max(1, ...state.rows.map((row) => getFiniteDps(row.max_dps)));
+  const totalSamples = state.rows.reduce((sum, row) => sum + Number(row.sample_count ?? 0), 0);
+  const refreshedAt = state.rows[0]?.refreshed_at ?? null;
+
+  return (
+    <section className="min-w-0 rounded-md border border-white/15 bg-black/45 p-4 shadow-2xl backdrop-blur-xl">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-base font-bold text-white">{bossName}</h3>
+            <span className="shrink-0 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/45">
+              #{bossId}
+            </span>
+          </div>
+          <div className="mt-1 text-xs text-white/42">样本 {totalSamples.toLocaleString()}</div>
+        </div>
+
+        <div className="shrink-0 text-right">
+          <div className="text-[11px] font-medium tracking-[0.08em] text-white/38 uppercase">
+            Updated
+          </div>
+          <div className="mt-0.5 text-sm font-semibold whitespace-nowrap text-white/55">
+            {formatDate(refreshedAt)}
+          </div>
+        </div>
+      </div>
+
+      {state.loading ? (
+        <div className="flex h-[320px] items-center justify-center rounded-md border border-white/10 bg-white/[0.025] text-sm text-white/55">
+          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+          加载中
+        </div>
+      ) : state.error ? (
+        <div className="flex h-[320px] items-center justify-center rounded-md border border-red-500/25 bg-red-500/10 px-4 text-center text-sm text-red-200">
+          {state.error}
+        </div>
+      ) : state.rows.length === 0 ? (
+        <div className="flex h-[320px] items-center justify-center rounded-md border border-white/10 bg-white/[0.025] px-4 text-center text-sm text-white/40">
+          暂无职业统计记录
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-[120px_1fr_86px] gap-3 px-2 text-[11px] tracking-[0.08em] text-white/38 uppercase">
+            <span>职业</span>
+            <span>箱型分布</span>
+            <span className="text-right">中位数</span>
+          </div>
+          {state.rows.map((row) => (
+            <div
+              key={`${bossId}-${row.main_actor_class}`}
+              className="grid grid-cols-[120px_1fr_86px] items-center gap-3 rounded-md border border-white/8 bg-white/[0.035] px-2 py-2 transition hover:bg-white/[0.055]"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <ClassIcon classCode={row.main_actor_class} />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-white">
+                    {getActorClassName(row.main_actor_class)}
+                  </div>
+                  <div className="text-xs text-white/38">
+                    n={Number(row.sample_count ?? 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <ClassBoxPlot row={row} maxDps={maxDps} />
+              <div className="text-right">
+                <div className="font-semibold text-[#F4C06A] tabular-nums">
+                  {formatNumber(row.median_dps)}
+                </div>
+                <div className="text-[11px] text-white/38 tabular-nums">
+                  avg {formatNumber(row.avg_dps)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DungeonClassStatsRowSection({ row, refreshKey }: { row: DungeonRow; refreshKey: number }) {
+  return (
+    <section className="rounded-md border border-white/15 bg-black/35 p-4 shadow-2xl backdrop-blur-xl">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-white/8 pb-3">
+        <div>
+          <h2 className="text-xl font-bold text-white">{localize(row.dungeon.name)}</h2>
+          <div className="mt-1 text-sm text-white/45">{localize(row.dungeon.difficulty)}</div>
+        </div>
+        <span className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/45">
+          dungeon_id {row.dungeon.dungeon_id}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
+        {row.bossIds.map((bossId) => (
+          <BossClassBoxStatsCard
+            key={`${row.dungeon.dungeon_id}-${bossId}-class-box`}
+            bossId={bossId}
+            refreshKey={refreshKey}
+          />
+        ))}
+      </div>
     </section>
   );
 }
@@ -928,6 +1183,34 @@ function SelectedDungeonRank({
   );
 }
 
+function SelectedDungeonClassStats({
+  option,
+  refreshKey,
+}: {
+  option: DungeonOption | undefined;
+  refreshKey: number;
+}) {
+  if (!option) {
+    return (
+      <section className="rounded-md border border-white/15 bg-black/35 p-8 text-center text-sm text-white/45 shadow-2xl backdrop-blur-xl">
+        暂无可展示的职业统计副本
+      </section>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {option.rows.map((row, index) => (
+        <DungeonClassStatsRowSection
+          key={`${row.dungeon.dungeon_id}-${localize(row.dungeon.difficulty)}-${index}-class`}
+          row={row}
+          refreshKey={refreshKey}
+        />
+      ))}
+    </div>
+  );
+}
+
 function getDefaultDungeonKey() {
   return DUNGEON_OPTIONS[0]?.key ?? "";
 }
@@ -937,6 +1220,7 @@ function findDungeonOption(key: string) {
 }
 
 export default function Aion2DpsRankPage() {
+  const [activePage, setActivePage] = useState<"rank" | "classStats">("rank");
   const [activeDungeonKey, setActiveDungeonKey] = useState(getDefaultDungeonKey);
   const [actorClass, setActorClass] = useState("ALL");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -984,19 +1268,43 @@ export default function Aion2DpsRankPage() {
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[#F4C06A]/30 bg-[#F4C06A]/12 text-[#F4C06A]">
-                    <Trophy size={22} />
+                    {activePage === "rank" ? <Trophy size={22} /> : <BarChart3 size={22} />}
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold tracking-wide text-white">DPS 排行榜</h1>
+                    <h1 className="text-2xl font-bold tracking-wide text-white">
+                      {activePage === "rank" ? "DPS 排行榜" : "职业统计"}
+                    </h1>
                     <p className="mt-1 text-sm text-white/55">
-                      选择副本后展示该副本所有难度的 Boss 排行，每个 Boss 独立加载前 {TOP_LIMIT}{" "}
-                      名。
+                      {activePage === "rank"
+                        ? `选择副本后展示该副本所有难度的 Boss 排行，每个 Boss 独立加载前 ${TOP_LIMIT} 名。`
+                        : "选择副本后展示该副本所有难度的 Boss 职业箱型分布，数据来自定时维护的统计表。"}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <ClassSelect value={actorClass} onValueChange={setActorClass} />
+                  <Tabs
+                    value={activePage}
+                    onValueChange={(value) => setActivePage(value as "rank" | "classStats")}
+                  >
+                    <TabsList className="border border-white/10 bg-black/45">
+                      <TabsTrigger
+                        value="rank"
+                        className="text-white/65 data-[state=active]:text-white"
+                      >
+                        DPS排行
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="classStats"
+                        className="text-white/65 data-[state=active]:text-white"
+                      >
+                        职业统计
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {activePage === "rank" ? (
+                    <ClassSelect value={actorClass} onValueChange={setActorClass} />
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => setRefreshKey((current) => current + 1)}
@@ -1016,14 +1324,18 @@ export default function Aion2DpsRankPage() {
               </div>
             </section>
 
-            <SelectedDungeonRank
-              option={activeDungeon}
-              actorClass={actorClass}
-              refreshKey={refreshKey}
-              mainActors={mainActors}
-              mainActorsLoading={mainActorsLoading}
-              mainActorsError={mainActorsError}
-            />
+            {activePage === "rank" ? (
+              <SelectedDungeonRank
+                option={activeDungeon}
+                actorClass={actorClass}
+                refreshKey={refreshKey}
+                mainActors={mainActors}
+                mainActorsLoading={mainActorsLoading}
+                mainActorsError={mainActorsError}
+              />
+            ) : (
+              <SelectedDungeonClassStats option={activeDungeon} refreshKey={refreshKey} />
+            )}
           </div>
         </div>
       </main>

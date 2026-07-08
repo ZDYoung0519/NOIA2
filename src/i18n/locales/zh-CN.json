@@ -115,10 +115,6 @@
       "shortcuts": "快捷键",
       "overlay": "悬浮窗",
       "backend": "运行时",
-      "captureDeviceDetectionMode": "封包设备检测逻辑",
-      "captureDeviceDetectionModeDesc": "自动检测会保持当前单设备检测链路；全部探测会同时监听多个网络设备，再根据稳定战斗特征锁定游戏流，适合直连或复杂网络环境。",
-      "captureDeviceDetectionModeAuto": "自动检测",
-      "captureDeviceDetectionModeAll": "全部探测",
       "shortcutShowDpsOverlay": "显示/隐藏 DPS 悬浮窗",
       "shortcutShowDpsOverlayDesc": "切换 DPS 悬浮窗的显示和隐藏",
       "shortcutResetDpsMeter": "重置 DPS 统计",
@@ -183,8 +179,8 @@
       "dpsSnapshotIntervalDesc": "控制 DPS 数据刷新频率，间隔越短显示越实时但开销略高。",
       "maxPacketSizeThreshold": "包大小阈值",
       "maxPacketSizeThresholdDesc": "忽略超过阈值的异常数据包，减少解析错误或噪声记录。",
-      "enableResyncOnStall": "卡顿时自动重同步",
-      "enableResyncOnStallDesc": "检测到数据流停滞时尝试重新同步，帮助恢复持续统计。"
+      "stallResyncDelay": "昵称重同步延迟",
+      "stallResyncDelayDesc": "仅影响昵称检测流。遇到疑似不完整的昵称包时，等待多久后再后移 1 字节重同步。"
     }
   },
 

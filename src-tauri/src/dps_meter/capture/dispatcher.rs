@@ -10,51 +10,13 @@ use crate::dps_meter::capture::assembler::StreamAssembler;
 use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
-use crate::dps_meter::config::{CaptureDeviceDetectionMode, SharedDpsMeterConfig};
+use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
 const MAGIC: [u8; 3] = [0x0E, 0x00, 0x36];
-const SIGNATURE_LOCK_THRESHOLD: u32 = 12;
-const SIGNATURE_WINDOW: Duration = Duration::from_secs(3);
-
-#[derive(Debug, Clone)]
-struct SignatureHitState {
-    count: u32,
-    last_hit: Instant,
-}
-
-#[derive(Default)]
-struct SignatureRateTracker {
-    hits: HashMap<String, SignatureHitState>,
-}
-
-impl SignatureRateTracker {
-    fn record_and_is_stable(&mut self, key: &str) -> bool {
-        let now = Instant::now();
-        let state = self
-            .hits
-            .entry(key.to_string())
-            .or_insert(SignatureHitState {
-                count: 0,
-                last_hit: now,
-            });
-
-        if now.duration_since(state.last_hit) > SIGNATURE_WINDOW {
-            state.count = 0;
-        }
-
-        state.count = state.count.saturating_add(1);
-        state.last_hit = now;
-        state.count >= SIGNATURE_LOCK_THRESHOLD
-    }
-
-    fn clear(&mut self) {
-        self.hits.clear();
-    }
-}
 
 #[derive(Default)]
 struct RecentPortWindow {
@@ -91,9 +53,8 @@ struct DispatcherState {
     // unified: StreamAssembler,
     // unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
+    nickname_assemblers: HashMap<String, TrackedAssembler>,
     recent_ports: RecentPortWindow,
-    signature_rates: SignatureRateTracker,
-    server_ports: HashMap<String, u16>,
     logged_packets: usize,
     logged_magic_packets: usize,
 }
@@ -126,9 +87,8 @@ impl DispatcherState {
             data_storage: Arc::clone(&data_storage),
             config: Arc::clone(&config),
             assemblers: HashMap::new(),
+            nickname_assemblers: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
-            signature_rates: SignatureRateTracker::default(),
-            server_ports: HashMap::new(),
             logged_packets: 0,
             logged_magic_packets: 0,
         }
@@ -140,10 +100,12 @@ impl DispatcherState {
         for assembler in self.assemblers.values() {
             assembler.assembler.clear();
         }
+        for assembler in self.nickname_assemblers.values() {
+            assembler.assembler.clear();
+        }
         self.assemblers.clear();
+        self.nickname_assemblers.clear();
         self.recent_ports.entries.clear();
-        self.signature_rates.clear();
-        self.server_ports.clear();
         self.logged_packets = 0;
         self.logged_magic_packets = 0;
     }
@@ -157,7 +119,6 @@ pub struct CaptureDispatcher {
     running: Arc<AtomicBool>,
     thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     combat_port: Arc<RwLock<Option<String>>>,
-    combat_server_port: Arc<RwLock<Option<u16>>>,
     state: Arc<Mutex<DispatcherState>>,
 }
 
@@ -182,7 +143,6 @@ impl CaptureDispatcher {
             running: Arc::new(AtomicBool::new(false)),
             thread: Arc::new(Mutex::new(None)),
             combat_port: Arc::new(RwLock::new(None)),
-            combat_server_port: Arc::new(RwLock::new(None)),
             state,
         }
     }
@@ -197,7 +157,6 @@ impl CaptureDispatcher {
         let ping_tracker = Arc::clone(&self.ping_tracker);
         let running = Arc::clone(&self.running);
         let combat_port = Arc::clone(&self.combat_port);
-        let combat_server_port = Arc::clone(&self.combat_server_port);
         let state = Arc::clone(&self.state);
 
         let handle = thread::spawn(move || {
@@ -231,21 +190,7 @@ impl CaptureDispatcher {
                     continue;
                 }
 
-                let key = normalized_port_key(packet.src_port, packet.dst_port);
-                let stream_key = {
-                    let use_device_key = state.config.read().unwrap().capture_device_detection_mode
-                        == CaptureDeviceDetectionMode::All;
-                    if use_device_key {
-                        packet
-                            .device_name
-                            .as_deref()
-                            .filter(|device| !device.trim().is_empty())
-                            .map(|device| format!("{device}@{key}"))
-                            .unwrap_or_else(|| key.clone())
-                    } else {
-                        key.clone()
-                    }
-                };
+                let key = directional_port_key(packet.src_port, packet.dst_port);
                 let contains_magic = packet
                     .data
                     .windows(MAGIC.len())
@@ -254,82 +199,94 @@ impl CaptureDispatcher {
                 if contains_magic && state.logged_magic_packets < 20 {
                     // logger.debug(format!(
                     //     "dispatcher magic packet key={} payload_len={} head={}",
-                    //     stream_key,
+                    //     key,
                     //     packet.data.len(),
                     //     format_packet_prefix(&packet.data, 24)
                     // ));
                     state.logged_magic_packets += 1;
                 }
 
-                if contains_magic && state.signature_rates.record_and_is_stable(&stream_key) {
-                    state
-                        .server_ports
-                        .insert(stream_key.clone(), packet.src_port);
-                    if let Some(locked) = state.recent_ports.add_and_get_locked(stream_key.clone())
-                    {
-                        let locked_server_port = state
-                            .server_ports
-                            .get(&locked)
-                            .copied()
-                            .unwrap_or(packet.src_port);
+                if contains_magic {
+                    if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
                         *combat_port.write().unwrap() = Some(locked.clone());
-                        *combat_server_port.write().unwrap() = Some(locked_server_port);
                         let data_storage = Arc::clone(&state.data_storage);
                         let logger = Arc::clone(&logger);
                         let config = Arc::clone(&state.config);
-                        state.assemblers.entry(locked.clone()).or_insert_with(|| {
-                            TrackedAssembler::new(StreamAssembler::new(
-                                data_storage,
-                                logger,
-                                locked,
-                                Arc::clone(&config),
-                            ))
-                        });
-                    }
-                }
-                let is_combat_port =
-                    combat_port.read().unwrap().as_deref() == Some(stream_key.as_str());
-                let is_server_downlink = combat_server_port
-                    .read()
-                    .unwrap()
-                    .map(|server_port| packet.src_port == server_port)
-                    .unwrap_or(false);
-                if is_combat_port && is_server_downlink {
-                    let data_storage = Arc::clone(&state.data_storage);
-                    let assembler_logger = Arc::clone(&logger);
-                    let config = Arc::clone(&state.config);
-                    let assembler =
-                        state
-                            .assemblers
-                            .entry(stream_key.clone())
-                            .or_insert_with(|| {
+                        state.assemblers.entry(locked.clone()).or_insert_with({
+                            let locked = locked.clone();
+                            let data_storage = Arc::clone(&data_storage);
+                            let logger = Arc::clone(&logger);
+                            let config = Arc::clone(&config);
+                            move || {
                                 TrackedAssembler::new(StreamAssembler::new(
                                     data_storage,
-                                    assembler_logger,
-                                    stream_key.clone(),
+                                    logger,
+                                    locked,
+                                    Arc::clone(&config),
+                                ))
+                            }
+                        });
+                        state
+                            .nickname_assemblers
+                            .entry(locked.clone())
+                            .or_insert_with(|| {
+                                TrackedAssembler::new(StreamAssembler::new_nickname_only(
+                                    data_storage,
+                                    logger,
+                                    format!("{locked}:nickname"),
                                     Arc::clone(&config),
                                 ))
                             });
+                    }
+                }
+                if combat_port.read().unwrap().as_deref() == Some(key.as_str()) {
+                    let data_storage = Arc::clone(&state.data_storage);
+                    let assembler_logger = Arc::clone(&logger);
+                    let config = Arc::clone(&state.config);
+                    let assembler = state.assemblers.entry(key.clone()).or_insert_with(|| {
+                        TrackedAssembler::new(StreamAssembler::new(
+                            data_storage,
+                            assembler_logger,
+                            key.clone(),
+                            Arc::clone(&config),
+                        ))
+                    });
                     let _ = assembler.assembler.process_chunk(&packet.data);
                     assembler.mark_processed();
+
+                    let data_storage = Arc::clone(&state.data_storage);
+                    let assembler_logger = Arc::clone(&logger);
+                    let config = Arc::clone(&state.config);
+                    let nickname_assembler = state
+                        .nickname_assemblers
+                        .entry(key.clone())
+                        .or_insert_with(|| {
+                            TrackedAssembler::new(StreamAssembler::new_nickname_only(
+                                data_storage,
+                                assembler_logger,
+                                format!("{key}:nickname"),
+                                Arc::clone(&config),
+                            ))
+                        });
+                    let _ = nickname_assembler.assembler.process_chunk(&packet.data);
+                    nickname_assembler.mark_processed();
                 }
             }
         });
 
         *self.thread.lock().unwrap() = Some(handle);
     }
+
     pub fn stop(&self) {
         self.running.store(false, Ordering::SeqCst);
         if let Some(handle) = self.thread.lock().unwrap().take() {
             let _ = handle.join();
         }
         *self.combat_port.write().unwrap() = None;
-        *self.combat_server_port.write().unwrap() = None;
     }
 
     pub fn clear(&self) {
         *self.combat_port.write().unwrap() = None;
-        *self.combat_server_port.write().unwrap() = None;
         self.state.lock().unwrap().clear();
     }
 
@@ -348,7 +305,6 @@ impl CaptureDispatcher {
         let now = Instant::now();
         let mut state = self.state.lock().unwrap();
         let mut combat_port = self.combat_port.write().unwrap();
-        let mut combat_server_port = self.combat_server_port.write().unwrap();
         let mut removed = Vec::new();
 
         state.assemblers.retain(|key, tracked| {
@@ -360,14 +316,15 @@ impl CaptureDispatcher {
             tracked.assembler.clear();
             if combat_port.as_deref() == Some(key.as_str()) {
                 *combat_port = None;
-                *combat_server_port = None;
             }
             removed.push(key.clone());
             false
         });
 
         for key in &removed {
-            state.server_ports.remove(key);
+            if let Some(tracked) = state.nickname_assemblers.remove(key) {
+                tracked.assembler.clear();
+            }
         }
 
         removed
@@ -394,6 +351,12 @@ impl CaptureDispatcher {
                 sizes.insert(key.clone(), size);
             }
         }
+        for (key, assembler) in &state.nickname_assemblers {
+            let size = assembler.assembler.buffer_size();
+            if size > 0 || current_port.as_deref() == Some(key.as_str()) {
+                sizes.insert(format!("{key}:nickname"), size);
+            }
+        }
 
         sizes
     }
@@ -412,13 +375,8 @@ fn looks_like_tls_payload(data: &[u8]) -> bool {
         && TLS_VERSIONS.contains(&data[2])
 }
 
-fn normalized_port_key(src_port: u16, dst_port: u16) -> String {
-    let (a, b) = if src_port <= dst_port {
-        (src_port, dst_port)
-    } else {
-        (dst_port, src_port)
-    };
-    format!("{a}-{b}")
+fn directional_port_key(src_port: u16, dst_port: u16) -> String {
+    format!("{src_port}->{dst_port}")
 }
 
 fn format_packet_prefix(data: &[u8], max_bytes: usize) -> String {

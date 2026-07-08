@@ -114,6 +114,7 @@ struct DataStorageInner {
     actor_id_name_map: BoundedMap<u32, String>,
     actor_id_server_map: BoundedMap<u32, String>,
     actor_id_class_map: BoundedMap<u32, String>,
+    actor_id_combat_power_map: BoundedMap<u32, u64>,
     actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
     detail_player_info_map: BoundedMap<String, DetailPlayerInfo>,
     mob_id_code_map: BoundedMap<u32, u32>,
@@ -128,6 +129,7 @@ struct DataStorageInner {
     dot_skill_list: Vec<u32>,
     main_actor_id: Option<u32>,
     main_actor_name: Option<String>,
+    main_actor_combat_power: Option<u64>,
     last_target: Option<u32>,
     last_target_by_main_actor: Option<u32>,
     last_player_target_by_main_actor: Option<u32>,
@@ -140,6 +142,7 @@ impl Default for DataStorageInner {
             actor_id_name_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_server_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
+            actor_id_combat_power_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             detail_player_info_map: BoundedMap::new(DETAIL_PLAYER_INFO_CAPACITY),
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
@@ -154,6 +157,7 @@ impl Default for DataStorageInner {
             dot_skill_list: Vec::new(),
             main_actor_id: None,
             main_actor_name: None,
+            main_actor_combat_power: None,
             last_target: None,
             last_target_by_main_actor: None,
             last_player_target_by_main_actor: None,
@@ -198,9 +202,11 @@ impl DataStorage {
         let mut inner = self.inner.write().unwrap();
         let main_actor_id = inner.main_actor_id;
         let main_actor_name = inner.main_actor_name.clone();
+        let main_actor_combat_power = inner.main_actor_combat_power;
         let actor_id_name_map = inner.actor_id_name_map.clone();
         let actor_id_server_map = inner.actor_id_server_map.clone();
         let actor_id_class_map = inner.actor_id_class_map.clone();
+        let actor_id_combat_power_map = inner.actor_id_combat_power_map.clone();
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
         let detail_player_info_map = inner.detail_player_info_map.clone();
         let mob_id_code_map = inner.mob_id_code_map.clone();
@@ -212,9 +218,11 @@ impl DataStorage {
         *inner = DataStorageInner::default();
         inner.main_actor_id = main_actor_id;
         inner.main_actor_name = main_actor_name;
+        inner.main_actor_combat_power = main_actor_combat_power;
         inner.actor_id_name_map = actor_id_name_map;
         inner.actor_id_server_map = actor_id_server_map;
         inner.actor_id_class_map = actor_id_class_map;
+        inner.actor_id_combat_power_map = actor_id_combat_power_map;
         inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
         inner.detail_player_info_map = detail_player_info_map;
         inner.mob_id_code_map = mob_id_code_map;
@@ -417,6 +425,27 @@ impl DataStorage {
             .insert(actor_id, actor_class.to_string());
     }
 
+    pub fn set_actor_combat_power(&self, actor_id: u32, combat_power: u64) {
+        if combat_power == 0 || combat_power > 10_000_000 {
+            return;
+        }
+
+        self.inner
+            .write()
+            .unwrap()
+            .actor_id_combat_power_map
+            .insert(actor_id, combat_power);
+    }
+
+    pub fn save_main_actor_combat_power(&self, combat_power: u64) -> bool {
+        if combat_power == 0 || combat_power > 10_000_000 {
+            return false;
+        }
+
+        self.inner.write().unwrap().main_actor_combat_power = Some(combat_power);
+        true
+    }
+
     pub fn upsert_detail_player_info(&self, info: DetailPlayerInfo) {
         let key = detail_player_info_key(info.server_id, &info.name);
         self.inner
@@ -522,6 +551,13 @@ impl DataStorage {
     pub fn set_main_actor(&self, actor_id: u32, actor_name: &str) {
         let sid = {
             let mut inner = self.inner.write().unwrap();
+            if inner
+                .main_actor_name
+                .as_deref()
+                .is_some_and(|current_name| current_name != actor_name)
+            {
+                inner.main_actor_combat_power = None;
+            }
             inner.main_actor_id = Some(actor_id);
             inner.main_actor_name = Some(actor_name.to_string());
             inner.actor_id_server_map.get(&actor_id).cloned()
@@ -555,6 +591,18 @@ impl DataStorage {
 
     pub fn actor_id_class_snapshot(&self) -> HashMap<u32, String> {
         self.inner.read().unwrap().actor_id_class_map.as_hash_map()
+    }
+
+    pub fn actor_id_combat_power_snapshot(&self) -> HashMap<u32, u64> {
+        self.inner
+            .read()
+            .unwrap()
+            .actor_id_combat_power_map
+            .as_hash_map()
+    }
+
+    pub fn main_actor_combat_power(&self) -> Option<u64> {
+        self.inner.read().unwrap().main_actor_combat_power
     }
 
     pub fn actor_skill_spec_snapshot(&self) -> HashMap<u32, HashMap<u32, Vec<u32>>> {

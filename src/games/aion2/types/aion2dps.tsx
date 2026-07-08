@@ -15,6 +15,7 @@ export type PlayerOverviewStat = {
   actorName: string;
   actorServerId: string;
   actorClass: string;
+  combatPower?: number | null;
   counts: number;
   totalDamage?: number;
   minDamage?: number;
@@ -30,6 +31,7 @@ export type ActorInfo = {
   actorName?: string | null;
   actorServerId?: string | null;
   actorClass?: string | null;
+  combatPower?: number | null;
   actorSkillSpec: Record<string, number[]>;
 };
 

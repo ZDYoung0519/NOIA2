@@ -104,6 +104,8 @@ pub struct ActorInfo {
     pub actor_name: Option<String>,
     pub actor_server_id: Option<String>,
     pub actor_class: Option<String>,
+    #[serde(default)]
+    pub combat_power: Option<u64>,
     pub actor_skill_spec: HashMap<u32, Vec<u32>>,
 }
 
@@ -139,6 +141,8 @@ pub struct PlayerOverviewStat {
     pub actor_name: String,
     pub actor_server_id: String,
     pub actor_class: String,
+    #[serde(default)]
+    pub combat_power: Option<u64>,
     pub counts: u32,
     pub total_damage: u64,
     pub min_damage: u64,

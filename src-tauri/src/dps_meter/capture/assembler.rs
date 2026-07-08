@@ -24,6 +24,18 @@ impl StreamAssembler {
         }
     }
 
+    pub fn new_nickname_only(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<AppLogger>,
+        port: String,
+        config: SharedDpsMeterConfig,
+    ) -> Self {
+        Self {
+            accumulator: PacketAccumulator::new(),
+            processor: StreamProcessor::new_nickname_only(data_storage, logger, port, config),
+        }
+    }
+
     pub fn process_chunk(&mut self, data: &[u8]) -> bool {
         self.accumulator.append(data);
         let mut parsed_any = false;

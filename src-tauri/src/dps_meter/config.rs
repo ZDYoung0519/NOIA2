@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 pub const DEFAULT_DPS_SNAPSHOT_INTERVAL_MS: u64 = 100;
 pub const DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS: u64 = 2000;
 pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 8 * 1024;
-pub const DEFAULT_ENABLE_RESYNC_ON_STALL: bool = true;
-pub const DEFAULT_RESYNC_DELAY_MS: u64 = 500;
+pub const DEFAULT_STALL_RESYNC_DELAY_MS: u64 = 1000;
 pub const TRAINING_DUMMY_MOB_CODE: u32 = 2_400_032;
 pub const DEFAULT_HIDE_KNOWN_PLAYERS: bool = false;
 pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
@@ -25,19 +24,6 @@ impl Default for PvpOverlayPosition {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum CaptureDeviceDetectionMode {
-    Auto,
-    All,
-}
-
-impl Default for CaptureDeviceDetectionMode {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DpsMeterConfig {
@@ -47,12 +33,8 @@ pub struct DpsMeterConfig {
     pub memory_snapshot_interval_ms: u64,
     #[serde(default = "default_max_packet_size_threshold")]
     pub max_packet_size_threshold: u64,
-    #[serde(default = "default_enable_resync_on_stall")]
-    pub enable_resync_on_stall: bool,
-    #[serde(default = "default_resync_delay_ms")]
-    pub resync_delay_ms: u64,
-    #[serde(default)]
-    pub capture_device_detection_mode: CaptureDeviceDetectionMode,
+    #[serde(default = "default_stall_resync_delay_ms")]
+    pub stall_resync_delay_ms: u64,
     #[serde(default)]
     pub boss_only: bool,
     #[serde(default)]
@@ -77,9 +59,7 @@ impl Default for DpsMeterConfig {
             dps_snapshot_interval_ms: DEFAULT_DPS_SNAPSHOT_INTERVAL_MS,
             memory_snapshot_interval_ms: DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS,
             max_packet_size_threshold: DEFAULT_MAX_PACKET_SIZE_THRESHOLD,
-            enable_resync_on_stall: DEFAULT_ENABLE_RESYNC_ON_STALL,
-            resync_delay_ms: DEFAULT_RESYNC_DELAY_MS,
-            capture_device_detection_mode: CaptureDeviceDetectionMode::Auto,
+            stall_resync_delay_ms: DEFAULT_STALL_RESYNC_DELAY_MS,
             boss_only: false,
             pvp_mode_on: false,
             pvp_overlay_position: PvpOverlayPosition::Bottom,
@@ -104,7 +84,7 @@ impl DpsMeterConfig {
         self.memory_snapshot_interval_ms = self.memory_snapshot_interval_ms.clamp(100, 10_000);
         self.max_packet_size_threshold =
             normalize_max_packet_size_threshold(self.max_packet_size_threshold);
-        self.resync_delay_ms = self.resync_delay_ms.clamp(200, 1_000);
+        self.stall_resync_delay_ms = self.stall_resync_delay_ms.clamp(200, 2000);
         self
     }
 }
@@ -123,12 +103,8 @@ fn default_max_packet_size_threshold() -> u64 {
     DEFAULT_MAX_PACKET_SIZE_THRESHOLD
 }
 
-fn default_enable_resync_on_stall() -> bool {
-    DEFAULT_ENABLE_RESYNC_ON_STALL
-}
-
-fn default_resync_delay_ms() -> u64 {
-    DEFAULT_RESYNC_DELAY_MS
+fn default_stall_resync_delay_ms() -> u64 {
+    DEFAULT_STALL_RESYNC_DELAY_MS
 }
 
 fn default_max_player_count() -> usize {

@@ -393,38 +393,6 @@ export function Aion2Settings() {
       {tab === "backend" && (
         <SettingsGroup title={t("settings.aion2.backend")}>
           <SettingRow
-            title={t("settings.aion2.captureDeviceDetectionMode")}
-            description={t("settings.aion2.captureDeviceDetectionModeDesc")}
-          >
-            <div className="flex gap-2">
-              <Button
-                variant={
-                  config.aion2.backend.captureDeviceDetectionMode === "auto"
-                    ? "default"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() =>
-                  updateSettings("aion2.backend.captureDeviceDetectionMode", "auto")
-                }
-              >
-                {t("settings.aion2.captureDeviceDetectionModeAuto")}
-              </Button>
-              <Button
-                variant={
-                  config.aion2.backend.captureDeviceDetectionMode === "all"
-                    ? "default"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => updateSettings("aion2.backend.captureDeviceDetectionMode", "all")}
-              >
-                {t("settings.aion2.captureDeviceDetectionModeAll")}
-              </Button>
-            </div>
-          </SettingRow>
-
-          <SettingRow
             title={t("settings.aion2.bossOnly")}
             description={t("settings.aion2.bossOnlyDesc")}
           >
@@ -570,14 +538,27 @@ export function Aion2Settings() {
           </SettingRow>
 
           <SettingRow
-            title={t("settings.aion2.enableResyncOnStall")}
-            description={t("settings.aion2.enableResyncOnStallDesc")}
+            title={t("settings.aion2.stallResyncDelay")}
+            description={t("settings.aion2.stallResyncDelayDesc")}
           >
-            <Switch
-              checked={config.aion2.backend.enableResyncOnStall}
-              onCheckedChange={(v) => updateSettings("aion2.backend.enableResyncOnStall", v)}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="200"
+                max="2000"
+                step="100"
+                value={config.aion2.backend.stallResyncDelayMs}
+                onChange={(e) =>
+                  updateSettings("aion2.backend.stallResyncDelayMs", Number(e.target.value))
+                }
+                className="w-24"
+              />
+              <span className="w-14 text-right text-sm tabular-nums">
+                {config.aion2.backend.stallResyncDelayMs}ms
+              </span>
+            </div>
           </SettingRow>
+
         </SettingsGroup>
       )}
     </div>

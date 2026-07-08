@@ -1,7 +1,6 @@
+use lz4_flex::block::decompress;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-
-use lz4_flex::block::decompress;
 
 use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::models::combat::DetailPlayerInfo;
@@ -9,7 +8,7 @@ use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarInt
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
-const MIN_IMPLAUSIBLE_RESYNC_BUFFER_SIZE: usize = 128;
+const COMBAT_POWER_MARKER: [u8; 3] = [0xF4, 0xCB, 0x1F];
 
 #[derive(Debug)]
 struct DamagePacketReader<'a> {
@@ -44,8 +43,6 @@ impl<'a> DamagePacketReader<'a> {
 struct PacketPrefixInfo {
     /// 真实业务 payload 的起始偏移（也就是 opcode 开始的位置）
     payload_offset: usize,
-    /// 长度字段后是否存在 extraFlag。
-    has_extra_flag: bool,
 }
 
 /// 解析长度字段后面的传输层前缀。
@@ -64,37 +61,19 @@ fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPr
         return None;
     }
 
-    Some(PacketPrefixInfo {
-        payload_offset,
-        has_extra_flag,
-    })
+    Some(PacketPrefixInfo { payload_offset })
 }
 
-fn peek_packet_opcode(buffer: &[u8], offset: usize, length_len: usize) -> Option<(u8, u8)> {
-    let prefix_info = resolve_packet_prefix(&buffer[offset..], length_len)?;
-    let opcode_offset = offset + prefix_info.payload_offset;
-    Some((*buffer.get(opcode_offset)?, *buffer.get(opcode_offset + 1)?))
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProcessorMode {
+    Full,
+    NicknameOnly,
 }
 
-fn is_plausible_stream_opcode(op0: u8, op1: u8) -> bool {
-    matches!(
-        (op0, op1),
-        (0xFF, 0xFF)
-            | (0x33, 0x36)
-            | (0x45, 0x36)
-            | (0x41, 0x36)
-            | (0x04, 0x38)
-            | (0x05, 0x38)
-            | (0x2A, 0x38)
-            | (0x2B, 0x38)
-            | (0x04, 0x8D)
-            | (0x00, 0x8D)
-    )
-}
-
-fn find_nearby_damage_opcode(buffer: &[u8], offset: usize) -> Option<usize> {
-    let search_end = (offset + 64).min(buffer.len());
-    find_bytes(buffer, offset, &[0x04, 0x38]).filter(|hit| *hit < search_end)
+#[derive(Debug, Clone, Copy)]
+enum StallResyncMode {
+    Immediate,
+    Delayed,
 }
 
 pub struct StreamProcessor {
@@ -102,6 +81,8 @@ pub struct StreamProcessor {
     logger: Arc<AppLogger>,
     port: String,
     config: SharedDpsMeterConfig,
+    mode: ProcessorMode,
+    stall_resync_mode: StallResyncMode,
     stalled_since: Option<Instant>,
 }
 
@@ -117,110 +98,36 @@ impl StreamProcessor {
             logger,
             port,
             config,
+            mode: ProcessorMode::Full,
+            stall_resync_mode: StallResyncMode::Immediate,
             stalled_since: None,
         }
     }
 
-    fn log_stream_frame_debug(
-        &self,
-        reason: &str,
-        buffer: &[u8],
-        offset: usize,
-        length_info: &VarIntOutput,
-        total_packet_bytes: Option<usize>,
-    ) {
-        let remaining = buffer.len().saturating_sub(offset);
-        let after_length_offset = offset + length_info.length;
-        let after_length_end = (after_length_offset + 16).min(buffer.len());
-        let after_length_hex = if after_length_offset < buffer.len() {
-            bytes_to_hex(&buffer[after_length_offset..after_length_end])
-        } else {
-            String::from("<eof>")
-        };
-
-        let prefix_info = resolve_packet_prefix(&buffer[offset..], length_info.length);
-        let (extra_flag, opcode_text, opcode_offset_text, known_opcode) =
-            if let Some(prefix_info) = prefix_info {
-                let opcode_offset = offset + prefix_info.payload_offset;
-                let opcode = buffer
-                    .get(opcode_offset)
-                    .zip(buffer.get(opcode_offset + 1))
-                    .map(|(op0, op1)| (*op0, *op1));
-                let opcode_text = opcode
-                    .map(|(op0, op1)| format!("{op0:02X}{op1:02X}"))
-                    .unwrap_or_else(|| String::from("<missing>"));
-                let known_opcode = opcode
-                    .map(|(op0, op1)| is_plausible_stream_opcode(op0, op1))
-                    .unwrap_or(false);
-
-                (
-                    prefix_info.has_extra_flag,
-                    opcode_text,
-                    opcode_offset.to_string(),
-                    known_opcode,
-                )
-            } else {
-                (
-                    false,
-                    String::from("<missing>"),
-                    String::from("<missing>"),
-                    false,
-                )
-            };
-
-        let raw_head_end = (offset + 32).min(buffer.len());
-        let raw_head_hex = bytes_to_hex(&buffer[offset..raw_head_end]);
-        let nearby_damage = find_nearby_damage_opcode(buffer, offset)
-            .map(|hit| {
-                let rel_to_offset = hit as isize - offset as isize;
-                let rel_to_opcode = opcode_offset_text
-                    .parse::<usize>()
-                    .map(|opcode_offset| hit as isize - opcode_offset as isize)
-                    .unwrap_or(rel_to_offset);
-                format!("04 38 at +{rel_to_offset} from_offset, {rel_to_opcode:+} from_opcode")
-            })
-            .unwrap_or_else(|| String::from("none"));
-
-        self.logger.debug(format!(
-            "[{}] stream frame {} offset={} remaining={} length_len={} length_value={} total_packet_bytes={} after_length_hex={} extra_flag={} opcode={} opcode_offset={} known_opcode={} nearby_0438={} raw_head={}",
-            self.port,
-            reason,
-            offset,
-            remaining,
-            length_info.length,
-            length_info.value,
-            total_packet_bytes
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| String::from("<invalid>")),
-            after_length_hex,
-            extra_flag,
-            opcode_text,
-            opcode_offset_text,
-            known_opcode,
-            nearby_damage,
-            raw_head_hex,
-        ));
-    }
-
-    fn should_log_stream_frame(
-        &self,
-        buffer: &[u8],
-        offset: usize,
-        length_info: &VarIntOutput,
-    ) -> bool {
-        let opcode = peek_packet_opcode(buffer, offset, length_info.length);
-        matches!(opcode, Some((0x04, 0x38))) || find_nearby_damage_opcode(buffer, offset).is_some()
+    pub fn new_nickname_only(
+        data_storage: Arc<DataStorage>,
+        logger: Arc<AppLogger>,
+        port: String,
+        config: SharedDpsMeterConfig,
+    ) -> Self {
+        Self {
+            data_storage,
+            logger,
+            port,
+            config,
+            mode: ProcessorMode::NicknameOnly,
+            // 昵称包比战斗包更依赖完整帧。这里保留等待策略，
+            // 只用于昵称流，避免影响伤害/血量/buff 的实时解析。
+            stall_resync_mode: StallResyncMode::Delayed,
+            stalled_since: None,
+        }
     }
 
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
-        let (max_packet_size_threshold, enable_resync_on_stall, resync_delay_ms) = {
+        let max_packet_size_threshold = {
             let config = self.config.read().unwrap();
-            (
-                usize::try_from(config.max_packet_size_threshold).unwrap_or(1024 * 8),
-                config.enable_resync_on_stall,
-                config.resync_delay_ms,
-            )
+            usize::try_from(config.max_packet_size_threshold).unwrap_or(1024 * 8)
         };
 
         while offset < buffer.len() {
@@ -231,15 +138,6 @@ impl StreamProcessor {
 
             let length_info = read_varint(buffer, offset);
             if !length_info.is_valid() || length_info.value <= 0 {
-                if find_nearby_damage_opcode(buffer, offset).is_some() {
-                    self.log_stream_frame_debug(
-                        "invalid-length-near-0438",
-                        buffer,
-                        offset,
-                        &length_info,
-                        None,
-                    );
-                }
                 if offset + 5 > buffer.len() {
                     break;
                 }
@@ -254,96 +152,24 @@ impl StreamProcessor {
             };
 
             if total_packet_bytes == 0 || total_packet_bytes > 65_535 {
-                self.log_stream_frame_debug(
-                    "invalid-total-size",
-                    buffer,
-                    offset,
-                    &length_info,
-                    Some(total_packet_bytes),
-                );
                 offset += 1;
                 continue;
             }
 
             if offset + total_packet_bytes > buffer.len() {
                 if total_packet_bytes > max_packet_size_threshold {
-                    self.log_stream_frame_debug(
-                        "incomplete-too-large",
-                        buffer,
-                        offset,
-                        &length_info,
-                        Some(total_packet_bytes),
-                    );
                     offset += 1;
                     continue;
-                }
-                if buffer.len().saturating_sub(offset) >= MIN_IMPLAUSIBLE_RESYNC_BUFFER_SIZE {
-                    if let Some((op0, op1)) = peek_packet_opcode(buffer, offset, length_info.length)
-                    {
-                        if !is_plausible_stream_opcode(op0, op1) {
-                            if self.should_log_stream_frame(buffer, offset, &length_info) {
-                                self.log_stream_frame_debug(
-                                    "incomplete-implausible-opcode",
-                                    buffer,
-                                    offset,
-                                    &length_info,
-                                    Some(total_packet_bytes),
-                                );
-                            }
-                            offset += 1;
-                            continue;
-                        }
-                    }
-                }
-                if self.should_log_stream_frame(buffer, offset, &length_info) {
-                    self.log_stream_frame_debug(
-                        "incomplete-wait",
-                        buffer,
-                        offset,
-                        &length_info,
-                        Some(total_packet_bytes),
-                    );
                 }
                 break;
             }
 
             let current_packet = &buffer[offset..offset + total_packet_bytes];
-            if self.should_log_stream_frame(buffer, offset, &length_info) {
-                self.log_stream_frame_debug(
-                    "complete-candidate",
-                    buffer,
-                    offset,
-                    &length_info,
-                    Some(total_packet_bytes),
-                );
-            }
             let Some(prefix_info) = resolve_packet_prefix(current_packet, length_info.length)
             else {
-                self.log_stream_frame_debug(
-                    "missing-prefix",
-                    buffer,
-                    offset,
-                    &length_info,
-                    Some(total_packet_bytes),
-                );
                 offset += 1;
                 continue;
             };
-            if let Some((op0, op1)) = peek_packet_opcode(buffer, offset, length_info.length) {
-                if !is_plausible_stream_opcode(op0, op1) {
-                    if self.should_log_stream_frame(buffer, offset, &length_info) {
-                        self.log_stream_frame_debug(
-                            "complete-implausible-opcode",
-                            buffer,
-                            offset,
-                            &length_info,
-                            Some(total_packet_bytes),
-                        );
-                    }
-                    offset += 1;
-                    continue;
-                }
-            }
             let payload_start = prefix_info.payload_offset;
             let is_bundle = payload_start + 1 < current_packet.len()
                 && current_packet[payload_start] == 0xFF
@@ -367,24 +193,29 @@ impl StreamProcessor {
         // }
 
         if offset == 0 && !buffer.is_empty() {
-            if enable_resync_on_stall {
-                let now = Instant::now();
-                if let Some(stalled_since) = self.stalled_since {
-                    if now.duration_since(stalled_since) >= Duration::from_millis(resync_delay_ms) {
-                        self.logger.info(format!(
-                            "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
-                            self.port,
-                            resync_delay_ms,
-                            buffer.len()
-                        ));
+            match self.stall_resync_mode {
+                StallResyncMode::Immediate => return 1,
+                StallResyncMode::Delayed => {
+                    let delay_ms = {
+                        let config = self.config.read().unwrap();
+                        config.stall_resync_delay_ms.clamp(200, 2000)
+                    };
+                    let now = Instant::now();
+                    if let Some(stalled_since) = self.stalled_since {
+                        if now.duration_since(stalled_since) >= Duration::from_millis(delay_ms) {
+                            self.logger.debug(format!(
+                                "[{}] nickname stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
+                                self.port,
+                                delay_ms,
+                                buffer.len()
+                            ));
+                            self.stalled_since = Some(now);
+                            return 1;
+                        }
+                    } else {
                         self.stalled_since = Some(now);
-                        return 1;
                     }
-                } else {
-                    self.stalled_since = Some(now);
                 }
-            } else {
-                self.stalled_since = None;
             }
         } else {
             self.stalled_since = None;
@@ -487,17 +318,26 @@ impl StreamProcessor {
         //     ));
         // }
 
-        match (payload[0], payload[1]) {
-            (0x33, 0x36) => self.parse_main_nickname(payload),
-            (0x45, 0x36) => self.parse_other_nickname(payload),
-            // (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
-            (0x41, 0x36) => self.parse_summon_packet(payload),
-            (0x04, 0x38) => self.parse_damage_packet(payload),
-            (0x05, 0x38) => self.parse_dot_packet(payload),
-            (0x2A, 0x38) | (0x2B, 0x38) => self.parse_buff_packet(payload),
-            (0x04, 0x8D) => self.parse_summon_packet_048d(payload),
-            (0x00, 0x8D) => self.parse_remain_hp_packet(payload),
-            _ => false,
+        match self.mode {
+            ProcessorMode::Full => match (payload[0], payload[1]) {
+                (0x33, 0x36) => self.parse_main_nickname(payload),
+                (0x45, 0x36) => self.parse_other_nickname(payload),
+                (0x56, 0x36) => self.parse_main_combat_power(payload),
+                // (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
+                (0x41, 0x36) => self.parse_summon_packet(payload),
+                (0x04, 0x38) => self.parse_damage_packet(payload),
+                (0x05, 0x38) => self.parse_dot_packet(payload),
+                (0x2A, 0x38) | (0x2B, 0x38) => self.parse_buff_packet(payload),
+                (0x04, 0x8D) => self.parse_summon_packet_048d(payload),
+                (0x00, 0x8D) => self.parse_remain_hp_packet(payload),
+                _ => false,
+            },
+            ProcessorMode::NicknameOnly => match (payload[0], payload[1]) {
+                (0x33, 0x36) => self.parse_main_nickname(payload),
+                (0x45, 0x36) => self.parse_other_nickname(payload),
+                (0x56, 0x36) => self.parse_main_combat_power(payload),
+                _ => false,
+            },
         }
     }
 
@@ -548,6 +388,10 @@ impl StreamProcessor {
                 reader.offset = checkpoint;
                 break;
             };
+            if actor_id == 0 {
+                reader.offset = checkpoint;
+                break;
+            }
 
             if reader.offset + 4 > packet.len() {
                 reader.offset = checkpoint;
@@ -1116,17 +960,17 @@ impl StreamProcessor {
 
         if is_target_player {
             if !self.config.read().unwrap().pvp_mode_on {
-                self.logger.debug(format!(
-                    "[{}] player remain hp skipped pvp_mode_off actor={} current_hp={}",
-                    self.port, target_id, target_hp
-                ));
+                // self.logger.debug(format!(
+                //     "[{}] player remain hp skipped pvp_mode_off actor={} current_hp={}",
+                //     self.port, target_id, target_hp
+                // ));
                 return true;
             }
             if self.data_storage.main_actor_id() == Some(target_id) {
-                self.logger.debug(format!(
-                    "[{}] player remain hp skipped main_actor actor={} current_hp={}",
-                    self.port, target_id, target_hp
-                ));
+                // self.logger.debug(format!(
+                //     "[{}] player remain hp skipped main_actor actor={} current_hp={}",
+                //     self.port, target_id, target_hp
+                // ));
                 return true;
             }
 
@@ -1298,6 +1142,23 @@ impl StreamProcessor {
 
     fn parse_main_nickname(&mut self, payload: &[u8]) -> bool {
         self.parse_main_nickname_standard(payload) || self.parse_main_nickname_fallback(payload)
+    }
+
+    fn parse_main_combat_power(&mut self, payload: &[u8]) -> bool {
+        if payload.len() < 6 || payload[0] != 0x56 || payload[1] != 0x36 {
+            return false;
+        }
+
+        let combat_power = parse_u32_le(payload, 2) as u64;
+        if !self.data_storage.save_main_actor_combat_power(combat_power) {
+            return false;
+        }
+
+        self.logger.info(format!(
+            "[{}] main actor combat power combat_power={}",
+            self.port, combat_power
+        ));
+        true
     }
 
     // Normal maps use a 0x07 separator before the name length.
@@ -1600,6 +1461,7 @@ impl StreamProcessor {
         let actor_class = job_to_actor_class(job);
         let server_base = actor_name_end + 1;
         let sid = find_server_id(payload, server_base);
+        let combat_power = parse_snapshot_combat_power(payload);
 
         let sid_string = sid.map(|sid| sid.to_string());
         let sid_text = sid_string.as_deref().unwrap_or("none");
@@ -1608,14 +1470,21 @@ impl StreamProcessor {
         if let Some(actor_class) = actor_class {
             self.data_storage.set_actor_class(actor_id, actor_class);
         }
+        if let Some(combat_power) = combat_power {
+            self.data_storage
+                .set_actor_combat_power(actor_id, combat_power);
+        }
         self.logger.info(format!(
-            "[{}] actor actor={} name={} sid={} job={} class={}",
+            "[{}] actor actor={} name={} sid={} job={} class={} combat_power={}",
             self.port,
             actor_id,
             actor_name,
             sid_text,
             job,
-            actor_class.unwrap_or("none")
+            actor_class.unwrap_or("none"),
+            combat_power
+                .map(|value| value.to_string())
+                .unwrap_or_else(|| "none".to_string())
         ));
 
         true
@@ -1676,6 +1545,23 @@ fn parse_u64_le(packet: &[u8], offset: usize) -> u64 {
         packet[offset + 6],
         packet[offset + 7],
     ])
+}
+
+fn parse_snapshot_combat_power(packet: &[u8]) -> Option<u64> {
+    let marker_idx = last_index_of(packet, &COMBAT_POWER_MARKER)?;
+    let mut offset = marker_idx + 11;
+
+    while offset + 8 <= packet.len() {
+        let combat_power = parse_u32_le(packet, offset) as u64;
+        let trailing_zero = parse_u32_le(packet, offset + 4) == 0;
+        if (1..=10_000_000).contains(&combat_power) && trailing_zero {
+            return Some(combat_power);
+        }
+
+        offset += 1;
+    }
+
+    None
 }
 
 fn parse_detail_player_info_entry(
@@ -1884,6 +1770,16 @@ fn find_bytes(haystack: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
                 .position(|window| window == needle)
         })
         .map(|pos| start + pos)
+}
+
+fn last_index_of(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    if needle.is_empty() || haystack.len() < needle.len() {
+        return None;
+    }
+
+    haystack
+        .windows(needle.len())
+        .rposition(|window| window == needle)
 }
 
 fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Option<usize> {

@@ -81,10 +81,6 @@
       "shortcuts": "Shortcuts",
       "overlay": "Overlay",
       "backend": "Runtime",
-      "captureDeviceDetectionMode": "Packet device detection",
-      "captureDeviceDetectionModeDesc": "Auto detection keeps the current single-device path. Probe all listens on multiple network devices and locks onto the stable combat stream, useful for direct or complex network setups.",
-      "captureDeviceDetectionModeAuto": "Auto detection",
-      "captureDeviceDetectionModeAll": "Probe all",
       "shortcutShowDpsOverlay": "Show / Hide DPS Overlay",
       "shortcutShowDpsOverlayDesc": "Toggle the DPS overlay on and off",
       "shortcutResetDpsMeter": "Reset DPS Meter",
@@ -144,8 +140,8 @@
       "dpsSnapshotIntervalDesc": "Controls how often DPS data refreshes. Shorter intervals feel more realtime with slightly more overhead.",
       "maxPacketSizeThreshold": "Packet size threshold",
       "maxPacketSizeThresholdDesc": "Ignores unusually large packets to reduce parser errors or noisy records.",
-      "enableResyncOnStall": "Auto resync on stall",
-      "enableResyncOnStallDesc": "Attempts to resync when the data stream appears stalled, helping continuous tracking recover."
+      "stallResyncDelay": "Nickname resync delay",
+      "stallResyncDelayDesc": "Only affects the nickname detection stream. When a nickname frame looks incomplete, this controls how long to wait before resyncing by one byte."
     }
   },
   "auth": {

@@ -43,6 +43,7 @@ type QueueUploadPlayer = {
   actor_name: string | null | undefined;
   actor_server_id: string | null | undefined;
   actor_class: string | null | undefined;
+  combat_power: number | null;
   damage: number;
   battle_duration: number;
   dps: number;
@@ -116,6 +117,14 @@ function getDuration(startTime: number, lastTime: number) {
     return lastTime - startTime;
   }
   return 0;
+}
+
+function normalizeCombatPower(value: unknown) {
+  const combatPower = Number(value ?? 0);
+  if (!Number.isFinite(combatPower) || combatPower <= 0) {
+    return null;
+  }
+  return Math.round(combatPower);
 }
 
 function getErrorMessage(error: unknown) {
@@ -207,6 +216,9 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
       actor_name: actor.actorName ?? null,
       actor_server_id: actor.actorServerId ?? null,
       actor_class: actor.actorClass ?? null,
+      combat_power: normalizeCombatPower(
+        actor.combatPower ?? record.playerStats?.[actorIdKey]?.combatPower
+      ),
       damage,
       battle_duration: battleDuration,
       dps: battleDuration > 0 ? damage / battleDuration : 0,

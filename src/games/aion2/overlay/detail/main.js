@@ -25,6 +25,8 @@ const $titleBar = document.querySelector(".detail-titlebar");
 const $playerIcon = document.getElementById("player-icon");
 const $playerName = document.getElementById("player-name");
 const $playerServer = document.getElementById("player-server");
+const $playerPower = document.getElementById("player-power");
+const $playerPowerText = document.getElementById("player-power-text");
 
 document.getElementById("close-btn").addEventListener("click", async () => {
   try {
@@ -74,6 +76,11 @@ function fmtDamage(n) {
 }
 function fmtFull(n) {
   return Math.round(n || 0).toLocaleString("en-US");
+}
+function fmtPower(n) {
+  const value = Number(n);
+  if (!Number.isFinite(value) || value <= 0) return "";
+  return (value / 1000).toFixed(1) + "k";
 }
 function esc(s) {
   if (!s) return "";
@@ -216,6 +223,7 @@ function render() {
   if (!selectedActorId) {
     $playerName.textContent = "Player";
     $playerServer.textContent = "";
+    $playerPower.style.display = "none";
     $playerIcon.style.display = "none";
     $content.innerHTML = `<div class="empty">${t("dps-detail.empty")}</div>`;
     return;
@@ -225,6 +233,7 @@ function render() {
   let playerNameText = `ID:${selectedActorId}`,
     playerClass = "",
     playerServer = "",
+    playerPower = "",
     iconSrc = "";
   let totalDmg = 0,
     skillMap = {},
@@ -245,6 +254,7 @@ function render() {
   playerNameText = actorInfo?.actorName || playerNameText;
   playerClass = actorInfo?.actorClass || "";
   playerServer = getServerName(actorInfo?.actorServerId);
+  playerPower = fmtPower(actorInfo?.combatPower);
   iconSrc = playerClass ? getClassIcon(playerClass) : "";
 
   // ── Target info (for fight duration) ──
@@ -297,6 +307,12 @@ function render() {
   setMode(mode);
   $playerName.textContent = playerNameText;
   $playerServer.textContent = playerServer ? `[${playerServer}]` : "";
+  if (playerPower) {
+    $playerPowerText.textContent = playerPower;
+    $playerPower.style.display = "";
+  } else {
+    $playerPower.style.display = "none";
+  }
   if (iconSrc) {
     $playerIcon.src = iconSrc;
     $playerIcon.style.display = "";
