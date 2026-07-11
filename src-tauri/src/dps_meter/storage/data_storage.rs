@@ -7,8 +7,8 @@ use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
 use crate::dps_meter::models::combat::{
-    DetailPlayerInfo, PlayerHpInfo, PvpKnownPlayer, PvpWatchInfo, PvpWatchInfoResponse, SkillStats,
-    UseBuff,
+    DetailPlayerInfo, PlayerHpInfo, PvpCombatStats, PvpCombatStatsRow, PvpKnownPlayer,
+    PvpWatchInfo, PvpWatchInfoResponse, SkillStats, UseBuff,
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
@@ -133,6 +133,16 @@ struct DataStorageInner {
     last_target: Option<u32>,
     last_target_by_main_actor: Option<u32>,
     last_player_target_by_main_actor: Option<u32>,
+    pvp_attackers_by_target: HashMap<u32, HashMap<PvpPlayerKey, u64>>,
+    pvp_last_attacker_by_target: HashMap<u32, PvpPlayerKey>,
+    pvp_combat_stats: HashMap<PvpPlayerKey, PvpCombatStats>,
+    pvp_dead_players: HashSet<PvpPlayerKey>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+struct PvpPlayerKey {
+    name: String,
+    server_id: String,
 }
 
 impl Default for DataStorageInner {
@@ -161,6 +171,10 @@ impl Default for DataStorageInner {
             last_target: None,
             last_target_by_main_actor: None,
             last_player_target_by_main_actor: None,
+            pvp_attackers_by_target: HashMap::new(),
+            pvp_last_attacker_by_target: HashMap::new(),
+            pvp_combat_stats: HashMap::new(),
+            pvp_dead_players: HashSet::new(),
         }
     }
 }
@@ -212,6 +226,10 @@ impl DataStorage {
         let mob_id_code_map = inner.mob_id_code_map.clone();
         let mob_id_hp_map = inner.mob_id_hp_map.clone();
         let player_hp_map = inner.player_hp_map.clone();
+        let pvp_attackers_by_target = inner.pvp_attackers_by_target.clone();
+        let pvp_last_attacker_by_target = inner.pvp_last_attacker_by_target.clone();
+        let pvp_combat_stats = inner.pvp_combat_stats.clone();
+        let pvp_dead_players = inner.pvp_dead_players.clone();
         // let summon_owner_map = inner.summon_owner_map.clone();
         let dot_skill_list = inner.dot_skill_list.clone();
 
@@ -228,6 +246,10 @@ impl DataStorage {
         inner.mob_id_code_map = mob_id_code_map;
         inner.mob_id_hp_map = mob_id_hp_map;
         inner.player_hp_map = player_hp_map;
+        inner.pvp_attackers_by_target = pvp_attackers_by_target;
+        inner.pvp_last_attacker_by_target = pvp_last_attacker_by_target;
+        inner.pvp_combat_stats = pvp_combat_stats;
+        inner.pvp_dead_players = pvp_dead_players;
         // inner.summon_owner_map = summon_owner_map;
         inner.dot_skill_list = dot_skill_list;
     }
@@ -306,6 +328,24 @@ impl DataStorage {
             && inner.main_actor_id != Some(actor_id)
         {
             return;
+        }
+
+        if config.pvp_mode_on && is_target_player {
+            let actor = pvp_player_key(&inner, actor_id);
+            let target = pvp_player_key(&inner, packet.target_id);
+            if let (Some(actor), Some(target)) = (actor, target) {
+                if actor != target {
+                    *inner
+                        .pvp_attackers_by_target
+                        .entry(packet.target_id)
+                        .or_default()
+                        .entry(actor.clone())
+                        .or_default() += packet.damage;
+                    inner
+                        .pvp_last_attacker_by_target
+                        .insert(packet.target_id, actor);
+                }
+            }
         }
 
         if packet.is_dot && !inner.dot_skill_list.contains(&packet.skill_code) {
@@ -697,6 +737,88 @@ impl DataStorage {
         }
     }
 
+    pub fn mark_player_dead(&self, entity_id: u32) -> (bool, Option<String>) {
+        if !self.config.read().unwrap().pvp_mode_on {
+            return (false, None);
+        }
+
+        let mut inner = self.inner.write().unwrap();
+        let Some(victim) = pvp_player_key(&inner, entity_id) else {
+            return (false, None);
+        };
+        if inner.mob_id_code_map.contains_key(&entity_id)
+            || !inner.pvp_dead_players.insert(victim.clone())
+        {
+            return (false, None);
+        }
+
+        let attackers = inner
+            .pvp_attackers_by_target
+            .remove(&entity_id)
+            .unwrap_or_default();
+        let killer = inner.pvp_last_attacker_by_target.remove(&entity_id);
+
+        inner
+            .pvp_combat_stats
+            .entry(victim.clone())
+            .or_default()
+            .deaths += 1;
+
+        let killer = killer.filter(|player| player != &victim);
+        if let Some(killer_player) = &killer {
+            inner
+                .pvp_combat_stats
+                .entry(killer_player.clone())
+                .or_default()
+                .kills += 1;
+        }
+
+        for (attacker, damage) in attackers {
+            if attacker == victim {
+                continue;
+            }
+            let stats = inner.pvp_combat_stats.entry(attacker.clone()).or_default();
+            stats.damage += damage;
+            if killer.as_ref() != Some(&attacker) {
+                stats.assists += 1;
+            }
+        }
+
+        (true, killer.map(|player| player.name))
+    }
+
+    pub fn mark_player_alive(&self, entity_id: u32) {
+        let mut inner = self.inner.write().unwrap();
+        if let Some(player) = pvp_player_key(&inner, entity_id) {
+            inner.pvp_dead_players.remove(&player);
+        }
+    }
+
+    pub fn get_pvp_combat_stats(&self) -> Vec<PvpCombatStatsRow> {
+        self.inner
+            .read()
+            .unwrap()
+            .pvp_combat_stats
+            .iter()
+            .map(|(player, stats)| PvpCombatStatsRow {
+                actor_name: player.name.clone(),
+                server_id: player.server_id.clone(),
+                damage: stats.damage,
+                kills: stats.kills,
+                assists: stats.assists,
+                deaths: stats.deaths,
+            })
+            .collect()
+    }
+
+    pub fn clear_pvp_combat_stats(&self) {
+        let mut inner = self.inner.write().unwrap();
+        inner.pvp_attackers_by_target.clear();
+        inner.pvp_last_attacker_by_target.clear();
+        inner.pvp_combat_stats.clear();
+        inner.pvp_dead_players.clear();
+    }
+
     pub fn summon_owner_snapshot(&self) -> HashMap<u32, u32> {
         self.inner.read().unwrap().summon_owner_map.as_hash_map()
     }
@@ -830,4 +952,15 @@ fn build_pvp_watch_info_for_actor(
         current_hp: hp.map(|value| value.current_hp),
         max_hp: hp.map(|value| value.max_observed_hp),
     }
+}
+
+fn pvp_player_key(inner: &DataStorageInner, actor_id: u32) -> Option<PvpPlayerKey> {
+    Some(PvpPlayerKey {
+        name: inner.actor_id_name_map.get(&actor_id)?.clone(),
+        server_id: inner
+            .actor_id_server_map
+            .get(&actor_id)
+            .cloned()
+            .unwrap_or_default(),
+    })
 }

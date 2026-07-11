@@ -76,6 +76,8 @@ pub fn run() {
             dps_meter::api::commands::start_dps_meter,
             dps_meter::api::commands::get_dps_snapshot,
             dps_meter::api::commands::get_pvp_watch_info,
+            dps_meter::api::commands::get_pvp_combat_stats,
+            dps_meter::api::commands::clear_pvp_combat_stats,
             dps_meter::api::commands::get_dps_meter_status,
             dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter,

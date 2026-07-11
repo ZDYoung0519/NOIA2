@@ -968,6 +968,21 @@ impl StreamProcessor {
                 // ));
                 return true;
             }
+
+            if target_hp == 0 {
+                let (newly_dead, killer) = self.data_storage.mark_player_dead(target_id);
+                if newly_dead {
+                    self.logger.info(format!(
+                        "[{}] player dead actor={} killer={}",
+                        self.port,
+                        target_id,
+                        killer.as_deref().unwrap_or("unknown")
+                    ));
+                }
+            } else {
+                self.data_storage.mark_player_alive(target_id);
+            }
+
             if self.data_storage.main_actor_id() == Some(target_id) {
                 // self.logger.debug(format!(
                 //     "[{}] player remain hp skipped main_actor actor={} current_hp={}",

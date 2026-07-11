@@ -4,7 +4,7 @@ use crate::dps_meter::capture::windivert_capturer::WinDivertStatus;
 use crate::dps_meter::config::DpsMeterConfig;
 use crate::dps_meter::engine::meter::DpsMeter;
 use crate::dps_meter::history::HistoryRecord;
-use crate::dps_meter::models::combat::{CombatSnapshot, PvpWatchInfoResponse};
+use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::DpsMeterState;
 
 #[tauri::command]
@@ -36,6 +36,17 @@ pub fn get_pvp_watch_info(
     names: Vec<String>,
 ) -> Result<PvpWatchInfoResponse, String> {
     Ok(meter.get_pvp_watch_info(&names))
+}
+
+#[tauri::command]
+pub fn get_pvp_combat_stats(meter: State<'_, DpsMeter>) -> Result<Vec<PvpCombatStatsRow>, String> {
+    Ok(meter.get_pvp_combat_stats())
+}
+
+#[tauri::command]
+pub fn clear_pvp_combat_stats(meter: State<'_, DpsMeter>) -> Result<(), String> {
+    meter.clear_pvp_combat_stats();
+    Ok(())
 }
 
 #[tauri::command]

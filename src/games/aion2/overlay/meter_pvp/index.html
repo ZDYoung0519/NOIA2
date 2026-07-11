@@ -15,20 +15,36 @@
       <button class="title-bar__close" id="close-btn" title="Close overlay">&times;</button>
     </div>
     <div class="pvp-content" id="pvp-content">
+      <div class="pvp-section-title pvp-section-title--stats">
+        <span>击杀统计</span>
+        <span class="pvp-section-title__line"></span>
+        <button class="pvp-stats-clear" id="pvp-stats-clear" type="button" title="清空战斗统计">
+          清空
+        </button>
+        <span
+          class="pvp-help"
+          tabindex="0"
+          aria-label="非侵入式检测，距离过远无法统计。伤害量只会在目标死亡时结算。"
+        >
+          ?
+        </span>
+      </div>
+      <div class="pvp-combat-stats">
+        <div class="pvp-combat-stats__header">
+          <span>玩家</span>
+          <button type="button" id="pvp-sort-damage">伤害</button>
+          <button type="button" id="pvp-sort-kills">击杀</button>
+          <span>助攻</span>
+          <span>死亡</span>
+        </div>
+        <div class="pvp-combat-stats__empty" id="pvp-combat-stats-empty">暂无战斗统计</div>
+        <div class="pvp-combat-stats__list" id="pvp-combat-stats-list"></div>
+      </div>
       <div class="pvp-section-title">受到伤害</div>
       <div class="pvp-empty" id="pvp-empty">暂无受到伤害</div>
       <div class="player-list" id="pvp-player-list"></div>
       <div class="player-hp-panel">
-        <div class="pvp-section-title">
-          <span>玩家血量监控</span>
-          <span
-            class="pvp-help"
-            tabindex="0"
-            aria-label="目标在附近时才会生效，首名玩家是我最后攻击的玩家"
-          >
-            ?
-          </span>
-        </div>
+        <div class="pvp-section-title">玩家血量监控</div>
         <div class="player-hp-list" id="player-hp-list"></div>
         <form class="player-hp-form" id="player-hp-form">
           <input

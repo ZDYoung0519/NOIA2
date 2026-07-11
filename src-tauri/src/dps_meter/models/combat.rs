@@ -58,6 +58,26 @@ pub struct PvpWatchInfoResponse {
     pub last_dealt_player: Option<PvpWatchInfo>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PvpCombatStats {
+    pub damage: u64,
+    pub kills: u32,
+    pub assists: u32,
+    pub deaths: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PvpCombatStatsRow {
+    pub actor_name: String,
+    pub server_id: String,
+    pub damage: u64,
+    pub kills: u32,
+    pub assists: u32,
+    pub deaths: u32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerHpInfo {

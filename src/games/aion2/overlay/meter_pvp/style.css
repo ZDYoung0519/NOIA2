@@ -72,6 +72,161 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.pvp-section-title--stats::after {
+  display: none;
+}
+
+.pvp-section-title__line {
+  height: 1px;
+  flex: 1 1 auto;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pvp-stats-clear {
+  flex: 0 0 auto;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.48);
+  font-family: var(--font-family);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.pvp-stats-clear:hover {
+  border-color: rgba(248, 113, 113, 0.26);
+  background: rgba(127, 29, 29, 0.2);
+  color: rgba(254, 202, 202, 0.9);
+}
+
+.pvp-stats-clear:disabled {
+  cursor: wait;
+  opacity: 0.4;
+}
+
+.pvp-combat-stats {
+  flex: 0 0 auto;
+  margin-bottom: 6px;
+  font-family: var(--font-family);
+  pointer-events: auto;
+}
+
+.pvp-section-title--stats {
+  pointer-events: auto;
+}
+
+.pvp-combat-stats__header,
+.pvp-combat-stats__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px repeat(3, 36px);
+  align-items: center;
+  gap: 4px;
+}
+
+.pvp-combat-stats__header {
+  height: 20px;
+  padding: 0 6px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  text-align: center;
+}
+
+.pvp-combat-stats__header > span:first-child {
+  text-align: left;
+}
+
+.pvp-combat-stats__header button {
+  height: 18px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pvp-combat-stats__header button:hover,
+.pvp-combat-stats__header button.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.pvp-combat-stats__header button.is-active::after {
+  content: "↓";
+  margin-left: 2px;
+}
+
+.pvp-combat-stats__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 140px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.pvp-combat-stats__list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pvp-combat-stats__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pvp-combat-stats__list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pvp-combat-stats__list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pvp-combat-stats__row {
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+}
+
+.pvp-combat-stats__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pvp-combat-stats__server {
+  margin-left: 5px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 9px;
+}
+
+.pvp-combat-stats__value {
+  color: rgba(255, 255, 255, 0.76);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.pvp-combat-stats__value.is-damage {
+  color: rgba(253, 186, 116, 0.92);
+}
+
+.pvp-combat-stats__value.is-kills {
+  color: rgba(248, 113, 113, 0.92);
+}
+
+.pvp-combat-stats__empty {
+  padding: 4px 6px 6px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+}
+
 .pvp-help {
   position: relative;
   display: inline-flex;
@@ -118,6 +273,19 @@
 .pvp-help:focus-visible::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.pvp-section-title--stats .pvp-help::after {
+  top: calc(100% + 7px);
+  right: 0;
+  bottom: auto;
+  left: auto;
+  transform: translateY(-2px);
+}
+
+.pvp-section-title--stats .pvp-help:hover::after,
+.pvp-section-title--stats .pvp-help:focus-visible::after {
+  transform: translateY(0);
 }
 
 .player-hp-panel {

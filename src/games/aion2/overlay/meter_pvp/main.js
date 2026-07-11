@@ -26,10 +26,17 @@ const watchForm = document.getElementById("player-hp-form");
 const watchInput = document.getElementById("player-hp-input");
 const watchSuggestions = document.getElementById("player-hp-suggestions");
 const watchList = document.getElementById("player-hp-list");
+const combatStatsList = document.getElementById("pvp-combat-stats-list");
+const combatStatsEmpty = document.getElementById("pvp-combat-stats-empty");
+const combatStatsClear = document.getElementById("pvp-stats-clear");
+const combatStatsSortDamage = document.getElementById("pvp-sort-damage");
+const combatStatsSortKills = document.getElementById("pvp-sort-kills");
 let overlayConfig = { ...DEFAULT_OVERLAY_CONFIG };
 let lastSnapshot = null;
 let watchNames = loadWatchNames();
 let knownPlayersKey = "";
+let combatStatsRows = [];
+let combatStatsSort = "damage";
 
 function getServerName(serverId) {
   return serverMap.get(Number(serverId)) || serverId || "";
@@ -328,11 +335,71 @@ function renderWatchInfo(items, lastDealtPlayer) {
   watchList.replaceChildren(...rows.map(createWatchRow));
 }
 
+function renderCombatStats(stats) {
+  if (Array.isArray(stats)) {
+    combatStatsRows = stats;
+  }
+
+  combatStatsSortDamage.classList.toggle("is-active", combatStatsSort === "damage");
+  combatStatsSortKills.classList.toggle("is-active", combatStatsSort === "kills");
+
+  const rows = combatStatsRows.sort((a, b) => {
+    const primary =
+      combatStatsSort === "kills"
+        ? (b.kills || 0) - (a.kills || 0)
+        : (b.damage || 0) - (a.damage || 0);
+    return (
+      primary ||
+      (b.kills || 0) - (a.kills || 0) ||
+      (b.assists || 0) - (a.assists || 0) ||
+      (a.deaths || 0) - (b.deaths || 0) ||
+      a.actorName.localeCompare(b.actorName)
+    );
+  });
+
+  combatStatsEmpty.hidden = rows.length > 0;
+  combatStatsList.replaceChildren(
+    ...rows.map((stats) => {
+      const row = document.createElement("div");
+      row.className = "pvp-combat-stats__row";
+
+      const name = document.createElement("div");
+      name.className = "pvp-combat-stats__name";
+      name.textContent = maskName(stats.actorName);
+      name.title = stats.actorName;
+
+      const server = document.createElement("span");
+      server.className = "pvp-combat-stats__server";
+      server.textContent = getServerName(stats.serverId) || "未知";
+      name.appendChild(server);
+
+      for (const [key, value] of [
+        ["damage", fmtDamage(stats.damage)],
+        ["kills", stats.kills],
+        ["assists", stats.assists],
+        ["deaths", stats.deaths],
+      ]) {
+        const cell = document.createElement("span");
+        cell.className = `pvp-combat-stats__value is-${key}`;
+        cell.textContent = String(value || 0);
+        row.appendChild(cell);
+      }
+
+      row.prepend(name);
+      return row;
+    })
+  );
+}
+
 async function refreshWatchInfo() {
   try {
-    const response = await invoke("get_pvp_watch_info", { names: watchNames });
+    const [response, combatStats] = await Promise.all([
+      invoke("get_pvp_watch_info", { names: watchNames }),
+      invoke("get_pvp_combat_stats"),
+    ]);
     updateKnownPlayers(response?.knownPlayers || []);
     renderWatchInfo(response?.watchInfo || [], response?.lastDealtPlayer || null);
+    renderCombatStats(combatStats);
   } catch (err) {
     console.error("[pvp-overlay] get_pvp_watch_info failed:", err);
   }
@@ -500,7 +567,27 @@ document.getElementById("close-btn")?.addEventListener("click", async () => {
     addWatchName(watchInput.value);
     watchInput.value = "";
   });
+  combatStatsClear?.addEventListener("click", async () => {
+    combatStatsClear.disabled = true;
+    try {
+      await invoke("clear_pvp_combat_stats");
+      renderCombatStats([]);
+    } catch (err) {
+      console.error("[pvp-overlay] clear_pvp_combat_stats failed:", err);
+    } finally {
+      combatStatsClear.disabled = false;
+    }
+  });
+  combatStatsSortDamage?.addEventListener("click", () => {
+    combatStatsSort = "damage";
+    renderCombatStats();
+  });
+  combatStatsSortKills?.addEventListener("click", () => {
+    combatStatsSort = "kills";
+    renderCombatStats();
+  });
   renderWatchInfo([]);
+  renderCombatStats([]);
   startWatchPolling();
 
   playerList.addEventListener("click", async (event) => {

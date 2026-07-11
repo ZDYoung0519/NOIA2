@@ -17,7 +17,7 @@ use crate::dps_meter::capture::windivert_capturer::{check_windivert_status, WinD
 use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
-use crate::dps_meter::models::combat::{CombatSnapshot, PvpWatchInfoResponse};
+use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -321,6 +321,14 @@ impl DpsMeter {
 
     pub fn get_pvp_watch_info(&self, names: &[String]) -> PvpWatchInfoResponse {
         self.data_storage.get_pvp_watch_info(names)
+    }
+
+    pub fn get_pvp_combat_stats(&self) -> Vec<PvpCombatStatsRow> {
+        self.data_storage.get_pvp_combat_stats()
+    }
+
+    pub fn clear_pvp_combat_stats(&self) {
+        self.data_storage.clear_pvp_combat_stats();
     }
 
     fn start_snapshot_loop(&self) {
