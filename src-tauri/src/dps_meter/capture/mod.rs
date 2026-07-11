@@ -1,5 +1,7 @@
 pub mod accumulator;
 pub mod assembler;
+#[cfg(windows)]
+pub mod capturer;
 pub mod channel;
 pub mod dispatcher;
 pub mod ping_tracker;

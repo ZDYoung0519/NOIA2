@@ -141,7 +141,9 @@
       "maxPacketSizeThreshold": "封包大小閾值",
       "maxPacketSizeThresholdDesc": "忽略超過閾值的異常封包，減少解析錯誤或雜訊記錄。",
       "stallResyncDelay": "暱稱重同步延遲",
-      "stallResyncDelayDesc": "僅影響暱稱偵測流。遇到疑似不完整的暱稱封包時，等待多久後再後移 1 位元組重同步。"
+      "stallResyncDelayDesc": "僅影響暱稱偵測流。遇到疑似不完整的暱稱封包時，等待多久後再後移 1 位元組重同步。",
+      "fullProcessorStallResyncDelay": "完整流重同步延遲",
+      "fullProcessorStallResyncDelayDesc": "完整解析流停滯後的等待時間。設為 0 時立即後移 1 位元組重同步。"
     }
   },
   "auth": {

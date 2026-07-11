@@ -5,7 +5,7 @@
     "dps": "DPS",
     "live": "LIVE",
     "history": "HISTORY",
-    "diagNpcap": "Npcap not installed — please install Npcap first",
+    "diagNpcap": "WinDivert packet capture driver is unavailable",
     "diagMeter": "Meter not running — starting...",
     "diagGameData": "Waiting for game data — please launch the game",
     "diagPlayerId": "Player not identified — please teleport or use a skill"

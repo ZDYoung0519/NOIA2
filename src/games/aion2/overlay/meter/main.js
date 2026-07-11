@@ -373,7 +373,10 @@ async function runDiagnostic() {
     const state = await invoke("check_dps_meter_state");
     for (const diag of DIAG_MESSAGES) {
       if (!state[diag.key]) {
-        $diag.textContent = t(diag.i18n);
+        $diag.textContent =
+          diag.key === "npcapAvailable" && state.npcapError
+            ? `${t(diag.i18n)}: ${state.npcapError}`
+            : t(diag.i18n);
         return false;
       }
     }

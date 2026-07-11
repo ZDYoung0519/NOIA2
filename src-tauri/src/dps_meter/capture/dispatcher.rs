@@ -7,9 +7,9 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use crate::dps_meter::capture::assembler::StreamAssembler;
+use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
-use crate::dps_meter::capture::windivert_capturer::CapturedPacket;
 use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;

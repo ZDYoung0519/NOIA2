@@ -5,7 +5,7 @@
     "dps": "DPS",
     "live": "실시간",
     "history": "기록",
-    "diagNpcap": "Npcap이 설치되지 않음 — Npcap을 먼저 설치하세요",
+    "diagNpcap": "WinDivert 패킷 캡처 드라이버를 사용할 수 없음",
     "diagMeter": "미터가 실행되지 않음 — 시작 중...",
     "diagGameData": "게임 데이터 대기 중 — 게임을 실행하세요",
     "diagPlayerId": "플레이어가 식별되지 않음 — 순간이동 또는 스킬을 사용하세요"

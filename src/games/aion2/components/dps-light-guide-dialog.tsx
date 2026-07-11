@@ -35,16 +35,26 @@ type DpsLightGuideDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+type WinDivertStatus = {
+  available: boolean;
+  errorCode: number | null;
+  error: string | null;
+};
+
 export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogProps) {
   const [guideStep, setGuideStep] = useState(0);
   const [npcapOk, setNpcapOk] = useState<boolean | null>(null);
+  const [npcapError, setNpcapError] = useState<string | null>(null);
   const currentGuideStep = DPS_GUIDE_STEPS[guideStep];
 
   const checkNpcap = async () => {
     try {
-      setNpcapOk(await invoke<boolean>("check_npcap_available"));
+      const status = await invoke<WinDivertStatus>("check_npcap_available");
+      setNpcapOk(status.available);
+      setNpcapError(status.error);
     } catch {
       setNpcapOk(false);
+      setNpcapError("WinDivert 检测失败");
     }
   };
 
@@ -109,8 +119,13 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
                         : "mt-0.5 shrink-0 text-slate-500"
                   }
                 >
-                  {npcapOk === true ? "已安装 ✓" : npcapOk === false ? "未安装 ×" : "检测中..."}
+                  {npcapOk === true ? "可用 ✓" : npcapOk === false ? "不可用 ×" : "检测中..."}
                 </span>
+              </div>
+            )}
+            {guideStep === 0 && npcapOk === false && npcapError && (
+              <div className="rounded border border-rose-400/20 bg-rose-400/5 px-3 py-2 text-xs text-rose-200">
+                {npcapError}
               </div>
             )}
 
@@ -159,12 +174,12 @@ export function DpsLightGuideDialog({ open, onOpenChange }: DpsLightGuideDialogP
               <img
                 src={currentGuideStep.image}
                 alt={currentGuideStep.alt}
-                className="mx-auto w-full rounded-md border border-white/10 object-contain max-h-[58vh]"
+                className="mx-auto max-h-[58vh] w-full rounded-md border border-white/10 object-contain"
               />
             )}
           </div>
 
-          <DialogFooter className="mt-4 border-t border-white/10 pt-4 items-center gap-2 sm:justify-between">
+          <DialogFooter className="mt-4 items-center gap-2 border-t border-white/10 pt-4 sm:justify-between">
             <div className="text-xs text-white/45">
               {guideStep + 1} / {DPS_GUIDE_STEPS.length}
             </div>

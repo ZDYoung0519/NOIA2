@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { ExternalLink, LoaderCircle, Menu, RefreshCcw } from "lucide-react";
+import { ExternalLink, LoaderCircle, Menu, RefreshCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -209,6 +209,7 @@ export function HomeCharacterCarousel() {
   const [records, setRecords] = useState<HistoryRecord[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [switchOpen, setSwitchOpen] = useState(false);
+  const [deletingActorId, setDeletingActorId] = useState<string | null>(null);
   const [detailReloadKey, setDetailReloadKey] = useState(0);
   const [detailState, setDetailState] = useState<CharacterDetailState>({
     loading: false,
@@ -306,6 +307,23 @@ export function HomeCharacterCarousel() {
     activeActor && activeActor.serverId
       ? `/aion2/character/view?serverId=${activeActor.serverId}&characterName=${activeActor.actorName}`
       : "/aion2/character";
+
+  async function deleteActorHistory(actor: HistoryActor) {
+    if (!window.confirm(`确定删除 ${actor.actorName} 的全部战斗历史吗？`)) {
+      return;
+    }
+
+    setDeletingActorId(actor.id);
+    try {
+      await invoke<number>("delete_history_records", {
+        ids: actor.records.map((record) => record.id),
+      });
+    } catch (error) {
+      console.error("delete character history failed:", error);
+    } finally {
+      setDeletingActorId(null);
+    }
+  }
 
   return (
     <>
@@ -473,20 +491,22 @@ export function HomeCharacterCarousel() {
           <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
             {actors.length > 0 ? (
               actors.map((actor, index) => (
-                <button
+                <div
                   key={actor.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveIndex(index);
-                    setSwitchOpen(false);
-                  }}
                   className={`flex w-full items-center justify-between rounded-md border px-3 py-3 text-left transition ${
                     index === activeIndex
                       ? "border-[#F4C06A]/60 bg-[#F4C06A]/10 text-white"
                       : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                   }`}
                 >
-                  <div className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveIndex(index);
+                      setSwitchOpen(false);
+                    }}
+                    className="min-w-0 flex-1 cursor-pointer text-left"
+                  >
                     <div className="truncate font-semibold">{actor.actorName}</div>
                     <div className="mt-1 text-xs text-white/55">
                       {actor.serverId
@@ -494,11 +514,31 @@ export function HomeCharacterCarousel() {
                         : actor.serverRaw || t("aion2Home.unknownServer")}{" "}
                       | {t("aion2Home.lastLogin")} {formatLastSeenAt(actor.lastSeenAt, t)}
                     </div>
+                  </button>
+                  <div className="ml-3 flex shrink-0 items-center gap-2">
+                    <div className="rounded-full bg-white/10 px-2 py-1 text-xs">
+                      {getInitial(actor.actorName)}
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => void deleteActorHistory(actor)}
+                          disabled={deletingActorId !== null}
+                          className="cursor-pointer text-white/45 transition hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
+                          aria-label={`删除 ${actor.actorName} 的历史记录`}
+                        >
+                          {deletingActorId === actor.id ? (
+                            <LoaderCircle size={17} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={17} />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">删除角色历史</TooltipContent>
+                    </Tooltip>
                   </div>
-                  <div className="ml-3 shrink-0 rounded-full bg-white/10 px-2 py-1 text-xs">
-                    {getInitial(actor.actorName)}
-                  </div>
-                </button>
+                </div>
               ))
             ) : (
               <div className="rounded-md border border-dashed border-white/12 bg-white/4 px-4 py-8 text-center text-sm text-white/55">

@@ -6,6 +6,7 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 pub struct DpsMeterState {
     pub npcap_available: bool,
+    pub npcap_error: Option<String>,
     pub meter_running: bool,
     pub has_game_data: bool,
     pub player_identified: bool,

@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Emitter, State};
 
+use crate::dps_meter::capture::windivert_capturer::WinDivertStatus;
 use crate::dps_meter::config::DpsMeterConfig;
 use crate::dps_meter::engine::meter::DpsMeter;
 use crate::dps_meter::history::HistoryRecord;
@@ -92,6 +93,19 @@ pub fn delete_history_record(
 }
 
 #[tauri::command]
+pub fn delete_history_records(
+    app: AppHandle,
+    meter: State<'_, DpsMeter>,
+    ids: Vec<String>,
+) -> Result<usize, String> {
+    let deleted = meter.delete_history_records(&ids);
+    if deleted > 0 {
+        let _ = app.emit("history-updated", ());
+    }
+    Ok(deleted)
+}
+
+#[tauri::command]
 pub fn mark_history_records_uploaded(
     app: AppHandle,
     meter: State<'_, DpsMeter>,
@@ -105,6 +119,24 @@ pub fn mark_history_records_uploaded(
 }
 
 #[tauri::command]
-pub fn check_npcap_available() -> Result<bool, String> {
-    Ok(crate::dps_meter::capture::windivert_capturer::is_windivert_available())
+pub fn check_npcap_available() -> Result<WinDivertStatus, String> {
+    let mut status = crate::dps_meter::capture::windivert_capturer::check_windivert_status();
+    if !status.available {
+        match crate::dps_meter::capture::capturer::check_npcap_available() {
+            Ok(()) => {
+                status.available = true;
+                status.error_code = None;
+                status.error = None;
+            }
+            Err(npcap_error) => {
+                status.error = Some(format!(
+                    "{}; Npcap: {npcap_error}",
+                    status
+                        .error
+                        .unwrap_or_else(|| "WinDivert unavailable".to_string())
+                ));
+            }
+        }
+    }
+    Ok(status)
 }

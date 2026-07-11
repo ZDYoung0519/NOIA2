@@ -180,7 +180,9 @@
       "maxPacketSizeThreshold": "Packet size threshold",
       "maxPacketSizeThresholdDesc": "Ignores unusually large packets to reduce parser errors or noisy records.",
       "stallResyncDelay": "Nickname resync delay",
-      "stallResyncDelayDesc": "Only affects the nickname detection stream. When a nickname frame looks incomplete, this controls how long to wait before resyncing by one byte."
+      "stallResyncDelayDesc": "Only affects the nickname detection stream. When a nickname frame looks incomplete, this controls how long to wait before resyncing by one byte.",
+      "fullProcessorStallResyncDelay": "Full stream resync delay",
+      "fullProcessorStallResyncDelayDesc": "Wait time after the full parser stalls. Set to 0 to resync by one byte immediately."
     }
   },
   "auth": {

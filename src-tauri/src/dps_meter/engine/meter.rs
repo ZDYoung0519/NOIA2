@@ -9,12 +9,11 @@ use std::time::Duration;
 use sysinfo::{get_current_pid, ProcessesToUpdate, System};
 use tauri::{AppHandle, Emitter, Manager};
 
+use crate::dps_meter::capture::capturer::{check_npcap_available, CapturedPacket, PcapCapturer};
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::dispatcher::CaptureDispatcher;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
-use crate::dps_meter::capture::windivert_capturer::{
-    is_windivert_available, CapturedPacket, WinDivertCapturer,
-};
+use crate::dps_meter::capture::windivert_capturer::{check_windivert_status, WinDivertCapturer};
 use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
@@ -26,6 +25,12 @@ use crate::plugins::logger::AppLogger;
 const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
 const PACKET_CHANNEL_CAPACITY: isize = 200_000;
 
+#[derive(Debug, Clone, Copy)]
+enum CaptureBackend {
+    WinDivert,
+    Npcap,
+}
+
 pub struct DpsMeter {
     app: AppHandle,
     config: SharedDpsMeterConfig,
@@ -34,7 +39,9 @@ pub struct DpsMeter {
     calculator: Arc<DpsCalculator>,
     ping_tracker: Arc<PingTracker>,
     packet_channel: Channel<CapturedPacket>,
-    capturer: WinDivertCapturer,
+    windivert_capturer: WinDivertCapturer,
+    pcap_capturer: PcapCapturer,
+    active_capture_backend: Arc<Mutex<Option<CaptureBackend>>>,
     dispatcher: CaptureDispatcher,
     running: Arc<AtomicBool>,
     snapshot_running: Arc<AtomicBool>,
@@ -53,7 +60,9 @@ impl DpsMeter {
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
         let packet_channel = Channel::new(PACKET_CHANNEL_CAPACITY);
-        let capturer = WinDivertCapturer::new(packet_channel.clone(), Arc::clone(&logger));
+        let windivert_capturer =
+            WinDivertCapturer::new(packet_channel.clone(), Arc::clone(&logger));
+        let pcap_capturer = PcapCapturer::new(packet_channel.clone(), Arc::clone(&logger));
         let dispatcher = CaptureDispatcher::new(
             packet_channel.clone(),
             Arc::clone(&data_storage),
@@ -94,7 +103,9 @@ impl DpsMeter {
             calculator,
             ping_tracker,
             packet_channel,
-            capturer,
+            windivert_capturer,
+            pcap_capturer,
+            active_capture_backend: Arc::new(Mutex::new(None)),
             dispatcher,
             running: Arc::new(AtomicBool::new(false)),
             snapshot_running: Arc::new(AtomicBool::new(false)),
@@ -112,11 +123,12 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms full_processor_stall_resync_delay={}ms boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
             config.max_packet_size_threshold,
             config.stall_resync_delay_ms,
+            config.full_processor_stall_resync_delay_ms,
             config.boss_only,
             config.pvp_mode_on,
             config.pvp_overlay_position,
@@ -139,11 +151,25 @@ impl DpsMeter {
 
         self.clear_runtime_state();
         self.dispatcher.start();
-        if let Err(error) = self.capturer.start() {
-            self.dispatcher.stop();
-            self.running.store(false, Ordering::SeqCst);
-            return Err(error);
-        }
+        let backend = match self.windivert_capturer.start() {
+            Ok(()) => CaptureBackend::WinDivert,
+            Err(windivert_error) => {
+                self.logger.info(format!(
+                    "WinDivert initialization failed, falling back to Npcap: {windivert_error}"
+                ));
+                if let Err(npcap_error) = self.pcap_capturer.start() {
+                    self.dispatcher.stop();
+                    self.running.store(false, Ordering::SeqCst);
+                    return Err(format!(
+                        "No capture backend available; WinDivert: {windivert_error}; Npcap: {npcap_error}"
+                    ));
+                }
+                CaptureBackend::Npcap
+            }
+        };
+        *self.active_capture_backend.lock().unwrap() = Some(backend);
+        self.logger
+            .info(format!("capture backend selected: {backend:?}"));
         self.start_snapshot_loop();
         self.start_memory_snapshot_loop();
         self.emit_running_status();
@@ -159,7 +185,7 @@ impl DpsMeter {
 
         self.stop_snapshot_loop();
         self.stop_memory_snapshot_loop();
-        self.capturer.stop();
+        self.stop_active_capturer();
         self.dispatcher.stop();
         self.clear_runtime_state();
         self.emit_running_status();
@@ -212,6 +238,10 @@ impl DpsMeter {
         self.history.delete_record(id)
     }
 
+    pub fn delete_history_records(&self, ids: &[String]) -> usize {
+        self.history.delete_records(ids)
+    }
+
     pub fn mark_history_records_uploaded(&self, ids: &[String]) -> usize {
         self.history.mark_records_uploaded(ids)
     }
@@ -245,13 +275,35 @@ impl DpsMeter {
     }
 
     pub fn check_state(&self) -> DpsMeterState {
-        let npcap_available = is_windivert_available();
+        let capture_backend_active = self.active_capture_backend.lock().unwrap().is_some();
+        let mut capture_available = capture_backend_active;
+        let mut capture_error = None;
+        if !capture_backend_active {
+            let windivert_status = check_windivert_status();
+            capture_available = windivert_status.available;
+            capture_error = windivert_status.error;
+            if !capture_available {
+                match check_npcap_available() {
+                    Ok(()) => {
+                        capture_available = true;
+                        capture_error = None;
+                    }
+                    Err(npcap_error) => {
+                        capture_error = Some(format!(
+                            "{}; Npcap: {npcap_error}",
+                            capture_error.unwrap_or_else(|| "WinDivert unavailable".to_string())
+                        ));
+                    }
+                }
+            }
+        }
         let meter_running = self.is_running();
         let has_game_data = self.dispatcher.has_recent_ports();
         let player_identified = self.data_storage.main_actor_name().is_some();
 
         DpsMeterState {
-            npcap_available,
+            npcap_available: capture_available,
+            npcap_error: capture_error,
             meter_running,
             has_game_data,
             player_identified,
@@ -338,7 +390,9 @@ impl DpsMeter {
         let data_storage = Arc::clone(&self.data_storage);
         let ping_tracker = Arc::clone(&self.ping_tracker);
         let packet_channel = self.packet_channel.clone();
-        let capturer = self.capturer.clone();
+        let windivert_capturer = self.windivert_capturer.clone();
+        let pcap_capturer = self.pcap_capturer.clone();
+        let active_capture_backend = Arc::clone(&self.active_capture_backend);
         let dispatcher = self.dispatcher.clone();
         let memory_snapshot_running = Arc::clone(&self.memory_snapshot_running);
 
@@ -362,14 +416,26 @@ impl DpsMeter {
                     ));
                 }
 
+                let (cap_device, cap_port) = match *active_capture_backend.lock().unwrap() {
+                    Some(CaptureBackend::WinDivert) => (
+                        windivert_capturer.target_device(),
+                        windivert_capturer.target_port(),
+                    ),
+                    Some(CaptureBackend::Npcap) => {
+                        (pcap_capturer.target_device(), pcap_capturer.target_port())
+                    }
+                    None => (None, None),
+                };
+
                 if let Some(snapshot) = build_memory_snapshot(
                     &mut system,
                     pid,
                     &data_storage,
                     &ping_tracker,
                     &packet_channel,
-                    &capturer,
                     &dispatcher,
+                    cap_device,
+                    cap_port,
                 ) {
                     let _ = app.emit("dps-memory", snapshot);
                 }
@@ -410,13 +476,22 @@ impl DpsMeter {
     fn emit_running_status(&self) {
         let _ = self.app.emit("dps-meter-status", self.is_running());
     }
+
+    fn stop_active_capturer(&self) {
+        match self.active_capture_backend.lock().unwrap().take() {
+            Some(CaptureBackend::WinDivert) => self.windivert_capturer.stop(),
+            Some(CaptureBackend::Npcap) => self.pcap_capturer.stop(),
+            None => {}
+        }
+    }
 }
 
 impl Drop for DpsMeter {
     fn drop(&mut self) {
         self.stop_snapshot_loop();
         self.stop_memory_snapshot_loop();
-        self.capturer.stop();
+        self.windivert_capturer.stop();
+        self.pcap_capturer.stop();
         self.dispatcher.stop();
         self.clear_runtime_state();
     }
@@ -428,8 +503,9 @@ fn build_memory_snapshot(
     data_storage: &Arc<DataStorage>,
     ping_tracker: &Arc<PingTracker>,
     packet_channel: &Channel<CapturedPacket>,
-    capturer: &WinDivertCapturer,
     dispatcher: &CaptureDispatcher,
+    cap_device: Option<String>,
+    cap_port: Option<String>,
 ) -> Option<MemorySnapshot> {
     system.refresh_memory();
     let _ = system.refresh_processes(ProcessesToUpdate::Some(&[pid]), true);
@@ -451,10 +527,8 @@ fn build_memory_snapshot(
         rss_mb: rss_bytes / (1024.0 * 1024.0),
         vms_mb: vms_bytes / (1024.0 * 1024.0),
         memory_percent: ((rss_bytes / total_memory) * 100.0) as f32,
-        cap_device: capturer.target_device(),
-        cap_port: dispatcher
-            .current_combat_port()
-            .or_else(|| capturer.target_port()),
+        cap_device,
+        cap_port: dispatcher.current_combat_port().or(cap_port),
         packet_sizes,
         ping_ms: ping_tracker.current_ping_ms(),
         ping_history: ping_tracker.history_snapshot(100),

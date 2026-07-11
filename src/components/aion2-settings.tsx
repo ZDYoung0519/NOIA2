@@ -558,6 +558,31 @@ export function Aion2Settings() {
               </span>
             </div>
           </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.fullProcessorStallResyncDelay")}
+            description={t("settings.aion2.fullProcessorStallResyncDelayDesc")}
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="2000"
+                step="50"
+                value={config.aion2.backend.fullProcessorStallResyncDelayMs}
+                onChange={(e) =>
+                  updateSettings(
+                    "aion2.backend.fullProcessorStallResyncDelayMs",
+                    Number(e.target.value)
+                  )
+                }
+                className="w-24"
+              />
+              <span className="w-14 text-right text-sm tabular-nums">
+                {config.aion2.backend.fullProcessorStallResyncDelayMs}ms
+              </span>
+            </div>
+          </SettingRow>
         </SettingsGroup>
       )}
     </div>

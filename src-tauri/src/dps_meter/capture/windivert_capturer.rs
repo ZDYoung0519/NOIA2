@@ -7,7 +7,6 @@ use std::sync::{
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use serde::Serialize;
 use windivert_sys::address::WINDIVERT_ADDRESS;
 use windivert_sys::{
     WinDivertClose, WinDivertFlags, WinDivertLayer, WinDivertOpen, WinDivertRecv,
@@ -15,6 +14,7 @@ use windivert_sys::{
 };
 use windows_048::Win32::Foundation::HANDLE;
 
+use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::plugins::logger::AppLogger;
 
@@ -51,13 +51,12 @@ impl CandidateConnections {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CapturedPacket {
-    pub src_port: u16,
-    pub dst_port: u16,
-    pub data: Vec<u8>,
-    pub captured_at: f64,
+pub struct WinDivertStatus {
+    pub available: bool,
+    pub error_code: Option<i32>,
+    pub error: Option<String>,
 }
 
 #[derive(Clone)]
@@ -83,7 +82,8 @@ impl WinDivertCapturer {
     pub fn start(&self) -> Result<(), String> {
         self.stop();
 
-        let handle = open_handle()?;
+        let handle =
+            open_handle().map_err(|error| windivert_error_message(error.raw_os_error(), &error))?;
         let raw_handle = handle.0;
         *self.handle.lock().unwrap() = Some(raw_handle);
         self.running.store(true, Ordering::SeqCst);
@@ -190,26 +190,55 @@ impl WinDivertCapturer {
     }
 }
 
-pub fn is_windivert_available() -> bool {
-    let Ok(handle) = open_handle() else {
-        return false;
+pub fn check_windivert_status() -> WinDivertStatus {
+    let handle = match open_handle() {
+        Ok(handle) => handle,
+        Err(error) => {
+            let error_code = error.raw_os_error();
+            return WinDivertStatus {
+                available: false,
+                error_code,
+                error: Some(windivert_error_message(error_code, &error)),
+            };
+        }
     };
 
-    unsafe { WinDivertClose(handle).as_bool() }
+    unsafe {
+        WinDivertClose(handle);
+    }
+    WinDivertStatus {
+        available: true,
+        error_code: None,
+        error: None,
+    }
 }
 
-fn open_handle() -> Result<HANDLE, String> {
+fn open_handle() -> std::io::Result<HANDLE> {
     let filter = CString::new(FILTER).expect("static WinDivert filter");
     let flags = WinDivertFlags::new().set_sniff().set_recv_only();
     let handle = unsafe { WinDivertOpen(filter.as_ptr(), WinDivertLayer::Network, 0, flags) };
 
     if handle.is_invalid() {
-        Err(format!(
-            "Failed to open WinDivert: {}",
-            std::io::Error::last_os_error()
-        ))
+        Err(std::io::Error::last_os_error())
     } else {
         Ok(handle)
+    }
+}
+
+fn windivert_error_message(error_code: Option<i32>, error: &std::io::Error) -> String {
+    let reason = match error_code {
+        Some(2) => "WinDivert64.sys was not found",
+        Some(5) => "administrator privileges are required",
+        Some(577) => "the WinDivert driver signature is invalid",
+        Some(654) => "an incompatible WinDivert driver is still loaded",
+        Some(1058) => "the WinDivert driver service is disabled",
+        Some(1275) => "the WinDivert driver was blocked by Windows or security software",
+        Some(1753) => "the Windows Base Filtering Engine service is unavailable",
+        _ => "WinDivert could not be opened",
+    };
+    match error_code {
+        Some(code) => format!("{reason} (Windows error {code}: {error})"),
+        None => format!("{reason}: {error}"),
     }
 }
 

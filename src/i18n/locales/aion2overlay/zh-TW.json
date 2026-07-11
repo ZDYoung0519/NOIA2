@@ -5,7 +5,7 @@
     "dps": "秒傷",
     "live": "即時",
     "history": "歷史",
-    "diagNpcap": "未安裝 Npcap — 請先安裝 Npcap",
+    "diagNpcap": "WinDivert 封包擷取驅動程式不可用",
     "diagMeter": "計量未啟動 — 正在啟動...",
     "diagGameData": "等待遊戲資料 — 請啟動遊戲",
     "diagPlayerId": "未識別玩家 — 請傳送或使用技能"

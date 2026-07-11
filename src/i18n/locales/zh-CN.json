@@ -180,7 +180,9 @@
       "maxPacketSizeThreshold": "包大小阈值",
       "maxPacketSizeThresholdDesc": "忽略超过阈值的异常数据包，减少解析错误或噪声记录。",
       "stallResyncDelay": "昵称重同步延迟",
-      "stallResyncDelayDesc": "仅影响昵称检测流。遇到疑似不完整的昵称包时，等待多久后再后移 1 字节重同步。"
+      "stallResyncDelayDesc": "仅影响昵称检测流。遇到疑似不完整的昵称包时，等待多久后再后移 1 字节重同步。",
+      "fullProcessorStallResyncDelay": "完整流重同步延迟",
+      "fullProcessorStallResyncDelayDesc": "完整解析流停滞后的等待时间。设为 0 时立即后移 1 字节重同步。"
     }
   },
 

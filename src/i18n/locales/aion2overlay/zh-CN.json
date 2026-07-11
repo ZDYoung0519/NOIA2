@@ -5,7 +5,7 @@
     "dps": "秒伤",
     "live": "实时",
     "history": "历史",
-    "diagNpcap": "未安装 Npcap — 请先安装 Npcap",
+    "diagNpcap": "WinDivert 抓包驱动不可用",
     "diagMeter": "水表未正常启动 — 请关闭并重启",
     "diagGameData": "未检测到数据特征 — 请启动游戏",
     "diagPlayerId": "未识别玩家 — 请传送或者重选角色"

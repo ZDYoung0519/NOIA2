@@ -193,29 +193,31 @@ impl StreamProcessor {
         // }
 
         if offset == 0 && !buffer.is_empty() {
-            match self.stall_resync_mode {
-                StallResyncMode::Immediate => return 1,
-                StallResyncMode::Delayed => {
-                    let delay_ms = {
-                        let config = self.config.read().unwrap();
-                        config.stall_resync_delay_ms.clamp(50, 2000)
-                    };
-                    let now = Instant::now();
-                    if let Some(stalled_since) = self.stalled_since {
-                        if now.duration_since(stalled_since) >= Duration::from_millis(delay_ms) {
-                            self.logger.debug(format!(
-                                "[{}] nickname stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
-                                self.port,
-                                delay_ms,
-                                buffer.len()
-                            ));
-                            self.stalled_since = Some(now);
-                            return 1;
-                        }
-                    } else {
-                        self.stalled_since = Some(now);
-                    }
+            let delay_ms = {
+                let config = self.config.read().unwrap();
+                match self.stall_resync_mode {
+                    StallResyncMode::Immediate => config.full_processor_stall_resync_delay_ms,
+                    StallResyncMode::Delayed => config.stall_resync_delay_ms,
                 }
+            };
+            if delay_ms == 0 {
+                return 1;
+            }
+
+            let now = Instant::now();
+            if let Some(stalled_since) = self.stalled_since {
+                if now.duration_since(stalled_since) >= Duration::from_millis(delay_ms) {
+                    self.logger.debug(format!(
+                        "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
+                        self.port,
+                        delay_ms,
+                        buffer.len()
+                    ));
+                    self.stalled_since = Some(now);
+                    return 1;
+                }
+            } else {
+                self.stalled_since = Some(now);
             }
         } else {
             self.stalled_since = None;
@@ -1221,66 +1223,6 @@ impl StreamProcessor {
         self.data_storage
             .set_main_actor(aid_info.value as u32, &name);
         true
-    }
-
-    fn parse_detail_player_info_packet_058a(&mut self, payload: &[u8]) -> bool {
-        if payload.len() < 8 || payload[0] != 0x05 || payload[1] != 0x8A {
-            return false;
-        }
-
-        let expected_count = if payload.len() >= 6 {
-            u16::from_le_bytes([payload[4], payload[5]]) as usize
-        } else {
-            0
-        };
-        let mut offset = 2usize;
-        let mut parsed_count = 0usize;
-
-        while offset < payload.len() {
-            let Some(entry_offset) =
-                find_next_detail_player_info_entry(payload, offset, payload.len())
-            else {
-                break;
-            };
-            let Some((info, next_offset)) = parse_detail_player_info_entry(payload, entry_offset)
-            else {
-                offset = entry_offset + 1;
-                continue;
-            };
-
-            self.logger.debug(format!(
-                "[{}] detail player info name={} server={} item_level={} combat_power={} unknown_1={} unknown_2={} unknown_3={}",
-                self.port,
-                info.name,
-                info.server_id,
-                info.item_level,
-                info.combat_power,
-                info.unknown_1,
-                info.unknown_2,
-                info.unknown_3
-            ));
-            self.data_storage.upsert_detail_player_info(info);
-            parsed_count += 1;
-
-            if expected_count > 0 && parsed_count >= expected_count {
-                break;
-            }
-            if next_offset <= entry_offset {
-                offset = entry_offset + 1;
-            } else {
-                offset = next_offset;
-            }
-        }
-
-        if parsed_count > 0 {
-            self.logger.info(format!(
-                "[{}] detail player info parsed count={} expected={}",
-                self.port, parsed_count, expected_count
-            ));
-            return true;
-        }
-
-        false
     }
 
     fn parse_other_nickname(&mut self, payload: &[u8]) -> bool {

@@ -75,6 +75,25 @@ impl HistoryStore {
         }
     }
 
+    pub fn delete_records(&self, ids: &[String]) -> usize {
+        if ids.is_empty() {
+            return 0;
+        }
+
+        let ids: std::collections::HashSet<&str> = ids.iter().map(String::as_str).collect();
+        let mut stored = self.records.lock().unwrap();
+        let old_len = stored.len();
+        stored.retain(|record| !ids.contains(record.id.as_str()));
+        let deleted = old_len - stored.len();
+
+        if deleted > 0 {
+            let snapshot: Vec<HistoryRecord> = stored.iter().cloned().collect();
+            self.write_to_disk(&snapshot);
+        }
+
+        deleted
+    }
+
     pub fn mark_records_uploaded(&self, ids: &[String]) -> usize {
         if ids.is_empty() {
             return 0;

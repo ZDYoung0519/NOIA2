@@ -84,6 +84,7 @@ pub fn run() {
             dps_meter::api::commands::get_history,
             dps_meter::api::commands::delete_all_history,
             dps_meter::api::commands::delete_history_record,
+            dps_meter::api::commands::delete_history_records,
             dps_meter::api::commands::mark_history_records_uploaded,
             dps_meter::api::commands::check_npcap_available,
             plugins::aion2_overlay::create_dps_overlay,
@@ -124,8 +125,8 @@ pub fn run() {
         });
 
     // Only enable updater in release mode
-    // #[cfg(not(debug_assertions))]
-    // let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
 
     let app = builder
         .build(tauri::generate_context!())
@@ -136,6 +137,10 @@ pub fn run() {
             if let Some(state) = app_handle.try_state::<plugins::system_tray::AppLifecycleState>() {
                 if !plugins::system_tray::should_allow_exit(state) {
                     api.prevent_exit();
+                } else if let Some(meter) =
+                    app_handle.try_state::<dps_meter::engine::meter::DpsMeter>()
+                {
+                    meter.stop_dps_meter();
                 }
             }
         }

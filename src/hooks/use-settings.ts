@@ -26,6 +26,7 @@ interface BackendSettings {
   memorySnapshotIntervalMs: number;
   maxPacketSizeThreshold: number;
   stallResyncDelayMs: number;
+  fullProcessorStallResyncDelayMs: number;
   bossOnly: boolean;
   pvpModeOn: boolean;
   pvpOverlayPosition: PvpOverlayPosition;
@@ -90,6 +91,7 @@ const DEFAULTS: AppConfig = {
       memorySnapshotIntervalMs: 2000,
       maxPacketSizeThreshold: 8192,
       stallResyncDelayMs: 200,
+      fullProcessorStallResyncDelayMs: 0,
       bossOnly: true,
       pvpModeOn: false,
       pvpOverlayPosition: "bottom",
