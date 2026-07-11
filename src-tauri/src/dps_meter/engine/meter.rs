@@ -9,10 +9,12 @@ use std::time::Duration;
 use sysinfo::{get_current_pid, ProcessesToUpdate, System};
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::dps_meter::capture::capturer::{CapturedPacket, PcapCapturer};
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::dispatcher::CaptureDispatcher;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
+use crate::dps_meter::capture::windivert_capturer::{
+    is_windivert_available, CapturedPacket, WinDivertCapturer,
+};
 use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
@@ -22,6 +24,7 @@ use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
 const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
+const PACKET_CHANNEL_CAPACITY: isize = 200_000;
 
 pub struct DpsMeter {
     app: AppHandle,
@@ -31,7 +34,7 @@ pub struct DpsMeter {
     calculator: Arc<DpsCalculator>,
     ping_tracker: Arc<PingTracker>,
     packet_channel: Channel<CapturedPacket>,
-    capturer: PcapCapturer,
+    capturer: WinDivertCapturer,
     dispatcher: CaptureDispatcher,
     running: Arc<AtomicBool>,
     snapshot_running: Arc<AtomicBool>,
@@ -49,8 +52,8 @@ impl DpsMeter {
         let data_storage = Arc::new(DataStorage::new(app.clone(), Arc::clone(&config)));
         let calculator = Arc::new(DpsCalculator::new(Arc::clone(&data_storage)));
         let ping_tracker = Arc::new(PingTracker::new());
-        let packet_channel = Channel::new(100000);
-        let capturer = PcapCapturer::new(packet_channel.clone(), Arc::clone(&logger));
+        let packet_channel = Channel::new(PACKET_CHANNEL_CAPACITY);
+        let capturer = WinDivertCapturer::new(packet_channel.clone(), Arc::clone(&logger));
         let dispatcher = CaptureDispatcher::new(
             packet_channel.clone(),
             Arc::clone(&data_storage),
@@ -136,7 +139,11 @@ impl DpsMeter {
 
         self.clear_runtime_state();
         self.dispatcher.start();
-        self.capturer.start();
+        if let Err(error) = self.capturer.start() {
+            self.dispatcher.stop();
+            self.running.store(false, Ordering::SeqCst);
+            return Err(error);
+        }
         self.start_snapshot_loop();
         self.start_memory_snapshot_loop();
         self.emit_running_status();
@@ -238,7 +245,7 @@ impl DpsMeter {
     }
 
     pub fn check_state(&self) -> DpsMeterState {
-        let npcap_available = unsafe { libloading::Library::new("wpcap.dll").is_ok() };
+        let npcap_available = is_windivert_available();
         let meter_running = self.is_running();
         let has_game_data = self.dispatcher.has_recent_ports();
         let player_identified = self.data_storage.main_actor_name().is_some();
@@ -421,7 +428,7 @@ fn build_memory_snapshot(
     data_storage: &Arc<DataStorage>,
     ping_tracker: &Arc<PingTracker>,
     packet_channel: &Channel<CapturedPacket>,
-    capturer: &PcapCapturer,
+    capturer: &WinDivertCapturer,
     dispatcher: &CaptureDispatcher,
 ) -> Option<MemorySnapshot> {
     system.refresh_memory();

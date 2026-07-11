@@ -52,6 +52,10 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": true,
+    "resources": {
+      "resources/windivert/WinDivert.dll": "WinDivert.dll",
+      "resources/windivert/WinDivert64.sys": "WinDivert64.sys"
+    },
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",

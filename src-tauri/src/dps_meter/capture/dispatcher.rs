@@ -7,9 +7,9 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use crate::dps_meter::capture::assembler::StreamAssembler;
-use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
+use crate::dps_meter::capture::windivert_capturer::CapturedPacket;
 use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -17,6 +17,8 @@ use crate::plugins::logger::AppLogger;
 const TLS_CONTENT_TYPES: [u8; 4] = [0x14, 0x15, 0x16, 0x17];
 const TLS_VERSIONS: [u8; 5] = [0x00, 0x01, 0x02, 0x03, 0x04];
 const MAGIC: [u8; 3] = [0x0E, 0x00, 0x36];
+const MAGIC_LOCK_THRESHOLD: usize = 12;
+const MAGIC_LOCK_WINDOW: Duration = Duration::from_secs(3);
 
 #[derive(Default)]
 struct RecentPortWindow {
@@ -54,6 +56,7 @@ struct DispatcherState {
     // unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
     nickname_assemblers: HashMap<String, TrackedAssembler>,
+    magic_hits: HashMap<String, VecDeque<Instant>>,
     recent_ports: RecentPortWindow,
     logged_packets: usize,
     logged_magic_packets: usize,
@@ -88,6 +91,7 @@ impl DispatcherState {
             config: Arc::clone(&config),
             assemblers: HashMap::new(),
             nickname_assemblers: HashMap::new(),
+            magic_hits: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
             logged_packets: 0,
             logged_magic_packets: 0,
@@ -105,6 +109,7 @@ impl DispatcherState {
         }
         self.assemblers.clear();
         self.nickname_assemblers.clear();
+        self.magic_hits.clear();
         self.recent_ports.entries.clear();
         self.logged_packets = 0;
         self.logged_magic_packets = 0;
@@ -206,7 +211,21 @@ impl CaptureDispatcher {
                     state.logged_magic_packets += 1;
                 }
 
-                if contains_magic {
+                let has_enough_magic_hits = if contains_magic {
+                    let now = Instant::now();
+                    let hits = state.magic_hits.entry(key.clone()).or_default();
+                    while hits.front().is_some_and(|hit_at| {
+                        now.saturating_duration_since(*hit_at) > MAGIC_LOCK_WINDOW
+                    }) {
+                        hits.pop_front();
+                    }
+                    hits.push_back(now);
+                    hits.len() > MAGIC_LOCK_THRESHOLD
+                } else {
+                    false
+                };
+
+                if contains_magic && has_enough_magic_hits {
                     if let Some(locked) = state.recent_ports.add_and_get_locked(key.clone()) {
                         *combat_port.write().unwrap() = Some(locked.clone());
                         let data_storage = Arc::clone(&state.data_storage);

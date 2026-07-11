@@ -106,11 +106,5 @@ pub fn mark_history_records_uploaded(
 
 #[tauri::command]
 pub fn check_npcap_available() -> Result<bool, String> {
-    match unsafe { libloading::Library::new("wpcap.dll") } {
-        Ok(lib) => {
-            drop(lib);
-            Ok(true)
-        }
-        Err(_) => Ok(false),
-    }
+    Ok(crate::dps_meter::capture::windivert_capturer::is_windivert_available())
 }

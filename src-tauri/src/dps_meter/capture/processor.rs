@@ -1141,7 +1141,7 @@ impl StreamProcessor {
     }
 
     fn parse_main_nickname(&mut self, payload: &[u8]) -> bool {
-        self.parse_main_nickname_standard(payload) || self.parse_main_nickname_fallback(payload)
+        self.parse_main_nickname_fixed(payload)
     }
 
     fn parse_main_combat_power(&mut self, payload: &[u8]) -> bool {
@@ -1161,44 +1161,33 @@ impl StreamProcessor {
         true
     }
 
-    // Normal maps use a 0x07 separator before the name length.
-    fn parse_main_nickname_standard(&mut self, payload: &[u8]) -> bool {
-        let mut offset = 2usize;
-        let aid_info = read_varint(payload, offset);
+    // 33 36 <actor_id> <five metadata bytes> <name_len> <name> <sid>
+    fn parse_main_nickname_fixed(&mut self, payload: &[u8]) -> bool {
+        let aid_info = read_varint(payload, 2);
         if !aid_info.is_valid() || aid_info.value <= 0 {
             return false;
         }
-        offset += aid_info.length;
-        if offset >= payload.len() {
+
+        let structure_start = 2 + aid_info.length;
+        if structure_start + 6 > payload.len() {
             return false;
         }
 
-        if payload.len() < offset + 10 {
+        let name_len = usize::from(payload[structure_start + 5]);
+        if !(1..=36).contains(&name_len) {
             return false;
         }
 
-        let Some(splitter_idx) = find_byte_in_range(payload, 0x07, offset, offset + 10) else {
-            return false;
-        };
-        offset = splitter_idx + 1;
-
-        let name_length_info = read_varint(payload, offset);
-        if !name_length_info.is_valid() {
-            return false;
-        }
-        offset += name_length_info.length;
-        if name_length_info.length > 71 || offset >= payload.len() {
+        let name_start = structure_start + 6;
+        let name_end = name_start + name_len;
+        if name_end + 2 > payload.len() {
             return false;
         }
 
-        let name_len = usize::try_from(name_length_info.value).ok().unwrap_or(0);
-        if offset + name_len > payload.len() {
+        let sid = u16::from_le_bytes([payload[name_end], payload[name_end + 1]]) as u32;
+        if !is_available_server_id(sid) {
             return false;
         }
-
-        let name_start = offset;
-        let name_end = offset + name_len;
-        let name_hex = bytes_to_hex(&payload[name_start..name_end]);
 
         let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
             return false;
@@ -1207,111 +1196,31 @@ impl StreamProcessor {
             return false;
         };
 
-        offset += name_len;
-        let sid = if offset + 2 <= payload.len() {
-            let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
-            offset += 2;
-            Some(sid)
-        } else {
-            None
-        };
-
-        let job = payload.get(offset).copied();
+        let name_hex = bytes_to_hex(&payload[name_start..name_end]);
+        let job = payload.get(name_end + 2).copied();
         let job_text = job
             .map(|job| job.to_string())
             .unwrap_or_else(|| "none".to_string());
         let actor_class = job.and_then(job_to_actor_class);
-
-        let sid_string = sid.map(|sid| sid.to_string());
-        let sid_text = sid_string.as_deref().unwrap_or("none");
         self.data_storage
-            .append_actor(aid_info.value as u32, &name, sid_string.as_deref());
+            .append_actor(aid_info.value as u32, &name, Some(&sid.to_string()));
+        if let Some(actor_class) = actor_class {
+            self.data_storage
+                .set_actor_class(aid_info.value as u32, actor_class);
+        }
         self.logger.info(format!(
             "[{}] main actor actor={} name={} name_hex={} sid={} job={} class={}",
             self.port,
             aid_info.value,
             name,
             name_hex,
-            sid_text,
+            sid,
             job_text,
             actor_class.unwrap_or("none")
         ));
-
-        if let Some(actor_class) = actor_class {
-            self.data_storage
-                .set_actor_class(aid_info.value as u32, actor_class);
-        }
         self.data_storage
             .set_main_actor(aid_info.value as u32, &name);
         true
-    }
-
-    // Some special maps still use opcode 33 36, but store the nickname as
-    // actor_id + several fields + name_len + name + sid, without the 0x07 separator.
-    fn parse_main_nickname_fallback(&mut self, payload: &[u8]) -> bool {
-        let mut offset = 2usize;
-        let aid_info = read_varint(payload, offset);
-        if !aid_info.is_valid() || aid_info.value <= 0 {
-            return false;
-        }
-
-        offset += aid_info.length;
-        let search_end = payload.len().min(offset + 32);
-
-        // Search only near the actor id to avoid matching names from later list data.
-        for name_len_offset in offset..search_end {
-            let name_len = usize::from(payload[name_len_offset]);
-            if name_len == 0 || name_len > 71 {
-                continue;
-            }
-
-            let name_start = name_len_offset + 1;
-            let name_end = name_start + name_len;
-            if name_end + 2 > payload.len() {
-                continue;
-            }
-
-            let sid = u16::from_le_bytes([payload[name_end], payload[name_end + 1]]) as u32;
-            if !is_available_server_id(sid) {
-                continue;
-            }
-
-            let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
-                continue;
-            };
-            let Some(name) = sanitize_nickname(name) else {
-                continue;
-            };
-
-            let name_hex = bytes_to_hex(&payload[name_start..name_end]);
-            let job = payload.get(name_end + 2).copied();
-            let job_text = job
-                .map(|job| job.to_string())
-                .unwrap_or_else(|| "none".to_string());
-            let actor_class = job.and_then(job_to_actor_class);
-            self.data_storage
-                .append_actor(aid_info.value as u32, &name, Some(&sid.to_string()));
-            if let Some(actor_class) = actor_class {
-                self.data_storage
-                    .set_actor_class(aid_info.value as u32, actor_class);
-            }
-            self.logger.info(format!(
-                "[{}] main actor fallback actor={} name={} name_hex={} sid={} job={} class={} name_len_offset={}",
-                self.port,
-                aid_info.value,
-                name,
-                name_hex,
-                sid,
-                job_text,
-                actor_class.unwrap_or("none"),
-                name_len_offset
-            ));
-            self.data_storage
-                .set_main_actor(aid_info.value as u32, &name);
-            return true;
-        }
-
-        false
     }
 
     fn parse_detail_player_info_packet_058a(&mut self, payload: &[u8]) -> bool {
@@ -1780,12 +1689,6 @@ fn last_index_of(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack
         .windows(needle.len())
         .rposition(|window| window == needle)
-}
-
-fn find_byte_in_range(data: &[u8], target: u8, start: usize, end: usize) -> Option<usize> {
-    data.get(start..end)
-        .and_then(|slice| slice.iter().position(|byte| *byte == target))
-        .map(|pos| start + pos)
 }
 
 fn bytes_to_hex(bytes: &[u8]) -> String {
