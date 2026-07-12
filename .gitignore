@@ -29,5 +29,6 @@ dist-ssr
 .tauri
 generate_key.sh
 scripts/sql
+scripts/output
 
 .env
