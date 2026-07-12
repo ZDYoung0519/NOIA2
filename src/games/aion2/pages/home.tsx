@@ -35,8 +35,8 @@ export default function HomePage() {
     const window = new WebviewWindow("splashscreen", {
       url: "/splashscreen?manual=1",
       title: "抓包检测",
-      width: 640,
-      height: 460,
+      width: 840,
+      height: 660,
       decorations: false,
       transparent: true,
       center: true,
