@@ -305,8 +305,10 @@ export function HomeCharacterCarousel() {
 
   const characterLink =
     activeActor && activeActor.serverId
-      ? `/aion2/character/view?serverId=${activeActor.serverId}&characterName=${activeActor.actorName}`
-      : "/aion2/character";
+      ? `/aion2/character/view?serverId=${activeActor.serverId}&characterName=${encodeURIComponent(
+          activeActor.actorName
+        )}`
+      : null;
 
   async function deleteActorHistory(actor: HistoryActor) {
     if (!window.confirm(`确定删除 ${actor.actorName} 的全部战斗历史吗？`)) {
@@ -347,19 +349,21 @@ export function HomeCharacterCarousel() {
               {activeActor ? formatLastSeenAt(activeActor.lastSeenAt, t) : "--"}
             </span>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  to={characterLink}
-                  className="shrink-0 cursor-pointer text-white/70 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:text-white hover:shadow-2xl"
-                >
-                  <ExternalLink size={20} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" align="center" className="rounded-full px-3 py-1.5">
-                查看角色详情
-              </TooltipContent>
-            </Tooltip>
+            {characterLink ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    to={characterLink}
+                    className="shrink-0 cursor-pointer text-white/70 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:text-white hover:shadow-2xl"
+                  >
+                    <ExternalLink size={20} />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center" className="rounded-full px-3 py-1.5">
+                  查看角色详情
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
 
             <Tooltip>
               <TooltipTrigger asChild>

@@ -20,7 +20,7 @@ pub enum CaptureBackendPriority {
 
 impl Default for CaptureBackendPriority {
     fn default() -> Self {
-        Self::WinDivertFirst
+        Self::NpcapFirst
     }
 }
 

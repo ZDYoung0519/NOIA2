@@ -13,17 +13,12 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "noia2"
-        ]
+        "schemes": ["noia2"]
       }
     },
     "updater": {
       "pubkey": "__TAURI_UPDATER_PUBKEY__",
-      "endpoints": [
-        "__TAURI_UPDATER_ENDPOINT_1__",
-        "__TAURI_UPDATER_ENDPOINT_2__"
-      ],
+      "endpoints": ["__TAURI_UPDATER_ENDPOINT_1__", "__TAURI_UPDATER_ENDPOINT_2__"],
       "windows": {
         "installMode": "passive"
       }
@@ -47,8 +42,8 @@
         "label": "splashscreen",
         "title": "NoiA",
         "url": "/splashscreen",
-        "width": 640,
-        "height": 460,
+        "width": 840,
+        "height": 660,
         "decorations": false,
         "transparent": true,
         "center": true,
@@ -72,10 +67,7 @@
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
-        "languages": [
-          "SimpChinese",
-          "English"
-        ],
+        "languages": ["SimpChinese", "English"],
         "installMode": "perMachine"
       }
     },

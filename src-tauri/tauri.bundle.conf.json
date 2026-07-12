@@ -1,8 +1,0 @@
-{
-  "bundle": {
-    "resources": {
-      "resources/windivert/WinDivert.dll": "WinDivert.dll",
-      "resources/windivert/WinDivert64.sys": "WinDivert64.sys"
-    }
-  }
-}

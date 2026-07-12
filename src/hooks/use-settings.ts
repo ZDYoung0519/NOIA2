@@ -101,7 +101,7 @@ const DEFAULTS: AppConfig = {
       myMuzhuangOnly: true,
       hideUnknownPlayers: true,
       maxPlayerCount: 10,
-      captureBackendPriority: "winDivertFirst",
+      captureBackendPriority: "npcapFirst",
     },
     overlay: {
       fontFamily: "Consolas",
