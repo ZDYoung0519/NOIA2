@@ -11,7 +11,9 @@ use crate::dps_meter::models::combat::{
     PvpWatchInfo, PvpWatchInfoResponse, SkillStats, UseBuff,
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
-use crate::dps_meter::storage::loaders::{load_boss_ids, load_healing_skill_codes, load_npc_names};
+use crate::dps_meter::storage::loaders::{
+    load_boss_ids, load_buff_templates, load_healing_skill_codes, load_npc_names, BuffTemplate,
+};
 
 const ACTOR_METADATA_CAPACITY: usize = 2_000;
 const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
@@ -188,6 +190,7 @@ pub struct DataStorage {
     healing_skill_codes: HashSet<u32>,
     boss_code_list: HashSet<u32>,
     mob_code_name_map: HashMap<u32, String>,
+    buff_templates: HashMap<String, BuffTemplate>,
     pub main_actor_callback: Mutex<Option<Box<MainActorCallback>>>,
 }
 
@@ -199,6 +202,13 @@ pub struct MainActorDetectedPayload {
     pub sid: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuffOverlayContext {
+    pub actor_class: Option<String>,
+    pub self_buff_candidate_skill_codes: Vec<u32>,
+}
+
 impl DataStorage {
     pub fn new(app: AppHandle, config: SharedDpsMeterConfig) -> Self {
         Self {
@@ -208,6 +218,7 @@ impl DataStorage {
             healing_skill_codes: load_healing_skill_codes(),
             boss_code_list: load_boss_ids(),
             mob_code_name_map: load_npc_names(),
+            buff_templates: load_buff_templates(),
             main_actor_callback: Mutex::new(None),
         }
     }
@@ -279,19 +290,63 @@ impl DataStorage {
             duration_ms,
             latency_ms,
         };
+        let skill_shortcode = first_four_digits(skill_code);
 
-        {
+        let should_emit = {
             let mut inner = self.inner.write().unwrap();
-            let target_buffs = inner
-                .use_buffs_by_target
-                .get_mut_or_insert_with(target_id, VecDeque::new);
-            target_buffs.push_back(buff.clone());
-            while target_buffs.len() > BUFF_RECORDS_PER_TARGET_CAPACITY {
-                target_buffs.pop_front();
+            {
+                let target_buffs = inner
+                    .use_buffs_by_target
+                    .get_mut_or_insert_with(target_id, VecDeque::new);
+                target_buffs.push_back(buff.clone());
+                while target_buffs.len() > BUFF_RECORDS_PER_TARGET_CAPACITY {
+                    target_buffs.pop_front();
+                }
             }
+
+            inner.main_actor_id == Some(target_id)
+                && inner
+                    .main_actor_id
+                    .and_then(|main_actor_id| inner.actor_id_class_map.get(&main_actor_id))
+                    .and_then(|actor_class| self.buff_templates.get(actor_class))
+                    .is_some_and(|template| {
+                        template
+                            .self_buff_candidate_skill_codes
+                            .contains(&skill_shortcode)
+                    })
+        };
+
+        if should_emit {
+            let _ = self.app.emit("dps-main-actor-buff", buff.clone());
         }
 
         buff
+    }
+
+    pub fn get_buff_overlay_context(&self) -> BuffOverlayContext {
+        let inner = self.inner.read().unwrap();
+        let actor_class = inner
+            .main_actor_id
+            .and_then(|actor_id| inner.actor_id_class_map.get(&actor_id))
+            .cloned();
+        let template = actor_class
+            .as_ref()
+            .and_then(|actor_class| self.buff_templates.get(actor_class));
+        let mut candidates: Vec<u32> = template
+            .map(|template| {
+                template
+                    .self_buff_candidate_skill_codes
+                    .iter()
+                    .copied()
+                    .collect()
+            })
+            .unwrap_or_default();
+        candidates.sort_unstable();
+
+        BuffOverlayContext {
+            actor_class,
+            self_buff_candidate_skill_codes: candidates,
+        }
     }
 
     pub fn append_damage_at(&self, packet: ParsedDamagePacket, timestamp: f64) {
@@ -934,6 +989,13 @@ fn current_timestamp_millis() -> u64 {
 
 fn detail_player_info_key(server_id: u16, name: &str) -> String {
     format!("{server_id}:{name}")
+}
+
+fn first_four_digits(mut value: u32) -> u32 {
+    while value >= 10_000 {
+        value /= 10;
+    }
+    value
 }
 
 fn build_pvp_watch_info_for_actor(

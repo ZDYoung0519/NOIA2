@@ -304,28 +304,27 @@ impl StreamProcessor {
             return false;
         }
 
-        // let search_target = 191_301_301u32.to_le_bytes();
-        // if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
-        //     let context_start = hit_offset.saturating_sub(256);
-        //     let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
-        //     self.logger.info(format!(
-        //         "[{}] hard search skill=191301301 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
-        //         self.port,
-        //         payload[0],
-        //         payload[1],
-        //         hit_offset,
-        //         bytes_to_hex(&search_target),
-        //         bytes_to_hex(&payload[context_start..context_end]),
-        //         bytes_to_hex(payload),
-        //     ));
-        // }
+        let search_target = 13_070_120u32.to_le_bytes();
+        if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
+            let context_start = hit_offset.saturating_sub(256);
+            let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
+            self.logger.info(format!(
+                "[{}] hard search skill=13070120 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
+                self.port,
+                payload[0],
+                payload[1],
+                hit_offset,
+                bytes_to_hex(&search_target),
+                bytes_to_hex(&payload[context_start..context_end]),
+                bytes_to_hex(payload),
+            ));
+        }
 
         match self.mode {
             ProcessorMode::Full => match (payload[0], payload[1]) {
                 (0x33, 0x36) => self.parse_main_nickname(payload),
                 (0x45, 0x36) => self.parse_other_nickname(payload),
                 (0x56, 0x36) => self.parse_main_combat_power(payload),
-                // (0x05, 0x8A) => self.parse_detail_player_info_packet_058a(payload), // player info in guild
                 (0x41, 0x36) => self.parse_summon_packet(payload),
                 (0x04, 0x38) => self.parse_damage_packet(payload),
                 (0x05, 0x38) => self.parse_dot_packet(payload),

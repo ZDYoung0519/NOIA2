@@ -10,6 +10,7 @@ use crate::dps_meter::engine::meter::DpsMeter;
 
 const DPS_OVERLAY_LABEL: &str = "dps-overlay";
 const PVP_OVERLAY_LABEL: &str = "dps-overlay-pvp";
+const BUFF_OVERLAY_LABEL: &str = "dps-overlay-buff";
 
 /// Create the DPS overlay window and start the DPS meter.
 /// If the window already exists, it will be shown instead of creating a new one.
@@ -116,6 +117,39 @@ pub async fn create_pvp_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     Ok(())
 }
 
+#[tauri::command]
+pub async fn create_dps_buff<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
+        window.show().map_err(|e| e.to_string())?;
+        window.unminimize().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    WebviewWindowBuilder::new(
+        &app,
+        BUFF_OVERLAY_LABEL,
+        WebviewUrl::App("src/games/aion2/overlay/buff/index.html".into()),
+    )
+    .title("NoiA | Buff Overlay")
+    .decorations(false)
+    .shadow(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .inner_size(320.0, 120.0)
+    .min_inner_size(160.0, 60.0)
+    .resizable(true)
+    .focused(false)
+    .focusable(true)
+    .center()
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    set_dps_overlay_locked_for_app(&app, OVERLAY_LOCKED.load(Ordering::Relaxed))?;
+
+    Ok(())
+}
+
 // =============================================================================
 // Overlay config relay (React → store → overlay pull on startup)
 // =============================================================================
@@ -217,10 +251,12 @@ pub fn set_dps_overlay_locked_for_app<R: Runtime>(
     locked: bool,
 ) -> Result<(), String> {
     OVERLAY_LOCKED.store(locked, Ordering::Relaxed);
-    if let Some(window) = app.get_webview_window(DPS_OVERLAY_LABEL) {
-        window
-            .set_ignore_cursor_events(locked)
-            .map_err(|e| e.to_string())?;
+    for label in [DPS_OVERLAY_LABEL, BUFF_OVERLAY_LABEL] {
+        if let Some(window) = app.get_webview_window(label) {
+            window
+                .set_ignore_cursor_events(locked)
+                .map_err(|e| e.to_string())?;
+        }
     }
     let _ = app.emit(
         "overlay-lock-toggled",
@@ -232,6 +268,11 @@ pub fn set_dps_overlay_locked_for_app<R: Runtime>(
 #[tauri::command]
 pub fn set_dps_overlay_locked<R: Runtime>(app: AppHandle<R>, locked: bool) -> Result<(), String> {
     set_dps_overlay_locked_for_app(&app, locked)
+}
+
+#[tauri::command]
+pub fn get_dps_overlay_locked() -> bool {
+    OVERLAY_LOCKED.load(Ordering::Relaxed)
 }
 
 #[tauri::command]

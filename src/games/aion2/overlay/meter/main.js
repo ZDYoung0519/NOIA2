@@ -302,6 +302,19 @@ $pvpBtn.addEventListener("click", async (event) => {
   }
 });
 
+const $buffBtn = document.getElementById("buff-btn");
+$buffBtn.addEventListener("mousedown", (event) => {
+  event.stopPropagation();
+});
+$buffBtn.addEventListener("click", async (event) => {
+  event.stopPropagation();
+  try {
+    await invoke("create_dps_buff");
+  } catch (_) {
+    /* ignore */
+  }
+});
+
 function buildBattleReport(snap) {
   const players = snap.lastTargetAllPlayersOverviewStats || [];
   const targetInfo = snap.lastTargetInfo;

@@ -331,6 +331,12 @@ impl DpsMeter {
         self.data_storage.clear_pvp_combat_stats();
     }
 
+    pub fn get_buff_overlay_context(
+        &self,
+    ) -> crate::dps_meter::storage::data_storage::BuffOverlayContext {
+        self.data_storage.get_buff_overlay_context()
+    }
+
     fn start_snapshot_loop(&self) {
         if self.snapshot_running.swap(true, Ordering::SeqCst) {
             return;

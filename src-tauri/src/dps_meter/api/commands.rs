@@ -6,6 +6,7 @@ use crate::dps_meter::engine::meter::DpsMeter;
 use crate::dps_meter::history::HistoryRecord;
 use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::DpsMeterState;
+use crate::dps_meter::storage::data_storage::BuffOverlayContext;
 
 #[tauri::command]
 pub fn apply_dps_meter_config(
@@ -47,6 +48,11 @@ pub fn get_pvp_combat_stats(meter: State<'_, DpsMeter>) -> Result<Vec<PvpCombatS
 pub fn clear_pvp_combat_stats(meter: State<'_, DpsMeter>) -> Result<(), String> {
     meter.clear_pvp_combat_stats();
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_buff_overlay_context(meter: State<'_, DpsMeter>) -> Result<BuffOverlayContext, String> {
+    Ok(meter.get_buff_overlay_context())
 }
 
 #[tauri::command]
