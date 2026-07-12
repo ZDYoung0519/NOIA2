@@ -12,7 +12,7 @@ use crate::dps_meter::models::combat::{
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{
-    load_boss_ids, load_buff_templates, load_healing_skill_codes, load_npc_names, BuffTemplate,
+    load_boss_ids, load_buff_templates, load_healing_skill_codes, load_npc_names, BuffTemplates,
 };
 
 const ACTOR_METADATA_CAPACITY: usize = 2_000;
@@ -190,7 +190,7 @@ pub struct DataStorage {
     healing_skill_codes: HashSet<u32>,
     boss_code_list: HashSet<u32>,
     mob_code_name_map: HashMap<u32, String>,
-    buff_templates: HashMap<String, BuffTemplate>,
+    buff_templates: BuffTemplates,
     pub main_actor_callback: Mutex<Option<Box<MainActorCallback>>>,
 }
 
@@ -207,6 +207,7 @@ pub struct MainActorDetectedPayload {
 pub struct BuffOverlayContext {
     pub actor_class: Option<String>,
     pub self_buff_candidate_skill_codes: Vec<u32>,
+    pub self_buff_candidate_skill_codes_by_class: HashMap<String, Vec<u32>>,
 }
 
 impl DataStorage {
@@ -291,8 +292,9 @@ impl DataStorage {
             latency_ms,
         };
         let skill_shortcode = first_four_digits(skill_code);
+        let config = self.config.read().unwrap().clone();
 
-        let should_emit = {
+        let (should_emit_self_buff, should_emit_boss_debuff) = {
             let mut inner = self.inner.write().unwrap();
             {
                 let target_buffs = inner
@@ -304,20 +306,36 @@ impl DataStorage {
                 }
             }
 
-            inner.main_actor_id == Some(target_id)
+            let should_emit_self_buff = inner.main_actor_id == Some(target_id)
                 && inner
                     .main_actor_id
                     .and_then(|main_actor_id| inner.actor_id_class_map.get(&main_actor_id))
-                    .and_then(|actor_class| self.buff_templates.get(actor_class))
+                    .and_then(|actor_class| self.buff_templates.classes.get(actor_class))
                     .is_some_and(|template| {
                         template
                             .self_buff_candidate_skill_codes
                             .contains(&skill_shortcode)
-                    })
+                    });
+            let target_mob_code = inner.mob_id_code_map.get(&target_id).copied();
+            let is_target_boss = target_mob_code
+                .map(|mob_code| {
+                    self.boss_code_list.contains(&mob_code)
+                        || (config.show_possible_boss
+                            && inner.possible_boss_codes.contains(&mob_code))
+                })
+                .unwrap_or(false);
+            let should_emit_boss_debuff = (inner.last_target_by_main_actor == Some(target_id)
+                || is_target_boss)
+                && actor_id != target_id;
+
+            (should_emit_self_buff, should_emit_boss_debuff)
         };
 
-        if should_emit {
+        if should_emit_self_buff {
             let _ = self.app.emit("dps-main-actor-buff", buff.clone());
+        }
+        if should_emit_boss_debuff {
+            let _ = self.app.emit("dps-boss-debuff", buff.clone());
         }
 
         buff
@@ -331,7 +349,7 @@ impl DataStorage {
             .cloned();
         let template = actor_class
             .as_ref()
-            .and_then(|actor_class| self.buff_templates.get(actor_class));
+            .and_then(|actor_class| self.buff_templates.classes.get(actor_class));
         let mut candidates: Vec<u32> = template
             .map(|template| {
                 template
@@ -342,10 +360,26 @@ impl DataStorage {
             })
             .unwrap_or_default();
         candidates.sort_unstable();
+        let mut candidates_by_class: HashMap<String, Vec<u32>> = self
+            .buff_templates
+            .classes
+            .iter()
+            .map(|(actor_class, template)| {
+                let mut skill_codes: Vec<u32> = template
+                    .self_buff_candidate_skill_codes
+                    .iter()
+                    .copied()
+                    .collect();
+                skill_codes.sort_unstable();
+                (actor_class.clone(), skill_codes)
+            })
+            .collect();
+        candidates_by_class.shrink_to_fit();
 
         BuffOverlayContext {
             actor_class,
             self_buff_candidate_skill_codes: candidates,
+            self_buff_candidate_skill_codes_by_class: candidates_by_class,
         }
     }
 

@@ -9,6 +9,7 @@ type Theme = "light" | "dark" | "system";
 type Language = "en" | "zh-CN" | "zh-TW" | "ko";
 type RGBA = [number, number, number, number];
 type PvpOverlayPosition = "bottom" | "right" | "free";
+type CaptureBackendPriority = "winDivertFirst" | "npcapFirst";
 
 interface AppSettings {
   theme: Theme;
@@ -34,6 +35,7 @@ interface BackendSettings {
   myMuzhuangOnly: boolean;
   hideUnknownPlayers: boolean;
   maxPlayerCount: number;
+  captureBackendPriority: CaptureBackendPriority;
 }
 
 interface OverlaySettings {
@@ -99,6 +101,7 @@ const DEFAULTS: AppConfig = {
       myMuzhuangOnly: true,
       hideUnknownPlayers: true,
       maxPlayerCount: 10,
+      captureBackendPriority: "winDivertFirst",
     },
     overlay: {
       fontFamily: "Consolas",

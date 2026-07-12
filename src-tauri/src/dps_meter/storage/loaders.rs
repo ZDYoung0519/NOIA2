@@ -12,9 +12,12 @@ struct BossIdsFile {
 pub struct BuffTemplate {
     #[serde(default)]
     pub self_buff_candidate_skill_codes: HashSet<u32>,
-    #[allow(dead_code)]
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BuffTemplates {
     #[serde(default)]
-    pub boss_debuff_candidate_skill_codes: HashSet<u32>,
+    pub classes: HashMap<String, BuffTemplate>,
 }
 
 pub fn load_boss_ids() -> HashSet<u32> {
@@ -39,7 +42,7 @@ pub fn load_healing_skill_codes() -> HashSet<u32> {
     .unwrap_or_default()
 }
 
-pub fn load_buff_templates() -> HashMap<String, BuffTemplate> {
+pub fn load_buff_templates() -> BuffTemplates {
     serde_json::from_str(include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/data/buff_templates.json"

@@ -14,7 +14,7 @@ use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::dispatcher::CaptureDispatcher;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::capture::windivert_capturer::{check_windivert_status, WinDivertCapturer};
-use crate::dps_meter::config::{DpsMeterConfig, SharedDpsMeterConfig};
+use crate::dps_meter::config::{CaptureBackendPriority, DpsMeterConfig, SharedDpsMeterConfig};
 use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
 use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
@@ -123,12 +123,13 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms full_processor_stall_resync_delay={}ms boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms full_processor_stall_resync_delay={}ms capture_backend_priority={:?} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
             config.max_packet_size_threshold,
             config.stall_resync_delay_ms,
             config.full_processor_stall_resync_delay_ms,
+            config.capture_backend_priority,
             config.boss_only,
             config.pvp_mode_on,
             config.pvp_overlay_position,
@@ -151,20 +152,13 @@ impl DpsMeter {
 
         self.clear_runtime_state();
         self.dispatcher.start();
-        let backend = match self.windivert_capturer.start() {
-            Ok(()) => CaptureBackend::WinDivert,
-            Err(windivert_error) => {
-                self.logger.info(format!(
-                    "WinDivert initialization failed, falling back to Npcap: {windivert_error}"
-                ));
-                if let Err(npcap_error) = self.pcap_capturer.start() {
-                    self.dispatcher.stop();
-                    self.running.store(false, Ordering::SeqCst);
-                    return Err(format!(
-                        "No capture backend available; WinDivert: {windivert_error}; Npcap: {npcap_error}"
-                    ));
-                }
-                CaptureBackend::Npcap
+        let capture_backend_priority = self.config.read().unwrap().capture_backend_priority.clone();
+        let backend = match self.start_capture_backend(capture_backend_priority) {
+            Ok(backend) => backend,
+            Err(error) => {
+                self.dispatcher.stop();
+                self.running.store(false, Ordering::SeqCst);
+                return Err(error);
             }
         };
         *self.active_capture_backend.lock().unwrap() = Some(backend);
@@ -175,6 +169,46 @@ impl DpsMeter {
         self.emit_running_status();
         self.logger.info("dps meter started");
         Ok(())
+    }
+
+    fn start_capture_backend(
+        &self,
+        priority: CaptureBackendPriority,
+    ) -> Result<CaptureBackend, String> {
+        match priority {
+            CaptureBackendPriority::WinDivertFirst => match self.windivert_capturer.start() {
+                Ok(()) => Ok(CaptureBackend::WinDivert),
+                Err(windivert_error) => {
+                    self.logger.info(format!(
+                        "WinDivert initialization failed, falling back to Npcap: {windivert_error}"
+                    ));
+                    self.pcap_capturer
+                        .start()
+                        .map(|_| CaptureBackend::Npcap)
+                        .map_err(|npcap_error| {
+                            format!(
+                                "No capture backend available; WinDivert: {windivert_error}; Npcap: {npcap_error}"
+                            )
+                        })
+                }
+            },
+            CaptureBackendPriority::NpcapFirst => match self.pcap_capturer.start() {
+                Ok(()) => Ok(CaptureBackend::Npcap),
+                Err(npcap_error) => {
+                    self.logger.info(format!(
+                        "Npcap initialization failed, falling back to WinDivert: {npcap_error}"
+                    ));
+                    self.windivert_capturer
+                        .start()
+                        .map(|_| CaptureBackend::WinDivert)
+                        .map_err(|windivert_error| {
+                            format!(
+                                "No capture backend available; Npcap: {npcap_error}; WinDivert: {windivert_error}"
+                            )
+                        })
+                }
+            },
+        }
     }
 
     pub fn stop_dps_meter(&self) {

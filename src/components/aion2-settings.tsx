@@ -393,6 +393,38 @@ export function Aion2Settings() {
       {tab === "backend" && (
         <SettingsGroup title={t("settings.aion2.backend")}>
           <SettingRow
+            title={t("settings.aion2.captureBackendPriority")}
+            description={t("settings.aion2.captureBackendPriorityDesc")}
+          >
+            <div className="flex gap-2">
+              <Button
+                variant={
+                  config.aion2.backend.captureBackendPriority === "winDivertFirst"
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() =>
+                  updateSettings("aion2.backend.captureBackendPriority", "winDivertFirst")
+                }
+              >
+                {t("settings.aion2.captureBackendPriorityWinDivertFirst")}
+              </Button>
+              <Button
+                variant={
+                  config.aion2.backend.captureBackendPriority === "npcapFirst"
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => updateSettings("aion2.backend.captureBackendPriority", "npcapFirst")}
+              >
+                {t("settings.aion2.captureBackendPriorityNpcapFirst")}
+              </Button>
+            </div>
+          </SettingRow>
+
+          <SettingRow
             title={t("settings.aion2.bossOnly")}
             description={t("settings.aion2.bossOnlyDesc")}
           >

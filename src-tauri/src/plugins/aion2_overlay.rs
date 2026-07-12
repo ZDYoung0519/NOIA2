@@ -136,11 +136,11 @@ pub async fn create_dps_buff<R: Runtime>(app: AppHandle<R>) -> Result<(), String
     .transparent(true)
     .always_on_top(true)
     .skip_taskbar(true)
-    .inner_size(320.0, 120.0)
+    .inner_size(960.0, 560.0)
     .min_inner_size(160.0, 60.0)
     .resizable(true)
     .focused(false)
-    .focusable(true)
+    .focusable(false)
     .center()
     .build()
     .map_err(|e| e.to_string())?;

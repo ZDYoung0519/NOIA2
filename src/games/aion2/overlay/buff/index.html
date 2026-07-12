@@ -11,26 +11,28 @@
       <header class="buff-toolbar" data-tauri-drag-region>
         <span class="buff-toolbar__title" id="buff-title" data-tauri-drag-region>BUFF</span>
         <div class="buff-toolbar__actions">
-          <button class="buff-toolbar__button" id="config-btn" title="配置监控 Buff">
-            &#9881;
-          </button>
+          <button class="buff-toolbar__button" id="add-row-btn" title="添加一行">+</button>
           <button class="buff-toolbar__button" id="close-btn" title="关闭">&times;</button>
         </div>
       </header>
       <div class="buff-list" id="buff-list" data-tauri-drag-region></div>
-      <section class="buff-config" id="buff-config" hidden>
+      <section class="buff-config" id="buff-config">
         <div class="buff-config__header">
-          <span>选择需要监控的 Buff</span>
-          <button class="buff-config__clear" id="clear-config-btn">取消全部</button>
+          <span>布局设置</span>
+          <button class="buff-config__clear" id="clear-config-btn">清空布局</button>
         </div>
         <label class="buff-config__size">
           <span>图标大小</span>
           <input id="icon-size-input" type="range" min="24" max="64" step="2" />
           <output id="icon-size-output"></output>
         </label>
-        <div class="buff-config__list" id="buff-config-list"></div>
-        <div class="buff-config__empty" id="buff-config-empty" hidden>当前职业暂无候选 Buff</div>
+        <label class="buff-config__size">
+          <span>图标间距</span>
+          <input id="icon-gap-input" type="range" min="0" max="16" step="1" />
+          <output id="icon-gap-output"></output>
+        </label>
       </section>
+      <div class="buff-picker" id="buff-picker" hidden></div>
     </main>
     <script type="module" src="./main.js"></script>
   </body>

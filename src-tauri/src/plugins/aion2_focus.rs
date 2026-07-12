@@ -7,7 +7,7 @@ use tauri::{
 };
 
 const AION2_PROCESS_NAME: &str = "Aion2.exe";
-const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 2] = ["dps-overlay", "dps-overlay-pvp"];
+const FOLLOW_FOCUS_WINDOW_LABELS: [&str; 3] = ["dps-overlay", "dps-overlay-pvp", "dps-overlay-buff"];
 const DPS_OVERLAY_LABEL: &str = "dps-overlay";
 
 #[derive(Clone, Serialize)]

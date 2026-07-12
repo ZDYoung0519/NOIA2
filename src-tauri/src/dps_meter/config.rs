@@ -13,6 +13,19 @@ pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub enum CaptureBackendPriority {
+    WinDivertFirst,
+    NpcapFirst,
+}
+
+impl Default for CaptureBackendPriority {
+    fn default() -> Self {
+        Self::WinDivertFirst
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub enum PvpOverlayPosition {
     Bottom,
     Right,
@@ -54,6 +67,8 @@ pub struct DpsMeterConfig {
     pub hide_unknown_players: bool,
     #[serde(default = "default_max_player_count")]
     pub max_player_count: usize,
+    #[serde(default)]
+    pub capture_backend_priority: CaptureBackendPriority,
 }
 
 impl Default for DpsMeterConfig {
@@ -72,6 +87,7 @@ impl Default for DpsMeterConfig {
             output_debug_log: false,
             hide_unknown_players: false,
             max_player_count: 10,
+            capture_backend_priority: CaptureBackendPriority::default(),
         }
     }
 }
