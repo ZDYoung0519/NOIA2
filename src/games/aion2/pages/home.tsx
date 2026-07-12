@@ -94,7 +94,7 @@ export default function HomePage() {
                 }}
               >
                 <ShieldCheck size={16} className="mr-2" />
-                抓包驱动检测
+                抓包驱动诊断
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
