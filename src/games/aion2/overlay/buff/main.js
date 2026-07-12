@@ -32,6 +32,8 @@ const CLASS_NAMES = {
 
 const activeBuffs = new Map();
 const slotElementsByBuffKey = new Map();
+let renderedBuffSlots = [];
+let updateTimer = 0;
 let buffContext = null;
 let layoutConfig = loadLayoutConfig();
 let pickerRowId = null;
@@ -68,7 +70,8 @@ function applyIconSize(value) {
 }
 
 function applyIconGap(value) {
-  const gap = Math.min(16, Math.max(0, Number(value) || 5));
+  const parsed = Number(value);
+  const gap = Math.min(16, Math.max(0, Number.isFinite(parsed) ? parsed : 5));
   document.documentElement.style.setProperty("--buff-icon-gap", `${gap}px`);
   $iconGapInput.value = String(gap);
   $iconGapOutput.value = `${gap}px`;
@@ -238,6 +241,7 @@ function renderRemoveRowButton(row) {
 
 function renderBuffLayout() {
   slotElementsByBuffKey.clear();
+  renderedBuffSlots = [];
   const layout = getCurrentLayout();
 
   const rows = layout.rows.map((row) => {
@@ -245,7 +249,10 @@ function renderBuffLayout() {
     element.className = "buff-row";
     element.dataset.tauriDragRegion = "";
     element.append(
-      ...row.slots.map((slot) => renderSlot(slot, row)),
+      ...row.slots.map((slot) => {
+        if (slot.type !== "empty") renderedBuffSlots.push(slot);
+        return renderSlot(slot, row);
+      }),
       renderAddButton(row),
       renderRemoveRowButton(row)
     );
@@ -472,12 +479,30 @@ function updateSlotElement(slot, element, now) {
 }
 
 function updateBuffStates() {
+  if (updateTimer) {
+    window.clearTimeout(updateTimer);
+    updateTimer = 0;
+  }
+
   const now = Date.now();
-  const layout = getCurrentLayout();
-  const slots = layout.rows.flatMap((row) => row.slots);
-  for (const slot of slots) {
-    const elements = slot.type === "empty" ? [] : slotElementsByBuffKey.get(buffKey(slot)) || [];
+  let nextUpdateAt = Infinity;
+
+  for (const slot of renderedBuffSlots) {
+    const elements = slotElementsByBuffKey.get(buffKey(slot)) || [];
     for (const element of elements) updateSlotElement(slot, element, now);
+
+    const buff = activeBuffs.get(buffKey(slot));
+    const localEndMs = Number(buff?.localEndMs);
+    if (!Number.isFinite(localEndMs) || localEndMs <= now) continue;
+
+    const remainingMs = localEndMs - now;
+    const nextSecondBoundary = localEndMs - (Math.ceil(remainingMs / 1000) - 1) * 1000;
+    nextUpdateAt = Math.min(nextUpdateAt, nextSecondBoundary, localEndMs);
+  }
+
+  if (Number.isFinite(nextUpdateAt)) {
+    const delay = Math.min(1000, Math.max(80, nextUpdateAt - Date.now()));
+    updateTimer = window.setTimeout(updateBuffStates, delay);
   }
 }
 
@@ -551,6 +576,4 @@ $iconGapInput.addEventListener("input", () => {
   await listen("overlay-config-changed", (event) => {
     applyBackground(event.payload);
   });
-
-  window.setInterval(updateBuffStates, 250);
 })();

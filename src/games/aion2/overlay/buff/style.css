@@ -330,35 +330,34 @@ body:active,
 }
 
 .buff-slot.is-just-activated {
-  animation: buff-activated 0.82s ease-out;
+  animation: none;
 }
 
 .buff-slot.is-expiring {
   animation: buff-expiring 0.5s ease-in-out infinite;
 }
 
-@keyframes buff-activated {
-  0% {
-    box-shadow:
-      0 0 0 0 rgba(103, 232, 249, 1),
-      0 0 24px rgba(103, 232, 249, 0.95),
-      0 0 42px rgba(34, 211, 238, 0.62);
-    filter: brightness(1.34);
-    transform: scale(1.12);
-  }
+.buff-slot.is-just-activated::before {
+  position: absolute;
+  inset: -4px;
+  z-index: 4;
+  pointer-events: none;
+  content: "";
+  border: 2px solid rgba(103, 232, 249, 0.88);
+  border-radius: 8px;
+  opacity: 0;
+  animation: buff-activated-ring 0.62s ease-out;
+}
 
-  45% {
-    box-shadow:
-      0 0 0 7px rgba(103, 232, 249, 0.28),
-      0 0 28px rgba(103, 232, 249, 0.72),
-      0 0 54px rgba(34, 211, 238, 0.42);
-    filter: brightness(1.18);
+@keyframes buff-activated-ring {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.92);
   }
 
   100% {
-    box-shadow: 0 0 7px var(--buff-accent-glow);
-    filter: brightness(1);
-    transform: scale(1);
+    opacity: 0;
+    transform: scale(1.28);
   }
 }
 
