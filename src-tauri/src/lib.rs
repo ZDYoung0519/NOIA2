@@ -90,6 +90,8 @@ pub fn run() {
             dps_meter::api::commands::delete_history_records,
             dps_meter::api::commands::mark_history_records_uploaded,
             dps_meter::api::commands::check_npcap_available,
+            dps_meter::api::commands::check_capture_runtime_status,
+            dps_meter::api::commands::repair_windivert_runtime,
             plugins::aion2_overlay::create_dps_overlay,
             plugins::aion2_overlay::destroy_dps_overlay,
             plugins::aion2_overlay::create_pvp_overlay,
@@ -120,11 +122,6 @@ pub fn run() {
                 .clone();
             let meter = dps_meter::engine::meter::DpsMeter::new(app.handle().clone(), logger);
             app.manage(meter);
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.unminimize();
-                let _ = window.set_focus();
-            }
             app.deep_link().register_all()?;
             Ok(())
         });

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Menu, ScrollText } from "lucide-react";
+import { Menu, ScrollText, ShieldCheck } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useNavigate } from "react-router-dom";
 import { DpsMeterLauncherButton } from "@/games/aion2/components/dps-meter-launcher-button";
 import { DpsLightGuideDialog } from "@/games/aion2/components/dps-light-guide-dialog";
@@ -21,6 +22,32 @@ export default function HomePage() {
   const { t } = useAppTranslation();
   const { config, updateSettings } = useSettings();
   const navigate = useNavigate();
+
+  const openCaptureCheckWindow = async () => {
+    const existing = await WebviewWindow.getByLabel("splashscreen");
+    if (existing) {
+      await existing.show();
+      await existing.unminimize();
+      await existing.setFocus();
+      return;
+    }
+
+    const window = new WebviewWindow("splashscreen", {
+      url: "/splashscreen?manual=1",
+      title: "抓包检测",
+      width: 640,
+      height: 460,
+      decorations: false,
+      transparent: true,
+      center: true,
+      resizable: false,
+      shadow: true,
+    });
+
+    window.once("tauri://created", () => {
+      void window.setFocus();
+    });
+  };
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-transparent text-white">
@@ -60,6 +87,14 @@ export default function HomePage() {
                 }}
               >
                 {t("aion2Home.appSettings")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  openCaptureCheckWindow().catch(() => {});
+                }}
+              >
+                <ShieldCheck size={16} className="mr-2" />
+                抓包驱动检测
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {

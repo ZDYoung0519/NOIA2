@@ -1,7 +1,6 @@
-import React, { lazy, useEffect } from "react";
+import React, { lazy } from "react";
 import { ThemeProvider } from "./components/theme-provider";
 import ReactDOM from "react-dom/client";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import { UpdaterDialog } from "@/components/updater-dialog";
 
 const HomePage = lazy(() => import("./pages/home"));
 const UserPage = lazy(() => import("./pages/user"));
+const StartupSplashPage = lazy(() => import("./pages/startup-splash"));
 const SettingsViewPage = lazy(() => import("./pages/settings"));
 const Aion2HomePage = lazy(() => import("./games/aion2/pages/home"));
 const Aion2CharacterPage = lazy(() => import("./games/aion2/pages/character"));
@@ -25,15 +25,12 @@ import "./index.css";
 import "./i18n";
 
 function AppWrapper() {
-  useEffect(() => {
-    // Show window after React is ready
-    getCurrentWindow().show();
-  }, []);
-
   useSettings(); // trigger initial sync on app start (shortcuts, config, etc.)
 
   return (
     <Routes>
+      <Route path="/splashscreen" element={<StartupSplashPage />} />
+
       {/* Main window for aion2*/}
       <Route
         element={

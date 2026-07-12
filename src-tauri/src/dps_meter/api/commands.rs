@@ -8,6 +8,29 @@ use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWat
 use crate::dps_meter::models::diagnostics::DpsMeterState;
 use crate::dps_meter::storage::data_storage::BuffOverlayContext;
 
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptureRuntimeCheck {
+    pub available: bool,
+    pub error_code: Option<i32>,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptureRuntimeStatus {
+    pub windivert: CaptureRuntimeCheck,
+    pub npcap: CaptureRuntimeCheck,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RepairRuntimeResult {
+    pub success: bool,
+    pub steps: Vec<String>,
+    pub error: Option<String>,
+}
+
 #[tauri::command]
 pub fn apply_dps_meter_config(
     meter: State<'_, DpsMeter>,
@@ -156,4 +179,117 @@ pub fn check_npcap_available() -> Result<WinDivertStatus, String> {
         }
     }
     Ok(status)
+}
+
+#[tauri::command]
+pub fn check_capture_runtime_status() -> Result<CaptureRuntimeStatus, String> {
+    let windivert_status = crate::dps_meter::capture::windivert_capturer::check_windivert_status();
+    let npcap_status = match crate::dps_meter::capture::capturer::check_npcap_available() {
+        Ok(()) => CaptureRuntimeCheck {
+            available: true,
+            error_code: None,
+            error: None,
+        },
+        Err(error) => CaptureRuntimeCheck {
+            available: false,
+            error_code: None,
+            error: Some(error),
+        },
+    };
+
+    Ok(CaptureRuntimeStatus {
+        windivert: CaptureRuntimeCheck {
+            available: windivert_status.available,
+            error_code: windivert_status.error_code,
+            error: windivert_status.error,
+        },
+        npcap: npcap_status,
+    })
+}
+
+#[tauri::command]
+pub async fn repair_windivert_runtime() -> Result<RepairRuntimeResult, String> {
+    const WINDIVERT_SYS_URL: &str = "https://tguffyzmkjkxqmmosfhf.supabase.co/storage/v1/object/public/windivert/WinDivert64.sys";
+
+    let mut steps = Vec::new();
+    steps.push("正在定位安装目录".to_string());
+
+    let exe_path = std::env::current_exe().map_err(|error| error.to_string())?;
+    let install_dir = exe_path
+        .parent()
+        .ok_or_else(|| "无法定位程序安装目录".to_string())?;
+    let target_path = install_dir.join("WinDivert64.sys");
+
+    steps.push(format!("安装目录：{}", install_dir.display()));
+    steps.push("正在下载 WinDivert64.sys".to_string());
+
+    let response = match reqwest::Client::new().get(WINDIVERT_SYS_URL).send().await {
+        Ok(response) => response,
+        Err(error) => {
+            steps.push("下载失败".to_string());
+            return Ok(RepairRuntimeResult {
+                success: false,
+                steps,
+                error: Some(error.to_string()),
+            });
+        }
+    };
+
+    if !response.status().is_success() {
+        let status = response.status();
+        steps.push(format!("下载失败：HTTP {status}"));
+        return Ok(RepairRuntimeResult {
+            success: false,
+            steps,
+            error: Some(format!("HTTP {status}")),
+        });
+    }
+
+    let bytes = match response.bytes().await {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            steps.push("读取下载内容失败".to_string());
+            return Ok(RepairRuntimeResult {
+                success: false,
+                steps,
+                error: Some(error.to_string()),
+            });
+        }
+    };
+    steps.push(format!("下载完成：{} bytes", bytes.len()));
+    steps.push(format!("正在写入：{}", target_path.display()));
+
+    if let Err(error) = std::fs::write(&target_path, &bytes) {
+        steps.push("写入失败".to_string());
+        return Ok(RepairRuntimeResult {
+            success: false,
+            steps,
+            error: Some(format!(
+                "{error}。如果安装在 Program Files，请以管理员身份运行 NoiA 后重试。"
+            )),
+        });
+    }
+
+    steps.push("WinDivert64.sys 已写入安装目录".to_string());
+    steps.push("正在重新检测 WinDivert".to_string());
+
+    let status = crate::dps_meter::capture::windivert_capturer::check_windivert_status();
+    if status.available {
+        steps.push("WinDivert 修复完成".to_string());
+        Ok(RepairRuntimeResult {
+            success: true,
+            steps,
+            error: None,
+        })
+    } else {
+        let error = status
+            .error
+            .unwrap_or_else(|| "WinDivert 仍然不可用".to_string());
+        steps.push(format!("重新检测失败：{error}"));
+        Ok(RepairRuntimeResult {
+            success: false,
+            steps,
+            error: Some(error),
+        })
+    }
 }
