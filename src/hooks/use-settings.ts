@@ -58,10 +58,17 @@ interface OverlaySettings {
   damageFormat: "万/亿" | "K/M/B";
 }
 
+interface BuffMonitorSettings {
+  enabled: boolean;
+  iconSize: number;
+  iconGap: number;
+}
+
 interface Aion2Settings {
   shortcuts: ShortcutSettings;
   backend: BackendSettings;
   overlay: OverlaySettings;
+  buffMonitor: BuffMonitorSettings;
   autoHideEnabled: boolean;
   autoCloseMain: boolean;
 }
@@ -122,6 +129,11 @@ const DEFAULTS: AppConfig = {
       autoResizeHeight: true,
       damageFormat: "万/亿",
     },
+    buffMonitor: {
+      enabled: false,
+      iconSize: 34,
+      iconGap: 5,
+    },
     autoHideEnabled: true,
     autoCloseMain: true,
   },
@@ -138,6 +150,10 @@ function loadConfig(): AppConfig {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (parsed?.aion2?.buffMonitor) {
+        delete parsed.aion2.buffMonitor.preferencesByClass;
+        delete parsed.aion2.buffMonitor.layoutsByClass;
+      }
       // Deep merge with defaults to fill missing keys from newer versions
       return deepMerge(DEFAULTS, parsed);
     }
@@ -151,6 +167,9 @@ function loadConfig(): AppConfig {
       shortcuts: { ...DEFAULTS.aion2.shortcuts },
       backend: { ...DEFAULTS.aion2.backend },
       overlay: { ...DEFAULTS.aion2.overlay },
+      buffMonitor: {
+        ...DEFAULTS.aion2.buffMonitor,
+      },
     },
   };
 }
@@ -237,6 +256,16 @@ export function useSettings() {
     }
   }, []);
 
+  const syncBuffMonitor = useCallback(async (cfg: AppConfig) => {
+    try {
+      await invoke("set_buff_monitor_enabled", {
+        enabled: cfg.aion2.buffMonitor.enabled,
+      });
+    } catch (e) {
+      console.error("[useSettings] syncBuffMonitor failed:", e);
+    }
+  }, []);
+
   // Push shortcuts to Rust
   const syncShortcuts = useCallback(async (cfg: AppConfig) => {
     try {
@@ -265,12 +294,15 @@ export function useSettings() {
         await syncOverlay(newConfig);
         await syncShortcuts(newConfig);
         await syncAutoHide(newConfig);
+        await syncBuffMonitor(newConfig);
       } else if (path.startsWith("aion2.backend")) {
         await syncBackend(newConfig);
       } else if (path.startsWith("aion2.overlay")) {
         await syncOverlay(newConfig);
       } else if (path.startsWith("aion2.shortcuts")) {
         await syncShortcuts(newConfig);
+      } else if (path.startsWith("aion2.buffMonitor")) {
+        await syncBuffMonitor(newConfig);
       } else if (path === "aion2.autoHideEnabled") {
         await syncAutoHide(newConfig);
         await syncLanguage(newConfig);
@@ -279,7 +311,7 @@ export function useSettings() {
       }
       // app.* only needs localStorage
     },
-    [syncBackend, syncOverlay, syncShortcuts, syncAutoHide, syncLanguage]
+    [syncBackend, syncOverlay, syncShortcuts, syncAutoHide, syncLanguage, syncBuffMonitor]
   );
 
   // Update a single key or whole section by path

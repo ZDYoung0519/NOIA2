@@ -7,8 +7,8 @@ use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
 use crate::dps_meter::models::combat::{
-    DetailPlayerInfo, PlayerHpInfo, PvpCombatStats, PvpCombatStatsRow, PvpKnownPlayer,
-    PvpWatchInfo, PvpWatchInfoResponse, SkillStats, UseBuff,
+    BuffInterval, BuffSummary, DetailPlayerInfo, PlayerHpInfo, PvpCombatStats, PvpCombatStatsRow,
+    PvpKnownPlayer, PvpWatchInfo, PvpWatchInfoResponse, SkillStats,
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
 use crate::dps_meter::storage::loaders::{
@@ -20,7 +20,8 @@ const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
 const BUFF_TARGET_CAPACITY: usize = 1_000;
-const BUFF_RECORDS_PER_TARGET_CAPACITY: usize = 300;
+const BUFF_INTERVALS_PER_SKILL_CAPACITY: usize = 64;
+const BUFF_INTERVAL_MERGE_TOLERANCE_MS: u64 = 250;
 const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 2] = ["11340000", "1740"];
 const FIGHTER_SKILLID_MAP: &[(u32, u32)] = &[
     (19_080_000, 19_070_000), // 疾风击[暴走] -> 疾风击
@@ -122,7 +123,7 @@ struct DataStorageInner {
     mob_id_code_map: BoundedMap<u32, u32>,
     mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
     player_hp_map: BoundedMap<u32, PlayerHpInfo>,
-    use_buffs_by_target: BoundedMap<u32, VecDeque<UseBuff>>,
+    use_buffs_by_target: BoundedMap<u32, HashMap<u32, HashMap<u32, VecDeque<BuffInterval>>>>,
     possible_boss_codes: HashSet<u32>,
     summon_owner_map: BoundedMap<u32, u32>,
     start_time: Option<f64>,
@@ -275,47 +276,54 @@ impl DataStorage {
         target_id: u32,
         actor_id: u32,
         skill_code: u32,
-        server_start_ms: u64,
+        _server_start_ms: u64,
         duration_ms: u64,
-    ) -> UseBuff {
+    ) -> BuffSummary {
         let local_start_ms = current_timestamp_millis();
         let local_end_ms = local_start_ms.saturating_add(duration_ms);
-        let latency_ms = local_start_ms as i64 - server_start_ms as i64;
-        let buff = UseBuff {
-            target_id,
-            actor_id,
-            skill_code,
-            server_start_ms,
-            local_start_ms,
-            local_end_ms,
-            duration_ms,
-            latency_ms,
-        };
         let skill_shortcode = first_four_digits(skill_code);
         let config = self.config.read().unwrap().clone();
 
         let (should_emit_self_buff, should_emit_boss_debuff) = {
             let mut inner = self.inner.write().unwrap();
             {
-                let target_buffs = inner
+                let skill_intervals = inner
                     .use_buffs_by_target
-                    .get_mut_or_insert_with(target_id, VecDeque::new);
-                target_buffs.push_back(buff.clone());
-                while target_buffs.len() > BUFF_RECORDS_PER_TARGET_CAPACITY {
-                    target_buffs.pop_front();
+                    .get_mut_or_insert_with(target_id, HashMap::new)
+                    .entry(actor_id)
+                    .or_default()
+                    .entry(skill_code)
+                    .or_default();
+                if let Some(last_interval) = skill_intervals.back_mut() {
+                    if local_start_ms
+                        <= last_interval
+                            .end_ms
+                            .saturating_add(BUFF_INTERVAL_MERGE_TOLERANCE_MS)
+                    {
+                        last_interval.end_ms = last_interval.end_ms.max(local_end_ms);
+                    } else {
+                        skill_intervals.push_back(BuffInterval {
+                            start_ms: local_start_ms,
+                            end_ms: local_end_ms,
+                        });
+                    }
+                } else {
+                    skill_intervals.push_back(BuffInterval {
+                        start_ms: local_start_ms,
+                        end_ms: local_end_ms,
+                    });
+                }
+                while skill_intervals.len() > BUFF_INTERVALS_PER_SKILL_CAPACITY {
+                    skill_intervals.pop_front();
                 }
             }
 
             let should_emit_self_buff = inner.main_actor_id == Some(target_id)
-                && inner
-                    .main_actor_id
-                    .and_then(|main_actor_id| inner.actor_id_class_map.get(&main_actor_id))
-                    .and_then(|actor_class| self.buff_templates.classes.get(actor_class))
-                    .is_some_and(|template| {
-                        template
-                            .self_buff_candidate_skill_codes
-                            .contains(&skill_shortcode)
-                    });
+                && self.buff_templates.classes.values().any(|template| {
+                    template
+                        .self_buff_candidate_skill_codes
+                        .contains(&skill_shortcode)
+                });
             let target_mob_code = inner.mob_id_code_map.get(&target_id).copied();
             let is_target_boss = target_mob_code
                 .map(|mob_code| {
@@ -329,6 +337,16 @@ impl DataStorage {
                 && actor_id != target_id;
 
             (should_emit_self_buff, should_emit_boss_debuff)
+        };
+
+        let buff = BuffSummary {
+            target_id,
+            actor_id,
+            skill_code,
+            coverage: 0.0,
+            active: local_end_ms > current_timestamp_millis(),
+            last_start_ms: local_start_ms,
+            last_end_ms: local_end_ms,
         };
 
         if should_emit_self_buff {
@@ -751,15 +769,10 @@ impl DataStorage {
             .as_hash_map()
     }
 
-    pub fn use_buffs_by_target_snapshot(&self) -> HashMap<u32, Vec<UseBuff>> {
-        self.inner
-            .read()
-            .unwrap()
-            .use_buffs_by_target
-            .as_hash_map()
-            .into_iter()
-            .map(|(target_id, buffs)| (target_id, buffs.into_iter().collect()))
-            .collect()
+    pub fn buff_intervals_snapshot(
+        &self,
+    ) -> HashMap<u32, HashMap<u32, HashMap<u32, VecDeque<BuffInterval>>>> {
+        self.inner.read().unwrap().use_buffs_by_target.as_hash_map()
     }
 
     pub fn get_pvp_watch_info(&self, names: &[String]) -> PvpWatchInfoResponse {

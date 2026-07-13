@@ -304,21 +304,21 @@ impl StreamProcessor {
             return false;
         }
 
-        let search_target = 13_070_120u32.to_le_bytes();
-        if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
-            let context_start = hit_offset.saturating_sub(256);
-            let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
-            self.logger.info(format!(
-                "[{}] hard search skill=13070120 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
-                self.port,
-                payload[0],
-                payload[1],
-                hit_offset,
-                bytes_to_hex(&search_target),
-                bytes_to_hex(&payload[context_start..context_end]),
-                bytes_to_hex(payload),
-            ));
-        }
+        // let search_target = 13_070_120u32.to_le_bytes();
+        // if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
+        //     let context_start = hit_offset.saturating_sub(256);
+        //     let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
+        //     self.logger.info(format!(
+        //         "[{}] hard search skill=13070120 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
+        //         self.port,
+        //         payload[0],
+        //         payload[1],
+        //         hit_offset,
+        //         bytes_to_hex(&search_target),
+        //         bytes_to_hex(&payload[context_start..context_end]),
+        //         bytes_to_hex(payload),
+        //     ));
+        // }
 
         match self.mode {
             ProcessorMode::Full => match (payload[0], payload[1]) {
@@ -638,7 +638,8 @@ impl StreamProcessor {
         if !target_info.is_valid() {
             return false;
         }
-        offset += target_info.length + 2;
+        let after_target_offset = offset + target_info.length;
+        offset = after_target_offset + 2;
         if offset >= packet.len() {
             return false;
         }
@@ -652,8 +653,27 @@ impl StreamProcessor {
         if offset + 4 > packet.len() {
             return false;
         }
-        let skill_code = parse_u32_le(packet, offset);
+        let mut skill_code = parse_u32_le(packet, offset);
         offset += 4;
+
+        let is_valid_buff_skill = |code: u32| {
+            (110_000_000..=200_000_000).contains(&code)
+                || (20_000_000..30_000_000).contains(&code)
+        };
+        if opcode == 0x2B && !is_valid_buff_skill(skill_code) {
+            let retry_offset = after_target_offset + 1;
+            if retry_offset < packet.len() {
+                let retry_unknown_info = read_varint(packet, retry_offset);
+                let retry_skill_offset = retry_offset + retry_unknown_info.length;
+                if retry_unknown_info.is_valid() && retry_skill_offset + 4 <= packet.len() {
+                    let retry_skill_code = parse_u32_le(packet, retry_skill_offset);
+                    if is_valid_buff_skill(retry_skill_code) {
+                        skill_code = retry_skill_code;
+                        offset = retry_skill_offset + 4;
+                    }
+                }
+            }
+        }
 
         if skill_code < 110_000_000 || skill_code > 200_000_000 {
             if !(20_000_000..30_000_000).contains(&skill_code) {
@@ -682,6 +702,9 @@ impl StreamProcessor {
         if !actor_info.is_valid() {
             return false;
         }
+        if actor_info.value <= 1 {
+            return true;
+        }
 
         if duration == u32::MAX as u64 {
             self.logger.debug(format!(
@@ -707,17 +730,20 @@ impl StreamProcessor {
             server_start_ms,
             duration,
         );
+        let latency_ms = buff.last_start_ms as i64 - server_start_ms as i64;
         self.logger.debug(format!(
-            "[{}] buff detected target={} actor={} skill={} duration_ms={} server_start_ms={} local_start_ms={} local_end_ms={} latency_ms={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
+            "[{}] buff detected target={} actor={} skill={} duration_ms={} server_start_ms={} local_start_ms={} local_end_ms={} latency_ms={} coverage={:.3} active={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
             self.port,
             buff.target_id,
             buff.actor_id,
             buff.skill_code,
-            buff.duration_ms,
-            buff.server_start_ms,
-            buff.local_start_ms,
-            buff.local_end_ms,
-            buff.latency_ms,
+            duration,
+            server_start_ms,
+            buff.last_start_ms,
+            buff.last_end_ms,
+            latency_ms,
+            buff.coverage,
+            buff.active,
             server_time,
             opcode,
             packet.len(),

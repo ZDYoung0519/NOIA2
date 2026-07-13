@@ -4,9 +4,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import skillsZhCN from "@/i18n/locales/aion2skills/zh-CN.json";
 
 const DEFAULT_BACKGROUND = [0, 0, 0, 102];
-const ICON_SIZE_KEY = "aion2-buff-icon-size";
-const ICON_GAP_KEY = "aion2-buff-icon-gap";
+const APP_CONFIG_STORAGE_KEY = "app-config";
 const LAYOUT_STORAGE_KEY = "aion2-buff-monitor-layout:v1";
+const STATIC_BUFF_SKILL_CODES = new Set([1816, 1819]);
 const CLASS_ORDER = [
   "GLADIATOR",
   "TEMPLAR",
@@ -37,15 +37,12 @@ let updateTimer = 0;
 let buffContext = null;
 let layoutConfig = loadLayoutConfig();
 let pickerRowId = null;
+let pickerSlotId = null;
 let idSeed = Date.now();
 
 const $buffList = document.getElementById("buff-list");
 const $buffTitle = document.getElementById("buff-title");
 const $buffPicker = document.getElementById("buff-picker");
-const $iconSizeInput = document.getElementById("icon-size-input");
-const $iconSizeOutput = document.getElementById("icon-size-output");
-const $iconGapInput = document.getElementById("icon-gap-input");
-const $iconGapOutput = document.getElementById("icon-gap-output");
 
 function nextId(prefix) {
   idSeed += 1;
@@ -64,8 +61,6 @@ function applyIconSize(value) {
     "--buff-duration-size",
     `${Math.min(24, Math.max(13, Math.round(size * 0.42)))}px`
   );
-  $iconSizeInput.value = String(size);
-  $iconSizeOutput.value = `${size}px`;
   return size;
 }
 
@@ -73,8 +68,6 @@ function applyIconGap(value) {
   const parsed = Number(value);
   const gap = Math.min(16, Math.max(0, Number.isFinite(parsed) ? parsed : 5));
   document.documentElement.style.setProperty("--buff-icon-gap", `${gap}px`);
-  $iconGapInput.value = String(gap);
-  $iconGapOutput.value = `${gap}px`;
   return gap;
 }
 
@@ -102,6 +95,14 @@ function skillName(skillCode) {
 
 function buffKey(slot) {
   return `${slot.type}:${skillShortcode(slot.skillCode)}`;
+}
+
+function shouldPlayActivationAnimation(slot) {
+  return !STATIC_BUFF_SKILL_CODES.has(skillShortcode(slot.skillCode));
+}
+
+function shouldShowRemainingTime(slot) {
+  return !STATIC_BUFF_SKILL_CODES.has(skillShortcode(slot.skillCode));
 }
 
 function loadLayoutConfig() {
@@ -140,6 +141,18 @@ function saveCurrentLayout(layout) {
   if (!actorClass) return;
   layoutConfig.classes[actorClass] = layout;
   saveLayoutConfig();
+}
+
+function applyBuffMonitorSettings() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(APP_CONFIG_STORAGE_KEY) || "{}");
+    const buffMonitor = parsed?.aion2?.buffMonitor;
+    applyIconSize(buffMonitor?.iconSize);
+    applyIconGap(buffMonitor?.iconGap);
+  } catch (_) {
+    applyIconSize(null);
+    applyIconGap(null);
+  }
 }
 
 function addSlotElement(slot, element) {
@@ -189,18 +202,12 @@ function renderSlot(slot, row) {
   duration.className = "buff-slot__duration";
   element.append(renderIcon(slot), duration);
 
-  const remove = document.createElement("button");
-  remove.className = "buff-slot__remove";
-  remove.type = "button";
-  remove.title = "删除";
-  remove.textContent = "×";
-  remove.addEventListener("click", (event) => {
-    event.stopPropagation();
-    row.slots = row.slots.filter((item) => item.id !== slot.id);
-    saveCurrentLayout(getCurrentLayout());
-    renderBuffLayout();
-  });
-  element.append(remove);
+  if (slot.type !== "empty") {
+    const code = document.createElement("span");
+    code.className = "buff-slot__code";
+    code.textContent = String(skillShortcode(slot.skillCode));
+    element.append(code);
+  }
 
   addSlotElement(slot, element);
   return element;
@@ -252,9 +259,7 @@ function renderBuffLayout() {
       ...row.slots.map((slot) => {
         if (slot.type !== "empty") renderedBuffSlots.push(slot);
         return renderSlot(slot, row);
-      }),
-      renderAddButton(row),
-      renderRemoveRowButton(row)
+      })
     );
     return element;
   });
@@ -281,15 +286,22 @@ function clearLayout() {
 
 function closePicker() {
   pickerRowId = null;
+  pickerSlotId = null;
+  if (!$buffPicker) return;
   $buffPicker.hidden = true;
   $buffPicker.replaceChildren();
 }
 
-function addSlotToPickerRow(slot) {
+function applyPickerSlot(slot) {
   const layout = getCurrentLayout();
   const row = layout.rows.find((item) => item.id === pickerRowId);
   if (!row) return;
-  row.slots.push({ id: nextId("slot"), ...slot });
+  const slotIndex = pickerSlotId ? row.slots.findIndex((item) => item.id === pickerSlotId) : -1;
+  if (slotIndex >= 0) {
+    row.slots[slotIndex] = { id: pickerSlotId, ...slot };
+  } else {
+    row.slots.push({ id: nextId("slot"), ...slot });
+  }
   saveCurrentLayout(layout);
   closePicker();
   renderBuffLayout();
@@ -299,9 +311,12 @@ function renderCandidateButton(slot) {
   const button = document.createElement("button");
   button.className = "buff-picker__item";
   button.type = "button";
-  button.title = slot.type === "empty" ? "空位" : skillName(slot.skillCode);
+  button.title =
+    slot.type === "empty"
+      ? "空位"
+      : `${skillName(slot.skillCode)} (${skillShortcode(slot.skillCode)})`;
   button.dataset.type = slot.type;
-  button.addEventListener("click", () => addSlotToPickerRow(slot));
+  button.addEventListener("click", () => applyPickerSlot(slot));
 
   if (slot.type === "empty") {
     const mark = document.createElement("span");
@@ -318,9 +333,19 @@ function renderCandidateButton(slot) {
   icon.draggable = false;
   icon.addEventListener("error", () => icon.remove(), { once: true });
 
+  const text = document.createElement("span");
+  text.className = "buff-picker__text";
+
   const name = document.createElement("span");
+  name.className = "buff-picker__name";
   name.textContent = skillName(slot.skillCode);
-  button.append(icon, name);
+
+  const code = document.createElement("span");
+  code.className = "buff-picker__code";
+  code.textContent = String(skillShortcode(slot.skillCode));
+
+  text.append(name, code);
+  button.append(icon, text);
   return button;
 }
 
@@ -329,7 +354,9 @@ function renderCandidateList(candidates, type) {
   const list = document.createElement("div");
   list.className = "buff-picker__list";
   list.append(
-    ...candidates.map((skillCode) => renderCandidateButton({ type, skillCode: skillShortcode(skillCode) }))
+    ...candidates.map((skillCode) =>
+      renderCandidateButton({ type, skillCode: skillShortcode(skillCode) })
+    )
   );
 
   if (candidates.length === 0) {
@@ -365,9 +392,25 @@ function renderPickerTypeButton(type, activeType, onSelect) {
   return button;
 }
 
-function openPicker(rowId, anchor) {
+function positionPicker() {
+  if (!$buffPicker) return;
+  if ($buffPicker.hidden) return;
+  const listRect = $buffList.getBoundingClientRect();
+  const top = Math.max(36, listRect.top + 6);
+  const bottom = 8;
+  $buffPicker.style.top = `${top}px`;
+  $buffPicker.style.left = "8px";
+  $buffPicker.style.right = "8px";
+  $buffPicker.style.bottom = `${bottom}px`;
+  $buffPicker.style.maxHeight = "";
+}
+
+function openPicker(rowId, anchor, slotId = null) {
+  if (!$buffPicker) return;
   pickerRowId = rowId;
+  pickerSlotId = slotId;
   const currentRow = getCurrentLayout().rows.find((row) => row.id === rowId);
+  const currentSlot = slotId ? currentRow?.slots.find((slot) => slot.id === slotId) : null;
   const byClass = buffContext?.selfBuffCandidateSkillCodesByClass || {};
   const tabs = CLASS_ORDER.map((actorClass) => ({
     key: actorClass,
@@ -380,6 +423,9 @@ function openPicker(rowId, anchor) {
   let activeType = currentRow?.slots.some((slot) => slot.type === "bossDebuff")
     ? "bossDebuff"
     : "selfBuff";
+  if (currentSlot?.type === "selfBuff" || currentSlot?.type === "bossDebuff") {
+    activeType = currentSlot.type;
+  }
 
   const close = document.createElement("button");
   close.className = "buff-picker__close";
@@ -394,6 +440,10 @@ function openPicker(rowId, anchor) {
 
   const typeSwitch = document.createElement("div");
   typeSwitch.className = "buff-picker__types";
+
+  const topbar = document.createElement("div");
+  topbar.className = "buff-picker__topbar";
+  topbar.append(quickActions, typeSwitch);
 
   const nav = document.createElement("div");
   nav.className = "buff-picker__tabs";
@@ -413,22 +463,21 @@ function openPicker(rowId, anchor) {
         renderActiveTab();
       })
     );
-    nav.replaceChildren(...tabs.map((tab) => renderPickerTab(tab, activeTab.key, (key) => {
-      activeKey = key;
-      renderActiveTab();
-    })));
+    nav.replaceChildren(
+      ...tabs.map((tab) =>
+        renderPickerTab(tab, activeTab.key, (key) => {
+          activeKey = key;
+          renderActiveTab();
+        })
+      )
+    );
     content.replaceChildren(renderCandidateList(activeTab.candidates, activeType));
   };
   renderActiveTab();
 
-  $buffPicker.replaceChildren(close, quickActions, typeSwitch, nav, content);
+  $buffPicker.replaceChildren(close, topbar, nav, content);
   $buffPicker.hidden = false;
-
-  const rect = anchor.getBoundingClientRect();
-  const top = Math.min(window.innerHeight - 12, rect.bottom + 6);
-  $buffPicker.style.top = `${Math.max(36, top)}px`;
-  $buffPicker.style.left = "8px";
-  $buffPicker.style.right = "8px";
+  positionPicker();
 }
 
 async function refreshBuffContext() {
@@ -455,13 +504,13 @@ function updateSlotElement(slot, element, now) {
   const remainingMs = buff ? Number(buff.localEndMs) - now : 0;
   const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
   const isActive = remainingSeconds > 0;
-  const isExpiring = isActive && remainingMs < 3000;
+  const isExpiring = isActive && remainingMs < 3000 && shouldPlayActivationAnimation(slot);
 
   if (element.dataset.active !== String(isActive)) {
     const wasActive = element.dataset.active === "true";
     element.dataset.active = String(isActive);
     element.classList.toggle("is-active", isActive);
-    if (!wasActive && isActive) {
+    if (!wasActive && isActive && shouldPlayActivationAnimation(slot)) {
       element.classList.remove("is-just-activated");
       void element.offsetWidth;
       element.classList.add("is-just-activated");
@@ -474,7 +523,7 @@ function updateSlotElement(slot, element, now) {
   if (element.dataset.seconds !== String(remainingSeconds)) {
     element.dataset.seconds = String(remainingSeconds);
     element.querySelector(".buff-slot__duration").textContent =
-      remainingSeconds > 0 ? String(remainingSeconds) : "";
+      remainingSeconds > 0 && shouldShowRemainingTime(slot) ? String(remainingSeconds) : "";
   }
 }
 
@@ -507,13 +556,20 @@ function updateBuffStates() {
 }
 
 function rememberBuff(type, payload) {
-  if (!payload?.skillCode || !Number.isFinite(Number(payload.localEndMs))) return;
-  activeBuffs.set(`${type}:${skillShortcode(payload.skillCode)}`, payload);
+  const localEndMs = Number(payload?.lastEndMs ?? payload?.localEndMs);
+  if (!payload?.skillCode || !Number.isFinite(localEndMs)) return;
+  activeBuffs.set(`${type}:${skillShortcode(payload.skillCode)}`, {
+    ...payload,
+    localEndMs,
+  });
   updateBuffStates();
 }
 
 document.body.addEventListener("mousedown", (event) => {
-  if (event.button === 0 && !event.target.closest("button, input, label, .buff-config, .buff-picker")) {
+  if (
+    event.button === 0 &&
+    !event.target.closest("button, input, label, .buff-config, .buff-picker")
+  ) {
     void getCurrentWindow().startDragging();
   }
 });
@@ -526,25 +582,31 @@ document.getElementById("close-btn").addEventListener("click", () => {
   void getCurrentWindow().close();
 });
 
-document.getElementById("add-row-btn").addEventListener("click", addRow);
-document.getElementById("clear-config-btn").addEventListener("click", clearLayout);
-
-$iconSizeInput.addEventListener("input", () => {
-  const size = applyIconSize($iconSizeInput.value);
-  localStorage.setItem(ICON_SIZE_KEY, String(size));
-});
-
-$iconGapInput.addEventListener("input", () => {
-  const gap = applyIconGap($iconGapInput.value);
-  localStorage.setItem(ICON_GAP_KEY, String(gap));
-});
-
 (async function init() {
-  applyIconSize(localStorage.getItem(ICON_SIZE_KEY));
-  applyIconGap(localStorage.getItem(ICON_GAP_KEY));
+  applyBuffMonitorSettings();
 
-  await listen("overlay-lock-toggled", (event) => {
-    applyLocked(event.payload?.locked === true);
+  window.addEventListener("storage", (event) => {
+    if (event.key === APP_CONFIG_STORAGE_KEY) {
+      applyBuffMonitorSettings();
+      renderBuffLayout();
+    }
+    if (event.key === LAYOUT_STORAGE_KEY) {
+      layoutConfig = loadLayoutConfig();
+      renderBuffLayout();
+    }
+  });
+
+  await listen("buff-monitor-layout-changed", (event) => {
+    if (event.payload?.version === 1) {
+      layoutConfig = event.payload;
+    } else {
+      layoutConfig = loadLayoutConfig();
+    }
+    renderBuffLayout();
+  });
+
+  await listen("buff-monitor-lock-toggled", (event) => {
+    applyLocked(event.payload?.enabled === true);
   });
 
   await listen("dps-main-actor-buff", (event) => {

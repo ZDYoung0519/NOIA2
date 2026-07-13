@@ -88,15 +88,21 @@ pub struct PlayerHpInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UseBuff {
+pub struct BuffInterval {
+    pub start_ms: u64,
+    pub end_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuffSummary {
     pub target_id: u32,
     pub actor_id: u32,
     pub skill_code: u32,
-    pub server_start_ms: u64,
-    pub local_start_ms: u64,
-    pub local_end_ms: u64,
-    pub duration_ms: u64,
-    pub latency_ms: i64,
+    pub coverage: f64,
+    pub active: bool,
+    pub last_start_ms: u64,
+    pub last_end_ms: u64,
 }
 
 impl SkillStats {
@@ -181,7 +187,7 @@ pub struct CombatSnapshot {
     pub by_target_player_skill_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
     pub by_target_player_stats: HashMap<u32, HashMap<u32, PlayerOverviewStat>>,
     #[serde(default)]
-    pub use_buffs_by_target: HashMap<u32, Vec<UseBuff>>,
+    pub use_buffs_by_target: HashMap<u32, Vec<BuffSummary>>,
     pub combat_infos: CombatInfos,
     pub last_target_info: Option<TargetInfo>,
     #[serde(default)]

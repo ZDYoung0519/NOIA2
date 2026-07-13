@@ -1,4 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -6,9 +8,67 @@ import { ShortcutInput } from "@/components/shortcut-input";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { useSettings } from "@/hooks/use-settings";
 import { SettingsGroup, SettingsRow as BaseSettingsRow } from "@/components/settings-layout";
+import skillsZhCN from "@/i18n/locales/aion2skills/zh-CN.json";
 
 type RGBA = [number, number, number, number];
-type Aion2Tab = "shortcuts" | "overlay" | "backend";
+type Aion2Tab = "shortcuts" | "overlay" | "buff" | "backend";
+type BuffSlotType = "selfBuff" | "bossDebuff" | "empty";
+type ActorClass =
+  | "GLADIATOR"
+  | "TEMPLAR"
+  | "ASSASSIN"
+  | "RANGER"
+  | "SORCERER"
+  | "ELEMENTALIST"
+  | "CLERIC"
+  | "CHANTER"
+  | "FIGHTER";
+
+const ACTOR_CLASSES: ActorClass[] = [
+  "GLADIATOR",
+  "TEMPLAR",
+  "ASSASSIN",
+  "RANGER",
+  "SORCERER",
+  "ELEMENTALIST",
+  "CLERIC",
+  "CHANTER",
+  "FIGHTER",
+];
+
+const ACTOR_CLASS_NAMES: Record<ActorClass, string> = {
+  GLADIATOR: "剑星",
+  TEMPLAR: "守护星",
+  ASSASSIN: "杀星",
+  RANGER: "弓星",
+  SORCERER: "魔道星",
+  ELEMENTALIST: "精灵星",
+  CLERIC: "治愈星",
+  CHANTER: "护法星",
+  FIGHTER: "拳星",
+};
+
+const BUFF_LAYOUT_STORAGE_KEY = "aion2-buff-monitor-layout:v1";
+
+interface BuffMonitorSlot {
+  id: string;
+  type: BuffSlotType;
+  skillCode?: number;
+}
+
+interface BuffMonitorRow {
+  id: string;
+  slots: BuffMonitorSlot[];
+}
+
+interface BuffMonitorClassLayout {
+  rows: BuffMonitorRow[];
+}
+
+interface BuffMonitorLayoutConfig {
+  version: 1;
+  classes: Partial<Record<ActorClass, BuffMonitorClassLayout>>;
+}
 
 function rgbToHex([r, g, b]: RGBA): string {
   return "#" + [r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("");
@@ -33,16 +93,177 @@ function SettingRow({
   return <BaseSettingsRow label={title} description={description} control={children} />;
 }
 
+function createEmptyClassLayout(actorClass: ActorClass): BuffMonitorClassLayout {
+  return { rows: [{ id: `row_${actorClass}_default`, slots: [] }] };
+}
+
+function loadBuffLayoutConfig(): BuffMonitorLayoutConfig {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(BUFF_LAYOUT_STORAGE_KEY) || "");
+    if (parsed?.version === 1 && parsed.classes && typeof parsed.classes === "object") {
+      return parsed;
+    }
+  } catch (_) {
+    /* use defaults */
+  }
+  return { version: 1, classes: {} };
+}
+
+function nextBuffId(prefix: string): string {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function skillShortcode(skillCode: number | string): number {
+  return Number(String(skillCode).slice(0, 4));
+}
+
+function resolveSkillId(skillCode: number | string): string {
+  const raw = String(skillCode);
+  const candidates = [raw, raw.length === 4 ? raw.padEnd(8, "0") : raw.slice(0, 8)];
+  if (raw.length > 8) candidates.push(raw.slice(0, 8).replace(/\d$/, "0"));
+  if (raw.length > 6) candidates.push(raw.slice(0, 6).padEnd(8, "0"));
+  return [...new Set(candidates)].find((id) => id in skillsZhCN) || raw.slice(0, 8);
+}
+
+function skillName(skillCode: number | string): string {
+  const resolvedId = resolveSkillId(skillCode);
+  return (skillsZhCN as Record<string, string>)[resolvedId] || `技能 ${skillCode}`;
+}
+
+function skillIconSrc(skillCode: number | string): string {
+  const resolvedId = resolveSkillId(skillCode);
+  return `/aion2/skill/${resolvedId.length === 6 ? resolvedId : resolvedId.slice(0, 4)}.png`;
+}
+
 export function Aion2Settings() {
   const { config, updateSettings } = useSettings();
   const { t } = useAppTranslation();
   const [tab, setTab] = useState<Aion2Tab>("shortcuts");
+  const [buffActorClass, setBuffActorClass] = useState<ActorClass>("GLADIATOR");
+  const [buffCandidateClass, setBuffCandidateClass] = useState<ActorClass>("GLADIATOR");
+  const [buffPickerType, setBuffPickerType] = useState<Exclude<BuffSlotType, "empty">>("selfBuff");
+  const [buffLayoutConfig, setBuffLayoutConfig] = useState<BuffMonitorLayoutConfig>(
+    loadBuffLayoutConfig
+  );
+  const [buffCandidatesByClass, setBuffCandidatesByClass] = useState<
+    Partial<Record<ActorClass, number[]>>
+  >({});
+  const [editingBuffSlot, setEditingBuffSlot] = useState<{
+    rowId: string;
+    slotId?: string;
+  } | null>(null);
 
   const tabs: { id: Aion2Tab; label: string }[] = [
     { id: "shortcuts", label: t("settings.aion2.shortcuts") },
     { id: "overlay", label: t("settings.aion2.overlay") },
+    { id: "buff", label: t("settings.aion2.buffMonitor") },
     { id: "backend", label: t("settings.aion2.backend") },
   ];
+  const activeBuffLayout =
+    buffLayoutConfig.classes[buffActorClass] ?? createEmptyClassLayout(buffActorClass);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BUFF_LAYOUT_STORAGE_KEY) {
+        setBuffLayoutConfig(loadBuffLayoutConfig());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  useEffect(() => {
+    invoke<{
+      actorClass?: ActorClass;
+      selfBuffCandidateSkillCodesByClass?: Partial<Record<ActorClass, number[]>>;
+    }>("get_buff_overlay_context")
+      .then((context) => {
+        setBuffCandidatesByClass(context.selfBuffCandidateSkillCodesByClass ?? {});
+        if (context.actorClass && ACTOR_CLASSES.includes(context.actorClass)) {
+          setBuffActorClass(context.actorClass);
+          setBuffCandidateClass(context.actorClass);
+        }
+      })
+      .catch(() => {
+        setBuffCandidatesByClass({});
+      });
+  }, []);
+
+  const saveBuffLayoutConfig = (nextConfig: BuffMonitorLayoutConfig) => {
+    localStorage.setItem(BUFF_LAYOUT_STORAGE_KEY, JSON.stringify(nextConfig));
+    setBuffLayoutConfig(nextConfig);
+    void emit("buff-monitor-layout-changed", nextConfig);
+  };
+
+  const updateBuffClassLayout = (nextLayout: BuffMonitorClassLayout) => {
+    saveBuffLayoutConfig({
+      version: 1,
+      classes: {
+        ...buffLayoutConfig.classes,
+        [buffActorClass]: nextLayout,
+      },
+    });
+  };
+
+  const addBuffRow = () => {
+    updateBuffClassLayout({
+      rows: [...activeBuffLayout.rows, { id: nextBuffId("row"), slots: [] }],
+    });
+  };
+
+  const removeBuffRow = (rowId: string) => {
+    const rows = activeBuffLayout.rows.filter((row) => row.id !== rowId);
+    updateBuffClassLayout(rows.length > 0 ? { rows } : createEmptyClassLayout(buffActorClass));
+    if (editingBuffSlot?.rowId === rowId) setEditingBuffSlot(null);
+  };
+
+  const removeBuffSlot = (rowId: string, slotId: string) => {
+    updateBuffClassLayout({
+      rows: activeBuffLayout.rows.map((row) =>
+        row.id === rowId ? { ...row, slots: row.slots.filter((slot) => slot.id !== slotId) } : row
+      ),
+    });
+    if (editingBuffSlot?.slotId === slotId) setEditingBuffSlot(null);
+  };
+
+  const upsertBuffSlot = (type: BuffSlotType, value?: number) => {
+    const skillCode = skillShortcode(value ?? "");
+    if (type !== "empty" && !Number.isFinite(skillCode)) return;
+    const firstRowId = activeBuffLayout.rows[0]?.id ?? nextBuffId("row");
+    const targetRowId = editingBuffSlot?.rowId ?? firstRowId;
+    const isReplacingSlot = Boolean(editingBuffSlot?.slotId);
+    const nextSlot: BuffMonitorSlot =
+      type === "empty"
+        ? { id: editingBuffSlot?.slotId ?? nextBuffId("slot"), type }
+        : { id: editingBuffSlot?.slotId ?? nextBuffId("slot"), type, skillCode };
+
+    const rows =
+      activeBuffLayout.rows.length > 0
+        ? activeBuffLayout.rows
+        : [{ id: targetRowId, slots: [] }];
+
+    updateBuffClassLayout({
+      rows: rows.map((row) => {
+        if (row.id !== targetRowId) return row;
+        if (!isReplacingSlot) return { ...row, slots: [...row.slots, nextSlot] };
+        return {
+          ...row,
+          slots: row.slots.map((slot) =>
+            slot.id === editingBuffSlot?.slotId ? nextSlot : slot
+          ),
+        };
+      }),
+    });
+    setEditingBuffSlot({ rowId: targetRowId });
+  };
+
+  const clearBuffLayout = () => {
+    updateBuffClassLayout(createEmptyClassLayout(buffActorClass));
+    setEditingBuffSlot(null);
+  };
+
+  const activePickerCandidates = buffCandidatesByClass[buffCandidateClass] ?? [];
+  const selectedBuffSlotId = editingBuffSlot?.slotId;
 
   return (
     <div className="space-y-4">
@@ -387,6 +608,341 @@ export function Aion2Settings() {
             </div>
           </SettingRow>
         </SettingsGroup>
+      )}
+
+      {/* Buff monitor tab */}
+      {tab === "buff" && (
+        <div className="flex flex-col gap-4">
+          <SettingsGroup title={t("settings.aion2.buffMonitor")}>
+            <SettingRow
+              title={t("settings.aion2.buffMonitorEnabled")}
+              description={t("settings.aion2.buffMonitorEnabledDesc")}
+            >
+              <Switch
+                checked={config.aion2.buffMonitor.enabled}
+                onCheckedChange={(v) => updateSettings("aion2.buffMonitor.enabled", v)}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t("settings.aion2.buffMonitorIconSize")}
+              description={t("settings.aion2.buffMonitorIconSizeDesc")}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="24"
+                  max="64"
+                  step="2"
+                  value={config.aion2.buffMonitor.iconSize}
+                  onChange={(e) =>
+                    updateSettings("aion2.buffMonitor.iconSize", Number(e.target.value))
+                  }
+                  className="w-24"
+                />
+                <span className="w-12 text-right text-sm tabular-nums">
+                  {config.aion2.buffMonitor.iconSize}px
+                </span>
+              </div>
+            </SettingRow>
+
+            <SettingRow
+              title={t("settings.aion2.buffMonitorIconGap")}
+              description={t("settings.aion2.buffMonitorIconGapDesc")}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="16"
+                  step="1"
+                  value={config.aion2.buffMonitor.iconGap}
+                  onChange={(e) =>
+                    updateSettings("aion2.buffMonitor.iconGap", Number(e.target.value))
+                  }
+                  className="w-24"
+                />
+                <span className="w-12 text-right text-sm tabular-nums">
+                  {config.aion2.buffMonitor.iconGap}px
+                </span>
+              </div>
+            </SettingRow>
+          </SettingsGroup>
+
+          <SettingsGroup title={t("settings.aion2.buffMonitorClassPreferences")}>
+            <div className="flex min-h-[72px] flex-col gap-4 px-5 py-4">
+              <div className="flex flex-wrap gap-2">
+                {ACTOR_CLASSES.map((actorClass) => (
+                  <Button
+                    key={actorClass}
+                    variant={buffActorClass === actorClass ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setBuffActorClass(actorClass);
+                      setBuffCandidateClass(actorClass);
+                      setEditingBuffSlot(null);
+                    }}
+                  >
+                    <img
+                      src={`/aion2/class/${actorClass.toLowerCase()}.png`}
+                      alt=""
+                      className="size-4 rounded-sm"
+                    />
+                    {ACTOR_CLASS_NAMES[actorClass]}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium">
+                      {t("settings.aion2.buffMonitorPreview")}
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {ACTOR_CLASS_NAMES[buffActorClass]}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={addBuffRow}>
+                      {t("settings.aion2.buffMonitorAddRow")}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={clearBuffLayout}>
+                      {t("settings.aion2.buffMonitorClearLayout")}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex min-h-20 flex-col gap-2 rounded-md bg-background/70 p-3">
+                  {activeBuffLayout.rows.length > 0 ? (
+                    activeBuffLayout.rows.map((row) => (
+                      <div
+                        key={row.id}
+                        className={cn(
+                          "flex items-center rounded-md border p-1 transition-colors",
+                          editingBuffSlot?.rowId === row.id
+                            ? "animate-pulse border border-primary/60 bg-primary/10 shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_0_18px_hsl(var(--primary)/0.18)]"
+                            : "border-transparent bg-transparent"
+                        )}
+                        style={{ gap: `${config.aion2.buffMonitor.iconGap}px` }}
+                      >
+                        {row.slots.map((slot) =>
+                          slot.type === "empty" ? (
+                            <div key={slot.id} className="group relative">
+                              <button
+                                type="button"
+                                className={cn(
+                                  "rounded-md border border-dashed border-muted-foreground/25 bg-muted/30",
+                                  editingBuffSlot?.slotId === slot.id && "ring-primary ring-2"
+                                )}
+                                style={{
+                                  width: `${config.aion2.buffMonitor.iconSize}px`,
+                                  height: `${config.aion2.buffMonitor.iconSize}px`,
+                                }}
+                              onClick={() => {
+                                setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
+                              }}
+                              />
+                              <button
+                                type="button"
+                                className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-destructive text-[10px] leading-none text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                onClick={() => removeBuffSlot(row.id, slot.id)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <div key={slot.id} className="group relative">
+                              <button
+                                type="button"
+                                className={cn(
+                                  "relative overflow-hidden rounded-md border bg-muted",
+                                  slot.type === "bossDebuff"
+                                    ? "border-red-400/60"
+                                    : "border-emerald-400/60",
+                                  editingBuffSlot?.slotId === slot.id && "ring-primary ring-2"
+                                )}
+                                title={`${skillName(slot.skillCode ?? "")} (${skillShortcode(
+                                  slot.skillCode ?? ""
+                                )})`}
+                                style={{
+                                  width: `${config.aion2.buffMonitor.iconSize}px`,
+                                  height: `${config.aion2.buffMonitor.iconSize}px`,
+                                }}
+                                onClick={() => {
+                                setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
+                                setBuffPickerType(
+                                  slot.type === "bossDebuff" ? "bossDebuff" : "selfBuff"
+                                );
+                                }}
+                              >
+                                <img
+                                  src={skillIconSrc(slot.skillCode ?? "")}
+                                  alt=""
+                                  className="size-full object-cover"
+                                />
+                                <span className="absolute right-0.5 bottom-0.5 rounded bg-background/80 px-1 font-mono text-[9px] leading-3">
+                                  {skillShortcode(slot.skillCode ?? "")}
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-destructive text-[10px] leading-none text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                onClick={() => removeBuffSlot(row.id, slot.id)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )
+                        )}
+                        <button
+                          type="button"
+                          className={cn(
+                            "grid shrink-0 place-items-center rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                            editingBuffSlot?.rowId === row.id &&
+                              !editingBuffSlot.slotId &&
+                              "ring-primary ring-2"
+                          )}
+                          title={t("settings.aion2.buffMonitorAddSelfBuff")}
+                          style={{
+                            width: `${config.aion2.buffMonitor.iconSize}px`,
+                            height: `${config.aion2.buffMonitor.iconSize}px`,
+                          }}
+                          onClick={() => setEditingBuffSlot({ rowId: row.id })}
+                        >
+                          +
+                        </button>
+                        {activeBuffLayout.rows.length > 1 && (
+                          <button
+                            type="button"
+                            className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            title={t("settings.aion2.buffMonitorRemoveRow")}
+                            onClick={() => removeBuffRow(row.id)}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted-foreground flex min-h-16 items-center justify-center text-xs">
+                      {t("settings.aion2.buffMonitorNoSkills")}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={buffPickerType === "selfBuff" ? "default" : "outline"}
+                      onClick={() => setBuffPickerType("selfBuff")}
+                    >
+                      {t("settings.aion2.buffMonitorAddSelfBuff")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={buffPickerType === "bossDebuff" ? "default" : "outline"}
+                      onClick={() => setBuffPickerType("bossDebuff")}
+                    >
+                      {t("settings.aion2.buffMonitorAddBossDebuff")}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => upsertBuffSlot("empty")}>
+                    {t("settings.aion2.buffMonitorAddEmptySlot")}
+                    </Button>
+                  </div>
+                  {editingBuffSlot && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingBuffSlot(null);
+                      }}
+                    >
+                      {t("settings.close")}
+                    </Button>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {editingBuffSlot && selectedBuffSlotId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeBuffSlot(editingBuffSlot.rowId, selectedBuffSlotId)}
+                    >
+                      {t("settings.aion2.buffMonitorRemoveSlot")}
+                    </Button>
+                  )}
+                </div>
+
+                <div className="mt-3 rounded-md bg-muted/30 p-2">
+                  <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+                    {ACTOR_CLASSES.map((actorClass) => (
+                      <button
+                        key={actorClass}
+                        type="button"
+                        className={cn(
+                          "flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs",
+                          buffCandidateClass === actorClass
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground"
+                        )}
+                        onClick={() => setBuffCandidateClass(actorClass)}
+                      >
+                        <img
+                          src={`/aion2/class/${actorClass.toLowerCase()}.png`}
+                          alt=""
+                          className="size-4 rounded-sm"
+                        />
+                        {ACTOR_CLASS_NAMES[actorClass]}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activePickerCandidates.length > 0 ? (
+                    <div className="grid max-h-64 grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-2 overflow-auto pr-1">
+                      {activePickerCandidates.map((skillCode) => (
+                        <button
+                          key={`${buffCandidateClass}-${skillCode}`}
+                          type="button"
+                          className={cn(
+                            "flex min-w-0 items-center gap-2 rounded-md border bg-background p-2 text-left text-xs hover:bg-muted",
+                            buffPickerType === "bossDebuff"
+                              ? "border-red-400/25"
+                              : "border-emerald-400/25"
+                          )}
+                          title={`${skillName(skillCode)} (${skillCode})`}
+                          onClick={() => upsertBuffSlot(buffPickerType, skillCode)}
+                        >
+                          <img
+                            src={skillIconSrc(skillCode)}
+                            alt=""
+                            className="size-7 rounded object-cover"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate">{skillName(skillCode)}</span>
+                            <span className="text-muted-foreground font-mono">{skillCode}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground flex min-h-24 items-center justify-center text-xs">
+                      {t("settings.aion2.buffMonitorNoSkills")}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-muted-foreground text-xs leading-5">
+                {t("settings.aion2.buffMonitorStorageDesc")}
+              </div>
+            </div>
+          </SettingsGroup>
+        </div>
       )}
 
       {/* Backend tab */}

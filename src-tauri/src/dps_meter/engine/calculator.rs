@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use crate::dps_meter::models::combat::{
-    ActorInfo, CombatInfos, CombatSnapshot, PlayerOverviewStat, SkillStats, TargetInfo,
+    ActorInfo, BuffInterval, BuffSummary, CombatInfos, CombatSnapshot, PlayerOverviewStat,
+    SkillStats, TargetInfo,
 };
 use crate::dps_meter::storage::data_storage::DataStorage;
 
@@ -158,7 +159,7 @@ fn build_combat_snapshot(
         total_damage,
         by_target_player_skill_stats: filtered_skill_stats,
         by_target_player_stats: per_target_overview,
-        use_buffs_by_target: data_storage.use_buffs_by_target_snapshot(),
+        use_buffs_by_target: build_buff_summaries(data_storage, &kept_targets, &actor_infos),
         combat_infos: CombatInfos {
             actor_infos,
             target_infos,
@@ -476,6 +477,120 @@ fn merge_actor_skill_specs(
 }
 
 // =============================================================================
+// Buff summaries
+// =============================================================================
+
+fn build_buff_summaries(
+    data_storage: &DataStorage,
+    kept_targets: &[u32],
+    actor_infos: &HashMap<u32, ActorInfo>,
+) -> HashMap<u32, Vec<BuffSummary>> {
+    let intervals_by_target = data_storage.buff_intervals_snapshot();
+    let target_start_times = data_storage.start_time_by_target_snapshot();
+    let global_start_time = data_storage.start_time();
+    let now_ms = current_timestamp_millis();
+    let allowed_targets: HashSet<u32> = kept_targets
+        .iter()
+        .copied()
+        .chain(actor_infos.keys().copied())
+        .collect();
+    let mut result = HashMap::new();
+
+    for (target_id, actor_map) in intervals_by_target {
+        if !allowed_targets.contains(&target_id) {
+            continue;
+        }
+
+        let battle_start_ms =
+            target_battle_start_ms(&target_start_times, global_start_time, target_id, now_ms);
+        let battle_duration_ms = now_ms.saturating_sub(battle_start_ms).max(1);
+        let mut summaries = Vec::new();
+
+        for (actor_id, skill_map) in &actor_map {
+            for (skill_code, intervals) in skill_map {
+                let Some(last_interval) = intervals.back() else {
+                    continue;
+                };
+                let covered_ms = covered_duration_ms(intervals, battle_start_ms, now_ms);
+                summaries.push(BuffSummary {
+                    target_id,
+                    actor_id: *actor_id,
+                    skill_code: *skill_code,
+                    coverage: (covered_ms as f64 / battle_duration_ms as f64).clamp(0.0, 1.0),
+                    active: last_interval.end_ms > now_ms,
+                    last_start_ms: last_interval.start_ms,
+                    last_end_ms: last_interval.end_ms,
+                });
+            }
+        }
+
+        if !summaries.is_empty() {
+            summaries.sort_by(|a, b| {
+                a.skill_code
+                    .cmp(&b.skill_code)
+                    .then_with(|| a.actor_id.cmp(&b.actor_id))
+            });
+            result.insert(target_id, summaries);
+        }
+    }
+
+    result
+}
+
+fn target_battle_start_ms(
+    target_start_times: &HashMap<u32, HashMap<u32, f64>>,
+    global_start_time: Option<f64>,
+    target_id: u32,
+    now_ms: u64,
+) -> u64 {
+    target_start_times
+        .get(&target_id)
+        .and_then(|by_actor| by_actor.values().copied().reduce(f64::min))
+        .or(global_start_time)
+        .map(|seconds| (seconds * 1000.0).max(0.0) as u64)
+        .unwrap_or(now_ms)
+}
+
+fn covered_duration_ms(
+    intervals: &VecDeque<BuffInterval>,
+    range_start_ms: u64,
+    range_end_ms: u64,
+) -> u64 {
+    if range_end_ms <= range_start_ms {
+        return 0;
+    }
+
+    let mut ranges: Vec<(u64, u64)> = intervals
+        .iter()
+        .filter_map(|interval| {
+            let start = interval.start_ms.max(range_start_ms);
+            let end = interval.end_ms.min(range_end_ms);
+            (end > start).then_some((start, end))
+        })
+        .collect();
+    ranges.sort_unstable_by_key(|(start, _)| *start);
+
+    let mut total = 0u64;
+    let mut current: Option<(u64, u64)> = None;
+    for (start, end) in ranges {
+        match current {
+            Some((current_start, current_end)) if start <= current_end => {
+                current = Some((current_start, current_end.max(end)));
+            }
+            Some((current_start, current_end)) => {
+                total = total.saturating_add(current_end.saturating_sub(current_start));
+                current = Some((start, end));
+            }
+            None => current = Some((start, end)),
+        }
+    }
+    if let Some((start, end)) = current {
+        total = total.saturating_add(end.saturating_sub(start));
+    }
+    total
+}
+
+// =============================================================================
 // Helpers
 // =============================================================================
 
@@ -489,5 +604,12 @@ fn current_timestamp_seconds() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs_f64())
+        .unwrap_or_default()
+}
+
+fn current_timestamp_millis() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as u64)
         .unwrap_or_default()
 }

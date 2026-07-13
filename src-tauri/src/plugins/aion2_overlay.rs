@@ -22,6 +22,9 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     // If window already exists, just show it
     if let Some(window) = app.get_webview_window(DPS_OVERLAY_LABEL) {
         window.show().map_err(|e| e.to_string())?;
+        if BUFF_MONITOR_ENABLED.load(Ordering::Relaxed) {
+            create_dps_buff(app).await?;
+        }
         return Ok(());
     }
 
@@ -50,6 +53,10 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     let meter = app.state::<DpsMeter>();
     meter.start_dps_meter()?;
 
+    if BUFF_MONITOR_ENABLED.load(Ordering::Relaxed) {
+        create_dps_buff(app).await?;
+    }
+
     Ok(())
 }
 
@@ -64,6 +71,9 @@ pub fn destroy_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> 
         window.destroy().map_err(|e| e.to_string())?;
     }
     if let Some(window) = app.get_webview_window(PVP_OVERLAY_LABEL) {
+        window.destroy().map_err(|e| e.to_string())?;
+    }
+    if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
         window.destroy().map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -122,6 +132,7 @@ pub async fn create_dps_buff<R: Runtime>(app: AppHandle<R>) -> Result<(), String
     if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
         window.show().map_err(|e| e.to_string())?;
         window.unminimize().map_err(|e| e.to_string())?;
+        apply_buff_monitor_locked_for_app(&app)?;
         return Ok(());
     }
 
@@ -145,7 +156,7 @@ pub async fn create_dps_buff<R: Runtime>(app: AppHandle<R>) -> Result<(), String
     .build()
     .map_err(|e| e.to_string())?;
 
-    set_dps_overlay_locked_for_app(&app, OVERLAY_LOCKED.load(Ordering::Relaxed))?;
+    apply_buff_monitor_locked_for_app(&app)?;
 
     Ok(())
 }
@@ -245,19 +256,56 @@ pub fn set_detail_selection(
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static OVERLAY_LOCKED: AtomicBool = AtomicBool::new(false);
+static BUFF_MONITOR_ENABLED: AtomicBool = AtomicBool::new(false);
+
+#[tauri::command]
+pub async fn set_buff_monitor_enabled<R: Runtime>(
+    app: AppHandle<R>,
+    enabled: bool,
+) -> Result<(), String> {
+    BUFF_MONITOR_ENABLED.store(enabled, Ordering::Relaxed);
+
+    if enabled {
+        if app.get_webview_window(DPS_OVERLAY_LABEL).is_some() {
+            create_dps_buff(app).await?;
+        }
+    } else if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
+        window.destroy().map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_buff_monitor_enabled() -> bool {
+    BUFF_MONITOR_ENABLED.load(Ordering::Relaxed)
+}
+
+fn apply_buff_monitor_locked_for_app<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let enabled = OVERLAY_LOCKED.load(Ordering::Relaxed);
+    if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
+        window
+            .set_ignore_cursor_events(enabled)
+            .map_err(|e| e.to_string())?;
+    }
+    let _ = app.emit(
+        "buff-monitor-lock-toggled",
+        serde_json::json!({ "enabled": enabled }),
+    );
+    Ok(())
+}
 
 pub fn set_dps_overlay_locked_for_app<R: Runtime>(
     app: &AppHandle<R>,
     locked: bool,
 ) -> Result<(), String> {
     OVERLAY_LOCKED.store(locked, Ordering::Relaxed);
-    for label in [DPS_OVERLAY_LABEL, BUFF_OVERLAY_LABEL] {
-        if let Some(window) = app.get_webview_window(label) {
-            window
-                .set_ignore_cursor_events(locked)
-                .map_err(|e| e.to_string())?;
-        }
+    if let Some(window) = app.get_webview_window(DPS_OVERLAY_LABEL) {
+        window
+            .set_ignore_cursor_events(locked)
+            .map_err(|e| e.to_string())?;
     }
+    apply_buff_monitor_locked_for_app(app)?;
     let _ = app.emit(
         "overlay-lock-toggled",
         serde_json::json!({ "locked": locked }),

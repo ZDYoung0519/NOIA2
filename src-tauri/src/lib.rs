@@ -97,6 +97,8 @@ pub fn run() {
             plugins::aion2_overlay::destroy_dps_overlay,
             plugins::aion2_overlay::create_pvp_overlay,
             plugins::aion2_overlay::create_dps_buff,
+            plugins::aion2_overlay::set_buff_monitor_enabled,
+            plugins::aion2_overlay::get_buff_monitor_enabled,
             plugins::aion2_overlay::create_dps_history,
             plugins::aion2_overlay::toggle_dps_overlay_locked,
             plugins::aion2_overlay::set_dps_overlay_locked,

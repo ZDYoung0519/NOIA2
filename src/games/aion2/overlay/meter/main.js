@@ -288,6 +288,19 @@ document.getElementById("history-btn").addEventListener("click", async () => {
   }
 });
 
+const $buffBtn = document.getElementById("buff-btn");
+$buffBtn.addEventListener("mousedown", (event) => {
+  event.stopPropagation();
+});
+$buffBtn.addEventListener("click", async (event) => {
+  event.stopPropagation();
+  try {
+    await invoke("create_dps_buff");
+  } catch (_) {
+    /* ignore */
+  }
+});
+
 const $pvpBtn = document.getElementById("pvp-btn");
 $pvpBtn.addEventListener("mousedown", (event) => {
   event.stopPropagation();
@@ -297,19 +310,6 @@ $pvpBtn.addEventListener("click", async (event) => {
   try {
     await enablePvpMode();
     await invoke("create_pvp_overlay");
-  } catch (_) {
-    /* ignore */
-  }
-});
-
-const $buffBtn = document.getElementById("buff-btn");
-$buffBtn.addEventListener("mousedown", (event) => {
-  event.stopPropagation();
-});
-$buffBtn.addEventListener("click", async (event) => {
-  event.stopPropagation();
-  try {
-    await invoke("create_dps_buff");
   } catch (_) {
     /* ignore */
   }
@@ -386,10 +386,7 @@ async function runDiagnostic() {
     const state = await invoke("check_dps_meter_state");
     for (const diag of DIAG_MESSAGES) {
       if (!state[diag.key]) {
-        $diag.textContent =
-          diag.key === "npcapAvailable" && state.npcapError
-            ? `${t(diag.i18n)}: ${state.npcapError}`
-            : t(diag.i18n);
+        $diag.textContent = t(diag.i18n);
         return false;
       }
     }

@@ -56,22 +56,21 @@ export type CombatInfos = {
   timeNow: number;
 };
 
-export type UseBuff = {
+export type BuffSummary = {
   targetId: number;
   actorId: number;
   skillCode: number;
-  serverStartMs: number;
-  localStartMs: number;
-  localEndMs: number;
-  durationMs: number;
-  latencyMs: number;
+  coverage: number;
+  active: boolean;
+  lastStartMs: number;
+  lastEndMs: number;
 };
 
 export type CombatSnapshot = {
   totalDamage: number;
   byTargetPlayerSkillStats: Record<string, Record<string, Record<string, SkillStats>>>;
   byTargetPlayerStats: Record<string, Record<string, PlayerOverviewStat>>;
-  useBuffsByTarget?: Record<string, UseBuff[]>;
+  useBuffsByTarget?: Record<string, BuffSummary[]>;
   combatInfos: CombatInfos;
   lastTargetInfo?: TargetInfo | null;
   lastTargetAllPlayersOverviewStats: PlayerOverviewStat[];

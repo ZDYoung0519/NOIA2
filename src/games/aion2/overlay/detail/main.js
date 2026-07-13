@@ -64,7 +64,8 @@ let selectedActorId = null;
 let selectedTargetId = null;
 let frozenRecord = null;
 let lastSnapshot = null;
-let isBuffPanelOpen = false;
+let isPlayerBuffPanelOpen = false;
+let isBossBuffPanelOpen = false;
 
 // ── Formatters ──
 function fmtDamage(n) {
@@ -140,9 +141,9 @@ function specDots(slots) {
 function getSpecial(stats, key) {
   return Number(stats?.specialCounts?.[key] ?? 0);
 }
-function fmtTimelineTime(seconds) {
-  if (!Number.isFinite(seconds)) return "--";
-  return seconds < 60 ? `${seconds.toFixed(1)}s` : fmtDuration(seconds);
+function fmtBuffCoverage(value) {
+  const pct = Math.max(0, Math.min(100, Number(value || 0) * 100));
+  return pct >= 99.95 ? "100%" : pct.toFixed(1) + "%";
 }
 function getTargetBuffs(dataSource, targetId) {
   if (targetId == null) return [];
@@ -152,33 +153,61 @@ function getTargetBuffs(dataSource, targetId) {
     []
   );
 }
-function renderBuffTimeline(buffs, fightStart, fightEnd) {
-  const fightStartMs = Math.floor(fightStart * 1000);
-  const fightEndMs = Math.floor(fightEnd * 1000);
-  const fightDurationMs = Math.max(1, fightEndMs - fightStartMs);
+function getActorInfo(dataSource, actorId) {
+  return (
+    dataSource?.combatInfos?.actorInfos?.[actorId] ||
+    dataSource?.combatInfos?.actorInfos?.[String(actorId)] ||
+    null
+  );
+}
+function getActorLabel(dataSource, actorId) {
+  const actorInfo = getActorInfo(dataSource, actorId);
+  return actorInfo?.actorName || `#${actorId}`;
+}
+function renderBuffTimeline(buffs, dataSource) {
   const rows = (buffs || [])
+    .slice()
+    .sort((a, b) => {
+      if (Boolean(a.active) !== Boolean(b.active)) return a.active ? -1 : 1;
+      return Number(b.coverage || 0) - Number(a.coverage || 0);
+    })
     .map((buff) => {
-      const startMs = Number(buff.localStartMs);
-      const endMs = Number(buff.localEndMs);
-      if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return null;
-      const visibleStart = Math.max(startMs, fightStartMs);
-      const visibleEnd = Math.min(endMs, fightEndMs);
-      if (visibleEnd <= visibleStart) return null;
-      const left = ((visibleStart - fightStartMs) / fightDurationMs) * 100;
-      const width = ((visibleEnd - visibleStart) / fightDurationMs) * 100;
-      const startSec = (visibleStart - fightStartMs) / 1000;
-      const endSec = (visibleEnd - fightStartMs) / 1000;
+      const skillCode = Number(buff.skillCode);
+      if (!Number.isFinite(skillCode)) return null;
       const name = skillName(buff.skillCode);
       const icon = skillIcon(buff.skillCode);
-      const label = `${name} ${fmtTimelineTime(startSec)}-${fmtTimelineTime(endSec)}`;
+      const casterInfo = getActorInfo(dataSource, buff.actorId);
+      const caster = getActorLabel(dataSource, buff.actorId);
+      const casterIcon = getClassIcon(casterInfo?.actorClass);
+      const coverage = fmtBuffCoverage(buff.coverage);
+      const coverageWidth = Math.max(2, Math.min(100, Number(buff.coverage || 0) * 100));
+      const activeClass = buff.active ? " is-active" : "";
+      const label = `${name} (${buff.skillCode}) / ${caster} / ${coverage}`;
       return `
-        <div class="buff-timeline__row">
-          <div class="buff-timeline__name">
-            ${icon ? `<img class="buff-timeline__icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}
-            <span>${esc(name)}</span>
+        <div class="buff-timeline__row${activeClass}" title="${esc(label)}">
+          <div class="buff-timeline__art">
+            ${icon ? `<img class="buff-timeline__art-icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}
           </div>
-          <div class="buff-timeline__track">
-            <div class="buff-timeline__bar" style="left:${left.toFixed(2)}%;width:${Math.max(width, 0.8).toFixed(2)}%" title="${esc(label)}"></div>
+          <div class="buff-timeline__content">
+            <div class="buff-timeline__head">
+              <span class="buff-timeline__text">
+                <span class="buff-timeline__skill-row">
+                  <span class="buff-timeline__skill">${esc(name)}</span>
+                  <span class="buff-timeline__coverage">${coverage}</span>
+                </span>
+                <span class="buff-timeline__caster">
+                  ${
+                    casterIcon
+                      ? `<img class="buff-timeline__class-icon" src="${casterIcon}" alt="" onerror="this.style.display='none'"/>`
+                      : ""
+                  }
+                  <span>${esc(caster)}</span>
+                </span>
+              </span>
+            </div>
+            <div class="buff-timeline__track">
+              <div class="buff-timeline__bar" style="width:${coverageWidth.toFixed(2)}%"></div>
+            </div>
           </div>
         </div>`;
     })
@@ -192,6 +221,18 @@ function renderBuffTimeline(buffs, fightStart, fightEnd) {
           : `<div class="buff-timeline__empty">${t("dps-detail.noBuffs")}</div>`
       }
     </div>`;
+}
+function renderBuffPanel({ id, title, open, buffs, dataSource, fightStart }) {
+  return `
+    <details class="buff-panel" data-buff-panel="${id}" ${open ? "open" : ""}>
+      <summary class="buff-panel__summary">
+        <span>${title}</span>
+        <span class="buff-panel__chevron">▾</span>
+      </summary>
+      <div class="buff-panel__body">
+        ${renderBuffTimeline(buffs, dataSource)}
+      </div>
+    </details>`;
 }
 function mergeSkillStats(target, source) {
   target.totalDamage += source.totalDamage || 0;
@@ -400,9 +441,10 @@ function render() {
       const dots = specDots(skillSpecMap[s.skillId]);
       const icon = skillIcon(s.skillId);
       const name = skillName(s.skillId);
+      const skillLabel = `${name} (${s.skillId})`;
 
       html += `<div class="skill-row">`;
-      html += `<span class="skill-name-cell">${icon ? `<img class="skill-icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}<span class="skill-name-text">${esc(name)}</span></span>`;
+      html += `<span class="skill-name-cell" data-tooltip="${esc(skillLabel)}">${icon ? `<img class="skill-icon" src="${icon}" alt="" onerror="this.style.display='none'"/>` : ""}<span class="skill-name-text">${esc(name)}</span></span>`;
       html += `<span class="spec-dots">${dots.map((a) => `<span class="spec-dot${a ? " active" : ""}"></span>`).join("")}</span>`;
       html += `<span class="color-slate">${s.counts}</span>`;
       html += `<span class="color-rose">${s.counts > 0 ? fmtPct((sc / s.counts) * 100) : "--"}</span>`;
@@ -423,20 +465,33 @@ function render() {
   } else {
     html += `<div class="empty">${t("dps-detail.noData")}</div>`;
   }
-  html += `
-    <details class="buff-panel" ${isBuffPanelOpen ? "open" : ""}>
-      <summary class="buff-panel__summary">
-        <span>${t("dps-detail.playerBuffs")}</span>
-        <span class="buff-panel__chevron">▾</span>
-      </summary>
-      <div class="buff-panel__body">
-        ${renderBuffTimeline(getTargetBuffs(dataSource, selectedActorId), fightStart, fightEnd)}
-      </div>
-    </details>`;
+  html += renderBuffPanel({
+    id: "player",
+    title: t("dps-detail.playerBuffs"),
+    open: isPlayerBuffPanelOpen,
+    buffs: getTargetBuffs(dataSource, selectedActorId),
+    dataSource,
+    fightStart,
+  });
+  html += renderBuffPanel({
+    id: "boss",
+    title: t("dps-detail.bossBuffs"),
+    open: isBossBuffPanelOpen,
+    buffs: getTargetBuffs(dataSource, currentTargetId),
+    dataSource,
+    fightStart,
+  });
   $content.innerHTML = html;
-  $content.querySelector(".buff-panel")?.addEventListener("toggle", (event) => {
-    isBuffPanelOpen = event.currentTarget.open;
-    requestAnimationFrame(() => requestAnimationFrame(autoResize));
+  $content.querySelectorAll(".buff-panel").forEach((panel) => {
+    panel.addEventListener("toggle", (event) => {
+      const panelId = event.currentTarget.dataset.buffPanel;
+      if (panelId === "player") {
+        isPlayerBuffPanelOpen = event.currentTarget.open;
+      } else if (panelId === "boss") {
+        isBossBuffPanelOpen = event.currentTarget.open;
+      }
+      requestAnimationFrame(() => requestAnimationFrame(autoResize));
+    });
   });
   // Resize after DOM update settles
   requestAnimationFrame(() => requestAnimationFrame(autoResize));

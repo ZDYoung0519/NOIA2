@@ -513,8 +513,7 @@ body:not(.has-players) .player-list {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.status-bar__pvp-btn,
-.status-bar__buff-btn {
+.status-bar__pvp-btn {
   height: 18px;
   padding: 0 4px;
   margin-left: 2px;
@@ -530,8 +529,7 @@ body:not(.has-players) .player-list {
   pointer-events: auto;
 }
 
-.status-bar__pvp-btn:hover,
-.status-bar__buff-btn:hover {
+.status-bar__pvp-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.72);
 }

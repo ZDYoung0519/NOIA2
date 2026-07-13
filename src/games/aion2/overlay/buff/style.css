@@ -55,7 +55,7 @@ body.is-click-through .buff-toolbar {
 }
 
 body.is-click-through .buff-config {
-  visibility: hidden;
+  display: none;
 }
 
 body.is-click-through .buff-picker {
@@ -71,6 +71,14 @@ body.is-click-through .buff-slot__remove {
 body.is-click-through .buff-slot {
   background: transparent;
   box-shadow: none;
+}
+
+body.is-click-through .buff-slot.is-empty::after {
+  display: none;
+}
+
+body.is-click-through .buff-slot__code {
+  display: none;
 }
 
 body,
@@ -414,12 +422,34 @@ body:active,
   transition: opacity 0.12s;
 }
 
+.buff-slot__code {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  z-index: 4;
+  max-width: calc(100% - 6px);
+  padding: 1px 3px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.86);
+  font-family: "Consolas", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.58);
+  border-radius: 3px;
+}
+
 .buff-picker {
   position: fixed;
   z-index: 20;
-  max-height: min(430px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 8px;
-  overflow: auto;
+  overflow: hidden;
   color: rgba(255, 255, 255, 0.88);
   background: rgba(12, 12, 14, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -427,35 +457,46 @@ body:active,
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
 }
 
+.buff-picker[hidden] {
+  display: none;
+}
+
 .buff-picker__close {
-  position: sticky;
-  top: 0;
-  float: right;
+  position: absolute;
+  top: 7px;
+  right: 7px;
   z-index: 2;
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   color: rgba(255, 255, 255, 0.68);
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.075);
   border: 0;
   border-radius: 6px;
   place-items: center;
 }
 
-.buff-picker__quick {
+.buff-picker__topbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: 6px;
   margin-bottom: 8px;
-  padding-right: 30px;
+  padding-right: 26px;
+}
+
+.buff-picker__quick {
+  flex: 0 0 auto;
 }
 
 .buff-picker__types {
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  margin-bottom: 8px;
+  min-width: 0;
 }
 
 .buff-picker__type {
@@ -482,6 +523,7 @@ body:active,
 }
 
 .buff-picker__tabs {
+  flex: 0 0 auto;
   display: flex;
   gap: 4px;
   margin-bottom: 8px;
@@ -513,11 +555,15 @@ body:active,
 
 .buff-picker__section {
   clear: both;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .buff-picker__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: 5px;
 }
 
@@ -560,10 +606,24 @@ body:active,
   border-radius: 5px;
 }
 
-.buff-picker__item span:last-child {
+.buff-picker__text {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.buff-picker__name,
+.buff-picker__code {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.buff-picker__code {
+  margin-top: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: "Consolas", monospace;
+  font-size: 10px;
 }
 
 .buff-picker__empty-icon {
