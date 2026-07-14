@@ -379,7 +379,7 @@ impl DpsMeter {
         let app = self.app.clone();
         let calculator = Arc::clone(&self.calculator);
         let config = Arc::clone(&self.config);
-        let logger = Arc::clone(&self.logger);
+
         let snapshot_running = Arc::clone(&self.snapshot_running);
         let last_emitted_total_damage = Arc::clone(&self.last_emitted_total_damage);
         let last_snapshot = Arc::clone(&self.last_snapshot);

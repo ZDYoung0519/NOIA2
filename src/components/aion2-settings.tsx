@@ -142,9 +142,8 @@ export function Aion2Settings() {
   const [buffActorClass, setBuffActorClass] = useState<ActorClass>("GLADIATOR");
   const [buffCandidateClass, setBuffCandidateClass] = useState<ActorClass>("GLADIATOR");
   const [buffPickerType, setBuffPickerType] = useState<Exclude<BuffSlotType, "empty">>("selfBuff");
-  const [buffLayoutConfig, setBuffLayoutConfig] = useState<BuffMonitorLayoutConfig>(
-    loadBuffLayoutConfig
-  );
+  const [buffLayoutConfig, setBuffLayoutConfig] =
+    useState<BuffMonitorLayoutConfig>(loadBuffLayoutConfig);
   const [buffCandidatesByClass, setBuffCandidatesByClass] = useState<
     Partial<Record<ActorClass, number[]>>
   >({});
@@ -161,6 +160,7 @@ export function Aion2Settings() {
   ];
   const activeBuffLayout =
     buffLayoutConfig.classes[buffActorClass] ?? createEmptyClassLayout(buffActorClass);
+  const buffIconStyle = config.aion2.buffMonitor.iconStyle ?? "style1";
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
@@ -238,9 +238,7 @@ export function Aion2Settings() {
         : { id: editingBuffSlot?.slotId ?? nextBuffId("slot"), type, skillCode };
 
     const rows =
-      activeBuffLayout.rows.length > 0
-        ? activeBuffLayout.rows
-        : [{ id: targetRowId, slots: [] }];
+      activeBuffLayout.rows.length > 0 ? activeBuffLayout.rows : [{ id: targetRowId, slots: [] }];
 
     updateBuffClassLayout({
       rows: rows.map((row) => {
@@ -248,9 +246,7 @@ export function Aion2Settings() {
         if (!isReplacingSlot) return { ...row, slots: [...row.slots, nextSlot] };
         return {
           ...row,
-          slots: row.slots.map((slot) =>
-            slot.id === editingBuffSlot?.slotId ? nextSlot : slot
-          ),
+          slots: row.slots.map((slot) => (slot.id === editingBuffSlot?.slotId ? nextSlot : slot)),
         };
       }),
     });
@@ -625,6 +621,38 @@ export function Aion2Settings() {
             </SettingRow>
 
             <SettingRow
+              title={t("settings.aion2.buffMonitorShowOnlyActive")}
+              description={t("settings.aion2.buffMonitorShowOnlyActiveDesc")}
+            >
+              <Switch
+                checked={config.aion2.buffMonitor.showOnlyActive}
+                onCheckedChange={(v) => updateSettings("aion2.buffMonitor.showOnlyActive", v)}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title={t("settings.aion2.buffMonitorIconStyle")}
+              description={t("settings.aion2.buffMonitorIconStyleDesc")}
+            >
+              <div className="flex gap-2">
+                <Button
+                  variant={buffIconStyle === "style1" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateSettings("aion2.buffMonitor.iconStyle", "style1")}
+                >
+                  {t("settings.aion2.buffMonitorIconStyle1")}
+                </Button>
+                <Button
+                  variant={buffIconStyle === "style2" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateSettings("aion2.buffMonitor.iconStyle", "style2")}
+                >
+                  {t("settings.aion2.buffMonitorIconStyle2")}
+                </Button>
+              </div>
+            </SettingRow>
+
+            <SettingRow
               title={t("settings.aion2.buffMonitorIconSize")}
               description={t("settings.aion2.buffMonitorIconSizeDesc")}
             >
@@ -693,7 +721,7 @@ export function Aion2Settings() {
                 ))}
               </div>
 
-              <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="bg-muted/20 rounded-lg border p-3">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium">
@@ -713,7 +741,7 @@ export function Aion2Settings() {
                   </div>
                 </div>
 
-                <div className="flex min-h-20 flex-col gap-2 rounded-md bg-background/70 p-3">
+                <div className="bg-background/70 flex min-h-20 flex-col gap-2 rounded-md p-3">
                   {activeBuffLayout.rows.length > 0 ? (
                     activeBuffLayout.rows.map((row) => (
                       <div
@@ -721,7 +749,7 @@ export function Aion2Settings() {
                         className={cn(
                           "flex items-center rounded-md border p-1 transition-colors",
                           editingBuffSlot?.rowId === row.id
-                            ? "animate-pulse border border-primary/60 bg-primary/10 shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_0_18px_hsl(var(--primary)/0.18)]"
+                            ? "border-primary/60 bg-primary/10 animate-pulse border shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_0_18px_hsl(var(--primary)/0.18)]"
                             : "border-transparent bg-transparent"
                         )}
                         style={{ gap: `${config.aion2.buffMonitor.iconGap}px` }}
@@ -732,20 +760,21 @@ export function Aion2Settings() {
                               <button
                                 type="button"
                                 className={cn(
-                                  "rounded-md border border-dashed border-muted-foreground/25 bg-muted/30",
+                                  "border-muted-foreground/25 bg-muted/30 border border-dashed",
+                                  buffIconStyle === "style2" ? "rounded-full" : "rounded-md",
                                   editingBuffSlot?.slotId === slot.id && "ring-primary ring-2"
                                 )}
                                 style={{
                                   width: `${config.aion2.buffMonitor.iconSize}px`,
                                   height: `${config.aion2.buffMonitor.iconSize}px`,
                                 }}
-                              onClick={() => {
-                                setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
-                              }}
+                                onClick={() => {
+                                  setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
+                                }}
                               />
                               <button
                                 type="button"
-                                className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-destructive text-[10px] leading-none text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 grid size-4 place-items-center rounded-full text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-100"
                                 onClick={() => removeBuffSlot(row.id, slot.id)}
                               >
                                 ×
@@ -756,7 +785,10 @@ export function Aion2Settings() {
                               <button
                                 type="button"
                                 className={cn(
-                                  "relative overflow-hidden rounded-md border bg-muted",
+                                  "bg-muted relative overflow-hidden border",
+                                  buffIconStyle === "style2"
+                                    ? "rounded-full border-2 border-white/85 shadow-[0_3px_0_rgba(15,23,42,0.42),0_5px_10px_rgba(0,0,0,0.32),inset_0_0_7px_rgba(0,0,0,0.55)]"
+                                    : "rounded-md",
                                   slot.type === "bossDebuff"
                                     ? "border-red-400/60"
                                     : "border-emerald-400/60",
@@ -770,24 +802,34 @@ export function Aion2Settings() {
                                   height: `${config.aion2.buffMonitor.iconSize}px`,
                                 }}
                                 onClick={() => {
-                                setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
-                                setBuffPickerType(
-                                  slot.type === "bossDebuff" ? "bossDebuff" : "selfBuff"
-                                );
+                                  setEditingBuffSlot({ rowId: row.id, slotId: slot.id });
+                                  setBuffPickerType(
+                                    slot.type === "bossDebuff" ? "bossDebuff" : "selfBuff"
+                                  );
                                 }}
                               >
                                 <img
                                   src={skillIconSrc(slot.skillCode ?? "")}
                                   alt=""
-                                  className="size-full object-cover"
+                                  className={cn(
+                                    "size-full object-cover",
+                                    buffIconStyle === "style2" && "rounded-full"
+                                  )}
                                 />
-                                <span className="absolute right-0.5 bottom-0.5 rounded bg-background/80 px-1 font-mono text-[9px] leading-3">
+                                <span
+                                  className={cn(
+                                    "bg-background/80 absolute font-mono text-[9px] leading-3",
+                                    buffIconStyle === "style2"
+                                      ? "-right-1 -bottom-1 min-w-6 rounded-full border border-white/30 px-1.5 py-0.5 text-center shadow-sm"
+                                      : "right-0.5 bottom-0.5 rounded px-1"
+                                  )}
+                                >
                                   {skillShortcode(slot.skillCode ?? "")}
                                 </span>
                               </button>
                               <button
                                 type="button"
-                                className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-destructive text-[10px] leading-none text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                                className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 grid size-4 place-items-center rounded-full text-[10px] leading-none opacity-0 transition-opacity group-hover:opacity-100"
                                 onClick={() => removeBuffSlot(row.id, slot.id)}
                               >
                                 ×
@@ -798,7 +840,8 @@ export function Aion2Settings() {
                         <button
                           type="button"
                           className={cn(
-                            "grid shrink-0 place-items-center rounded-md border border-dashed border-muted-foreground/30 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                            "border-muted-foreground/30 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground grid shrink-0 place-items-center border border-dashed",
+                            buffIconStyle === "style2" ? "rounded-full" : "rounded-md",
                             editingBuffSlot?.rowId === row.id &&
                               !editingBuffSlot.slotId &&
                               "ring-primary ring-2"
@@ -815,7 +858,7 @@ export function Aion2Settings() {
                         {activeBuffLayout.rows.length > 1 && (
                           <button
                             type="button"
-                            className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive grid size-6 shrink-0 place-items-center rounded-md"
                             title={t("settings.aion2.buffMonitorRemoveRow")}
                             onClick={() => removeBuffRow(row.id)}
                           >
@@ -850,7 +893,7 @@ export function Aion2Settings() {
                       {t("settings.aion2.buffMonitorAddBossDebuff")}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => upsertBuffSlot("empty")}>
-                    {t("settings.aion2.buffMonitorAddEmptySlot")}
+                      {t("settings.aion2.buffMonitorAddEmptySlot")}
                     </Button>
                   </div>
                   {editingBuffSlot && (
@@ -878,7 +921,7 @@ export function Aion2Settings() {
                   )}
                 </div>
 
-                <div className="mt-3 rounded-md bg-muted/30 p-2">
+                <div className="bg-muted/30 mt-3 rounded-md p-2">
                   <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
                     {ACTOR_CLASSES.map((actorClass) => (
                       <button
@@ -909,7 +952,7 @@ export function Aion2Settings() {
                           key={`${buffCandidateClass}-${skillCode}`}
                           type="button"
                           className={cn(
-                            "flex min-w-0 items-center gap-2 rounded-md border bg-background p-2 text-left text-xs hover:bg-muted",
+                            "bg-background hover:bg-muted flex min-w-0 items-center gap-2 rounded-md border p-2 text-left text-xs",
                             buffPickerType === "bossDebuff"
                               ? "border-red-400/25"
                               : "border-emerald-400/25"

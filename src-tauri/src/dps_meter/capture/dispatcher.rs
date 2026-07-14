@@ -397,11 +397,3 @@ fn looks_like_tls_payload(data: &[u8]) -> bool {
 fn directional_port_key(src_port: u16, dst_port: u16) -> String {
     format!("{src_port}->{dst_port}")
 }
-
-fn format_packet_prefix(data: &[u8], max_bytes: usize) -> String {
-    data.iter()
-        .take(max_bytes)
-        .map(|byte| format!("{byte:02X}"))
-        .collect::<Vec<_>>()
-        .join(" ")
-}

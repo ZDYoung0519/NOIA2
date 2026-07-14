@@ -420,7 +420,7 @@ pub async fn create_dps_detail<R: Runtime>(app: AppHandle<R>) -> Result<(), Stri
     .transparent(true)
     .always_on_top(true)
     .skip_taskbar(true)
-    .inner_size(700.0, 360.0)
+    .inner_size(1080.0, 360.0)
     .resizable(true)
     .visible(false)
     .build()

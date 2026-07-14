@@ -50,6 +50,50 @@ body {
   white-space: nowrap;
 }
 
+.history-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  flex-shrink: 0;
+  margin: 0 0 7px;
+}
+
+.history-filter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: #9aa3af;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.history-filter select {
+  min-width: 0;
+  height: 25px;
+  padding: 0 22px 0 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  outline: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    rgba(8, 10, 14, 0.82);
+  color: #e5e7eb;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.history-filter select:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.history-filter select:focus {
+  border-color: rgba(245, 215, 138, 0.32);
+}
+
 /* ── Footer ── */
 .history-footer {
   display: flex;

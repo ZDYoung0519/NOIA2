@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::models::combat::DetailPlayerInfo;
 use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -432,18 +431,16 @@ impl StreamProcessor {
             if matches!(and_result, 5..=7) && reader.offset + temp_v <= packet.len() {
                 let special_area = &packet[reader.offset..reader.offset + temp_v];
                 let special_byte = special_area[0];
+                if special_byte & 0x02 != 0 {
+                    specials.push(SpecialDamage::Parry);
+                }
                 if special_byte & 0x04 != 0 {
                     specials.push(SpecialDamage::Perfect);
                 }
                 if special_byte & 0x08 != 0 {
                     specials.push(SpecialDamage::Double);
                 }
-                // if special_byte & 0x10 != 0 {
-                //     // Keep the old DOUBLE bit as a fallback, but do not count the same
-                //     // special twice when both 0x08 and 0x10 are present in one packet.
-                //     specials.push(SpecialDamage::Double);
-                // }
-                if special_byte & 0x40 != 0 {
+                if special_byte & 0x20 != 0 {
                     specials.push(SpecialDamage::Smite);
                 }
                 match special_area.get(2).copied() {
@@ -577,6 +574,11 @@ impl StreamProcessor {
         if !actor_info.is_valid() {
             return false;
         }
+
+        if actor_info.value < 1 {
+            return false;
+        }
+
         offset += actor_info.length;
 
         let unknown_info = read_varint(packet, offset);
@@ -1455,63 +1457,6 @@ fn parse_snapshot_combat_power(packet: &[u8]) -> Option<u64> {
     None
 }
 
-fn parse_detail_player_info_entry(
-    payload: &[u8],
-    offset: usize,
-) -> Option<(DetailPlayerInfo, usize)> {
-    if !looks_like_detail_player_info_entry(payload, offset) {
-        return None;
-    }
-
-    let server_id = u16::from_le_bytes([payload[offset], payload[offset + 1]]);
-    let class_or_role = parse_u32_le(payload, offset + 2);
-    let name_len = payload[offset + 6] as usize;
-    let name_start = offset + 7;
-    let name_end = name_start + name_len;
-    let name = std::str::from_utf8(&payload[name_start..name_end]).ok()?;
-    let name = sanitize_nickname(name)?;
-
-    let mut cursor = name_end;
-    let level = parse_u32_le(payload, cursor);
-    cursor += 4;
-    let flag = *payload.get(cursor)?;
-    cursor += 1;
-    let character_uid = parse_u64_le(payload, cursor);
-    cursor += 8;
-    let unknown_1 = parse_u32_le(payload, cursor);
-    cursor += 4;
-    let item_level = parse_u32_le(payload, cursor);
-    cursor += 4;
-    let combat_power = parse_u64_le(payload, cursor);
-    cursor += 8;
-    let unknown_2 = parse_u64_le(payload, cursor);
-    cursor += 8;
-    let unknown_3 = parse_u32_le(payload, cursor);
-    cursor += 4;
-
-    // Records may have a few padding bytes, so find the next plausible record
-    // instead of assuming a fixed stride.
-    let next_offset = find_next_detail_player_info_entry(payload, cursor, payload.len())
-        .unwrap_or(cursor.min(payload.len()));
-
-    Some((
-        DetailPlayerInfo {
-            server_id,
-            name,
-            class_or_role,
-            level,
-            flag,
-            character_uid,
-            unknown_1,
-            item_level,
-            combat_power,
-            unknown_2,
-            unknown_3,
-        },
-        next_offset,
-    ))
-}
-
 fn job_to_actor_class(job: u8) -> Option<&'static str> {
     match job {
         5..=8 => Some("GLADIATOR"),
@@ -1525,44 +1470,6 @@ fn job_to_actor_class(job: u8) -> Option<&'static str> {
         45..=48 => Some("FIGHTER"),
         _ => None,
     }
-}
-
-fn find_next_detail_player_info_entry(payload: &[u8], start: usize, end: usize) -> Option<usize> {
-    let end = end.min(payload.len());
-    (start..end).find(|offset| looks_like_detail_player_info_entry(payload, *offset))
-}
-
-fn looks_like_detail_player_info_entry(payload: &[u8], offset: usize) -> bool {
-    if offset + 48 > payload.len() {
-        return false;
-    }
-
-    let server_id = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
-    if !is_available_server_id(server_id) {
-        return false;
-    }
-
-    let name_len = payload[offset + 6] as usize;
-    if !(1..=71).contains(&name_len) {
-        return false;
-    }
-
-    let name_start = offset + 7;
-    let name_end = name_start + name_len;
-    let min_end = name_end + 41;
-    if min_end > payload.len() {
-        return false;
-    }
-
-    let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
-        return false;
-    };
-    if sanitize_nickname(name).is_none() {
-        return false;
-    }
-
-    let level = parse_u32_le(payload, name_end);
-    (1..=100).contains(&level)
 }
 
 fn normalize_skill_id(raw: u32) -> u32 {

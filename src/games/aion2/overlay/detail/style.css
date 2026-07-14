@@ -498,6 +498,7 @@ body {
   overflow: hidden;
   border-radius: 3px;
   padding: 1px 6px;
+  white-space: nowrap;
 }
 .skill-total-bar {
   position: absolute;

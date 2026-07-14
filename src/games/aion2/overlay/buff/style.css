@@ -81,6 +81,10 @@ body.is-click-through .buff-slot__code {
   display: none;
 }
 
+body.is-click-through .buff-slot.is-hidden-in-click-through {
+  visibility: hidden;
+}
+
 body,
 .buff-overlay {
   cursor: grab;
@@ -337,49 +341,19 @@ body:active,
   opacity: 1;
 }
 
-.buff-slot.is-just-activated {
-  animation: none;
-}
-
 .buff-slot.is-expiring {
-  animation: buff-expiring 0.5s ease-in-out infinite;
+  --buff-accent: rgba(245, 158, 11, 0.95);
+  --buff-accent-glow: rgba(245, 158, 11, 0.2);
+  opacity: 0.68;
 }
 
-.buff-slot.is-just-activated::before {
-  position: absolute;
-  inset: -4px;
-  z-index: 4;
-  pointer-events: none;
-  content: "";
-  border: 2px solid rgba(103, 232, 249, 0.88);
-  border-radius: 8px;
-  opacity: 0;
-  animation: buff-activated-ring 0.62s ease-out;
+.buff-slot.is-expiring::after {
+  border-color: rgba(245, 158, 11, 0.95);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
 }
 
-@keyframes buff-activated-ring {
-  0% {
-    opacity: 0.95;
-    transform: scale(0.92);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(1.28);
-  }
-}
-
-@keyframes buff-expiring {
-  50% {
-    opacity: 0.1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .buff-slot.is-just-activated,
-  .buff-slot.is-expiring {
-    animation: none;
-  }
+.buff-slot.is-expiring .buff-slot__duration {
+  color: #f59e0b;
 }
 
 .buff-slot__icon {
@@ -440,6 +414,104 @@ body:active,
   pointer-events: none;
   background: rgba(0, 0, 0, 0.58);
   border-radius: 3px;
+}
+
+body[data-icon-style="style2"] .buff-slot {
+  overflow: visible;
+  background: transparent;
+  border-radius: 999px;
+  box-shadow:
+    0 3px 0 rgba(15, 23, 42, 0.48),
+    0 5px 10px rgba(0, 0, 0, 0.34);
+}
+
+body[data-icon-style="style2"] .buff-slot::after {
+  inset: 0;
+  border: 3px solid rgba(246, 248, 249, 0.88);
+  box-shadow:
+    inset 0 0 7px rgba(0, 0, 0, 0.64),
+    0 0 0 1px rgba(0, 0, 0, 0.24);
+}
+
+body[data-icon-style="style2"] .buff-slot.is-active.is-player-buff {
+  --buff-accent: rgba(56, 189, 248, 0.96);
+  --buff-accent-glow: rgba(56, 189, 248, 0.28);
+}
+
+body[data-icon-style="style2"] .buff-slot.is-active::after {
+  border-color: var(--buff-accent);
+  box-shadow:
+    inset 0 0 7px rgba(0, 0, 0, 0.68),
+    0 0 9px var(--buff-accent-glow);
+}
+
+body[data-icon-style="style2"] .buff-slot.is-empty {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+}
+
+body[data-icon-style="style2"] .buff-slot.is-empty::after {
+  display: none;
+}
+
+body.is-click-through[data-icon-style="style2"] .buff-slot.is-empty {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+body[data-icon-style="style2"] .buff-slot__icon {
+  border-radius: 999px;
+}
+
+body[data-icon-style="style2"] .buff-slot__duration {
+  inset: auto -5px -6px auto;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 6px;
+  color: #42c9ff;
+  font-size: min(14px, var(--buff-duration-size));
+  text-align: center;
+  background: rgba(3, 5, 6, 0.92);
+  border: 1px solid rgba(95, 123, 133, 0.82);
+  border-radius: 999px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.38);
+  opacity: 0.95;
+  place-items: center;
+}
+
+body[data-icon-style="style2"] .buff-slot__duration:empty {
+  display: none;
+}
+
+body[data-icon-style="style2"] .buff-slot__code {
+  right: -3px;
+  bottom: -4px;
+  min-width: 22px;
+  padding: 2px 5px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  background: rgba(3, 5, 6, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+body[data-icon-style="style2"] .buff-slot.is-expiring {
+  --buff-accent: rgba(245, 158, 11, 0.95);
+  --buff-accent-glow: rgba(245, 158, 11, 0.2);
+}
+
+body[data-icon-style="style2"] .buff-slot.is-expiring::after {
+  border-color: rgba(245, 158, 11, 0.95);
+  box-shadow:
+    inset 0 0 7px rgba(0, 0, 0, 0.68),
+    0 0 8px rgba(245, 158, 11, 0.24);
+}
+
+body[data-icon-style="style2"] .buff-slot.is-expiring .buff-slot__duration {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.62);
 }
 
 .buff-picker {

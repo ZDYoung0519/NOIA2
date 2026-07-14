@@ -15,9 +15,14 @@ const $count = document.getElementById("header-count");
 const $empty = document.getElementById("empty");
 const $upload = document.getElementById("upload-btn");
 const $uploadStatus = document.getElementById("upload-status");
+const $targetFilter = document.getElementById("target-filter");
+const $actorFilter = document.getElementById("actor-filter");
+const $targetFilterLabel = document.getElementById("target-filter-label");
+const $actorFilterLabel = document.getElementById("actor-filter-label");
 let allRecords = [];
 let expandedId = null;
 let isUploading = false;
+const ALL_FILTER_VALUE = "__all__";
 
 document.getElementById("close-btn").addEventListener("click", async () => {
   try {
@@ -90,7 +95,7 @@ async function uploadRecords(records, emptyMessage) {
       }),
       result.failed > 0 ? "error" : "success"
     );
-    render(allRecords);
+    applyFilters();
   } catch (error) {
     console.error("[dps-history] queue upload failed:", error);
     setUploadStatus(error?.message || t("dps-history.uploadFailed"), "error");
@@ -237,13 +242,71 @@ function getMainPlayerName(record) {
 
   return getRecognizedPlayers(record)[0]?.actorName?.trim() || "";
 }
+function getMainPlayerFilterName(record) {
+  return getMainPlayerName(record) || t("dps-history.unknownMainActor");
+}
+function countOptions(values) {
+  const counts = new Map();
+  for (const value of values) {
+    if (!value) continue;
+    counts.set(value, (counts.get(value) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.value.localeCompare(b.value, undefined, { numeric: true, sensitivity: "base" });
+    });
+}
+function setSelectOptions(select, options, allLabel) {
+  const oldValue = select.value || ALL_FILTER_VALUE;
+  select.innerHTML = [
+    `<option value="${ALL_FILTER_VALUE}">${esc(allLabel)}</option>`,
+    ...options.map(
+      (option) =>
+        `<option value="${esc(option.value)}">${esc(option.value)} (${option.count})</option>`
+    ),
+  ].join("");
+  select.value = options.some((option) => option.value === oldValue) ? oldValue : ALL_FILTER_VALUE;
+}
+function refreshFilterOptions() {
+  $targetFilterLabel.textContent = t("dps-history.targetFilter");
+  $actorFilterLabel.textContent = t("dps-history.actorFilter");
+  setSelectOptions(
+    $targetFilter,
+    countOptions(allRecords.map(getTargetName)),
+    t("dps-history.allTargets")
+  );
+  setSelectOptions(
+    $actorFilter,
+    countOptions(allRecords.map(getMainPlayerFilterName)),
+    t("dps-history.allActors")
+  );
+  $targetFilter.disabled = allRecords.length === 0;
+  $actorFilter.disabled = allRecords.length === 0;
+}
+function applyFilters() {
+  const targetValue = $targetFilter.value || ALL_FILTER_VALUE;
+  const actorValue = $actorFilter.value || ALL_FILTER_VALUE;
+  const records = allRecords.filter((record) => {
+    if (targetValue !== ALL_FILTER_VALUE && getTargetName(record) !== targetValue) return false;
+    if (actorValue !== ALL_FILTER_VALUE && getMainPlayerFilterName(record) !== actorValue) {
+      return false;
+    }
+    return true;
+  });
+  render(records);
+}
 
 // ── Render record list ──
 function render(records) {
-  allRecords = records;
   const lbl = records.length === 1 ? t("dps-history.record") : t("dps-history.records");
-  const pendingCount = records.filter((record) => !record.uploaded).length;
-  $count.textContent = `${records.length} ${lbl} · ${pendingCount} ${t("dps-history.pending")}`;
+  const pendingCount = allRecords.filter((record) => !record.uploaded).length;
+  const countPrefix =
+    records.length === allRecords.length
+      ? `${records.length} ${lbl}`
+      : `${records.length} / ${allRecords.length} ${lbl}`;
+  $count.textContent = `${countPrefix} · ${pendingCount} ${t("dps-history.pending")}`;
   setUploadControlsDisabled(isUploading);
 
   if (records.length === 0) {
@@ -253,10 +316,10 @@ function render(records) {
     return;
   }
   $empty.style.display = "none";
-  records.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  const sortedRecords = records.slice().sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 
   let html = "";
-  for (const r of records) {
+  for (const r of sortedRecords) {
     const name = getTargetName(r);
     const targetInfo = getTargetInfo(r);
     const isBoss = targetInfo?.isBoss;
@@ -404,7 +467,9 @@ $list.addEventListener("click", async (e) => {
   async function load() {
     try {
       const records = await invoke("get_history");
-      render(records);
+      allRecords = Array.isArray(records) ? records : [];
+      refreshFilterOptions();
+      applyFilters();
     } catch (e) {
       console.error("[dps-history] load failed:", e);
     }
@@ -413,11 +478,14 @@ $list.addEventListener("click", async (e) => {
     $empty.textContent = t("dps-history.empty");
   }
   setEmptyText();
+  $targetFilter.addEventListener("change", applyFilters);
+  $actorFilter.addEventListener("change", applyFilters);
 
   listen("language-changed", (event) => {
     setLanguage(event.payload.language);
     setEmptyText();
-    if (allRecords.length > 0) render(allRecords);
+    refreshFilterOptions();
+    applyFilters();
   });
 
   await load();

@@ -295,55 +295,55 @@ pub fn ensure_tracked_window<R: Runtime>(
     Ok(())
 }
 
-#[tauri::command]
-pub fn untrack_window_pair<R: Runtime>(
-    app: AppHandle<R>,
-    parent_label: String,
-    child_label: String,
-) -> Result<(), String> {
-    let key = pair_key(&parent_label, &child_label);
-    let tracked_pairs_state = app.state::<TrackedWindowPairs>();
-    let mut tracked_pairs = tracked_pairs_state
-        .0
-        .lock()
-        .map_err(|_| "failed to lock tracked window pairs".to_string())?;
+// #[tauri::command]
+// pub fn untrack_window_pair<R: Runtime>(
+//     app: AppHandle<R>,
+//     parent_label: String,
+//     child_label: String,
+// ) -> Result<(), String> {
+//     let key = pair_key(&parent_label, &child_label);
+//     let tracked_pairs_state = app.state::<TrackedWindowPairs>();
+//     let mut tracked_pairs = tracked_pairs_state
+//         .0
+//         .lock()
+//         .map_err(|_| "failed to lock tracked window pairs".to_string())?;
 
-    tracked_pairs.remove(&key);
-    Ok(())
-}
+//     tracked_pairs.remove(&key);
+//     Ok(())
+// }
 
-#[tauri::command]
-pub fn resize_window<R: Runtime>(
-    app: AppHandle<R>,
-    label: String,
-    width: Option<f64>,
-    height: Option<f64>,
-) -> Result<(), String> {
-    let window = app
-        .get_webview_window(&label)
-        .ok_or_else(|| format!("window '{label}' not found"))?;
-    let scale_factor = window.scale_factor().map_err(|e| e.to_string())?;
-    let current_size = window.inner_size().map_err(|e| e.to_string())?;
-    let logical_size = current_size.to_logical::<f64>(scale_factor);
+// #[tauri::command]
+// pub fn resize_window<R: Runtime>(
+//     app: AppHandle<R>,
+//     label: String,
+//     width: Option<f64>,
+//     height: Option<f64>,
+// ) -> Result<(), String> {
+//     let window = app
+//         .get_webview_window(&label)
+//         .ok_or_else(|| format!("window '{label}' not found"))?;
+//     let scale_factor = window.scale_factor().map_err(|e| e.to_string())?;
+//     let current_size = window.inner_size().map_err(|e| e.to_string())?;
+//     let logical_size = current_size.to_logical::<f64>(scale_factor);
 
-    window
-        .set_size(LogicalSize::new(
-            width.unwrap_or(logical_size.width).max(10.0),
-            height.unwrap_or(logical_size.height).max(10.0),
-        ))
-        .map_err(|e| e.to_string())
-}
+//     window
+//         .set_size(LogicalSize::new(
+//             width.unwrap_or(logical_size.width).max(10.0),
+//             height.unwrap_or(logical_size.height).max(10.0),
+//         ))
+//         .map_err(|e| e.to_string())
+// }
 
-#[tauri::command]
-pub fn get_window_size<R: Runtime>(app: AppHandle<R>, label: String) -> Result<(f64, f64), String> {
-    let window = app
-        .get_webview_window(&label)
-        .ok_or_else(|| format!("window '{label}' not found"))?;
-    let scale_factor = window.scale_factor().map_err(|e| e.to_string())?;
-    let size = window.inner_size().map_err(|e| e.to_string())?;
-    let logical_size = size.to_logical::<f64>(scale_factor);
-    Ok((logical_size.width, logical_size.height))
-}
+// #[tauri::command]
+// pub fn get_window_size<R: Runtime>(app: AppHandle<R>, label: String) -> Result<(f64, f64), String> {
+//     let window = app
+//         .get_webview_window(&label)
+//         .ok_or_else(|| format!("window '{label}' not found"))?;
+//     let scale_factor = window.scale_factor().map_err(|e| e.to_string())?;
+//     let size = window.inner_size().map_err(|e| e.to_string())?;
+//     let logical_size = size.to_logical::<f64>(scale_factor);
+//     Ok((logical_size.width, logical_size.height))
+// }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("window-tracking")

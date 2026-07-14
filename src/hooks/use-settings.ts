@@ -10,6 +10,7 @@ type Language = "en" | "zh-CN" | "zh-TW" | "ko";
 type RGBA = [number, number, number, number];
 type PvpOverlayPosition = "bottom" | "right" | "free";
 type CaptureBackendPriority = "winDivertFirst" | "npcapFirst";
+type BuffMonitorIconStyle = "style1" | "style2";
 
 interface AppSettings {
   theme: Theme;
@@ -60,6 +61,8 @@ interface OverlaySettings {
 
 interface BuffMonitorSettings {
   enabled: boolean;
+  showOnlyActive: boolean;
+  iconStyle: BuffMonitorIconStyle;
   iconSize: number;
   iconGap: number;
 }
@@ -131,6 +134,8 @@ const DEFAULTS: AppConfig = {
     },
     buffMonitor: {
       enabled: false,
+      showOnlyActive: true,
+      iconStyle: "style1",
       iconSize: 34,
       iconGap: 5,
     },

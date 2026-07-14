@@ -85,6 +85,7 @@ export type HistoryRecord = {
   combatInfos: CombatInfos;
   playerSkillStats: Record<string, Record<string, SkillStats>>;
   playerStats: Record<string, PlayerOverviewStat>;
+  useBuffsByTarget?: Record<string, BuffSummary[]>;
   createdAt: number;
   uploaded?: boolean;
 };

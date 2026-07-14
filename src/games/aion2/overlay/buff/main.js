@@ -39,6 +39,8 @@ let layoutConfig = loadLayoutConfig();
 let pickerRowId = null;
 let pickerSlotId = null;
 let idSeed = Date.now();
+let showOnlyActive = true;
+let iconStyle = "style1";
 
 const $buffList = document.getElementById("buff-list");
 const $buffTitle = document.getElementById("buff-title");
@@ -69,6 +71,11 @@ function applyIconGap(value) {
   const gap = Math.min(16, Math.max(0, Number.isFinite(parsed) ? parsed : 5));
   document.documentElement.style.setProperty("--buff-icon-gap", `${gap}px`);
   return gap;
+}
+
+function applyIconStyle(value) {
+  iconStyle = value === "style2" ? "style2" : "style1";
+  document.body.dataset.iconStyle = iconStyle;
 }
 
 function applyLocked(locked) {
@@ -147,9 +154,13 @@ function applyBuffMonitorSettings() {
   try {
     const parsed = JSON.parse(localStorage.getItem(APP_CONFIG_STORAGE_KEY) || "{}");
     const buffMonitor = parsed?.aion2?.buffMonitor;
+    showOnlyActive = buffMonitor?.showOnlyActive !== false;
+    applyIconStyle(buffMonitor?.iconStyle);
     applyIconSize(buffMonitor?.iconSize);
     applyIconGap(buffMonitor?.iconGap);
   } catch (_) {
+    showOnlyActive = true;
+    applyIconStyle(null);
     applyIconSize(null);
     applyIconGap(null);
   }
@@ -505,16 +516,15 @@ function updateSlotElement(slot, element, now) {
   const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
   const isActive = remainingSeconds > 0;
   const isExpiring = isActive && remainingMs < 3000 && shouldPlayActivationAnimation(slot);
+  const isHiddenInClickThrough = showOnlyActive && !isActive;
 
   if (element.dataset.active !== String(isActive)) {
-    const wasActive = element.dataset.active === "true";
     element.dataset.active = String(isActive);
     element.classList.toggle("is-active", isActive);
-    if (!wasActive && isActive && shouldPlayActivationAnimation(slot)) {
-      element.classList.remove("is-just-activated");
-      void element.offsetWidth;
-      element.classList.add("is-just-activated");
-    }
+  }
+  if (element.dataset.hiddenInClickThrough !== String(isHiddenInClickThrough)) {
+    element.dataset.hiddenInClickThrough = String(isHiddenInClickThrough);
+    element.classList.toggle("is-hidden-in-click-through", isHiddenInClickThrough);
   }
   if (element.dataset.expiring !== String(isExpiring)) {
     element.dataset.expiring = String(isExpiring);
@@ -527,20 +537,19 @@ function updateSlotElement(slot, element, now) {
   }
 }
 
-function updateBuffStates() {
-  if (updateTimer) {
-    window.clearTimeout(updateTimer);
-    updateTimer = 0;
+function pruneExpiredBuffs(now) {
+  for (const [key, buff] of activeBuffs) {
+    const localEndMs = Number(buff?.localEndMs);
+    if (!Number.isFinite(localEndMs) || localEndMs <= now) {
+      activeBuffs.delete(key);
+    }
   }
+}
 
-  const now = Date.now();
+function getNextBuffUpdateAt(now) {
   let nextUpdateAt = Infinity;
 
-  for (const slot of renderedBuffSlots) {
-    const elements = slotElementsByBuffKey.get(buffKey(slot)) || [];
-    for (const element of elements) updateSlotElement(slot, element, now);
-
-    const buff = activeBuffs.get(buffKey(slot));
+  for (const buff of activeBuffs.values()) {
     const localEndMs = Number(buff?.localEndMs);
     if (!Number.isFinite(localEndMs) || localEndMs <= now) continue;
 
@@ -548,6 +557,25 @@ function updateBuffStates() {
     const nextSecondBoundary = localEndMs - (Math.ceil(remainingMs / 1000) - 1) * 1000;
     nextUpdateAt = Math.min(nextUpdateAt, nextSecondBoundary, localEndMs);
   }
+
+  return nextUpdateAt;
+}
+
+function updateBuffStates() {
+  if (updateTimer) {
+    window.clearTimeout(updateTimer);
+    updateTimer = 0;
+  }
+
+  const now = Date.now();
+
+  for (const slot of renderedBuffSlots) {
+    const elements = slotElementsByBuffKey.get(buffKey(slot)) || [];
+    for (const element of elements) updateSlotElement(slot, element, now);
+  }
+
+  pruneExpiredBuffs(now);
+  const nextUpdateAt = getNextBuffUpdateAt(now);
 
   if (Number.isFinite(nextUpdateAt)) {
     const delay = Math.min(1000, Math.max(80, nextUpdateAt - Date.now()));

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 
 use crate::dps_meter::models::combat::{
-    CombatInfos, CombatSnapshot, PlayerOverviewStat, SkillStats, TargetInfo,
+    BuffSummary, CombatInfos, CombatSnapshot, PlayerOverviewStat, SkillStats, TargetInfo,
 };
 
 const MAGIC: &[u8; 4] = b"DPSH";
@@ -28,6 +28,8 @@ pub struct HistoryRecord {
     pub combat_infos: CombatInfos,
     pub player_skill_stats: HashMap<u32, HashMap<u32, SkillStats>>,
     pub player_stats: HashMap<u32, PlayerOverviewStat>,
+    #[serde(default)]
+    pub use_buffs_by_target: HashMap<u32, Vec<BuffSummary>>,
     pub created_at: u64,
     #[serde(default)]
     pub uploaded: bool,
@@ -156,6 +158,19 @@ impl HistoryStore {
                     .cloned()
                     .unwrap_or_default();
 
+                let relevant_buff_targets: HashSet<u32> = std::iter::once(target_id)
+                    .chain(player_stats.keys().copied())
+                    .collect();
+                let use_buffs_by_target = snapshot
+                    .use_buffs_by_target
+                    .iter()
+                    .filter_map(|(buff_target_id, buffs)| {
+                        relevant_buff_targets
+                            .contains(buff_target_id)
+                            .then(|| (*buff_target_id, buffs.clone()))
+                    })
+                    .collect();
+
                 let combat_infos = CombatInfos {
                     target_infos: target_info
                         .as_ref()
@@ -176,6 +191,7 @@ impl HistoryStore {
                     combat_infos,
                     player_stats,
                     player_skill_stats: skill_stats,
+                    use_buffs_by_target,
                     created_at: now_ms,
                     uploaded: false,
                 })

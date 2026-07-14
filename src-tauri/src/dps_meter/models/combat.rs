@@ -13,21 +13,6 @@ pub struct SkillStats {
     pub special_counts: HashMap<String, u32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DetailPlayerInfo {
-    pub server_id: u16,
-    pub name: String,
-    pub class_or_role: u32,
-    pub level: u32,
-    pub flag: u8,
-    pub character_uid: u64,
-    pub unknown_1: u32,
-    pub item_level: u32,
-    pub combat_power: u64,
-    pub unknown_2: u64,
-    pub unknown_3: u32,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

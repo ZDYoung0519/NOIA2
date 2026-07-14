@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::dps_meter::config::{SharedDpsMeterConfig, TRAINING_DUMMY_MOB_CODE};
 use crate::dps_meter::models::combat::{
-    BuffInterval, BuffSummary, DetailPlayerInfo, PlayerHpInfo, PvpCombatStats, PvpCombatStatsRow,
+    BuffInterval, BuffSummary, PlayerHpInfo, PvpCombatStats, PvpCombatStatsRow,
     PvpKnownPlayer, PvpWatchInfo, PvpWatchInfoResponse, SkillStats,
 };
 use crate::dps_meter::models::packet::ParsedDamagePacket;
@@ -16,13 +16,14 @@ use crate::dps_meter::storage::loaders::{
 };
 
 const ACTOR_METADATA_CAPACITY: usize = 2_000;
-const DETAIL_PLAYER_INFO_CAPACITY: usize = 5_000;
 const MOB_METADATA_CAPACITY: usize = 5_000;
 const SUMMON_METADATA_CAPACITY: usize = 5_000;
-const BUFF_TARGET_CAPACITY: usize = 1_000;
-const BUFF_INTERVALS_PER_SKILL_CAPACITY: usize = 64;
-const BUFF_INTERVAL_MERGE_TOLERANCE_MS: u64 = 250;
-const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 2] = ["11340000", "1740"];
+
+const BUFF_TARGET_CAPACITY: usize = 1_024;
+const BUFF_INTERVALS_PER_SKILL_CAPACITY: usize = 1_024;
+const BUFF_INTERVAL_MERGE_TOLERANCE_MS: u64 = 100;
+
+const ACTOR_CLASS_SKILL_IGNORE_LIST: [&str; 2] = ["1134", "1740"];
 const FIGHTER_SKILLID_MAP: &[(u32, u32)] = &[
     (19_080_000, 19_070_000), // 疾风击[暴走] -> 疾风击
     (19_100_000, 19_090_000), // 地面强击[暴走] -> 地面强击
@@ -119,7 +120,6 @@ struct DataStorageInner {
     actor_id_class_map: BoundedMap<u32, String>,
     actor_id_combat_power_map: BoundedMap<u32, u64>,
     actor_id_skill_spec_map: BoundedMap<u32, HashMap<u32, Vec<u32>>>,
-    detail_player_info_map: BoundedMap<String, DetailPlayerInfo>,
     mob_id_code_map: BoundedMap<u32, u32>,
     mob_id_hp_map: BoundedMap<u32, (u32, u32)>,
     player_hp_map: BoundedMap<u32, PlayerHpInfo>,
@@ -157,7 +157,6 @@ impl Default for DataStorageInner {
             actor_id_class_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_combat_power_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
             actor_id_skill_spec_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
-            detail_player_info_map: BoundedMap::new(DETAIL_PLAYER_INFO_CAPACITY),
             mob_id_code_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             mob_id_hp_map: BoundedMap::new(MOB_METADATA_CAPACITY),
             player_hp_map: BoundedMap::new(ACTOR_METADATA_CAPACITY),
@@ -235,7 +234,7 @@ impl DataStorage {
         let actor_id_class_map = inner.actor_id_class_map.clone();
         let actor_id_combat_power_map = inner.actor_id_combat_power_map.clone();
         let actor_id_skill_spec_map = inner.actor_id_skill_spec_map.clone();
-        let detail_player_info_map = inner.detail_player_info_map.clone();
+
         let mob_id_code_map = inner.mob_id_code_map.clone();
         let mob_id_hp_map = inner.mob_id_hp_map.clone();
         let player_hp_map = inner.player_hp_map.clone();
@@ -255,7 +254,7 @@ impl DataStorage {
         inner.actor_id_class_map = actor_id_class_map;
         inner.actor_id_combat_power_map = actor_id_combat_power_map;
         inner.actor_id_skill_spec_map = actor_id_skill_spec_map;
-        inner.detail_player_info_map = detail_player_info_map;
+
         inner.mob_id_code_map = mob_id_code_map;
         inner.mob_id_hp_map = mob_id_hp_map;
         inner.player_hp_map = player_hp_map;
@@ -515,7 +514,7 @@ impl DataStorage {
         {
             stats_skill_code = *mapped_skill_code;
         }
-        // 精灵星召唤物的普通攻击归类
+        // 精灵星召唤物的普通攻击映射
         if (100_010..=100_059).contains(&stats_skill_code)
             && (10001..=10005).contains(&(stats_skill_code / 10))
         {
@@ -591,15 +590,6 @@ impl DataStorage {
 
         self.inner.write().unwrap().main_actor_combat_power = Some(combat_power);
         true
-    }
-
-    pub fn upsert_detail_player_info(&self, info: DetailPlayerInfo) {
-        let key = detail_player_info_key(info.server_id, &info.name);
-        self.inner
-            .write()
-            .unwrap()
-            .detail_player_info_map
-            .insert(key, info);
     }
 
     pub fn append_mob(&self, target_id: u32, mob_code: u32) {
@@ -757,15 +747,6 @@ impl DataStorage {
             .read()
             .unwrap()
             .actor_id_skill_spec_map
-            .as_hash_map()
-    }
-
-    #[allow(dead_code)]
-    pub fn detail_player_info_snapshot(&self) -> HashMap<String, DetailPlayerInfo> {
-        self.inner
-            .read()
-            .unwrap()
-            .detail_player_info_map
             .as_hash_map()
     }
 
@@ -1032,10 +1013,6 @@ fn current_timestamp_millis() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_millis() as u64)
         .unwrap_or_default()
-}
-
-fn detail_player_info_key(server_id: u16, name: &str) -> String {
-    format!("{server_id}:{name}")
 }
 
 fn first_four_digits(mut value: u32) -> u32 {
