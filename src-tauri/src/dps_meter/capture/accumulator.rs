@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-const MAX_BUFFER_SIZE: usize = 32 * 1024 * 1024;
+const MAX_BUFFER_SIZE: usize = 128 * 1024 * 1024;
 const INITIAL_CAPACITY: usize = 256 * 1024;
 
 #[derive(Debug)]

@@ -1,7 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
+import { ListPlus, SquareDashed, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { ShortcutInput } from "@/components/shortcut-input";
@@ -49,6 +58,7 @@ const ACTOR_CLASS_NAMES: Record<ActorClass, string> = {
 };
 
 const BUFF_LAYOUT_STORAGE_KEY = "aion2-buff-monitor-layout:v1";
+const BUFF_LAYOUT_TOKEN_PREFIX = "NOIA-BUFF-V1:";
 
 interface BuffMonitorSlot {
   id: string;
@@ -68,6 +78,12 @@ interface BuffMonitorClassLayout {
 interface BuffMonitorLayoutConfig {
   version: 1;
   classes: Partial<Record<ActorClass, BuffMonitorClassLayout>>;
+}
+
+interface BuffLayoutTokenPayload {
+  version: 1;
+  sourceClass: ActorClass;
+  layout: BuffMonitorClassLayout;
 }
 
 function rgbToHex([r, g, b]: RGBA): string {
@@ -113,6 +129,89 @@ function nextBuffId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function encodeBase64Url(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function isActorClass(value: unknown): value is ActorClass {
+  return typeof value === "string" && ACTOR_CLASSES.includes(value as ActorClass);
+}
+
+function normalizeImportedBuffLayout(value: unknown): BuffMonitorClassLayout | null {
+  if (!value || typeof value !== "object" || !Array.isArray((value as { rows?: unknown }).rows)) {
+    return null;
+  }
+
+  const rows: BuffMonitorRow[] = [];
+  for (const rawRow of (value as { rows: unknown[] }).rows) {
+    if (
+      !rawRow ||
+      typeof rawRow !== "object" ||
+      !Array.isArray((rawRow as { slots?: unknown }).slots)
+    ) {
+      return null;
+    }
+
+    const slots: BuffMonitorSlot[] = [];
+    for (const rawSlot of (rawRow as { slots: unknown[] }).slots) {
+      if (!rawSlot || typeof rawSlot !== "object") return null;
+      const { type, skillCode } = rawSlot as { type?: unknown; skillCode?: unknown };
+      if (type !== "selfBuff" && type !== "bossDebuff" && type !== "empty") return null;
+
+      if (type === "empty") {
+        slots.push({ id: nextBuffId("slot"), type });
+        continue;
+      }
+
+      if (typeof skillCode !== "number" && typeof skillCode !== "string") return null;
+      const normalizedSkillCode = skillShortcode(skillCode);
+      if (!Number.isFinite(normalizedSkillCode)) return null;
+      slots.push({
+        id: nextBuffId("slot"),
+        type,
+        skillCode: normalizedSkillCode,
+      });
+    }
+
+    rows.push({ id: nextBuffId("row"), slots });
+  }
+
+  return rows.length > 0 ? { rows } : { rows: [{ id: nextBuffId("row"), slots: [] }] };
+}
+
+function createBuffLayoutToken(sourceClass: ActorClass, layout: BuffMonitorClassLayout): string {
+  const payload: BuffLayoutTokenPayload = { version: 1, sourceClass, layout };
+  return `${BUFF_LAYOUT_TOKEN_PREFIX}${encodeBase64Url(JSON.stringify(payload))}`;
+}
+
+function parseBuffLayoutToken(token: string): BuffLayoutTokenPayload | null {
+  const trimmed = token.trim();
+  if (!trimmed.startsWith(BUFF_LAYOUT_TOKEN_PREFIX)) return null;
+
+  try {
+    const parsed = JSON.parse(decodeBase64Url(trimmed.slice(BUFF_LAYOUT_TOKEN_PREFIX.length)));
+    if (parsed?.version !== 1 || !isActorClass(parsed.sourceClass)) return null;
+    const layout = normalizeImportedBuffLayout(parsed.layout);
+    if (!layout) return null;
+    return { version: 1, sourceClass: parsed.sourceClass, layout };
+  } catch (_) {
+    return null;
+  }
+}
+
 function skillShortcode(skillCode: number | string): number {
   return Number(String(skillCode).slice(0, 4));
 }
@@ -151,6 +250,13 @@ export function Aion2Settings() {
     rowId: string;
     slotId?: string;
   } | null>(null);
+  const [buffLayoutStatus, setBuffLayoutStatus] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [buffImportOpen, setBuffImportOpen] = useState(false);
+  const [buffImportToken, setBuffImportToken] = useState("");
+  const parsedBuffImport = parseBuffLayoutToken(buffImportToken);
 
   const tabs: { id: Aion2Tab; label: string }[] = [
     { id: "shortcuts", label: t("settings.aion2.shortcuts") },
@@ -217,6 +323,18 @@ export function Aion2Settings() {
     if (editingBuffSlot?.rowId === rowId) setEditingBuffSlot(null);
   };
 
+  const moveBuffRow = (rowId: string, direction: -1 | 1) => {
+    const fromIndex = activeBuffLayout.rows.findIndex((row) => row.id === rowId);
+    const toIndex = fromIndex + direction;
+    if (fromIndex < 0 || toIndex < 0 || toIndex >= activeBuffLayout.rows.length) return;
+
+    const rows = [...activeBuffLayout.rows];
+    const [row] = rows.splice(fromIndex, 1);
+    rows.splice(toIndex, 0, row);
+    updateBuffClassLayout({ rows });
+    setEditingBuffSlot((current) => current ?? { rowId });
+  };
+
   const removeBuffSlot = (rowId: string, slotId: string) => {
     updateBuffClassLayout({
       rows: activeBuffLayout.rows.map((row) =>
@@ -256,6 +374,45 @@ export function Aion2Settings() {
   const clearBuffLayout = () => {
     updateBuffClassLayout(createEmptyClassLayout(buffActorClass));
     setEditingBuffSlot(null);
+  };
+
+  const exportBuffLayout = async () => {
+    const token = createBuffLayoutToken(buffActorClass, activeBuffLayout);
+    try {
+      await navigator.clipboard.writeText(token);
+      setBuffLayoutStatus({
+        type: "success",
+        text: t("settings.aion2.buffMonitorExportCopied", {
+          actorClass: ACTOR_CLASS_NAMES[buffActorClass],
+        }),
+      });
+    } catch (_) {
+      setBuffLayoutStatus({
+        type: "error",
+        text: t("settings.aion2.buffMonitorExportCopyFailed"),
+      });
+    }
+  };
+
+  const importBuffLayout = () => {
+    if (!parsedBuffImport) {
+      setBuffLayoutStatus({ type: "error", text: t("settings.aion2.buffMonitorImportInvalid") });
+      return;
+    }
+
+    updateBuffClassLayout(parsedBuffImport.layout);
+    setEditingBuffSlot(
+      parsedBuffImport.layout.rows[0]?.id ? { rowId: parsedBuffImport.layout.rows[0].id } : null
+    );
+    setBuffImportOpen(false);
+    setBuffImportToken("");
+    setBuffLayoutStatus({
+      type: "success",
+      text: t("settings.aion2.buffMonitorImportSuccess", {
+        sourceClass: ACTOR_CLASS_NAMES[parsedBuffImport.sourceClass],
+        targetClass: ACTOR_CLASS_NAMES[buffActorClass],
+      }),
+    });
   };
 
   const activePickerCandidates = buffCandidatesByClass[buffCandidateClass] ?? [];
@@ -732,18 +889,38 @@ export function Aion2Settings() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={addBuffRow}>
-                      {t("settings.aion2.buffMonitorAddRow")}
+                    <Button variant="outline" size="sm" onClick={exportBuffLayout}>
+                      {t("settings.aion2.buffMonitorExportLayout")}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={clearBuffLayout}>
-                      {t("settings.aion2.buffMonitorClearLayout")}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setBuffImportToken("");
+                        setBuffImportOpen(true);
+                      }}
+                    >
+                      {t("settings.aion2.buffMonitorImportLayout")}
                     </Button>
                   </div>
                 </div>
 
+                {buffLayoutStatus && (
+                  <div
+                    className={cn(
+                      "mb-3 rounded-md border px-3 py-2 text-xs",
+                      buffLayoutStatus.type === "success"
+                        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300"
+                        : "border-destructive/30 bg-destructive/10 text-destructive"
+                    )}
+                  >
+                    {buffLayoutStatus.text}
+                  </div>
+                )}
+
                 <div className="bg-background/70 flex min-h-20 flex-col gap-2 rounded-md p-3">
                   {activeBuffLayout.rows.length > 0 ? (
-                    activeBuffLayout.rows.map((row) => (
+                    activeBuffLayout.rows.map((row, rowIndex) => (
                       <div
                         key={row.id}
                         className={cn(
@@ -856,14 +1033,34 @@ export function Aion2Settings() {
                           +
                         </button>
                         {activeBuffLayout.rows.length > 1 && (
-                          <button
-                            type="button"
-                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive grid size-6 shrink-0 place-items-center rounded-md"
-                            title={t("settings.aion2.buffMonitorRemoveRow")}
-                            onClick={() => removeBuffRow(row.id)}
-                          >
-                            ×
-                          </button>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:bg-muted hover:text-foreground grid size-6 place-items-center rounded-md disabled:pointer-events-none disabled:opacity-30"
+                              title={t("settings.aion2.buffMonitorMoveRowUp")}
+                              disabled={rowIndex === 0}
+                              onClick={() => moveBuffRow(row.id, -1)}
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:bg-muted hover:text-foreground grid size-6 place-items-center rounded-md disabled:pointer-events-none disabled:opacity-30"
+                              title={t("settings.aion2.buffMonitorMoveRowDown")}
+                              disabled={rowIndex === activeBuffLayout.rows.length - 1}
+                              onClick={() => moveBuffRow(row.id, 1)}
+                            >
+                              ▼
+                            </button>
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive grid size-6 place-items-center rounded-md"
+                              title={t("settings.aion2.buffMonitorRemoveRow")}
+                              onClick={() => removeBuffRow(row.id)}
+                            >
+                              ×
+                            </button>
+                          </div>
                         )}
                       </div>
                     ))
@@ -892,21 +1089,32 @@ export function Aion2Settings() {
                     >
                       {t("settings.aion2.buffMonitorAddBossDebuff")}
                     </Button>
+                  </div>
+                  <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                     <Button size="sm" variant="outline" onClick={() => upsertBuffSlot("empty")}>
+                      <SquareDashed className="size-4" />
                       {t("settings.aion2.buffMonitorAddEmptySlot")}
                     </Button>
-                  </div>
-                  {editingBuffSlot && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingBuffSlot(null);
-                      }}
-                    >
-                      {t("settings.close")}
+                    <Button variant="outline" size="sm" onClick={addBuffRow}>
+                      <ListPlus className="size-4" />
+                      {t("settings.aion2.buffMonitorAddRow")}
                     </Button>
-                  )}
+                    <Button variant="outline" size="sm" onClick={clearBuffLayout}>
+                      <Trash2 className="size-4" />
+                      {t("settings.aion2.buffMonitorClearLayout")}
+                    </Button>
+                    {editingBuffSlot && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingBuffSlot(null);
+                        }}
+                      >
+                        {t("settings.close")}
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1216,6 +1424,53 @@ export function Aion2Settings() {
           </SettingRow>
         </SettingsGroup>
       )}
+
+      <Dialog open={buffImportOpen} onOpenChange={setBuffImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("settings.aion2.buffMonitorImportTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("settings.aion2.buffMonitorImportDesc", {
+                targetClass: ACTOR_CLASS_NAMES[buffActorClass],
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <textarea
+            value={buffImportToken}
+            onChange={(event) => setBuffImportToken(event.target.value)}
+            placeholder={t("settings.aion2.buffMonitorImportPlaceholder")}
+            className="border-input bg-background focus:ring-ring min-h-28 w-full resize-y rounded-md border px-3 py-2 font-mono text-xs outline-none focus:ring-2"
+          />
+
+          {buffImportToken.trim() && (
+            <div
+              className={cn(
+                "rounded-md border px-3 py-2 text-xs",
+                parsedBuffImport
+                  ? "border-amber-400/35 bg-amber-400/10 text-amber-700 dark:text-amber-300"
+                  : "border-destructive/30 bg-destructive/10 text-destructive"
+              )}
+            >
+              {parsedBuffImport
+                ? t("settings.aion2.buffMonitorImportOverwriteWarning", {
+                    sourceClass: ACTOR_CLASS_NAMES[parsedBuffImport.sourceClass],
+                    targetClass: ACTOR_CLASS_NAMES[buffActorClass],
+                  })
+                : t("settings.aion2.buffMonitorImportInvalid")}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBuffImportOpen(false)}>
+              {t("settings.aion2.buffMonitorImportCancel")}
+            </Button>
+            <Button onClick={importBuffLayout} disabled={!parsedBuffImport}>
+              {t("settings.aion2.buffMonitorImportConfirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

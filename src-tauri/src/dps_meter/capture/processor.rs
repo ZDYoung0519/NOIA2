@@ -336,6 +336,7 @@ impl StreamProcessor {
                 (0x33, 0x36) => self.parse_main_nickname(payload),
                 (0x45, 0x36) => self.parse_other_nickname(payload),
                 (0x56, 0x36) => self.parse_main_combat_power(payload),
+                (0x41, 0x36) => self.parse_summon_packet(payload),
                 _ => false,
             },
         }
@@ -833,7 +834,7 @@ impl StreamProcessor {
                         .cloned()
                         .unwrap_or_else(|| "Unknown Boss".to_string());
                     self.logger.info(format!(
-                        "[{}] summon spawn target={} mob_code={} name={}",
+                        "[{}] 4136 summon spawn target={} mob_code={} name={}",
                         self.port, summon_id, mob_code, boss_name
                     ));
                 }

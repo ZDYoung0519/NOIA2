@@ -22,8 +22,8 @@ use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
-const STALE_ASSEMBLER_IDLE_SECS: u64 = 300;
-const PACKET_CHANNEL_CAPACITY: isize = 200_000;
+const STALE_ASSEMBLER_IDLE_SECS: u64 = 10;
+const PACKET_CHANNEL_CAPACITY: isize = 2_000_000;
 
 #[derive(Debug, Clone, Copy)]
 enum CaptureBackend {

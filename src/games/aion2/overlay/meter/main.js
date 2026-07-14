@@ -142,8 +142,7 @@ function updatePinButton() {
 function persistOverlayConfigToLocalStorage(cfg) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const appConfig = JSON.parse(raw);
+    const appConfig = raw ? JSON.parse(raw) : {};
     appConfig.aion2 = appConfig.aion2 || {};
     appConfig.aion2.overlay = { ...(appConfig.aion2.overlay || {}), ...cfg };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appConfig));
@@ -935,6 +934,8 @@ function updatePlayerList(snap, fullRebuild) {
   // Lock toggle — show/hide title bar based on Rust state
   listen("overlay-lock-toggled", (event) => {
     const locked = event.payload?.locked ?? false;
+    overlayConfig = { ...DEFAULT_OVERLAY_CONFIG, ...(overlayConfig || {}), locked };
+    persistOverlayConfigToLocalStorage({ locked });
     const titleBar = document.querySelector(".title-bar");
     if (titleBar) {
       titleBar.style.display = locked ? "none" : "";
