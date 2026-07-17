@@ -1,6 +1,6 @@
 [package]
 name = "NoiA"
-version = "3.8.10"
+version = "3.9.0"
 description = "A Tauri App"
 authors = ["zdyoung"]
 edition = "2021"
