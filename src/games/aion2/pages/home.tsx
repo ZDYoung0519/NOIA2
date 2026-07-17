@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Menu, ScrollText, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Megaphone, Menu, ScrollText, ShieldCheck } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,10 @@ import { DpsMeterLauncherButton } from "@/games/aion2/components/dps-meter-launc
 import { DpsLightGuideDialog } from "@/games/aion2/components/dps-light-guide-dialog";
 import { HomeNewsCarousel } from "@/games/aion2/components/home-news-carousel";
 import { HomeCharacterCarousel } from "../components/home-character-carousel";
+import {
+  fetchHomeAnnouncement,
+  type HomeAnnouncement,
+} from "@/games/aion2/lib/fetchHomeAnnouncement";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { useSettings } from "@/hooks/use-settings";
 
@@ -19,9 +23,28 @@ import {
 
 export default function HomePage() {
   const [showLightDialog, setShowLightDialog] = useState(false);
+  const [announcement, setAnnouncement] = useState<HomeAnnouncement | null>(null);
   const { t } = useAppTranslation();
   const { config, updateSettings } = useSettings();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchHomeAnnouncement()
+      .then((nextAnnouncement) => {
+        if (cancelled) return;
+        setAnnouncement(nextAnnouncement);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAnnouncement(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openCaptureCheckWindow = async () => {
     const existing = await WebviewWindow.getByLabel("splashscreen");
@@ -64,6 +87,41 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+      {announcement ? (
+        <section className="pointer-events-none absolute right-10 bottom-28 z-30 w-[520px] max-w-[calc(100vw-5rem)]">
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-black/45 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[#F4C06A]/25 bg-[#F4C06A]/10 text-[#F4C06A]">
+                <Megaphone size={17} />
+              </div>
+
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="mb-0.5 flex items-center gap-2">
+                  <span className="text-xs font-semibold tracking-[0.18em] text-[#F4C06A]/90 uppercase">
+                    {announcement.title}
+                  </span>
+                  <span className="rounded-sm bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/65">
+                    {announcement.badge}
+                  </span>
+                </div>
+                <div className="relative overflow-hidden text-sm whitespace-nowrap text-white/82">
+                  <div className="inline-flex min-w-full animate-[aion2-home-marquee_18s_linear_infinite] gap-12">
+                    <span>{announcement.message}</span>
+                    <span aria-hidden="true">{announcement.message}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <style>{`
+            @keyframes aion2-home-marquee {
+              from { transform: translateX(0); }
+              to { transform: translateX(-50%); }
+            }
+          `}</style>
+        </section>
+      ) : null}
 
       <section className="absolute right-10 bottom-10 z-30 flex flex-col items-end gap-2">
         <div className="flex items-center">
