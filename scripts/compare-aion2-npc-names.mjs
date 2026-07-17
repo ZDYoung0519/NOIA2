@@ -6,105 +6,61 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
-const mobsPath = path.join(rootDir, "src", "data", "aion2", "mobs.json");
-const npcNamesPath = path.join(
-  rootDir,
-  "src",
-  "data",
-  "aion2",
-  "npc_names_zh.json",
-);
-
-const outputJson = process.argv.includes("--json");
-const bossOnly = process.argv.includes("--boss-only");
+const sourcePath = path.join(rootDir, "npc_names.json");
+const npcDataPath = path.join(rootDir, "npc_data.json");
+const targetPath = path.join(rootDir, "src", "games", "aion2", "data", "npc_names_zh.json");
 const outArgIndex = process.argv.indexOf("--out");
 const outPath =
   outArgIndex >= 0 && process.argv[outArgIndex + 1]
     ? path.resolve(rootDir, process.argv[outArgIndex + 1])
-    : null;
+    : path.join(rootDir, "scripts", "output", "missing-aion2-npc-names.json");
 
-const [mobs, npcNames] = await Promise.all([
-  readJson(mobsPath),
-  readJson(npcNamesPath),
+const [sourceNpcNames, npcData, targetNpcNames] = await Promise.all([
+  readJson(sourcePath),
+  readJson(npcDataPath),
+  readJson(targetPath),
 ]);
 
-if (!Array.isArray(mobs)) {
-  throw new Error(`Expected mobs.json to be an array: ${mobsPath}`);
-}
+const bossCodes = new Set(
+  Object.entries(npcData)
+    .filter(([, value]) => value?.is_boss === true)
+    .map(([code]) => code)
+);
 
-const npcNameCodes = new Set(Object.keys(npcNames));
-const mobByCode = new Map();
-const knownNameTranslations = new Map();
-
-for (const mob of mobs) {
-  if (mob?.code === undefined || mob?.code === null) {
-    continue;
-  }
-
-  const code = String(mob.code);
-  const knownNpcName = npcNames[code]?.name;
-  if (mob.name && knownNpcName && !knownNameTranslations.has(mob.name)) {
-    knownNameTranslations.set(mob.name, knownNpcName);
-  }
-
-  if (!mobByCode.has(code)) {
-    mobByCode.set(code, {
+const missingEntries = Object.fromEntries(
+  Object.entries(sourceNpcNames)
+    .filter(([code]) => bossCodes.has(code) && !Object.hasOwn(targetNpcNames, code))
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([code, value]) => [
       code,
-      name: mob.name ?? "",
-      suggestedZhName: mob.name ? (knownNameTranslations.get(mob.name) ?? "") : "",
-      boss: Boolean(mob.boss),
-    });
-  }
-}
+      {
+        name: value?.zh_TW ?? value?.zh_CN ?? value?.en ?? "",
+        level: 0,
+        npcType: "",
+        npcSubType: "",
+        mainCategory: "monster",
+      },
+    ])
+);
 
-let missing = [...mobByCode.values()]
-  .filter((mob) => !npcNameCodes.has(mob.code))
-  .map((mob) => ({
-    ...mob,
-    suggestedZhName: knownNameTranslations.get(mob.name) ?? mob.suggestedZhName,
-  }))
-  .sort((a, b) => Number(a.code) - Number(b.code));
-
-if (bossOnly) {
-  missing = missing.filter((mob) => mob.boss);
-}
-
-const result = {
-  mobsTotal: mobs.length,
-  uniqueMobCodes: mobByCode.size,
-  npcNamesTotal: npcNameCodes.size,
-  missingTotal: missing.length,
-  missingBossTotal: missing.filter((mob) => mob.boss).length,
-  missing,
+const summary = {
+  source: path.relative(rootDir, sourcePath),
+  npcData: path.relative(rootDir, npcDataPath),
+  target: path.relative(rootDir, targetPath),
+  sourceTotal: Object.keys(sourceNpcNames).length,
+  bossTotal: bossCodes.size,
+  targetTotal: Object.keys(targetNpcNames).length,
+  missingTotal: Object.keys(missingEntries).length,
 };
 
-if (outputJson) {
-  console.log(JSON.stringify(result, null, 2));
-} else {
-  console.log(`mobs.json total rows: ${result.mobsTotal}`);
-  console.log(`mobs.json unique codes: ${result.uniqueMobCodes}`);
-  console.log(`npc_names_zh.json codes: ${result.npcNamesTotal}`);
-  console.log(`missing codes${bossOnly ? " (boss only)" : ""}: ${result.missingTotal}`);
-  console.log(`missing boss codes: ${result.missingBossTotal}`);
+await mkdir(path.dirname(outPath), { recursive: true });
+await writeFile(outPath, `${JSON.stringify(missingEntries, null, 2)}\n`, "utf8");
 
-  if (missing.length > 0) {
-    console.log("");
-    console.log("Missing entries:");
-    for (const mob of missing) {
-      const bossMark = mob.boss ? " boss" : "";
-      const suggestedName = mob.suggestedZhName
-        ? `\t=> ${mob.suggestedZhName}`
-        : "";
-      console.log(`${mob.code}\t${mob.name}${bossMark}${suggestedName}`);
-    }
-  }
-}
-
-if (outPath) {
-  await mkdir(path.dirname(outPath), { recursive: true });
-  await writeFile(`${outPath}`, `${JSON.stringify(result, null, 2)}\n`, "utf8");
-  console.log(`\nWrote missing entries to ${outPath}`);
-}
+console.log(`source total: ${summary.sourceTotal}`);
+console.log(`boss total: ${summary.bossTotal}`);
+console.log(`target total: ${summary.targetTotal}`);
+console.log(`missing boss total: ${summary.missingTotal}`);
+console.log(`wrote missing entries to: ${path.relative(rootDir, outPath)}`);
 
 async function readJson(filePath) {
   const content = await readFile(filePath, "utf8");

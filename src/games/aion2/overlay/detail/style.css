@@ -401,11 +401,13 @@ body {
 }
 .skill-table-scroll {
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: min(420px, calc(100vh - 230px));
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
 .skill-table-scroll::-webkit-scrollbar {
+  width: 6px;
   height: 6px;
 }
 .skill-table-scroll::-webkit-scrollbar-track {
@@ -426,8 +428,12 @@ body {
   align-items: center;
 }
 .skill-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   padding: 7px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.94);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

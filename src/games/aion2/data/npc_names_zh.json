@@ -83,6 +83,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2000895": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2000923": {
     "name": "紅眼蜘蛛",
     "level": 0,
@@ -8224,6 +8231,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2101257": {
+    "name": "折翼茲拜因",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2101260": {
     "name": "普雷爾跑腿工",
     "level": 0,
@@ -8336,6 +8350,20 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2101278": {
+    "name": "貪欲伊格提斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101279": {
+    "name": "生命神獸蘇佩爾維亞",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2101290": {
     "name": "雷帕爾團搜索隊戰士",
     "level": 0,
@@ -8422,6 +8450,13 @@
   },
   "2101302": {
     "name": "梅特林",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101306": {
+    "name": "腐根梅特林",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -8562,6 +8597,41 @@
   },
   "2101349": {
     "name": "被汙染的德拉那曼杜里",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101350": {
+    "name": "最初實驗體柯堤馬",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101415": {
+    "name": "三角麥伊諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101416": {
+    "name": "痛苦拉普斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101600": {
+    "name": "第3部隊長卡爾寇提",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2101601": {
+    "name": "副軍團長比巴茲拉",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -12725,6 +12795,34 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2300188": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300189": {
+    "name": "贤明的巴温努特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300190": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300200": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2300201": {
     "name": "烏努庫庫士兵",
     "level": 0,
@@ -12851,6 +12949,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2300219": {
+    "name": "賢明的巴溫努特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2300220": {
     "name": "監視型治癒圖騰",
     "level": 0,
@@ -12916,6 +13021,69 @@
   },
   "2300229": {
     "name": "訓練用稻草人",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300230": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300243": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300244": {
+    "name": "贤明的巴温努特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300245": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300259": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300260": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300261": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300299": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300300": {
+    "name": "羅普斯提諾",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -13014,6 +13182,55 @@
   },
   "2300316": {
     "name": "爆炸的火焰精靈",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300317": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300334": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300335": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300336": {
+    "name": "克羅梅德深淵",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300353": {
+    "name": "羅塔爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300354": {
+    "name": "羅普斯提諾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300355": {
+    "name": "克羅梅德深淵",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -13201,6 +13418,48 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2300473": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300474": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300475": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300491": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300492": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300493": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2300500": {
     "name": "德拉多納",
     "level": 0,
@@ -13322,6 +13581,69 @@
   },
   "2300517": {
     "name": "腐敗的杜勒巴提(樣本)",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300527": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300528": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300529": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300544": {
+    "name": "卡普",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300545": {
+    "name": "達坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300546": {
+    "name": "加爾加姆",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300580": {
+    "name": "提耶",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300581": {
+    "name": "塔蒙",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2300582": {
+    "name": "巴克隆",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -13922,6 +14244,48 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2301055": {
+    "name": "守護劍（左）",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301059": {
+    "name": "伊斯卡利爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301060": {
+    "name": "凱德利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301067": {
+    "name": "守護劍（右）",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301089": {
+    "name": "伊斯卡利爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301090": {
+    "name": "凱德利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2301207": {
     "name": "黑血布拉特",
     "level": 0,
@@ -14090,6 +14454,27 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2301401": {
+    "name": "格蕾絲貝因",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301402": {
+    "name": "那薩拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301403": {
+    "name": "納特哈拉",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2301501": {
     "name": "沉沒的艾蒙",
     "level": 0,
@@ -14190,6 +14575,69 @@
   },
   "2301515": {
     "name": "神殿思念體",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301601": {
+    "name": "意志圖勒根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301602": {
+    "name": "禁忌魔手格里歐薩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301603": {
+    "name": "偽惡巴席路斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301701": {
+    "name": "意志圖勒根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301702": {
+    "name": "禁忌魔手格里歐薩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301703": {
+    "name": "僞惡巴席路人斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301721": {
+    "name": "意志圖勒根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301722": {
+    "name": "禁忌魔手格里歐薩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2301723": {
+    "name": "僞惡巴席路人斯",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -15436,6 +15884,27 @@
   },
   "2311323": {
     "name": "亞空間蟲子",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2311401": {
+    "name": "格蕾絲貝因",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2311402": {
+    "name": "那薩拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2311403": {
+    "name": "納特哈拉",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -16724,6 +17193,27 @@
   },
   "2321323": {
     "name": "亞空間蟲子",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2321401": {
+    "name": "格蕾絲貝因",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2321402": {
+    "name": "那薩拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2321403": {
+    "name": "納特哈拉",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -29574,6 +30064,20 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2406034": {
+    "name": "警戒流浪者帕爾坤",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406035": {
+    "name": "捕食巨手瓦拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2406050": {
     "name": "沙包",
     "level": 0,
@@ -29693,6 +30197,27 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2406071": {
+    "name": "血光暴風雪雷努夫",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406093": {
+    "name": "冰霜盔甲哈爾坎",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406094": {
+    "name": "藍眼淚格蕾伊西亞",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2406100": {
     "name": "沙包",
     "level": 0,
@@ -29735,6 +30260,27 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2406129": {
+    "name": "業火翅膀皮歐斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406131": {
+    "name": "熔岩心臟巴圖",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406132": {
+    "name": "精銳審問官布蘭特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2406150": {
     "name": "沙包",
     "level": 0,
@@ -29772,6 +30318,20 @@
   },
   "2406155": {
     "name": "殘暴的火之精靈",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406181": {
+    "name": "發狂的看守人布爾拉根",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406182": {
+    "name": "火山君主格林尼爾",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -29884,6 +30444,20 @@
   },
   "2406350": {
     "name": "沙包",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406990": {
+    "name": "第3部隊長米納沙拉",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2406991": {
+    "name": "副軍團長沙勒巴卡",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -33888,6 +34462,48 @@
   },
   "2600387": {
     "name": "守護神將普拉薩達",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600478": {
+    "name": "憤怒的守護神將納赫瑪",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600479": {
+    "name": "憤怒的守護神將納赫瑪",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600480": {
+    "name": "憤怒的守護神將納赫瑪",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600520": {
+    "name": "處刑官德拉莫斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600521": {
+    "name": "反逆者杜卡爾",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2600522": {
+    "name": "破滅者瑪拉卡",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42146,6 +42762,146 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2702359": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702372": {
+    "name": "羽毛砲火杜杜里",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702373": {
+    "name": "覺醒的猛禽多多里",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702384": {
+    "name": "羽毛砲火杜杜里",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702385": {
+    "name": "覺醒的猛禽多多里",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702396": {
+    "name": "分裂體阿布諾斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702409": {
+    "name": "分裂體阿布諾斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702461": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702462": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702475": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702488": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702501": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702611": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702623": {
+    "name": "耶爾羅恩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702648": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702659": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702670": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702681": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702692": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2702703": {
+    "name": "卡爾利斯",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920015": {
     "name": "結縛圈套",
     "level": 0,
@@ -42174,6 +42930,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920024": {
+    "name": "Ritualist Aulisa",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920029": {
     "name": "變異阿爾拉烏守護者",
     "level": 0,
@@ -42197,6 +42960,20 @@
   },
   "2920033": {
     "name": "中型怪物",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920036": {
+    "name": "Oathbreaker Gartua",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920054": {
+    "name": "Root Mythical Bird Aultross",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42307,6 +43084,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920274": {
+    "name": "Incarnated Warding Feather",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920275": {
     "name": "庇護氣息",
     "level": 0,
@@ -42316,6 +43100,20 @@
   },
   "2920276": {
     "name": "祖米昂氣息",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920277": {
+    "name": "Incarnated Warding Feather",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920278": {
+    "name": "Incarnated Warding Feather",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42391,6 +43189,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920323": {
+    "name": "Oathbreaker Gartua",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920331": {
     "name": "馴養的波沙屍體(樣本)",
     "level": 0,
@@ -42414,6 +43219,20 @@
   },
   "2920372": {
     "name": "平衡",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920374": {
+    "name": "Oathbreaker Gartua",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920375": {
+    "name": "Oathbreaker Gartua",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42461,6 +43280,13 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920395": {
+    "name": "Nathara",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920396": {
     "name": "變異的凱洛特",
     "level": 0,
@@ -42496,6 +43322,20 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920456": {
+    "name": "Modified Bargott",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920460": {
+    "name": "Modified Bargott",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920474": {
     "name": "塔蒙石化",
     "level": 0,
@@ -42526,6 +43366,13 @@
   },
   "2920512": {
     "name": "洞穴德拉多納幼體",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920538": {
+    "name": "Incarnated Warding Feather",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42671,6 +43518,20 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2920915": {
+    "name": "那薩拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920916": {
+    "name": "那薩拉克",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2920924": {
     "name": "岩石",
     "level": 0,
@@ -42715,6 +43576,20 @@
   },
   "2920955": {
     "name": "黑血布拉特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920967": {
+    "name": "膨脹的札伊爾佩",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2920968": {
+    "name": "膨脹的札伊爾佩",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42776,8 +43651,64 @@
     "npcSubType": "",
     "mainCategory": "monster"
   },
+  "2921022": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921026": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921027": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921028": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921029": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921030": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921031": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
   "2921044": {
     "name": "背叛",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921053": {
+    "name": "甦醒的艾圖拉頓",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -42799,6 +43730,83 @@
   },
   "2921098": {
     "name": "聚合物巴考特",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921186": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921187": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921188": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921200": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921201": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921202": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921209": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921215": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921225": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921226": {
+    "name": "甦醒的艾圖拉頓",
+    "level": 0,
+    "npcType": "",
+    "npcSubType": "",
+    "mainCategory": "monster"
+  },
+  "2921229": {
+    "name": "甦醒的艾圖拉頓",
     "level": 0,
     "npcType": "",
     "npcSubType": "",
@@ -44549,384 +45557,6 @@
   },
   "2980259": {
     "name": "亡靈芝捷爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301401": {
-    "name": "格蕾絲貝因",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301402": {
-    "name": "那薩拉克",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301403": {
-    "name": "納特哈拉",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2311401": {
-    "name": "格蕾絲貝因",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2311402": {
-    "name": "那薩拉克",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2311403": {
-    "name": "納特哈拉",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2321401": {
-    "name": "格蕾絲貝因",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2321402": {
-    "name": "那薩拉克",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2321403": {
-    "name": "納特哈拉",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300188": {
-    "name": "甦醒的艾圖拉頓",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300189": {
-    "name": "贤明的巴温努特",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300190": {
-    "name": "膨脹的札伊爾佩",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300243": {
-    "name": "甦醒的艾圖拉頓",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300244": {
-    "name": "贤明的巴温努特",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300245": {
-    "name": "膨脹的札伊爾佩",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300219": {
-    "name": "賢明的巴溫努特",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300230": {
-    "name": "膨脹的札伊爾佩",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300200": {
-    "name": "甦醒的艾圖拉頓",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300259": {
-    "name": "羅塔爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300260": {
-    "name": "羅普斯提諾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300261": {
-    "name": "克羅梅德深淵",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300299": {
-    "name": "羅塔爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300300": {
-    "name": "羅普斯提諾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300317": {
-    "name": "克羅梅德深淵",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300334": {
-    "name": "羅塔爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300335": {
-    "name": "羅普斯提諾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300336": {
-    "name": "克羅梅德深淵",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300353": {
-    "name": "羅塔爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300354": {
-    "name": "羅普斯提諾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300355": {
-    "name": "克羅梅德深淵",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301055": {
-    "name": "守護劍（左）",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301059": {
-    "name": "伊斯卡利爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301060": {
-    "name": "凱德利斯",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301067": {
-    "name": "守護劍（右）",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301089": {
-    "name": "伊斯卡利爾",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301090": {
-    "name": "凱德利斯",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300473": {
-    "name": "卡普",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300474": {
-    "name": "達坎",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300475": {
-    "name": "加爾加姆",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300491": {
-    "name": "卡普",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300492": {
-    "name": "達坎",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300493": {
-    "name": "加爾加姆",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300527": {
-    "name": "卡普",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300528": {
-    "name": "達坎",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300529": {
-    "name": "加爾加姆",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300544": {
-    "name": "卡普",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300545": {
-    "name": "達坎",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2300546": {
-    "name": "加爾加姆",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301701": {
-    "name": "意志圖勒根",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301702": {
-    "name": "禁忌魔手格里歐薩",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301703": {
-    "name": "僞惡巴席路人斯",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301721": {
-    "name": "意志圖勒根",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301722": {
-    "name": "禁忌魔手格里歐薩",
-    "level": 0,
-    "npcType": "",
-    "npcSubType": "",
-    "mainCategory": "monster"
-  },
-  "2301723": {
-    "name": "僞惡巴席路人斯",
     "level": 0,
     "npcType": "",
     "npcSubType": "",

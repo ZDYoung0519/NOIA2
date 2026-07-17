@@ -163,6 +163,20 @@ function syncLockedToBackend(locked) {
   });
 }
 
+function applyLockedState(locked, { persist = false } = {}) {
+  overlayConfig = { ...DEFAULT_OVERLAY_CONFIG, ...(overlayConfig || {}), locked };
+  if (persist) {
+    persistOverlayConfigToLocalStorage({ locked });
+  }
+
+  if ($titleBar) {
+    $titleBar.style.display = locked ? "none" : "";
+    $titleBar.style.pointerEvents = locked ? "none" : "auto";
+  }
+  document.body.style.pointerEvents = locked ? "none" : "";
+  scheduleAutoHeightReconcile();
+}
+
 async function enablePvpMode() {
   let backendConfig = null;
 
@@ -236,6 +250,7 @@ function applyOverlayConfig(cfg) {
   root.style.setProperty("--font-family", overlayConfig.fontFamily || "Consolas");
   syncAutoResizeMode();
   updatePinButton();
+  applyLockedState(overlayConfig.locked === true);
   syncLockedToBackend(overlayConfig.locked === true);
   syncAlwaysOnTopToBackend(overlayConfig.alwaysOnTop === true);
   // Re-render existing rows immediately with new config
@@ -896,6 +911,12 @@ function updatePlayerList(snap, fullRebuild) {
 // Init
 // =============================================================================
 (async function init() {
+  // Lock state affects local UI too; register this before any async startup work
+  // so the title bar cannot miss the initial backend event.
+  listen("overlay-lock-toggled", (event) => {
+    applyLockedState(event.payload?.locked === true, { persist: true });
+  });
+
   // Pull initial overlay config from Rust store (avoids race with event timing)
   try {
     const cfg = await invoke("get_overlay_config");
@@ -910,6 +931,15 @@ function updatePlayerList(snap, fullRebuild) {
   listen("overlay-config-changed", (event) => {
     applyOverlayConfig(event.payload);
   });
+
+  // Backend state is the source of truth if an event was emitted before this
+  // webview finished loading.
+  try {
+    const locked = await invoke("get_dps_overlay_locked");
+    applyLockedState(locked === true);
+  } catch (e) {
+    console.error("[dps-overlay] get_dps_overlay_locked failed:", e);
+  }
 
   // Diagnostic polling
   let allOk = await runDiagnostic();
@@ -930,22 +960,6 @@ function updatePlayerList(snap, fullRebuild) {
   } catch (_) {
     /* ignore */
   }
-
-  // Lock toggle — show/hide title bar based on Rust state
-  listen("overlay-lock-toggled", (event) => {
-    const locked = event.payload?.locked ?? false;
-    overlayConfig = { ...DEFAULT_OVERLAY_CONFIG, ...(overlayConfig || {}), locked };
-    persistOverlayConfigToLocalStorage({ locked });
-    const titleBar = document.querySelector(".title-bar");
-    if (titleBar) {
-      titleBar.style.display = locked ? "none" : "";
-    }
-    document.body.style.pointerEvents = locked ? "none" : "";
-    if (!locked && titleBar) {
-      titleBar.style.pointerEvents = "auto";
-    }
-    scheduleAutoHeightReconcile();
-  });
 
   // Language sync
   listen("language-changed", (event) => {

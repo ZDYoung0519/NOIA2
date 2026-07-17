@@ -2711,6 +2711,27 @@
     "difficulty": "normal",
     "npc_internal_name": "M_PD_EleKing_01_001"
   },
+  "2300580": {
+    "is_boss": true,
+    "category": "expedition",
+    "dungeon": "BakronIsland",
+    "difficulty": "trial",
+    "npc_internal_name": "M_PD_BakronIsland_T_01_Tie_01_001"
+  },
+  "2300581": {
+    "is_boss": true,
+    "category": "expedition",
+    "dungeon": "BakronIsland",
+    "difficulty": "trial",
+    "npc_internal_name": "M_PD_BakronIsland_T_01_Tamon_01_001"
+  },
+  "2300582": {
+    "is_boss": true,
+    "category": "expedition",
+    "dungeon": "BakronIsland",
+    "difficulty": "trial",
+    "npc_internal_name": "M_PD_T_01_EleKing_01_001"
+  },
   "2300813": {},
   "2300814": {},
   "2300815": {},
