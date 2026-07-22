@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const MARKER: [u8; 4] = [0x03, 0x36, 0x00, 0x00];
 const DOTNET_EPOCH_OFFSET_MS: i64 = 62_135_596_800_000;
 const MIN_PING_RS_BYTES: usize = 12;
-const MAX_PING_MS: f64 = 9_999.0;
+const MAX_PING_MS: f64 = 1000.0;
 const MAX_HISTORY: usize = 10_000;
 
 #[derive(Debug, Default)]
@@ -57,7 +57,7 @@ impl PingTracker {
             let arrival_ms = captured_at_seconds * 1000.0;
             let ping_ms = (arrival_ms - client_sent_unix_ms as f64).round();
 
-            if (1.0..=MAX_PING_MS).contains(&ping_ms) {
+            if (10.0..=MAX_PING_MS).contains(&ping_ms) {
                 let mut inner = self.inner.lock().unwrap();
                 inner.last_ping_ms = Some(ping_ms);
                 inner.history.push_back((current_time_ms(), ping_ms));

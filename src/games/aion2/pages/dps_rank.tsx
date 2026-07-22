@@ -125,7 +125,7 @@ type MyRankState = {
   rows: MyRankRow[];
 };
 
-const EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES = ["2400032"];
+const EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES = ["2400032", "2400035"];
 const ALLOWED_BOSS_IDS = [...getKnownBossMobCodes(), ...EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES];
 const ALLOWED_BOSS_ID_SET = new Set(ALLOWED_BOSS_IDS.map(String));
 const DUNGEONS = dungeonsData as DungeonDefinition[];

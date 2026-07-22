@@ -1,5 +1,4 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { t, setLanguage } from "../../i18n.js";
@@ -21,7 +20,6 @@ function getServerName(serverId) {
 // ── DOM ──
 const $modeBadge = document.getElementById("mode-badge");
 const $content = document.getElementById("detail-content");
-const $titleBar = document.querySelector(".detail-titlebar");
 const $playerIcon = document.getElementById("player-icon");
 const $playerName = document.getElementById("player-name");
 const $playerServer = document.getElementById("player-server");
@@ -40,32 +38,14 @@ document.getElementById("detail-drag-handle").addEventListener("mousedown", () =
   getCurrentWindow().startDragging();
 });
 
-// ── Auto-resize ──
-let lastDetailHeight = 0;
-async function autoResize() {
-  const h = ($titleBar?.offsetHeight || 0) + ($content?.offsetHeight || 0);
-  if (Math.abs(h - lastDetailHeight) > 1) {
-    lastDetailHeight = h;
-    try {
-      const win = getCurrentWindow();
-      const size = await win.innerSize();
-      const sf = await win.scaleFactor();
-      const w = size.width / sf;
-      await win.setSize(new LogicalSize(w, h));
-    } catch (_) {
-      /* ignore */
-    }
-  }
-}
-
 // ── State ──
 let mode = "live";
 let selectedActorId = null;
 let selectedTargetId = null;
 let frozenRecord = null;
 let lastSnapshot = null;
-let isPlayerBuffPanelOpen = false;
-let isBossBuffPanelOpen = false;
+let isPlayerBuffPanelOpen = true;
+let isBossBuffPanelOpen = true;
 
 // ── Formatters ──
 function fmtDamage(n) {
@@ -190,20 +170,19 @@ function renderBuffTimeline(buffs, dataSource) {
           </div>
           <div class="buff-timeline__content">
             <div class="buff-timeline__head">
-              <span class="buff-timeline__text">
-                <span class="buff-timeline__skill-row">
-                  <span class="buff-timeline__skill">${esc(name)}</span>
-                  <span class="buff-timeline__coverage">${coverage}</span>
-                </span>
-                <span class="buff-timeline__caster">
-                  ${
-                    casterIcon
-                      ? `<img class="buff-timeline__class-icon" src="${casterIcon}" alt="" onerror="this.style.display='none'"/>`
-                      : ""
-                  }
-                  <span>${esc(caster)}</span>
-                </span>
+              <span class="buff-timeline__skill">${esc(name)}</span>
+              <span class="buff-timeline__coverage">${coverage}</span>
+            </div>
+            <div class="buff-timeline__meta">
+              <span class="buff-timeline__caster">
+                ${
+                  casterIcon
+                    ? `<img class="buff-timeline__class-icon" src="${casterIcon}" alt="" onerror="this.style.display='none'"/>`
+                    : ""
+                }
+                <span>${esc(caster)}</span>
               </span>
+              <span class="buff-timeline__state${buff.active ? " is-active" : ""}"></span>
             </div>
             <div class="buff-timeline__track">
               <div class="buff-timeline__bar" style="width:${coverageWidth.toFixed(2)}%"></div>
@@ -465,6 +444,7 @@ function render() {
   } else {
     html += `<div class="empty">${t("dps-detail.noData")}</div>`;
   }
+  html += `<div class="buff-panels">`;
   html += renderBuffPanel({
     id: "player",
     title: t("dps-detail.playerBuffs"),
@@ -481,6 +461,7 @@ function render() {
     dataSource,
     fightStart,
   });
+  html += `</div>`;
   $content.innerHTML = html;
   $content.querySelectorAll(".buff-panel").forEach((panel) => {
     panel.addEventListener("toggle", (event) => {
@@ -490,11 +471,8 @@ function render() {
       } else if (panelId === "boss") {
         isBossBuffPanelOpen = event.currentTarget.open;
       }
-      requestAnimationFrame(() => requestAnimationFrame(autoResize));
     });
   });
-  // Resize after DOM update settles
-  requestAnimationFrame(() => requestAnimationFrame(autoResize));
 }
 
 // ── Init ──

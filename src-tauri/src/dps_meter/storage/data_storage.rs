@@ -430,7 +430,7 @@ impl DataStorage {
         }
 
         if config.my_muzhuang_only
-            && target_mob_code == Some(TRAINING_DUMMY_MOB_CODE)
+            && TRAINING_DUMMY_MOB_CODE.contains(&target_mob_code.unwrap())
             && inner.main_actor_id != Some(actor_id)
         {
             return;

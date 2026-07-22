@@ -115,8 +115,6 @@ impl StreamProcessor {
             port,
             config,
             mode: ProcessorMode::NicknameOnly,
-            // 昵称包比战斗包更依赖完整帧。这里保留等待策略，
-            // 只用于昵称流，避免影响伤害/血量/buff 的实时解析。
             stall_resync_mode: StallResyncMode::Delayed,
             stalled_since: None,
         }
@@ -838,6 +836,12 @@ impl StreamProcessor {
                         self.port, summon_id, mob_code, boss_name
                     ));
                 }
+                else {
+                        self.logger.debug(format!(
+                        "[{}] 4136 summon spawn target={} mob_code={}",
+                        self.port, summon_id, mob_code
+                    ));
+                }
                 parsed_any = true;
             }
         }
@@ -861,69 +865,71 @@ impl StreamProcessor {
                 real_actor_id
             ));
             parsed_any = true;
-        } else if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
-            self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon fallback le32 owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self.data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
-            parsed_any = true;
-        } else if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
-            self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon fallback marker owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self.data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
-            parsed_any = true;
-        } else if !self.data_storage.has_summon_owner(real_actor_id) {
-            let mut best_match: Option<(u32, String)> = None;
-            let mut best_len = 0usize;
-            let actor_id_name_map = self.data_storage.actor_id_name_snapshot();
+        } 
+        
+        // else if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
+        //     self.data_storage.append_summon(owner_id, real_actor_id);
+        //     self.logger.info(format!(
+        //         "[{}] summon fallback le32 owner={} owner_name={} summon={}",
+        //         self.port,
+        //         owner_id,
+        //         self.data_storage
+        //             .actor_id_name_snapshot()
+        //             .get(&owner_id)
+        //             .cloned()
+        //             .unwrap_or_else(|| "Unknown".to_string()),
+        //         real_actor_id
+        //     ));
+        //     parsed_any = true;
+        // } else if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
+        //     self.data_storage.append_summon(owner_id, real_actor_id);
+        //     self.logger.info(format!(
+        //         "[{}] summon fallback marker owner={} owner_name={} summon={}",
+        //         self.port,
+        //         owner_id,
+        //         self.data_storage
+        //             .actor_id_name_snapshot()
+        //             .get(&owner_id)
+        //             .cloned()
+        //             .unwrap_or_else(|| "Unknown".to_string()),
+        //         real_actor_id
+        //     ));
+        //     parsed_any = true;
+        // } else if !self.data_storage.has_summon_owner(real_actor_id) {
+        //     let mut best_match: Option<(u32, String)> = None;
+        //     let mut best_len = 0usize;
+        //     let actor_id_name_map = self.data_storage.actor_id_name_snapshot();
 
-            for (actor_id, nickname) in actor_id_name_map {
-                if nickname.is_empty() {
-                    continue;
-                }
+        //     for (actor_id, nickname) in actor_id_name_map {
+        //         if nickname.is_empty() {
+        //             continue;
+        //         }
 
-                let nickname_bytes = nickname.as_bytes();
-                if nickname_bytes.is_empty()
-                    || !packet
-                        .windows(nickname_bytes.len())
-                        .any(|window| window == nickname_bytes)
-                {
-                    continue;
-                }
+        //         let nickname_bytes = nickname.as_bytes();
+        //         if nickname_bytes.is_empty()
+        //             || !packet
+        //                 .windows(nickname_bytes.len())
+        //                 .any(|window| window == nickname_bytes)
+        //         {
+        //             continue;
+        //         }
 
-                let nickname_len = nickname.chars().count();
-                if nickname_len > best_len {
-                    best_len = nickname_len;
-                    best_match = Some((actor_id, nickname));
-                }
-            }
+        //         let nickname_len = nickname.chars().count();
+        //         if nickname_len > best_len {
+        //             best_len = nickname_len;
+        //             best_match = Some((actor_id, nickname));
+        //         }
+        //     }
 
-            if let Some((owner_id, nickname)) = best_match {
-                self.data_storage.append_summon(owner_id, real_actor_id);
-                self.logger.info(format!(
-                    "[{}] summon-nickname matched nick owner={} owner_name={} summon={}",
-                    self.port, owner_id, nickname, real_actor_id
-                ));
-                parsed_any = true;
-            }
-        }
+        //     if let Some((owner_id, nickname)) = best_match {
+        //         self.data_storage.append_summon(owner_id, real_actor_id);
+        //         self.logger.info(format!(
+        //             "[{}] summon-nickname matched nick owner={} owner_name={} summon={}",
+        //             self.port, owner_id, nickname, real_actor_id
+        //         ));
+        //         parsed_any = true;
+        //     }
+        // }
 
         parsed_any
     }

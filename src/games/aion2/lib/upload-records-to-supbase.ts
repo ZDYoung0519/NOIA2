@@ -83,7 +83,7 @@ type UploadOptions = {
   onProgress?: (progress: UploadProgress) => void;
 };
 
-const EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES = ["2400032"];
+const EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES = ["2400032", "2400035"];
 const ALLOWED_DPS_UPLOAD_MOB_CODES = new Set([
   ...getKnownBossMobCodes(),
   ...EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES,
@@ -178,11 +178,13 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
   const teamBattleLastTime = getMaxTime(battleLastTime);
   const teamBattleDuration = getDuration(teamBattleStartTime, teamBattleLastTime);
 
-  if (targetMobCode === 2400032 && teamBattleDuration < 60) {
+  const isMuzhuang = EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES.includes(targetMobCode.toString())
+
+  if (isMuzhuang && teamBattleDuration < 60) {
     return skipRecord(
       record,
       targetInfo,
-      `target 2400032 battle duration is less than 60 seconds: ${teamBattleDuration}`
+      `target ${targetMobCode} battle duration is less than 60 seconds: ${teamBattleDuration}`
     );
   }
 
@@ -195,7 +197,7 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
   }
 
   const currentHp = Number(targetInfo?.currentHp ?? 0);
-  if (targetMobCode !== 2400032 && currentHp > 0) {
+  if (!isMuzhuang && currentHp > 0) {
     return skipRecord(record, targetInfo, `boss is still alive, currentHp=${currentHp}`);
   }
   const partyTotalDamage = Object.values(record.playerStats ?? {}).reduce(
