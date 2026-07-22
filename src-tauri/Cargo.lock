@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "NoiA"
-version = "3.9.0"
+version = "3.10.0"
 dependencies = [
  "crc32fast",
  "libloading 0.8.9",
