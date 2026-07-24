@@ -408,6 +408,10 @@ impl DataStorage {
             return;
         }
 
+        if packet.actor_id == 0 {
+            return;
+        }
+
         // let actor_id = packet.actor_id;
         // 如果是召唤物，把召唤物的伤害分配给他的owner
         let mut actor_id = packet.actor_id;
@@ -430,7 +434,7 @@ impl DataStorage {
         }
 
         if config.my_muzhuang_only
-            && TRAINING_DUMMY_MOB_CODE.contains(&target_mob_code.unwrap())
+            && target_mob_code.is_some_and(|mob_code| TRAINING_DUMMY_MOB_CODE.contains(&mob_code))
             && inner.main_actor_id != Some(actor_id)
         {
             return;
