@@ -865,8 +865,8 @@ impl StreamProcessor {
                 real_actor_id
             ));
             parsed_any = true;
-        } 
-        
+        }
+
         // else if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
         //     self.data_storage.append_summon(owner_id, real_actor_id);
         //     self.logger.info(format!(
@@ -1711,7 +1711,7 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
             continue;
         }
 
-        let is_han = matches!(code, 0x4E00..=0x9FFF | 0x3400..=0x4DBF | 0xF900..=0xFAFF);
+        let is_han = is_han_character(ch);
         if ch.is_alphanumeric() || is_han {
             result.push(ch);
             if ch.is_alphabetic() || is_han {
@@ -1734,4 +1734,38 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
     }
 
     Some(result)
+}
+
+fn is_han_character(ch: char) -> bool {
+    let code = ch as u32;
+    matches!(
+        code,
+        0x3400..=0x4DBF
+            | 0x4E00..=0x9FFF
+            | 0xF900..=0xFAFF
+            | 0x20000..=0x2A6DF
+            | 0x2A700..=0x2B73F
+            | 0x2B740..=0x2B81F
+            | 0x2B820..=0x2CEAF
+            | 0x2CEB0..=0x2EBEF
+            | 0x2F800..=0x2FA1F
+            | 0x30000..=0x3134F
+            | 0x31350..=0x323AF
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sanitize_nickname;
+
+    #[test]
+    fn sanitize_nickname_keeps_single_cjk_extension_character() {
+        assert_eq!(sanitize_nickname("𠮷"), Some("𠮷".to_string()));
+        assert_eq!(sanitize_nickname("𫠜"), Some("𫠜".to_string()));
+    }
+
+    #[test]
+    fn sanitize_nickname_still_rejects_single_ascii_letter() {
+        assert_eq!(sanitize_nickname("A"), None);
+    }
 }
