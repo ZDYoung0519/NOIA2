@@ -2,8 +2,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use crate::dps_meter::models::combat::{
-    ActorInfo, BuffInterval, BuffSummary, CombatInfos, CombatSnapshot, PlayerOverviewStat,
-    SkillStats, TargetInfo,
+    ActorInfo, BuffInterval, BuffSummary, CombatInfos, CombatSnapshot, PlayerHpInfo,
+    PlayerOverviewStat, PvpDamageOverviewStat, SkillStats, TargetInfo,
 };
 use crate::dps_meter::storage::data_storage::DataStorage;
 
@@ -143,7 +143,22 @@ fn build_combat_snapshot(
         .map(|(main_actor_id, stats)| {
             let mut sorted: Vec<_> = stats.values().cloned().collect();
             sorted.retain(|p| p.actor_id != main_actor_id);
-            sorted.sort_by(|a, b| b.total_damage.cmp(&a.total_damage));
+            let start_times = target_infos
+                .get(&main_actor_id)
+                .map(|target| &target.target_start_time);
+            sorted.sort_by(|a, b| {
+                let a_start = start_times
+                    .and_then(|times| times.get(&a.actor_id))
+                    .copied()
+                    .unwrap_or(f64::MAX);
+                let b_start = start_times
+                    .and_then(|times| times.get(&b.actor_id))
+                    .copied()
+                    .unwrap_or(f64::MAX);
+                a_start
+                    .total_cmp(&b_start)
+                    .then_with(|| b.total_damage.cmp(&a.total_damage))
+            });
             if hide_unknown_players {
                 sorted
                     .into_iter()
@@ -154,6 +169,14 @@ fn build_combat_snapshot(
             }
         })
         .unwrap_or_default();
+
+    let main_actor_dealt_overview = build_main_actor_dealt_player_overview(
+        data_storage,
+        &per_target_overview,
+        &target_infos,
+        hide_unknown_players,
+        max_player_count,
+    );
 
     Some(CombatSnapshot {
         total_damage,
@@ -172,7 +195,104 @@ fn build_combat_snapshot(
         last_target_info,
         last_target_all_players_overview_stats: last_target_overview,
         main_actor_received_player_overview_stats: main_actor_received_overview,
+        main_actor_dealt_player_overview_stats: main_actor_dealt_overview,
     })
+}
+
+fn build_main_actor_dealt_player_overview(
+    data_storage: &DataStorage,
+    per_target_overview: &HashMap<u32, HashMap<u32, PlayerOverviewStat>>,
+    target_infos: &HashMap<u32, TargetInfo>,
+    hide_unknown_players: bool,
+    max_player_count: usize,
+) -> Vec<PvpDamageOverviewStat> {
+    let actor_names = data_storage.actor_id_name_snapshot();
+    let actor_servers = data_storage.actor_id_server_snapshot();
+    let actor_classes = data_storage.actor_id_class_snapshot();
+    let player_hp = data_storage.player_hp_snapshot();
+    let mob_codes = data_storage.mob_id_code_snapshot();
+
+    aggregate_main_actor_dealt_player_overview(
+        data_storage.main_actor_id(),
+        per_target_overview,
+        target_infos,
+        &actor_names,
+        &actor_servers,
+        &actor_classes,
+        &player_hp,
+        &mob_codes,
+        hide_unknown_players,
+        max_player_count,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn aggregate_main_actor_dealt_player_overview(
+    main_actor_id: Option<u32>,
+    per_target_overview: &HashMap<u32, HashMap<u32, PlayerOverviewStat>>,
+    target_infos: &HashMap<u32, TargetInfo>,
+    actor_names: &HashMap<u32, String>,
+    actor_servers: &HashMap<u32, String>,
+    actor_classes: &HashMap<u32, String>,
+    player_hp: &HashMap<u32, PlayerHpInfo>,
+    mob_codes: &HashMap<u32, u32>,
+    hide_unknown_players: bool,
+    max_player_count: usize,
+) -> Vec<PvpDamageOverviewStat> {
+    let Some(main_actor_id) = main_actor_id else {
+        return Vec::new();
+    };
+
+    let mut rows: Vec<_> = per_target_overview
+        .iter()
+        .filter_map(|(target_id, actors)| {
+            if *target_id == main_actor_id
+                || mob_codes.contains_key(target_id)
+                || !actor_names.contains_key(target_id)
+            {
+                return None;
+            }
+
+            let player_name = actor_names.get(target_id).cloned().unwrap_or_default();
+            if hide_unknown_players && player_name.is_empty() {
+                return None;
+            }
+
+            let stats = actors.get(&main_actor_id)?;
+            let max_hp = player_hp.get(target_id).map(|hp| hp.max_observed_hp);
+            let hp_damage_ratio =
+                max_hp.filter(|value| *value > 0)
+                    .map(|value| stats.total_damage as f64 / value as f64);
+            let battle_start_time = target_infos
+                .get(target_id)
+                .and_then(|target| target.target_start_time.get(&main_actor_id))
+                .copied()
+                .unwrap_or(f64::MAX);
+
+            Some(PvpDamageOverviewStat {
+                player_id: *target_id,
+                player_name,
+                player_server_id: actor_servers.get(target_id).cloned().unwrap_or_default(),
+                player_class: actor_classes.get(target_id).cloned().unwrap_or_default(),
+                counts: stats.counts,
+                total_damage: stats.total_damage,
+                min_damage: stats.min_damage,
+                max_damage: stats.max_damage,
+                dps: stats.dps,
+                damage_contribution: stats.damage_share,
+                hp_damage_ratio,
+                battle_start_time,
+            })
+        })
+        .collect();
+
+    rows.sort_by(|a, b| {
+        a.battle_start_time
+            .total_cmp(&b.battle_start_time)
+            .then_with(|| b.total_damage.cmp(&a.total_damage))
+    });
+    rows.truncate(max_player_count.max(5).min(20));
+    rows
 }
 
 // =============================================================================

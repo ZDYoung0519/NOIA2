@@ -1,5 +1,6 @@
 .meter-pvp {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   background: var(--overlay-bg);
 }
 
@@ -18,7 +19,8 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 68px;
+  gap: 4px;
+  min-height: 0;
   width: 100%;
   background: var(--overlay-bg);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
@@ -41,15 +43,50 @@
   text-align: center;
 }
 
-.meter-pvp.has-players .pvp-empty {
+.pvp-damage-section.has-data .pvp-empty {
   display: none;
 }
 
-.meter-pvp .player-list {
+.meter-pvp .pvp-damage-section .player-list {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-top: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.pvp-damage-section {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 52px;
+  overflow: hidden;
+}
+
+.pvp-damage-section:not(.has-data) .player-list {
+  display: none;
+}
+
+.pvp-damage-section .pvp-empty {
+  min-height: 0;
+}
+
+.pvp-damage-section .player-list::-webkit-scrollbar,
+.player-hp-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pvp-damage-section .player-list::-webkit-scrollbar-track,
+.player-hp-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pvp-damage-section .player-list::-webkit-scrollbar-thumb,
+.player-hp-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .pvp-section-title {
@@ -162,7 +199,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 140px;
+  max-height: min(112px, 22vh);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
@@ -289,9 +326,13 @@
 }
 
 .player-hp-panel {
-  flex: 0 0 auto;
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  max-height: 34%;
+  min-height: 0;
   pointer-events: auto;
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .player-hp-form {
@@ -346,7 +387,12 @@
 .player-hp-list {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 
 .player-hp-row {

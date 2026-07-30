@@ -1703,7 +1703,6 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
 
     let mut result = String::new();
     let mut only_numbers = true;
-    let mut has_han = false;
 
     for ch in sanitized.chars() {
         let code = ch as u32;
@@ -1717,23 +1716,24 @@ fn sanitize_nickname(nickname: &str) -> Option<String> {
             if ch.is_alphabetic() || is_han {
                 only_numbers = false;
             }
-            if is_han {
-                has_han = true;
-            }
         }
     }
 
     if result.is_empty() || only_numbers {
         return None;
     }
-    if result.chars().count() < 2 && !has_han {
-        return None;
-    }
-    if result.chars().count() == 1 && result.chars().all(|ch| ch.is_ascii_alphabetic()) {
-        return None;
+    if result.chars().count() == 1 {
+        let character = result.chars().next()?;
+        if !is_han_character(character) && !is_hangul_syllable(character) {
+            return None;
+        }
     }
 
     Some(result)
+}
+
+fn is_hangul_syllable(ch: char) -> bool {
+    matches!(ch as u32, 0xAC00..=0xD7A3)
 }
 
 fn is_han_character(ch: char) -> bool {

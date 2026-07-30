@@ -167,6 +167,23 @@ pub struct PlayerOverviewStat {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PvpDamageOverviewStat {
+    pub player_id: u32,
+    pub player_name: String,
+    pub player_server_id: String,
+    pub player_class: String,
+    pub counts: u32,
+    pub total_damage: u64,
+    pub min_damage: u64,
+    pub max_damage: u64,
+    pub dps: f64,
+    pub damage_contribution: f64,
+    pub hp_damage_ratio: Option<f64>,
+    pub battle_start_time: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CombatSnapshot {
     pub total_damage: u64,
     pub by_target_player_skill_stats: HashMap<u32, HashMap<u32, HashMap<u32, SkillStats>>>,
@@ -179,4 +196,6 @@ pub struct CombatSnapshot {
     pub last_target_all_players_overview_stats: Vec<PlayerOverviewStat>,
     #[serde(default)]
     pub main_actor_received_player_overview_stats: Vec<PlayerOverviewStat>,
+    #[serde(default)]
+    pub main_actor_dealt_player_overview_stats: Vec<PvpDamageOverviewStat>,
 }

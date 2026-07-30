@@ -21,7 +21,10 @@ const STORAGE_KEY = "app-config";
 const WATCH_NAMES_STORAGE_KEY = "aion2-pvp-watch-names";
 const WATCH_POLL_MS = 500;
 const serverMap = new Map(serversData.map((s) => [s.serverId, s.serverShortName]));
-const playerList = document.getElementById("pvp-player-list");
+const dealtSection = document.getElementById("pvp-dealt-section");
+const dealtPlayerList = document.getElementById("pvp-dealt-player-list");
+const receivedSection = document.getElementById("pvp-received-section");
+const receivedPlayerList = document.getElementById("pvp-received-player-list");
 const watchForm = document.getElementById("player-hp-form");
 const watchInput = document.getElementById("player-hp-input");
 const watchSuggestions = document.getElementById("player-hp-suggestions");
@@ -413,7 +416,7 @@ function startWatchPolling() {
   void poll();
 }
 
-function createPlayerRow(player, maxDamage) {
+function createPlayerRow(player, maxDamage, fullBar = false) {
   const row = document.createElement("div");
   row.className = "player-row";
   row.dataset.actorId = String(player.actorId);
@@ -422,7 +425,7 @@ function createPlayerRow(player, maxDamage) {
   bar.className = "player-row__bar";
   bar.style.setProperty(
     "--bar-scale",
-    maxDamage > 0 ? String((player.totalDamage || 0) / maxDamage) : "0"
+    fullBar ? "1" : maxDamage > 0 ? String((player.totalDamage || 0) / maxDamage) : "0"
   );
 
   const content = document.createElement("div");
@@ -509,9 +512,9 @@ function createPlayerRow(player, maxDamage) {
   return row;
 }
 
-function renderReceivedDamage(players) {
+function renderDamageList(section, playerList, players, { fullBars = false } = {}) {
   const list = Array.isArray(players) ? players : [];
-  document.body.classList.toggle("has-players", list.length > 0);
+  section.classList.toggle("has-data", list.length > 0);
   playerList.replaceChildren();
 
   if (list.length === 0) {
@@ -520,8 +523,35 @@ function renderReceivedDamage(players) {
 
   const maxDamage = list.reduce((max, player) => Math.max(max, player.totalDamage || 0), 0);
   for (const player of list) {
-    playerList.appendChild(createPlayerRow(player, maxDamage));
+    playerList.appendChild(createPlayerRow(player, maxDamage, fullBars));
   }
+}
+
+function renderDealtDamage(players) {
+  const normalizedPlayers = (Array.isArray(players) ? players : []).map((player) => ({
+    actorId: player.playerId,
+    actorName: player.playerName,
+    actorServerId: player.playerServerId,
+    actorClass: player.playerClass,
+    totalDamage: player.totalDamage,
+    dps: player.dps,
+    damageShare: player.damageContribution,
+    damageContribution: player.damageContribution,
+  }));
+  renderDamageList(dealtSection, dealtPlayerList, normalizedPlayers, { fullBars: true });
+  syncPlayerPresence();
+}
+
+function renderReceivedDamage(players) {
+  renderDamageList(receivedSection, receivedPlayerList, players);
+  syncPlayerPresence();
+}
+
+function syncPlayerPresence() {
+  document.body.classList.toggle(
+    "has-players",
+    dealtSection.classList.contains("has-data") || receivedSection.classList.contains("has-data")
+  );
 }
 
 const currentWindow = getCurrentWindow();
@@ -559,8 +589,17 @@ document.getElementById("close-btn")?.addEventListener("click", async () => {
 
   listen("dps-snapshot", (event) => {
     lastSnapshot = event.payload;
+    renderDealtDamage(lastSnapshot?.mainActorDealtPlayerOverviewStats || []);
     renderReceivedDamage(lastSnapshot?.mainActorReceivedPlayerOverviewStats || []);
   });
+
+  try {
+    lastSnapshot = await invoke("get_dps_snapshot");
+    renderDealtDamage(lastSnapshot?.mainActorDealtPlayerOverviewStats || []);
+    renderReceivedDamage(lastSnapshot?.mainActorReceivedPlayerOverviewStats || []);
+  } catch (err) {
+    console.error("[pvp-overlay] get initial DPS snapshot failed:", err);
+  }
 
   watchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -590,12 +629,30 @@ document.getElementById("close-btn")?.addEventListener("click", async () => {
   renderCombatStats([]);
   startWatchPolling();
 
-  playerList.addEventListener("click", async (event) => {
+  receivedPlayerList.addEventListener("click", async (event) => {
     const row = event.target.closest(".player-row");
     if (!row) return;
 
     const actorId = Number(row.dataset.actorId);
     const targetId = lastSnapshot?.combatInfos?.mainActorId;
+    if (!actorId || !targetId) return;
+
+    try {
+      await invoke("set_detail_selection", {
+        value: { actorId, targetId, mode: "live" },
+      });
+      await invoke("create_dps_detail");
+    } catch (_) {
+      /* ignore */
+    }
+  });
+
+  dealtPlayerList.addEventListener("click", async (event) => {
+    const row = event.target.closest(".player-row");
+    if (!row) return;
+
+    const actorId = lastSnapshot?.combatInfos?.mainActorId;
+    const targetId = Number(row.dataset.actorId);
     if (!actorId || !targetId) return;
 
     try {

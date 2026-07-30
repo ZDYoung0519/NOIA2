@@ -44,8 +44,8 @@ let selectedActorId = null;
 let selectedTargetId = null;
 let frozenRecord = null;
 let lastSnapshot = null;
-let isPlayerBuffPanelOpen = true;
-let isBossBuffPanelOpen = true;
+let isPlayerBuffPanelOpen = false;
+let isBossBuffPanelOpen = false;
 
 // ── Formatters ──
 function fmtDamage(n) {

@@ -734,6 +734,10 @@ impl DataStorage {
         self.inner.read().unwrap().actor_id_class_map.as_hash_map()
     }
 
+    pub fn player_hp_snapshot(&self) -> HashMap<u32, PlayerHpInfo> {
+        self.inner.read().unwrap().player_hp_map.as_hash_map()
+    }
+
     pub fn actor_id_combat_power_snapshot(&self) -> HashMap<u32, u64> {
         self.inner
             .read()
