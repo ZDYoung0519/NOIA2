@@ -29,6 +29,7 @@ interface BackendSettings {
   maxPacketSizeThreshold: number;
   stallResyncDelayMs: number;
   fullProcessorStallResyncDelayMs: number;
+  unknownPacketStallResyncDelayMs: number;
   bossOnly: boolean;
   pvpModeOn: boolean;
   pvpOverlayPosition: PvpOverlayPosition;
@@ -104,6 +105,7 @@ const DEFAULTS: AppConfig = {
       maxPacketSizeThreshold: 8192,
       stallResyncDelayMs: 1000,
       fullProcessorStallResyncDelayMs: 200,
+      unknownPacketStallResyncDelayMs: 50,
       bossOnly: true,
       pvpModeOn: false,
       pvpOverlayPosition: "bottom",

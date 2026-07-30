@@ -123,12 +123,13 @@ impl DpsMeter {
         *self.config.write().unwrap() = config.clone();
         self.logger.set_debug_enabled(config.output_debug_log);
         self.logger.info(format!(
-            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms full_processor_stall_resync_delay={}ms capture_backend_priority={:?} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
+            "config applied: dps_interval={}ms memory_interval={}ms max_packet_size_threshold={} stall_resync_delay={}ms full_processor_stall_resync_delay={}ms unknown_packet_stall_resync_delay={}ms capture_backend_priority={:?} boss_only={} pvp_mode_on={} pvp_overlay_position={:?} show_possible_boss={} my_muzhuang_only={} output_debug_log={}",
             config.dps_snapshot_interval_ms,
             config.memory_snapshot_interval_ms,
             config.max_packet_size_threshold,
             config.stall_resync_delay_ms,
             config.full_processor_stall_resync_delay_ms,
+            config.unknown_packet_stall_resync_delay_ms,
             config.capture_backend_priority,
             config.boss_only,
             config.pvp_mode_on,

@@ -264,8 +264,11 @@ fn parse_network_packet(packet: &[u8]) -> Option<CapturedPacket> {
     }
 
     Some(CapturedPacket {
+        src_ip: [packet[12], packet[13], packet[14], packet[15]],
         src_port: u16::from_be_bytes([tcp[0], tcp[1]]),
+        dst_ip: [packet[16], packet[17], packet[18], packet[19]],
         dst_port: u16::from_be_bytes([tcp[2], tcp[3]]),
+        sequence: u32::from_be_bytes([tcp[4], tcp[5], tcp[6], tcp[7]]),
         data: tcp[tcp_header_len..].to_vec(),
         captured_at: current_timestamp_seconds(),
     })
@@ -363,15 +366,21 @@ mod tests {
         packet[0] = 0x45;
         packet[2..4].copy_from_slice(&(44u16).to_be_bytes());
         packet[9] = 6;
+        packet[12..16].copy_from_slice(&[10, 0, 0, 1]);
+        packet[16..20].copy_from_slice(&[10, 0, 0, 2]);
         packet[20..22].copy_from_slice(&(50_000u16).to_be_bytes());
         packet[22..24].copy_from_slice(&(10_007u16).to_be_bytes());
+        packet[24..28].copy_from_slice(&(12_345u32).to_be_bytes());
         packet[32] = 0x50;
         packet[40..44].copy_from_slice(&[0x33, 0x36, 0xaa, 0xbb]);
 
         let captured = parse_network_packet(&packet).expect("valid TCP packet");
 
+        assert_eq!(captured.src_ip, [10, 0, 0, 1]);
         assert_eq!(captured.src_port, 50_000);
+        assert_eq!(captured.dst_ip, [10, 0, 0, 2]);
         assert_eq!(captured.dst_port, 10_007);
+        assert_eq!(captured.sequence, 12_345);
         assert_eq!(captured.data, [0x33, 0x36, 0xaa, 0xbb]);
         assert_eq!(normalized_connection(50_000, 10_007), (10_007, 50_000));
     }

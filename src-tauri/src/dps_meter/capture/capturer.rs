@@ -18,8 +18,11 @@ use crate::plugins::logger::AppLogger;
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CapturedPacket {
+    pub src_ip: [u8; 4],
     pub src_port: u16,
+    pub dst_ip: [u8; 4],
     pub dst_port: u16,
+    pub sequence: u32,
     pub data: Vec<u8>,
     pub captured_at: f64,
 }
@@ -584,20 +587,27 @@ fn parse_captured_packet(frame: &[u8], header: &PcapPkthdr) -> Option<CapturedPa
     let tcp_header = &frame[tcp_offset..];
     let src_port = u16::from_be_bytes([tcp_header[0], tcp_header[1]]);
     let dst_port = u16::from_be_bytes([tcp_header[2], tcp_header[3]]);
+    let sequence = u32::from_be_bytes([tcp_header[4], tcp_header[5], tcp_header[6], tcp_header[7]]);
     let tcp_header_len = ((tcp_header[12] >> 4) as usize) * 4;
     let payload_offset = tcp_offset + tcp_header_len;
-    if payload_offset >= frame.len() {
+    let ip_total_len =
+        usize::from(u16::from_be_bytes([ip_header[2], ip_header[3]])).min(frame.len() - ip_offset);
+    let payload_end = ip_offset + ip_total_len;
+    if payload_offset >= payload_end {
         return None;
     }
 
-    let payload = &frame[payload_offset..];
+    let payload = &frame[payload_offset..payload_end];
     if payload.is_empty() {
         return None;
     }
 
     Some(CapturedPacket {
+        src_ip: [ip_header[12], ip_header[13], ip_header[14], ip_header[15]],
         src_port,
+        dst_ip: [ip_header[16], ip_header[17], ip_header[18], ip_header[19]],
         dst_port,
+        sequence,
         data: payload.to_vec(),
         captured_at: pcap_header_timestamp_seconds(header),
     })

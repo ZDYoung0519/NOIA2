@@ -1422,6 +1422,31 @@ export function Aion2Settings() {
               </span>
             </div>
           </SettingRow>
+
+          <SettingRow
+            title={t("settings.aion2.unknownPacketStallResyncDelay")}
+            description={t("settings.aion2.unknownPacketStallResyncDelayDesc")}
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="500"
+                step="10"
+                value={config.aion2.backend.unknownPacketStallResyncDelayMs}
+                onChange={(e) =>
+                  updateSettings(
+                    "aion2.backend.unknownPacketStallResyncDelayMs",
+                    Number(e.target.value)
+                  )
+                }
+                className="w-24"
+              />
+              <span className="w-14 text-right text-sm tabular-nums">
+                {config.aion2.backend.unknownPacketStallResyncDelayMs}ms
+              </span>
+            </div>
+          </SettingRow>
         </SettingsGroup>
       )}
 

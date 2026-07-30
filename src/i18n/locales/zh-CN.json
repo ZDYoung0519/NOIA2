@@ -232,7 +232,9 @@
       "stallResyncDelay": "昵称重同步延迟",
       "stallResyncDelayDesc": "仅影响昵称检测流。遇到疑似不完整的昵称包时，等待多久后再后移 1 字节重同步。",
       "fullProcessorStallResyncDelay": "完整流重同步延迟",
-      "fullProcessorStallResyncDelayDesc": "完整解析流停滞后的等待时间。设为 0 时立即后移 1 字节重同步。"
+      "fullProcessorStallResyncDelayDesc": "完整解析流停滞后的等待时间。设为 0 时立即后移 1 字节重同步。",
+      "unknownPacketStallResyncDelay": "未知包重同步延迟",
+      "unknownPacketStallResyncDelayDesc": "遇到包头未知的不完整包时等待多久再后移 1 字节。范围 0–500ms，设为 0 时立即重同步。"
     }
   },
 

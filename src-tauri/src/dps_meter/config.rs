@@ -7,6 +7,7 @@ pub const DEFAULT_MEMORY_SNAPSHOT_INTERVAL_MS: u64 = 2000;
 pub const DEFAULT_MAX_PACKET_SIZE_THRESHOLD: u64 = 8 * 1024;
 pub const DEFAULT_STALL_RESYNC_DELAY_MS: u64 = 1000;
 pub const DEFAULT_FULL_PROCESSOR_STALL_RESYNC_DELAY_MS: u64 = 200;
+pub const DEFAULT_UNKNOWN_PACKET_STALL_RESYNC_DELAY_MS: u64 = 10;
 pub const TRAINING_DUMMY_MOB_CODE: [u32; 2] = [2_400_032, 2_400_035];
 pub const DEFAULT_HIDE_KNOWN_PLAYERS: bool = false;
 pub const DEFAULT_MAX_PLAYER_COUNT: usize = 10;
@@ -51,6 +52,8 @@ pub struct DpsMeterConfig {
     pub stall_resync_delay_ms: u64,
     #[serde(default = "default_full_processor_stall_resync_delay_ms")]
     pub full_processor_stall_resync_delay_ms: u64,
+    #[serde(default = "default_unknown_packet_stall_resync_delay_ms")]
+    pub unknown_packet_stall_resync_delay_ms: u64,
     #[serde(default)]
     pub boss_only: bool,
     #[serde(default)]
@@ -79,6 +82,7 @@ impl Default for DpsMeterConfig {
             max_packet_size_threshold: DEFAULT_MAX_PACKET_SIZE_THRESHOLD,
             stall_resync_delay_ms: DEFAULT_STALL_RESYNC_DELAY_MS,
             full_processor_stall_resync_delay_ms: DEFAULT_FULL_PROCESSOR_STALL_RESYNC_DELAY_MS,
+            unknown_packet_stall_resync_delay_ms: DEFAULT_UNKNOWN_PACKET_STALL_RESYNC_DELAY_MS,
             boss_only: false,
             pvp_mode_on: false,
             pvp_overlay_position: PvpOverlayPosition::Bottom,
@@ -107,6 +111,8 @@ impl DpsMeterConfig {
         self.stall_resync_delay_ms = self.stall_resync_delay_ms.clamp(50, 2000);
         self.full_processor_stall_resync_delay_ms =
             self.full_processor_stall_resync_delay_ms.min(2000);
+        self.unknown_packet_stall_resync_delay_ms =
+            self.unknown_packet_stall_resync_delay_ms.min(500);
         self
     }
 }
@@ -131,6 +137,10 @@ fn default_stall_resync_delay_ms() -> u64 {
 
 fn default_full_processor_stall_resync_delay_ms() -> u64 {
     DEFAULT_FULL_PROCESSOR_STALL_RESYNC_DELAY_MS
+}
+
+fn default_unknown_packet_stall_resync_delay_ms() -> u64 {
+    DEFAULT_UNKNOWN_PACKET_STALL_RESYNC_DELAY_MS
 }
 
 fn default_max_player_count() -> usize {

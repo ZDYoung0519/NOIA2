@@ -10,6 +10,7 @@ use crate::dps_meter::capture::assembler::StreamAssembler;
 use crate::dps_meter::capture::capturer::CapturedPacket;
 use crate::dps_meter::capture::channel::Channel;
 use crate::dps_meter::capture::ping_tracker::PingTracker;
+use crate::dps_meter::capture::tcp_reassembler::{TcpFlowKey, TcpReassembler};
 use crate::dps_meter::config::SharedDpsMeterConfig;
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
@@ -56,6 +57,7 @@ struct DispatcherState {
     // unified1: StreamAssembler,
     assemblers: HashMap<String, TrackedAssembler>,
     nickname_assemblers: HashMap<String, TrackedAssembler>,
+    tcp_reassemblers: HashMap<TcpFlowKey, TrackedTcpReassembler>,
     magic_hits: HashMap<String, VecDeque<Instant>>,
     recent_ports: RecentPortWindow,
     logged_packets: usize,
@@ -65,6 +67,11 @@ struct DispatcherState {
 struct TrackedAssembler {
     assembler: StreamAssembler,
     last_processed_at: Instant,
+}
+
+struct TrackedTcpReassembler {
+    reassembler: TcpReassembler,
+    last_seen_at: Instant,
 }
 
 impl TrackedAssembler {
@@ -91,6 +98,7 @@ impl DispatcherState {
             config: Arc::clone(&config),
             assemblers: HashMap::new(),
             nickname_assemblers: HashMap::new(),
+            tcp_reassemblers: HashMap::new(),
             magic_hits: HashMap::new(),
             recent_ports: RecentPortWindow::new(Duration::from_secs(2)),
             logged_packets: 0,
@@ -109,6 +117,7 @@ impl DispatcherState {
         }
         self.assemblers.clear();
         self.nickname_assemblers.clear();
+        self.tcp_reassemblers.clear();
         self.magic_hits.clear();
         self.recent_ports.entries.clear();
         self.logged_packets = 0;
@@ -166,19 +175,57 @@ impl CaptureDispatcher {
 
         let handle = thread::spawn(move || {
             while running.load(Ordering::SeqCst) {
-                let packet = match channel.receive(Some(Duration::from_secs(1))) {
+                let mut packet = match channel.receive(Some(Duration::from_secs(1))) {
                     Some(packet) => packet,
                     None => continue,
                 };
 
                 let mut state = state.lock().unwrap();
+                let flow_key = TcpFlowKey {
+                    src_ip: packet.src_ip,
+                    src_port: packet.src_port,
+                    dst_ip: packet.dst_ip,
+                    dst_port: packet.dst_port,
+                };
+                let tracked_reassembler =
+                    state.tcp_reassemblers.entry(flow_key).or_insert_with(|| {
+                        TrackedTcpReassembler {
+                            reassembler: TcpReassembler::default(),
+                            last_seen_at: Instant::now(),
+                        }
+                    });
+                tracked_reassembler.last_seen_at = Instant::now();
+                let reassembler = &mut tracked_reassembler.reassembler;
+                let previous_retransmits = reassembler.retransmits();
+                let previous_gap_skips = reassembler.gap_skips();
+                let aligned = reassembler.feed(packet.sequence, std::mem::take(&mut packet.data));
+                if aligned.is_empty() {
+                    continue;
+                }
+                packet.data = aligned.concat();
+                if reassembler.retransmits() != previous_retransmits
+                    || reassembler.gap_skips() != previous_gap_skips
+                {
+                    logger.debug(format!(
+                        "tcp reassembly src={}:{} dst={}:{} retransmits={} gap_skips={}",
+                        format_ipv4(packet.src_ip),
+                        packet.src_port,
+                        format_ipv4(packet.dst_ip),
+                        packet.dst_port,
+                        reassembler.retransmits(),
+                        reassembler.gap_skips()
+                    ));
+                }
                 ping_tracker.on_packet(&packet.data, packet.captured_at);
 
                 if state.logged_packets < 20 {
                     logger.info(format!(
-                        "dispatcher packet src={} dst={} payload_len={} captured_at={:.3}",
+                        "dispatcher packet src={}:{} dst={}:{} sequence={} payload_len={} captured_at={:.3}",
+                        format_ipv4(packet.src_ip),
                         packet.src_port,
+                        format_ipv4(packet.dst_ip),
                         packet.dst_port,
+                        packet.sequence,
                         packet.data.len(),
                         packet.captured_at
                     ));
@@ -325,6 +372,9 @@ impl CaptureDispatcher {
         let mut state = self.state.lock().unwrap();
         let mut combat_port = self.combat_port.write().unwrap();
         let mut removed = Vec::new();
+        state
+            .tcp_reassemblers
+            .retain(|_, tracked| now.duration_since(tracked.last_seen_at) <= max_idle);
 
         state.assemblers.retain(|key, tracked| {
             let is_stale = now.duration_since(tracked.last_processed_at) > max_idle;
@@ -379,6 +429,7 @@ impl CaptureDispatcher {
 
         sizes
     }
+
 }
 
 impl Drop for CaptureDispatcher {
@@ -396,4 +447,8 @@ fn looks_like_tls_payload(data: &[u8]) -> bool {
 
 fn directional_port_key(src_port: u16, dst_port: u16) -> String {
     format!("{src_port}->{dst_port}")
+}
+
+fn format_ipv4(ip: [u8; 4]) -> String {
+    format!("{}.{}.{}.{}", ip[0], ip[1], ip[2], ip[3])
 }

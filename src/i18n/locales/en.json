@@ -232,7 +232,9 @@
       "stallResyncDelay": "Nickname resync delay",
       "stallResyncDelayDesc": "Only affects the nickname detection stream. When a nickname frame looks incomplete, this controls how long to wait before resyncing by one byte.",
       "fullProcessorStallResyncDelay": "Full stream resync delay",
-      "fullProcessorStallResyncDelayDesc": "Wait time after the full parser stalls. Set to 0 to resync by one byte immediately."
+      "fullProcessorStallResyncDelayDesc": "Wait time after the full parser stalls. Set to 0 to resync by one byte immediately.",
+      "unknownPacketStallResyncDelay": "Unknown packet resync delay",
+      "unknownPacketStallResyncDelayDesc": "Wait time before skipping one byte for an incomplete packet with an unknown header. Range: 0–500ms. Set to 0 to resync immediately."
     }
   },
   "auth": {

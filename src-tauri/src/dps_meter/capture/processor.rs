@@ -2,12 +2,28 @@ use lz4_flex::block::decompress;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use crate::dps_meter::capture::parser::field_boss_timer::FieldBossTimerParser;
+use crate::dps_meter::capture::parser::utils::{current_timestamp_millis, read_varint};
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage, VarIntOutput};
+use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
 const COMBAT_POWER_MARKER: [u8; 3] = [0xF4, 0xCB, 0x1F];
+const KNOWN_PACKET_HEADERS: &[(u8, u8)] = &[
+    (0x33, 0x36),
+    (0x45, 0x36),
+    (0x56, 0x36),
+    (0x41, 0x36),
+    (0x04, 0x38),
+    (0x05, 0x38),
+    (0x2A, 0x38),
+    (0x2B, 0x38),
+    (0x04, 0x8D),
+    (0x00, 0x8D),
+    (0x01, 0x91),
+    (0xFF, 0xFF),
+];
 
 #[derive(Debug)]
 struct DamagePacketReader<'a> {
@@ -63,6 +79,31 @@ fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPr
     Some(PacketPrefixInfo { payload_offset })
 }
 
+fn inspect_stall_candidate(buffer: &[u8]) -> StallCandidate {
+    let length_info = read_varint(buffer, 0);
+    let declared_packet_len = if length_info.is_valid() && length_info.value > 0 {
+        usize::try_from(length_info.value.saturating_sub(3)).ok()
+    } else {
+        None
+    };
+    let opcode = if length_info.is_valid() {
+        resolve_packet_prefix(buffer, length_info.length).and_then(|prefix| {
+            Some((
+                *buffer.get(prefix.payload_offset)?,
+                *buffer.get(prefix.payload_offset + 1)?,
+            ))
+        })
+    } else {
+        None
+    };
+
+    StallCandidate {
+        buffer_len: buffer.len(),
+        declared_packet_len,
+        opcode,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ProcessorMode {
     Full,
@@ -75,6 +116,13 @@ enum StallResyncMode {
     Delayed,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct StallCandidate {
+    buffer_len: usize,
+    declared_packet_len: Option<usize>,
+    opcode: Option<(u8, u8)>,
+}
+
 pub struct StreamProcessor {
     data_storage: Arc<DataStorage>,
     logger: Arc<AppLogger>,
@@ -83,6 +131,7 @@ pub struct StreamProcessor {
     mode: ProcessorMode,
     stall_resync_mode: StallResyncMode,
     stalled_since: Option<Instant>,
+    stalled_candidate: Option<StallCandidate>,
 }
 
 impl StreamProcessor {
@@ -100,6 +149,7 @@ impl StreamProcessor {
             mode: ProcessorMode::Full,
             stall_resync_mode: StallResyncMode::Immediate,
             stalled_since: None,
+            stalled_candidate: None,
         }
     }
 
@@ -117,15 +167,12 @@ impl StreamProcessor {
             mode: ProcessorMode::NicknameOnly,
             stall_resync_mode: StallResyncMode::Delayed,
             stalled_since: None,
+            stalled_candidate: None,
         }
     }
 
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
-        let max_packet_size_threshold = {
-            let config = self.config.read().unwrap();
-            usize::try_from(config.max_packet_size_threshold).unwrap_or(1024 * 8)
-        };
 
         while offset < buffer.len() {
             if buffer[offset] == 0x00 {
@@ -154,10 +201,6 @@ impl StreamProcessor {
             }
 
             if offset + total_packet_bytes > buffer.len() {
-                if total_packet_bytes > max_packet_size_threshold {
-                    offset += 1;
-                    continue;
-                }
                 break;
             }
 
@@ -180,7 +223,7 @@ impl StreamProcessor {
                 self.unwrap_bundle(&buffer[offset + payload_start..offset + bundle_size]);
                 offset += bundle_size;
             } else {
-                self.parse_packet(current_packet);
+                self.parse_packet(current_packet, false);
                 offset += total_packet_bytes;
             }
         }
@@ -190,25 +233,49 @@ impl StreamProcessor {
         // }
 
         if offset == 0 && !buffer.is_empty() {
-            let delay_ms = {
+            let candidate = inspect_stall_candidate(buffer);
+            let is_known_or_undetermined = candidate
+                .opcode
+                .is_none_or(|opcode| KNOWN_PACKET_HEADERS.contains(&opcode));
+            let delay_ms = if is_known_or_undetermined {
                 let config = self.config.read().unwrap();
                 match self.stall_resync_mode {
                     StallResyncMode::Immediate => config.full_processor_stall_resync_delay_ms,
                     StallResyncMode::Delayed => config.stall_resync_delay_ms,
                 }
+            } else {
+                self.config
+                    .read()
+                    .unwrap()
+                    .unknown_packet_stall_resync_delay_ms
             };
+
             if delay_ms == 0 {
+                self.stalled_since = None;
+                self.stalled_candidate = None;
                 return 1;
             }
 
             let now = Instant::now();
+            if self.stalled_candidate != Some(candidate) {
+                self.stalled_candidate = Some(candidate);
+                self.stalled_since = Some(now);
+                return 0;
+            }
+
             if let Some(stalled_since) = self.stalled_since {
                 if now.duration_since(stalled_since) >= Duration::from_millis(delay_ms) {
                     self.logger.debug(format!(
-                        "[{}] stream stalled for {}ms with buffer_size={}, forcing resync by skipping 1 byte",
+                        "[{}] stream stalled for {}ms with buffer_size={} declared_packet_len={:?} opcode={} known_or_undetermined={}, forcing resync by skipping 1 byte",
                         self.port,
                         delay_ms,
-                        buffer.len()
+                        buffer.len(),
+                        candidate.declared_packet_len,
+                        candidate
+                            .opcode
+                            .map(|(first, second)| format!("{first:02X}{second:02X}"))
+                            .unwrap_or_else(|| "undetermined".to_string()),
+                        is_known_or_undetermined
                     ));
                     self.stalled_since = Some(now);
                     return 1;
@@ -218,6 +285,7 @@ impl StreamProcessor {
             }
         } else {
             self.stalled_since = None;
+            self.stalled_candidate = None;
         }
 
         offset
@@ -275,14 +343,14 @@ impl StreamProcessor {
             if is_nested_bundle {
                 self.unwrap_bundle(&inner_packet[inner_payload_start..]);
             } else {
-                self.parse_packet(inner_packet);
+                self.parse_packet(inner_packet, true);
             }
 
             offset += inner_total_bytes;
         }
     }
 
-    fn parse_packet(&mut self, packet: &[u8]) -> bool {
+    fn parse_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
         if packet.len() < 3 {
             return false;
         }
@@ -319,29 +387,100 @@ impl StreamProcessor {
 
         match self.mode {
             ProcessorMode::Full => match (payload[0], payload[1]) {
-                (0x33, 0x36) => self.parse_main_nickname(payload),
-                (0x45, 0x36) => self.parse_other_nickname(payload),
-                (0x56, 0x36) => self.parse_main_combat_power(payload),
-                (0x41, 0x36) => self.parse_summon_packet(payload),
-                (0x04, 0x38) => self.parse_damage_packet(payload),
-                (0x05, 0x38) => self.parse_dot_packet(payload),
-                (0x2A, 0x38) | (0x2B, 0x38) => self.parse_buff_packet(payload),
-                (0x04, 0x8D) => self.parse_summon_packet_048d(payload),
-                (0x00, 0x8D) => self.parse_remain_hp_packet(payload),
+                (0x33, 0x36) => self.parse_main_nickname(payload, is_compressed_bundle),
+                (0x45, 0x36) => self.parse_other_nickname(payload, is_compressed_bundle),
+                (0x56, 0x36) => self.parse_main_combat_power(payload, is_compressed_bundle),
+                (0x41, 0x36) => self.parse_summon_packet(payload, is_compressed_bundle),
+                (0x04, 0x38) => self.parse_damage_packet(payload, is_compressed_bundle),
+                (0x05, 0x38) => self.parse_dot_packet(payload, is_compressed_bundle),
+                (0x2A, 0x38) | (0x2B, 0x38) => {
+                    self.parse_buff_packet(payload, is_compressed_bundle)
+                }
+                (0x04, 0x8D) => {
+                    self.parse_summon_packet_048d(payload, is_compressed_bundle)
+                }
+                (0x00, 0x8D) => self.parse_remain_hp_packet(payload, is_compressed_bundle),
+                (0x01, 0x91) => {
+                    self.parse_field_boss_timer_packet(payload, is_compressed_bundle)
+                }
                 _ => false,
             },
             ProcessorMode::NicknameOnly => match (payload[0], payload[1]) {
-                (0x33, 0x36) => self.parse_main_nickname(payload),
-                (0x45, 0x36) => self.parse_other_nickname(payload),
-                (0x56, 0x36) => self.parse_main_combat_power(payload),
-                (0x41, 0x36) => self.parse_summon_packet(payload),
+                (0x33, 0x36) => self.parse_main_nickname(payload, is_compressed_bundle),
+                (0x45, 0x36) => self.parse_other_nickname(payload, is_compressed_bundle),
+                (0x56, 0x36) => self.parse_main_combat_power(payload, is_compressed_bundle),
+                (0x41, 0x36) => self.parse_summon_packet(payload, is_compressed_bundle),
                 _ => false,
             },
         }
     }
 
+    fn log_packet_source(&self, packet: &[u8], is_compressed_bundle: bool) {
+        if packet.len() < 2 {
+            return;
+        }
+        self.logger.info(format!(
+            "[{}] packet source opcode={:02X}{:02X} compressed_bundle={} packet_len={}",
+            self.port,
+            packet[0],
+            packet[1],
+            is_compressed_bundle,
+            packet.len()
+        ));
+    }
+
+    fn parse_field_boss_timer_packet(
+        &self,
+        packet: &[u8],
+        is_compressed_bundle: bool,
+    ) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
+        let Some(table) = FieldBossTimerParser::parse(packet, 2) else {
+            self.logger.info(format!(
+                "[{}] 0191 field boss timer packet could not be parsed packet_len={} packet_hex={}",
+                self.port,
+                packet.len(),
+                bytes_to_hex(packet)
+            ));
+            return false;
+        };
+
+        self.logger.info(format!(
+            "[{}] 0191 field boss timer table map_id={} declared_entries={} parsed_entries={} packet_len={}",
+            self.port,
+            table.map_id,
+            table.declared_entry_count,
+            table.timers.len(),
+            packet.len()
+        ));
+
+        for timer in &table.timers {
+            let remaining_ms = timer.target_ms.saturating_sub(current_timestamp_millis());
+            self.logger.info(format!(
+                "[{}] 0191 field boss timer map_id={} wire_code={} mob_code={} target_ms={} remaining_ms={}",
+                self.port,
+                table.map_id,
+                timer.wire_code,
+                timer.mob_code,
+                timer.target_ms,
+                remaining_ms
+            ));
+        }
+
+        if table.timers.is_empty() {
+            self.logger.info(format!(
+                "[{}] 0191 field boss timer table contained no recognized timestamps packet_hex={}",
+                self.port,
+                bytes_to_hex(packet)
+            ));
+        }
+
+        true
+    }
+
     #[allow(unused_assignments)]
-    fn parse_damage_packet(&mut self, packet: &[u8]) -> bool {
+    fn parse_damage_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
         let mut reader = DamagePacketReader::new(packet, 0);
         if reader.offset + 1 >= packet.len() {
             return false;
@@ -547,7 +686,8 @@ impl StreamProcessor {
         parsed_any
     }
 
-    fn parse_dot_packet(&mut self, packet: &[u8]) -> bool {
+    fn parse_dot_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
         let mut offset = 0usize;
         if packet.len() <= offset + 1 || packet[offset] != 0x05 || packet[offset + 1] != 0x38 {
             return false;
@@ -627,7 +767,8 @@ impl StreamProcessor {
         true
     }
 
-    fn parse_buff_packet(&mut self, packet: &[u8]) -> bool {
+    fn parse_buff_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
         if packet.len() < 2 || !matches!(packet[0], 0x2A | 0x2B) || packet[1] != 0x38 {
             return false;
         }
@@ -753,7 +894,12 @@ impl StreamProcessor {
         true
     }
 
-    fn parse_summon_packet_048d(&mut self, packet: &[u8]) -> bool {
+    fn parse_summon_packet_048d(
+        &mut self,
+        packet: &[u8],
+        is_compressed_bundle: bool,
+    ) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
         let offset = 0usize;
         if offset + 1 >= packet.len() || packet[offset] != 0x04 || packet[offset + 1] != 0x8D {
             return false;
@@ -793,7 +939,8 @@ impl StreamProcessor {
         true
     }
 
-    fn parse_summon_packet(&mut self, packet: &[u8]) -> bool {
+    fn parse_summon_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
         // 4136 的前半段按 Kotlin 版本保持一致：
         // 1. opcode 后读取 summon_id / actor_id
         // 2. 在整包中查找 00 40 02，找不到再尝试 00 00 02
@@ -934,11 +1081,17 @@ impl StreamProcessor {
         parsed_any
     }
 
-    fn parse_remain_hp_packet(&mut self, packet: &[u8]) -> bool {
-        self.parse_remain_hp_packet_at(packet, 2)
+    fn parse_remain_hp_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
+        // self.log_packet_source(packet, is_compressed_bundle);
+        self.parse_remain_hp_packet_at(packet, 2, is_compressed_bundle)
     }
 
-    fn parse_remain_hp_packet_at(&mut self, packet: &[u8], offset_after_opcode: usize) -> bool {
+    fn parse_remain_hp_packet_at(
+        &mut self,
+        packet: &[u8],
+        offset_after_opcode: usize,
+        _is_compressed_bundle: bool,
+    ) -> bool {
         let mut offset = offset_after_opcode;
 
         if packet.len() < offset {
@@ -1191,11 +1344,13 @@ impl StreamProcessor {
         None
     }
 
-    fn parse_main_nickname(&mut self, payload: &[u8]) -> bool {
-        self.parse_main_nickname_fixed(payload)
+    fn parse_main_nickname(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
+        self.log_packet_source(payload, is_compressed_bundle);
+        self.parse_main_nickname_fixed(payload, is_compressed_bundle)
     }
 
-    fn parse_main_combat_power(&mut self, payload: &[u8]) -> bool {
+    fn parse_main_combat_power(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
+        self.log_packet_source(payload, is_compressed_bundle);
         if payload.len() < 6 || payload[0] != 0x56 || payload[1] != 0x36 {
             return false;
         }
@@ -1213,7 +1368,11 @@ impl StreamProcessor {
     }
 
     // 33 36 <actor_id> <five metadata bytes> <name_len> <name> <sid>
-    fn parse_main_nickname_fixed(&mut self, payload: &[u8]) -> bool {
+    fn parse_main_nickname_fixed(
+        &mut self,
+        payload: &[u8],
+        _is_compressed_bundle: bool,
+    ) -> bool {
         let aid_info = read_varint(payload, 2);
         if !aid_info.is_valid() || aid_info.value <= 0 {
             return false;
@@ -1274,7 +1433,8 @@ impl StreamProcessor {
         true
     }
 
-    fn parse_other_nickname(&mut self, payload: &[u8]) -> bool {
+    fn parse_other_nickname(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
+        self.log_packet_source(payload, is_compressed_bundle);
         let aid_info = read_varint(payload, 2);
         if !aid_info.is_valid() || aid_info.value <= 0 {
             return false;
@@ -1388,34 +1548,6 @@ impl StreamProcessor {
         ));
 
         true
-    }
-}
-
-pub fn read_varint(data: &[u8], offset: usize) -> VarIntOutput {
-    let mut value: u32 = 0;
-    let mut shift = 0u32;
-    let mut count = 0usize;
-
-    loop {
-        if offset + count >= data.len() {
-            return VarIntOutput::invalid();
-        }
-
-        let byte_val = data[offset + count];
-        count += 1;
-        value |= u32::from(byte_val & 0x7F) << shift;
-
-        if (byte_val & 0x80) == 0 {
-            return VarIntOutput {
-                value: i64::from(value),
-                length: count,
-            };
-        }
-
-        shift += 7;
-        if shift >= 32 {
-            return VarIntOutput::invalid();
-        }
     }
 }
 
