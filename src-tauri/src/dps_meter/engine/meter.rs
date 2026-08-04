@@ -11,7 +11,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::dps_meter::capture::capturer::{check_npcap_available, CapturedPacket, PcapCapturer};
 use crate::dps_meter::capture::channel::Channel;
-use crate::dps_meter::capture::dispatcher::CaptureDispatcher;
+use crate::dps_meter::capture::dispatcher::{CaptureDispatcher, TcpReassemblyStatus};
 use crate::dps_meter::capture::ping_tracker::PingTracker;
 use crate::dps_meter::capture::windivert_capturer::{check_windivert_status, WinDivertCapturer};
 use crate::dps_meter::config::{CaptureBackendPriority, DpsMeterConfig, SharedDpsMeterConfig};
@@ -22,7 +22,7 @@ use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
-const STALE_ASSEMBLER_IDLE_SECS: u64 = 10;
+const STALE_ASSEMBLER_IDLE_SECS: u64 = 30;
 const PACKET_CHANNEL_CAPACITY: isize = 2_000_000;
 
 #[derive(Debug, Clone, Copy)]
@@ -344,6 +344,10 @@ impl DpsMeter {
             has_game_data,
             player_identified,
         }
+    }
+
+    pub fn tcp_reassembly_status(&self) -> TcpReassemblyStatus {
+        self.dispatcher.tcp_reassembly_status()
     }
 
     pub fn get_dps_snapshot(&self, target_damage_threshold: u64) -> Option<CombatSnapshot> {

@@ -75,6 +75,26 @@
       "setSuccess": "已将快捷键设为 {{shortcut}}！",
       "cleared": "已取消快捷键！"
     },
+    "tcpReassembly": {
+      "title": "TCP 重組",
+      "description": "查看進入遊戲協議解析前的 TCP 流即時狀態。",
+      "refresh": "重新整理",
+      "loadFailed": "TCP 重組狀態載入失敗",
+      "overview": "狀態概覽",
+      "autoRefresh": "僅在開啟此頁面時每秒自動重新整理。",
+      "flowCount": "{{count}} 條流",
+      "connections": "連線明細",
+      "pending": "暫存分段",
+      "held": "暫存資料",
+      "retransmits": "重傳",
+      "gapSkips": "缺口跳過",
+      "notDetected": "尚未識別戰鬥連線",
+      "flow": "TCP 流",
+      "nextSequence": "下一個序號",
+      "idle": "閒置時間",
+      "combat": "戰鬥",
+      "empty": "暫未擷取到 TCP 流。"
+    },
     "aion2": {
       "title": "永恒之塔 2",
       "description": "Aion 2 的 DPS 计量和悬浮窗设置",

@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Emitter, State};
 
+use crate::dps_meter::capture::dispatcher::TcpReassemblyStatus;
 use crate::dps_meter::capture::windivert_capturer::WinDivertStatus;
 use crate::dps_meter::config::DpsMeterConfig;
 use crate::dps_meter::engine::meter::DpsMeter;
@@ -98,6 +99,13 @@ pub fn stop_dps_meter(meter: State<'_, DpsMeter>) -> Result<(), String> {
 #[tauri::command]
 pub fn check_dps_meter_state(meter: State<'_, DpsMeter>) -> Result<DpsMeterState, String> {
     Ok(meter.check_state())
+}
+
+#[tauri::command]
+pub fn get_tcp_reassembly_status(
+    meter: State<'_, DpsMeter>,
+) -> Result<TcpReassemblyStatus, String> {
+    Ok(meter.tcp_reassembly_status())
 }
 
 #[tauri::command]

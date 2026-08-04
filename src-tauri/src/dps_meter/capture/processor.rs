@@ -2,14 +2,14 @@ use lz4_flex::block::decompress;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use crate::dps_meter::capture::parser::field_boss_timer::FieldBossTimerParser;
-use crate::dps_meter::capture::parser::utils::{current_timestamp_millis, read_varint};
+use crate::dps_meter::capture::parser::context::ParserContext;
+use crate::dps_meter::capture::parser::field_boss_timer;
+use crate::dps_meter::capture::parser::nickname;
+use crate::dps_meter::capture::parser::utils::read_varint;
 use crate::dps_meter::config::SharedDpsMeterConfig;
-use crate::dps_meter::models::packet::{ParsedDamagePacket, SpecialDamage};
 use crate::dps_meter::storage::data_storage::DataStorage;
 use crate::plugins::logger::AppLogger;
 
-const COMBAT_POWER_MARKER: [u8; 3] = [0xF4, 0xCB, 0x1F];
 const KNOWN_PACKET_HEADERS: &[(u8, u8)] = &[
     (0x33, 0x36),
     (0x45, 0x36),
@@ -25,48 +25,21 @@ const KNOWN_PACKET_HEADERS: &[(u8, u8)] = &[
     (0xFF, 0xFF),
 ];
 
-#[derive(Debug)]
-struct DamagePacketReader<'a> {
-    packet: &'a [u8],
-    offset: usize,
-}
-
-impl<'a> DamagePacketReader<'a> {
-    fn new(packet: &'a [u8], offset: usize) -> Self {
-        Self { packet, offset }
-    }
-
-    fn remaining_bytes(&self) -> usize {
-        self.packet.len().saturating_sub(self.offset)
-    }
-
-    fn try_read_var_int(&mut self) -> Option<u32> {
-        let out = read_varint(self.packet, self.offset);
-        if !out.is_valid() {
-            return None;
-        }
-        self.offset += out.length;
-        u32::try_from(out.value).ok()
-    }
-}
-
-/// 数据包前缀信息。
+/// Packet prefix metadata.
 ///
-/// 协议在长度 varint 后面，可能会额外插入 1 个扩展字节（extraFlag，范围 0xF0~0xFE）。
-/// 这个字节不属于真正的业务 opcode，只会让后续 payload 整体后移 1 字节。
+/// An optional extension byte in the 0xF0..0xFE range may appear after the
+/// length varint. It is not part of the business opcode.
 #[derive(Debug, Clone, Copy)]
 struct PacketPrefixInfo {
-    /// 真实业务 payload 的起始偏移（也就是 opcode 开始的位置）
+    /// Offset of the business payload and opcode.
     payload_offset: usize,
 }
 
-/// 解析长度字段后面的传输层前缀。
+/// Resolve the transport prefix following the length field.
 ///
-/// 目前已知协议有两种形式：
+/// Supported layouts:
 /// 1. [length varint][opcode...]
 /// 2. [length varint][extraFlag][opcode...]
-///
-/// 这里统一把真正的 payload 起始偏移算出来，避免各个解析函数各自重复处理。
 fn resolve_packet_prefix(packet: &[u8], length_offset: usize) -> Option<PacketPrefixInfo> {
     let first_byte = *packet.get(length_offset)?;
     let has_extra_flag = (0xF0..0xFF).contains(&first_byte);
@@ -98,7 +71,6 @@ fn inspect_stall_candidate(buffer: &[u8]) -> StallCandidate {
     };
 
     StallCandidate {
-        buffer_len: buffer.len(),
         declared_packet_len,
         opcode,
     }
@@ -118,20 +90,20 @@ enum StallResyncMode {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct StallCandidate {
-    buffer_len: usize,
     declared_packet_len: Option<usize>,
     opcode: Option<(u8, u8)>,
 }
 
 pub struct StreamProcessor {
-    data_storage: Arc<DataStorage>,
-    logger: Arc<AppLogger>,
-    port: String,
-    config: SharedDpsMeterConfig,
+    pub(super) data_storage: Arc<DataStorage>,
+    pub(super) logger: Arc<AppLogger>,
+    pub(super) port: String,
+    pub(super) config: SharedDpsMeterConfig,
     mode: ProcessorMode,
     stall_resync_mode: StallResyncMode,
     stalled_since: Option<Instant>,
     stalled_candidate: Option<StallCandidate>,
+    combat_damage_enabled: bool,
 }
 
 impl StreamProcessor {
@@ -150,6 +122,7 @@ impl StreamProcessor {
             stall_resync_mode: StallResyncMode::Immediate,
             stalled_since: None,
             stalled_candidate: None,
+            combat_damage_enabled: false,
         }
     }
 
@@ -168,11 +141,20 @@ impl StreamProcessor {
             stall_resync_mode: StallResyncMode::Delayed,
             stalled_since: None,
             stalled_candidate: None,
+            combat_damage_enabled: false,
         }
+    }
+
+    pub fn set_combat_damage_enabled(&mut self, enabled: bool) {
+        self.combat_damage_enabled = enabled;
     }
 
     pub fn consume_stream(&mut self, buffer: &[u8]) -> usize {
         let mut offset = 0usize;
+        let max_packet_size_threshold = {
+            let config = self.config.read().unwrap();
+            usize::try_from(config.max_packet_size_threshold).unwrap_or(8 * 1024)
+        };
 
         while offset < buffer.len() {
             if buffer[offset] == 0x00 {
@@ -201,6 +183,18 @@ impl StreamProcessor {
             }
 
             if offset + total_packet_bytes > buffer.len() {
+                // let candidate = inspect_stall_candidate(&buffer[offset..]);
+                // let is_explicitly_unknown = candidate
+                //     .opcode
+                //     .is_some_and(|opcode| !KNOWN_PACKET_HEADERS.contains(&opcode));
+                // if is_explicitly_unknown && total_packet_bytes > max_packet_size_threshold {
+                //     offset += 1;
+                //     continue;
+                // }
+                if total_packet_bytes > max_packet_size_threshold {
+                    offset += 1;
+                    continue;
+                }
                 break;
             }
 
@@ -233,7 +227,7 @@ impl StreamProcessor {
         // }
 
         if offset == 0 && !buffer.is_empty() {
-            let candidate = inspect_stall_candidate(buffer);
+            let candidate: StallCandidate = inspect_stall_candidate(buffer);
             let is_known_or_undetermined = candidate
                 .opcode
                 .is_none_or(|opcode| KNOWN_PACKET_HEADERS.contains(&opcode));
@@ -253,6 +247,20 @@ impl StreamProcessor {
             if delay_ms == 0 {
                 self.stalled_since = None;
                 self.stalled_candidate = None;
+                
+                self.logger.info(format!(
+                    "[{}] stream stalled for {}ms with buffer_size={} declared_packet_len={:?} opcode={} known_or_undetermined={}, forcing resync by skipping 1 byte",
+                    self.port,
+                    delay_ms,
+                    buffer.len(),
+                    candidate.declared_packet_len,
+                    candidate
+                        .opcode
+                        .map(|(first, second)| format!("{first:02X}{second:02X}"))
+                        .unwrap_or_else(|| "undetermined".to_string()),
+                    is_known_or_undetermined
+                ));
+
                 return 1;
             }
 
@@ -265,7 +273,7 @@ impl StreamProcessor {
 
             if let Some(stalled_since) = self.stalled_since {
                 if now.duration_since(stalled_since) >= Duration::from_millis(delay_ms) {
-                    self.logger.debug(format!(
+                    self.logger.info(format!(
                         "[{}] stream stalled for {}ms with buffer_size={} declared_packet_len={:?} opcode={} known_or_undetermined={}, forcing resync by skipping 1 byte",
                         self.port,
                         delay_ms,
@@ -369,1535 +377,53 @@ impl StreamProcessor {
             return false;
         }
 
-        // let search_target = 13_070_120u32.to_le_bytes();
-        // if let Some(hit_offset) = find_bytes(payload, 0, &search_target) {
-        //     let context_start = hit_offset.saturating_sub(256);
-        //     let context_end = (hit_offset + search_target.len() + 256).min(payload.len());
-        //     self.logger.info(format!(
-        //         "[{}] hard search skill=13070120 opcode={:02X} {:02X} offset={} target_hex={} context_hex={} full_hex={}",
-        //         self.port,
-        //         payload[0],
-        //         payload[1],
-        //         hit_offset,
-        //         bytes_to_hex(&search_target),
-        //         bytes_to_hex(&payload[context_start..context_end]),
-        //         bytes_to_hex(payload),
-        //     ));
-        // }
-
         match self.mode {
             ProcessorMode::Full => match (payload[0], payload[1]) {
-                (0x33, 0x36) => self.parse_main_nickname(payload, is_compressed_bundle),
-                (0x45, 0x36) => self.parse_other_nickname(payload, is_compressed_bundle),
-                (0x56, 0x36) => self.parse_main_combat_power(payload, is_compressed_bundle),
+                (0x33, 0x36) => {
+                    nickname::parse_main(&self.parser_context(), payload, is_compressed_bundle)
+                }
+                (0x45, 0x36) => {
+                    nickname::parse_other(&self.parser_context(), payload, is_compressed_bundle)
+                }
+                (0x56, 0x36) => nickname::parse_main_combat_power(
+                    &self.parser_context(),
+                    payload,
+                    is_compressed_bundle,
+                ),
                 (0x41, 0x36) => self.parse_summon_packet(payload, is_compressed_bundle),
-                (0x04, 0x38) => self.parse_damage_packet(payload, is_compressed_bundle),
-                (0x05, 0x38) => self.parse_dot_packet(payload, is_compressed_bundle),
+                (0x04, 0x38) if self.combat_damage_enabled => {
+                    self.parse_damage_packet(payload, is_compressed_bundle)
+                }
+                (0x05, 0x38) if self.combat_damage_enabled => {
+                    self.parse_dot_packet(payload, is_compressed_bundle)
+                }
                 (0x2A, 0x38) | (0x2B, 0x38) => {
                     self.parse_buff_packet(payload, is_compressed_bundle)
                 }
-                (0x04, 0x8D) => {
-                    self.parse_summon_packet_048d(payload, is_compressed_bundle)
-                }
+                (0x04, 0x8D) => self.parse_summon_packet_048d(payload, is_compressed_bundle),
                 (0x00, 0x8D) => self.parse_remain_hp_packet(payload, is_compressed_bundle),
-                (0x01, 0x91) => {
-                    self.parse_field_boss_timer_packet(payload, is_compressed_bundle)
-                }
+                (0x01, 0x91) => field_boss_timer::parse_packet(&self.parser_context(), payload),
                 _ => false,
             },
             ProcessorMode::NicknameOnly => match (payload[0], payload[1]) {
-                (0x33, 0x36) => self.parse_main_nickname(payload, is_compressed_bundle),
-                (0x45, 0x36) => self.parse_other_nickname(payload, is_compressed_bundle),
-                (0x56, 0x36) => self.parse_main_combat_power(payload, is_compressed_bundle),
+                (0x33, 0x36) => {
+                    nickname::parse_main(&self.parser_context(), payload, is_compressed_bundle)
+                }
+                (0x45, 0x36) => {
+                    nickname::parse_other(&self.parser_context(), payload, is_compressed_bundle)
+                }
+                (0x56, 0x36) => nickname::parse_main_combat_power(
+                    &self.parser_context(),
+                    payload,
+                    is_compressed_bundle,
+                ),
                 (0x41, 0x36) => self.parse_summon_packet(payload, is_compressed_bundle),
                 _ => false,
             },
         }
     }
 
-    fn log_packet_source(&self, packet: &[u8], is_compressed_bundle: bool) {
-        if packet.len() < 2 {
-            return;
-        }
-        self.logger.info(format!(
-            "[{}] packet source opcode={:02X}{:02X} compressed_bundle={} packet_len={}",
-            self.port,
-            packet[0],
-            packet[1],
-            is_compressed_bundle,
-            packet.len()
-        ));
-    }
-
-    fn parse_field_boss_timer_packet(
-        &self,
-        packet: &[u8],
-        is_compressed_bundle: bool,
-    ) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        let Some(table) = FieldBossTimerParser::parse(packet, 2) else {
-            self.logger.info(format!(
-                "[{}] 0191 field boss timer packet could not be parsed packet_len={} packet_hex={}",
-                self.port,
-                packet.len(),
-                bytes_to_hex(packet)
-            ));
-            return false;
-        };
-
-        self.logger.info(format!(
-            "[{}] 0191 field boss timer table map_id={} declared_entries={} parsed_entries={} packet_len={}",
-            self.port,
-            table.map_id,
-            table.declared_entry_count,
-            table.timers.len(),
-            packet.len()
-        ));
-
-        for timer in &table.timers {
-            let remaining_ms = timer.target_ms.saturating_sub(current_timestamp_millis());
-            self.logger.info(format!(
-                "[{}] 0191 field boss timer map_id={} wire_code={} mob_code={} target_ms={} remaining_ms={}",
-                self.port,
-                table.map_id,
-                timer.wire_code,
-                timer.mob_code,
-                timer.target_ms,
-                remaining_ms
-            ));
-        }
-
-        if table.timers.is_empty() {
-            self.logger.info(format!(
-                "[{}] 0191 field boss timer table contained no recognized timestamps packet_hex={}",
-                self.port,
-                bytes_to_hex(packet)
-            ));
-        }
-
-        true
-    }
-
-    #[allow(unused_assignments)]
-    fn parse_damage_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        let mut reader = DamagePacketReader::new(packet, 0);
-        if reader.offset + 1 >= packet.len() {
-            return false;
-        }
-        if packet[reader.offset] != 0x04 || packet[reader.offset + 1] != 0x38 {
-            return false;
-        }
-        reader.offset += 2;
-
-        let mut parsed_any = false;
-        while reader.remaining_bytes() > 0 {
-            let checkpoint = reader.offset;
-            if reader.remaining_bytes() >= 2
-                && packet[reader.offset] == 0x01
-                && packet[reader.offset + 1] == 0x00
-            {
-                reader.offset += 2;
-            } else if parsed_any {
-                break;
-            }
-
-            let Some(target_id) = reader.try_read_var_int() else {
-                reader.offset = checkpoint;
-                break;
-            };
-
-            let Some(switch_value) = reader.try_read_var_int() else {
-                reader.offset = checkpoint;
-                break;
-            };
-            let and_result = switch_value & 0x0F;
-            if !matches!(and_result, 4..=7) {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            if reader.try_read_var_int().is_none() {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            let Some(actor_id) = reader.try_read_var_int() else {
-                reader.offset = checkpoint;
-                break;
-            };
-            if actor_id == 0 {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            if reader.offset + 4 > packet.len() {
-                reader.offset = checkpoint;
-                break;
-            }
-            let mut exact_skill_code = parse_u32_le(packet, reader.offset);
-            reader.offset += 4;
-
-            if (3_000_000..=3_099_999).contains(&exact_skill_code) {
-                exact_skill_code = exact_skill_code * 10 + 1;
-            }
-            if !(1..=299_999_999).contains(&exact_skill_code)
-                || (1_000_000..=9_999_999).contains(&exact_skill_code)
-            {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            if reader.remaining_bytes() > 0 {
-                reader.offset += 1;
-            }
-
-            let Some(dummy_type) = reader.try_read_var_int() else {
-                reader.offset = checkpoint;
-                break;
-            };
-            let damage_type = (dummy_type & 0xFF) as u8;
-
-            let temp_v = match and_result {
-                5 => 12,
-                6 => 10,
-                7 => 14,
-                _ => 8,
-            };
-
-            let mut specials = Vec::new();
-            if matches!(and_result, 5..=7) && reader.offset + temp_v <= packet.len() {
-                let special_area = &packet[reader.offset..reader.offset + temp_v];
-                let special_byte = special_area[0];
-                if special_byte & 0x02 != 0 {
-                    specials.push(SpecialDamage::Parry);
-                }
-                if special_byte & 0x04 != 0 {
-                    specials.push(SpecialDamage::Perfect);
-                }
-                if special_byte & 0x08 != 0 {
-                    specials.push(SpecialDamage::Double);
-                }
-                if special_byte & 0x20 != 0 {
-                    specials.push(SpecialDamage::Smite);
-                }
-                match special_area.get(2).copied() {
-                    Some(0x01) => specials.push(SpecialDamage::Back),
-                    Some(0x02) => specials.push(SpecialDamage::Front),
-                    _ => {}
-                }
-            }
-
-            if damage_type == 3 {
-                specials.push(SpecialDamage::Critical);
-            }
-
-            // Damage tail versions share the same varint stream:
-            //   old: [unknown][damage][hit_count][per-hit...]
-            //   new: [0][legacy_damage][damage][hit_count][per-hit...]
-            // When the first value is 0, damage/hit_count shift right by one varint.
-            reader.offset = reader.offset.saturating_add(temp_v);
-            let tail_values = collect_varints(packet, reader.offset, 12);
-            let Some(unknown) = read_varint_u32(packet, reader.offset) else {
-                reader.offset = checkpoint;
-                break;
-            };
-            reader.offset += read_varint(packet, reader.offset).length;
-
-            let Some(legacy_damage) = read_varint_u32(packet, reader.offset) else {
-                reader.offset = checkpoint;
-                break;
-            };
-            reader.offset += read_varint(packet, reader.offset).length;
-
-            let mut tail_mode = "old";
-            let mut damage = legacy_damage;
-
-            if unknown == 0 {
-                let Some(shifted_damage) = read_varint_u32(packet, reader.offset) else {
-                    reader.offset = checkpoint;
-                    break;
-                };
-                let shifted_len = read_varint(packet, reader.offset).length;
-                let hit_count_info = read_varint(packet, reader.offset + shifted_len);
-                if shifted_damage > 0
-                    && hit_count_info.is_valid()
-                    && (1..=25).contains(&hit_count_info.value)
-                {
-                    tail_mode = "shifted";
-                    damage = shifted_damage;
-                    reader.offset += shifted_len;
-                }
-            }
-
-            let tail_hit_count = read_varint_u32(packet, reader.offset).unwrap_or(0);
-            let multi_hit = parse_repeated_multi_hit(packet, reader.offset);
-            reader.offset = multi_hit.next_offset;
-
-            if damage > 99_999_999 {
-                reader.offset = checkpoint;
-                break;
-            }
-
-            let resolved_skill_code = normalize_skill_id(exact_skill_code);
-            let special_names: Vec<String> = specials
-                .iter()
-                .map(|special| special.as_str().to_string())
-                .collect();
-
-            let parsed = ParsedDamagePacket {
-                target_id,
-                actor_id,
-                skill_code: resolved_skill_code,
-                ori_skill_code: exact_skill_code,
-                damage: u64::from(damage),
-                is_dot: false,
-                is_crit: specials.contains(&SpecialDamage::Critical),
-                multi_hit_damage: multi_hit.damage,
-                multi_hit_count: multi_hit.count,
-                specials: special_names.clone(),
-            };
-
-            self.data_storage.append_damage(parsed);
-            self.logger.debug(format!(
-                "[{}] damage target={} actor={} skill={} ori_code={} damage={} tail_mode={} unknown={} legacy_damage={} raw_damage={} tail_values={:?} tail_hit_count={} multi_hit_count={} multi_hit_damage={} per_hits={:?} specials={:?} packet_len={} packet_hex={}",
-                self.port,
-                target_id,
-                actor_id,
-                resolved_skill_code,
-                exact_skill_code,
-                damage,
-                tail_mode,
-                unknown,
-                legacy_damage,
-                damage,
-                tail_values,
-                tail_hit_count,
-                multi_hit.count,
-                multi_hit.damage,
-                multi_hit.per_hit_values,
-                special_names,
-                packet.len(),
-                bytes_to_hex(packet)
-            ));
-            parsed_any = true;
-        }
-
-        parsed_any
-    }
-
-    fn parse_dot_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        let mut offset = 0usize;
-        if packet.len() <= offset + 1 || packet[offset] != 0x05 || packet[offset + 1] != 0x38 {
-            return false;
-        }
-        offset += 2;
-
-        let target_info = read_varint(packet, offset);
-        if !target_info.is_valid() {
-            return false;
-        }
-        offset += target_info.length;
-        if packet.len() <= offset {
-            return false;
-        }
-
-        let unknown_bit_flag = packet[offset];
-        if (unknown_bit_flag & 0x02) == 0 {
-            return true;
-        }
-        offset += 1;
-
-        let actor_info = read_varint(packet, offset);
-        if !actor_info.is_valid() {
-            return false;
-        }
-
-        if actor_info.value < 1 {
-            return false;
-        }
-
-        offset += actor_info.length;
-
-        let unknown_info = read_varint(packet, offset);
-        if !unknown_info.is_valid() {
-            return false;
-        }
-        offset += unknown_info.length;
-        if offset + 4 > packet.len() {
-            return false;
-        }
-
-        let skill_code_candidate = parse_u32_le(packet, offset);
-        let skill_code = normalize_skill_id(skill_code_candidate);
-        offset += 4;
-
-        let damage_info = read_varint(packet, offset);
-        if !damage_info.is_valid() {
-            return false;
-        }
-
-        let parsed = ParsedDamagePacket {
-            target_id: target_info.value as u32,
-            actor_id: actor_info.value as u32,
-            skill_code,
-            ori_skill_code: skill_code_candidate,
-            damage: damage_info.value as u64,
-            is_dot: true,
-            is_crit: false,
-            multi_hit_damage: 0,
-            multi_hit_count: 0,
-            specials: Vec::new(),
-        };
-        let log_target_id = parsed.target_id;
-        let log_actor_id = parsed.actor_id;
-        let log_skill_code = parsed.skill_code;
-        let log_damage = parsed.damage;
-        self.data_storage.append_damage(parsed);
-        self.logger.debug(format!(
-            "[{}] dot target={} actor={} skill={} ori_code={}, damage={}",
-            self.port,
-            log_target_id,
-            log_actor_id,
-            log_skill_code,
-            skill_code_candidate,
-            log_damage
-        ));
-        true
-    }
-
-    fn parse_buff_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        if packet.len() < 2 || !matches!(packet[0], 0x2A | 0x2B) || packet[1] != 0x38 {
-            return false;
-        }
-
-        let opcode = packet[0];
-        let mut offset = 2usize;
-
-        let target_info = read_varint(packet, offset);
-        if !target_info.is_valid() {
-            return false;
-        }
-        let after_target_offset = offset + target_info.length;
-        offset = after_target_offset + 2;
-        if offset >= packet.len() {
-            return false;
-        }
-
-        let unknown_info = read_varint(packet, offset);
-        if !unknown_info.is_valid() {
-            return false;
-        }
-        offset += unknown_info.length;
-
-        if offset + 4 > packet.len() {
-            return false;
-        }
-        let mut skill_code = parse_u32_le(packet, offset);
-        offset += 4;
-
-        let is_valid_buff_skill = |code: u32| {
-            (110_000_000..=200_000_000).contains(&code)
-                || (20_000_000..30_000_000).contains(&code)
-        };
-        if opcode == 0x2B && !is_valid_buff_skill(skill_code) {
-            let retry_offset = after_target_offset + 1;
-            if retry_offset < packet.len() {
-                let retry_unknown_info = read_varint(packet, retry_offset);
-                let retry_skill_offset = retry_offset + retry_unknown_info.length;
-                if retry_unknown_info.is_valid() && retry_skill_offset + 4 <= packet.len() {
-                    let retry_skill_code = parse_u32_le(packet, retry_skill_offset);
-                    if is_valid_buff_skill(retry_skill_code) {
-                        skill_code = retry_skill_code;
-                        offset = retry_skill_offset + 4;
-                    }
-                }
-            }
-        }
-
-        if skill_code < 110_000_000 || skill_code > 200_000_000 {
-            if !(20_000_000..30_000_000).contains(&skill_code) {
-                self.logger.debug(format!(
-                    "[{}] buff skipped target={} skill={} opcode={:02X}38 packet_len={} packet_hex={}",
-                    self.port,
-                    target_info.value,
-                    skill_code,
-                    opcode,
-                    packet.len(),
-                    bytes_to_hex(packet)
-                ));
-                return true;
-            }
-        }
-
-        if offset + 16 > packet.len() {
-            return false;
-        }
-        let duration = parse_u32_le(packet, offset) as u64;
-        offset += 8;
-        let server_time = parse_u64_le(packet, offset);
-        offset += 8;
-
-        let actor_info = read_varint(packet, offset);
-        if !actor_info.is_valid() {
-            return false;
-        }
-        if actor_info.value <= 1 {
-            return true;
-        }
-
-        if duration == u32::MAX as u64 {
-            self.logger.debug(format!(
-                "[{}] buff skipped permanent target={} actor={} skill={} duration={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
-                self.port,
-                target_info.value,
-                actor_info.value,
-                skill_code,
-                duration,
-                server_time,
-                opcode,
-                packet.len(),
-                bytes_to_hex(packet)
-            ));
-            return true;
-        }
-
-        let server_start_ms = server_time.saturating_sub(duration);
-        let buff = self.data_storage.save_buff(
-            target_info.value as u32,
-            actor_info.value as u32,
-            skill_code,
-            server_start_ms,
-            duration,
-        );
-        let latency_ms = buff.last_start_ms as i64 - server_start_ms as i64;
-        self.logger.debug(format!(
-            "[{}] buff detected target={} actor={} skill={} duration_ms={} server_start_ms={} local_start_ms={} local_end_ms={} latency_ms={} coverage={:.3} active={} server_time={} opcode={:02X}38 packet_len={} packet_hex={}",
-            self.port,
-            buff.target_id,
-            buff.actor_id,
-            buff.skill_code,
-            duration,
-            server_start_ms,
-            buff.last_start_ms,
-            buff.last_end_ms,
-            latency_ms,
-            buff.coverage,
-            buff.active,
-            server_time,
-            opcode,
-            packet.len(),
-            bytes_to_hex(packet)
-        ));
-        true
-    }
-
-    fn parse_summon_packet_048d(
-        &mut self,
-        packet: &[u8],
-        is_compressed_bundle: bool,
-    ) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        let offset = 0usize;
-        if offset + 1 >= packet.len() || packet[offset] != 0x04 || packet[offset + 1] != 0x8D {
-            return false;
-        }
-
-        let mut pos = offset + 2;
-        let summon_info = read_varint(packet, pos);
-        if !summon_info.is_valid() || summon_info.value < 100 {
-            return false;
-        }
-        pos += summon_info.length;
-        if pos + 4 > packet.len() || packet[pos..pos + 4] != [0x00, 0x00, 0x00, 0x00] {
-            return false;
-        }
-        pos += 4;
-
-        let owner_info = read_varint(packet, pos);
-        if !owner_info.is_valid() || owner_info.value == summon_info.value {
-            return false;
-        }
-
-        self.data_storage
-            .append_summon(owner_info.value as u32, summon_info.value as u32);
-        if self.is_boss_summon(summon_info.value as u32) {
-            self.logger.info(format!(
-                "[{}] summon ownership owner={} owner_name={} summon={}",
-                self.port,
-                owner_info.value,
-                self.data_storage
-                    .actor_id_name_snapshot()
-                    .get(&(owner_info.value as u32))
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                summon_info.value
-            ));
-        }
-        true
-    }
-
-    fn parse_summon_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        // 4136 的前半段按 Kotlin 版本保持一致：
-        // 1. opcode 后读取 summon_id / actor_id
-        // 2. 在整包中查找 00 40 02，找不到再尝试 00 00 02
-        // 3. marker 前 3 字节按 little-endian 拼出 mob_code
-        //
-        // 这样做的好处是包结构和旧版本经验完全一致，后续抓包时更容易直接对照。
-        //
-        // owner 归属部分则保留当前 Rust 版本的多级 fallback，以兼顾稳定性。
-        let summon_info = read_varint(packet, 2);
-        if !summon_info.is_valid() || summon_info.value <= 0 {
-            return false;
-        }
-
-        let summon_id = summon_info.value as u32;
-        let mut parsed_any = false;
-
-        let marker_idx = find_bytes(packet, 0, &[0x00, 0x40, 0x02])
-            .or_else(|| find_bytes(packet, 0, &[0x00, 0x00, 0x02]));
-
-        if let Some(marker_idx) = marker_idx {
-            if marker_idx >= 3 {
-                let mob_code = (packet[marker_idx - 3] as u32)
-                    | ((packet[marker_idx - 2] as u32) << 8)
-                    | ((packet[marker_idx - 1] as u32) << 16);
-
-                self.data_storage.append_mob(summon_id, mob_code);
-                if self
-                    .data_storage
-                    .boss_code_list_snapshot()
-                    .contains(&mob_code)
-                {
-                    let boss_name = self
-                        .data_storage
-                        .mob_code_name_snapshot()
-                        .get(&mob_code)
-                        .cloned()
-                        .unwrap_or_else(|| "Unknown Boss".to_string());
-                    self.logger.info(format!(
-                        "[{}] 4136 summon spawn target={} mob_code={} name={}",
-                        self.port, summon_id, mob_code, boss_name
-                    ));
-                }
-                else {
-                        self.logger.debug(format!(
-                        "[{}] 4136 summon spawn target={} mob_code={}",
-                        self.port, summon_id, mob_code
-                    ));
-                }
-                parsed_any = true;
-            }
-        }
-
-        let mut real_actor_id = summon_id;
-        if real_actor_id > 1_000_000 {
-            real_actor_id = (real_actor_id & 0x3FFF) | 0x4000;
-        }
-
-        if let Some(owner_id) = self.extract_summon_owner_kotlin_style(packet, real_actor_id) {
-            self.data_storage.append_summon(owner_id, real_actor_id);
-            self.logger.info(format!(
-                "[{}] summon kotlin owner={} owner_name={} summon={}",
-                self.port,
-                owner_id,
-                self.data_storage
-                    .actor_id_name_snapshot()
-                    .get(&owner_id)
-                    .cloned()
-                    .unwrap_or_else(|| "Unknown".to_string()),
-                real_actor_id
-            ));
-            parsed_any = true;
-        }
-
-        // else if let Some(owner_id) = self.scan_for_known_player_le32(packet, real_actor_id) {
-        //     self.data_storage.append_summon(owner_id, real_actor_id);
-        //     self.logger.info(format!(
-        //         "[{}] summon fallback le32 owner={} owner_name={} summon={}",
-        //         self.port,
-        //         owner_id,
-        //         self.data_storage
-        //             .actor_id_name_snapshot()
-        //             .get(&owner_id)
-        //             .cloned()
-        //             .unwrap_or_else(|| "Unknown".to_string()),
-        //         real_actor_id
-        //     ));
-        //     parsed_any = true;
-        // } else if let Some(owner_id) = self.extract_owner_from_packet(packet, real_actor_id) {
-        //     self.data_storage.append_summon(owner_id, real_actor_id);
-        //     self.logger.info(format!(
-        //         "[{}] summon fallback marker owner={} owner_name={} summon={}",
-        //         self.port,
-        //         owner_id,
-        //         self.data_storage
-        //             .actor_id_name_snapshot()
-        //             .get(&owner_id)
-        //             .cloned()
-        //             .unwrap_or_else(|| "Unknown".to_string()),
-        //         real_actor_id
-        //     ));
-        //     parsed_any = true;
-        // } else if !self.data_storage.has_summon_owner(real_actor_id) {
-        //     let mut best_match: Option<(u32, String)> = None;
-        //     let mut best_len = 0usize;
-        //     let actor_id_name_map = self.data_storage.actor_id_name_snapshot();
-
-        //     for (actor_id, nickname) in actor_id_name_map {
-        //         if nickname.is_empty() {
-        //             continue;
-        //         }
-
-        //         let nickname_bytes = nickname.as_bytes();
-        //         if nickname_bytes.is_empty()
-        //             || !packet
-        //                 .windows(nickname_bytes.len())
-        //                 .any(|window| window == nickname_bytes)
-        //         {
-        //             continue;
-        //         }
-
-        //         let nickname_len = nickname.chars().count();
-        //         if nickname_len > best_len {
-        //             best_len = nickname_len;
-        //             best_match = Some((actor_id, nickname));
-        //         }
-        //     }
-
-        //     if let Some((owner_id, nickname)) = best_match {
-        //         self.data_storage.append_summon(owner_id, real_actor_id);
-        //         self.logger.info(format!(
-        //             "[{}] summon-nickname matched nick owner={} owner_name={} summon={}",
-        //             self.port, owner_id, nickname, real_actor_id
-        //         ));
-        //         parsed_any = true;
-        //     }
-        // }
-
-        parsed_any
-    }
-
-    fn parse_remain_hp_packet(&mut self, packet: &[u8], is_compressed_bundle: bool) -> bool {
-        // self.log_packet_source(packet, is_compressed_bundle);
-        self.parse_remain_hp_packet_at(packet, 2, is_compressed_bundle)
-    }
-
-    fn parse_remain_hp_packet_at(
-        &mut self,
-        packet: &[u8],
-        offset_after_opcode: usize,
-        _is_compressed_bundle: bool,
-    ) -> bool {
-        let mut offset = offset_after_opcode;
-
-        if packet.len() < offset {
-            return false;
-        }
-
-        let target_id_info = read_varint(packet, offset);
-        if !target_id_info.is_valid() || target_id_info.value < 100 {
-            return false;
-        }
-        offset += target_id_info.length;
-
-        let target_id = target_id_info.value as u32;
-        let skip_1 = read_varint(packet, offset);
-        if !skip_1.is_valid() {
-            return false;
-        }
-        offset += skip_1.length;
-
-        let skip_2 = read_varint(packet, offset);
-        if !skip_2.is_valid() {
-            return false;
-        }
-        offset += skip_2.length;
-
-        let skip_3 = read_varint(packet, offset);
-        if !skip_3.is_valid() {
-            return false;
-        }
-        offset += skip_3.length;
-
-        if offset + 4 > packet.len() {
-            return false;
-        }
-
-        let target_hp = parse_u32_le(packet, offset);
-        if target_hp > 1_000_000_000 {
-            return false;
-        }
-
-        // Mark as possible boss if HP exceeds threshold
-        const POSSIBLE_BOSS_HP_THRESHOLD: u32 = 10_000_000;
-        let show_possible_boss = self.config.read().unwrap().show_possible_boss;
-        if show_possible_boss && target_hp > POSSIBLE_BOSS_HP_THRESHOLD {
-            if let Some(mob_code) = self.data_storage.get_mob_code(target_id) {
-                self.data_storage.add_possible_boss(mob_code);
-            }
-        }
-
-        let is_target_player = self
-            .data_storage
-            .actor_id_name_snapshot()
-            .contains_key(&target_id)
-            && self.data_storage.get_mob_code(target_id).is_none();
-
-        if is_target_player {
-            if !self.config.read().unwrap().pvp_mode_on {
-                // self.logger.debug(format!(
-                //     "[{}] player remain hp skipped pvp_mode_off actor={} current_hp={}",
-                //     self.port, target_id, target_hp
-                // ));
-                return true;
-            }
-
-            if target_hp == 0 {
-                let (newly_dead, killer) = self.data_storage.mark_player_dead(target_id);
-                if newly_dead {
-                    self.logger.info(format!(
-                        "[{}] player dead actor={} killer={}",
-                        self.port,
-                        target_id,
-                        killer.as_deref().unwrap_or("unknown")
-                    ));
-                }
-            } else {
-                self.data_storage.mark_player_alive(target_id);
-            }
-
-            if self.data_storage.main_actor_id() == Some(target_id) {
-                // self.logger.debug(format!(
-                //     "[{}] player remain hp skipped main_actor actor={} current_hp={}",
-                //     self.port, target_id, target_hp
-                // ));
-                return true;
-            }
-
-            self.data_storage.append_player_hp(target_id, target_hp);
-            let actor_name = self
-                .data_storage
-                .actor_id_name_snapshot()
-                .get(&target_id)
-                .cloned()
-                .unwrap_or_else(|| "Unknown".to_string());
-            self.logger.info(format!(
-                "[{}] player remain hp actor={} name={} current_hp={}",
-                self.port, target_id, actor_name, target_hp
-            ));
-            return true;
-        }
-
-        self.logger.debug(format!(
-            "[{}] remain hp target not player target={} current_hp={} known_actor={} mob_code={:?}",
-            self.port,
-            target_id,
-            target_hp,
-            self.data_storage
-                .actor_id_name_snapshot()
-                .contains_key(&target_id),
-            self.data_storage.get_mob_code(target_id)
-        ));
-
-        // Skip non-boss targets hp changes when boss_only is enabled
-        {
-            let config = self.config.read().unwrap();
-            if config.boss_only {
-                let mob_code = self.data_storage.get_mob_code(target_id);
-                let is_known =
-                    mob_code.is_some_and(|code| self.data_storage.is_known_boss_code(code));
-                let is_possible =
-                    mob_code.is_some_and(|code| self.data_storage.is_possible_boss(code));
-                if !is_known && !is_possible {
-                    return true;
-                }
-            }
-        }
-
-        let is_first_hp_detection = !self
-            .data_storage
-            .mob_id_hp_snapshot()
-            .contains_key(&target_id);
-        self.data_storage.append_mob_hp(target_id, target_hp);
-        if is_first_hp_detection {
-            if let Some((current_hp, max_hp)) = self
-                .data_storage
-                .mob_id_hp_snapshot()
-                .get(&target_id)
-                .copied()
-            {
-                let mob_id_code_map = self.data_storage.mob_id_code_snapshot();
-                let mob_code_name_map = self.data_storage.mob_code_name_snapshot();
-
-                if let Some(mob_code) = mob_id_code_map.get(&target_id).copied() {
-                    let mob_name = mob_code_name_map
-                        .get(&mob_code)
-                        .cloned()
-                        .unwrap_or_else(|| "Unknown Boss".to_string());
-                    self.logger.info(format!(
-                        "[{}] first remain hp mob_id={} mob_code={} name={} current_hp={} max_hp={}",
-                        self.port, target_id, mob_code, mob_name, current_hp, max_hp
-                    ));
-                } else {
-                    self.logger.info(format!(
-                        "[{}] first remain hp mob_id={} current_hp={} max_hp={}",
-                        self.port, target_id, current_hp, max_hp
-                    ));
-                }
-            }
-        }
-        true
-    }
-
-    fn extract_summon_owner_kotlin_style(&self, packet: &[u8], summon_id: u32) -> Option<u32> {
-        let key_idx = find_bytes(packet, 0, &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])?;
-        let after_packet_start = key_idx + 8;
-        if after_packet_start >= packet.len() {
-            return None;
-        }
-
-        let opcode_absolute_idx = find_bytes(packet, after_packet_start, &[0x07, 0x02, 0x06])?;
-        // Kotlin 原版是在 keyIdx + 8 之后切片，再用切片内索引 + 11。
-        // 换算回原始 packet 的绝对偏移，等价于 opcode 绝对位置 + 3。
-        let owner_offset = opcode_absolute_idx + 3;
-        if owner_offset + 2 > packet.len() {
-            return None;
-        }
-
-        let owner_id = u16::from_le_bytes([packet[owner_offset], packet[owner_offset + 1]]) as u32;
-        if !(1..=999_999).contains(&owner_id) {
-            return None;
-        }
-        if owner_id == summon_id
-            || self.data_storage.has_summon_owner(owner_id)
-            || self.data_storage.has_mob(owner_id)
-        {
-            return None;
-        }
-
-        Some(owner_id)
-    }
-
-    fn extract_owner_from_packet(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
-        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
-        let marker_idx = find_bytes(packet, 0, &marker)?;
-        let owner_offset = marker_idx + marker.len();
-        if owner_offset >= packet.len() {
-            return None;
-        }
-
-        let owner_info = read_varint(packet, owner_offset);
-        if !owner_info.is_valid() || !(100..=999_999).contains(&owner_info.value) {
-            return None;
-        }
-
-        let owner_id = owner_info.value as u32;
-        if owner_id == exclude_actor_id
-            || self.data_storage.has_summon_owner(owner_id)
-            || self.data_storage.has_mob(owner_id)
-        {
-            return None;
-        }
-
-        Some(owner_id)
-    }
-
-    fn is_boss_summon(&self, summon_id: u32) -> bool {
-        let mob_code = self
-            .data_storage
-            .mob_id_code_snapshot()
-            .get(&summon_id)
-            .copied();
-
-        mob_code
-            .map(|code| self.data_storage.boss_code_list_snapshot().contains(&code))
-            .unwrap_or(false)
-    }
-
-    fn scan_for_known_player_le32(&self, packet: &[u8], exclude_actor_id: u32) -> Option<u32> {
-        let marker = [0x80, 0x75, 0xD5, 0x2A, 0xBB, 0x03, 0x00, 0x00];
-        let marker_idx = find_bytes(packet, 0, &marker)?;
-        let start_offset = marker_idx + marker.len();
-        let end_offset = packet.len().saturating_sub(3).min(start_offset + 48);
-        let known_actor_ids = self.data_storage.actor_id_name_snapshot();
-
-        for i in start_offset..end_offset {
-            let le32 = (packet[i] as u32)
-                | ((packet[i + 1] as u32) << 8)
-                | ((packet[i + 2] as u32) << 16)
-                | ((packet[i + 3] as u32) << 24);
-
-            if le32 != exclude_actor_id
-                && (1..=999_999).contains(&le32)
-                && known_actor_ids.contains_key(&le32)
-                && !self.data_storage.has_summon_owner(le32)
-                && !self.data_storage.has_mob(le32)
-            {
-                return Some(le32);
-            }
-        }
-
-        None
-    }
-
-    fn parse_main_nickname(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
-        self.log_packet_source(payload, is_compressed_bundle);
-        self.parse_main_nickname_fixed(payload, is_compressed_bundle)
-    }
-
-    fn parse_main_combat_power(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
-        self.log_packet_source(payload, is_compressed_bundle);
-        if payload.len() < 6 || payload[0] != 0x56 || payload[1] != 0x36 {
-            return false;
-        }
-
-        let combat_power = parse_u32_le(payload, 2) as u64;
-        if !self.data_storage.save_main_actor_combat_power(combat_power) {
-            return false;
-        }
-
-        self.logger.info(format!(
-            "[{}] main actor combat power combat_power={}",
-            self.port, combat_power
-        ));
-        true
-    }
-
-    // 33 36 <actor_id> <five metadata bytes> <name_len> <name> <sid>
-    fn parse_main_nickname_fixed(
-        &mut self,
-        payload: &[u8],
-        _is_compressed_bundle: bool,
-    ) -> bool {
-        let aid_info = read_varint(payload, 2);
-        if !aid_info.is_valid() || aid_info.value <= 0 {
-            return false;
-        }
-
-        let structure_start = 2 + aid_info.length;
-        if structure_start + 6 > payload.len() {
-            return false;
-        }
-
-        let name_len = usize::from(payload[structure_start + 5]);
-        if !(1..=36).contains(&name_len) {
-            return false;
-        }
-
-        let name_start = structure_start + 6;
-        let name_end = name_start + name_len;
-        if name_end + 2 > payload.len() {
-            return false;
-        }
-
-        let sid = u16::from_le_bytes([payload[name_end], payload[name_end + 1]]) as u32;
-        if !is_available_server_id(sid) {
-            return false;
-        }
-
-        let Ok(name) = std::str::from_utf8(&payload[name_start..name_end]) else {
-            return false;
-        };
-        let Some(name) = sanitize_nickname(name) else {
-            return false;
-        };
-
-        let name_hex = bytes_to_hex(&payload[name_start..name_end]);
-        let job = payload.get(name_end + 2).copied();
-        let job_text = job
-            .map(|job| job.to_string())
-            .unwrap_or_else(|| "none".to_string());
-        let actor_class = job.and_then(job_to_actor_class);
-        self.data_storage
-            .append_actor(aid_info.value as u32, &name, Some(&sid.to_string()));
-        if let Some(actor_class) = actor_class {
-            self.data_storage
-                .set_actor_class(aid_info.value as u32, actor_class);
-        }
-        self.logger.info(format!(
-            "[{}] main actor actor={} name={} name_hex={} sid={} job={} class={}",
-            self.port,
-            aid_info.value,
-            name,
-            name_hex,
-            sid,
-            job_text,
-            actor_class.unwrap_or("none")
-        ));
-        self.data_storage
-            .set_main_actor(aid_info.value as u32, &name);
-        true
-    }
-
-    fn parse_other_nickname(&mut self, payload: &[u8], is_compressed_bundle: bool) -> bool {
-        self.log_packet_source(payload, is_compressed_bundle);
-        let aid_info = read_varint(payload, 2);
-        if !aid_info.is_valid() || aid_info.value <= 0 {
-            return false;
-        }
-
-        let actor_id = aid_info.value as u32;
-        let mut offset = 2 + aid_info.length;
-        if payload.len() <= offset {
-            return false;
-        }
-
-        let unknown_info_1 = read_varint(payload, offset);
-        if !unknown_info_1.is_valid() {
-            return false;
-        }
-        offset += unknown_info_1.length;
-        if payload.len() <= offset {
-            return false;
-        }
-
-        let unknown_info_2 = read_varint(payload, offset);
-        if !unknown_info_2.is_valid() {
-            return false;
-        }
-        offset += unknown_info_2.length;
-        if payload.len().saturating_sub(offset) <= 2 {
-            return false;
-        }
-
-        offset += 1;
-        let base = offset;
-        let mut best_actor_name: Option<String> = None;
-        let mut best_actor_name_end = None;
-        let mut best_actor_name_bytes = 0usize;
-
-        for relative in 0..5usize {
-            let name_offset = base + relative;
-            if name_offset >= payload.len() {
-                continue;
-            }
-
-            let name_length_info = read_varint(payload, name_offset);
-            if !name_length_info.is_valid() {
-                continue;
-            }
-
-            let candidate_length = name_length_info.value as usize;
-            if !(1..=71).contains(&candidate_length) {
-                continue;
-            }
-
-            let value_start = name_offset + name_length_info.length;
-            let value_end = value_start + candidate_length;
-            if value_end > payload.len() {
-                continue;
-            }
-
-            let Ok(candidate_name) = std::str::from_utf8(&payload[value_start..value_end]) else {
-                continue;
-            };
-            let Some(sanitized_name) = sanitize_nickname(candidate_name) else {
-                continue;
-            };
-
-            let sanitized_bytes = sanitized_name.len();
-            if sanitized_bytes > best_actor_name_bytes {
-                best_actor_name_bytes = sanitized_bytes;
-                best_actor_name = Some(sanitized_name);
-                best_actor_name_end = Some(value_end);
-            }
-        }
-
-        let Some(actor_name) = best_actor_name else {
-            return false;
-        };
-        let Some(actor_name_end) = best_actor_name_end else {
-            return false;
-        };
-        if actor_name_end >= payload.len() {
-            return false;
-        }
-
-        let job = payload[actor_name_end];
-        let actor_class = job_to_actor_class(job);
-        let server_base = actor_name_end + 1;
-        let sid = find_server_id(payload, server_base);
-        let combat_power = parse_snapshot_combat_power(payload);
-
-        let sid_string = sid.map(|sid| sid.to_string());
-        let sid_text = sid_string.as_deref().unwrap_or("none");
-        self.data_storage
-            .append_actor(actor_id, &actor_name, sid_string.as_deref());
-        if let Some(actor_class) = actor_class {
-            self.data_storage.set_actor_class(actor_id, actor_class);
-        }
-        if let Some(combat_power) = combat_power {
-            self.data_storage
-                .set_actor_combat_power(actor_id, combat_power);
-        }
-        self.logger.info(format!(
-            "[{}] actor actor={} name={} sid={} job={} class={} combat_power={}",
-            self.port,
-            actor_id,
-            actor_name,
-            sid_text,
-            job,
-            actor_class.unwrap_or("none"),
-            combat_power
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| "none".to_string())
-        ));
-
-        true
-    }
-}
-
-fn parse_u32_le(packet: &[u8], offset: usize) -> u32 {
-    if offset + 4 > packet.len() {
-        return 0;
-    }
-    u32::from_le_bytes([
-        packet[offset],
-        packet[offset + 1],
-        packet[offset + 2],
-        packet[offset + 3],
-    ])
-}
-
-fn parse_u64_le(packet: &[u8], offset: usize) -> u64 {
-    if offset + 8 > packet.len() {
-        return 0;
-    }
-    u64::from_le_bytes([
-        packet[offset],
-        packet[offset + 1],
-        packet[offset + 2],
-        packet[offset + 3],
-        packet[offset + 4],
-        packet[offset + 5],
-        packet[offset + 6],
-        packet[offset + 7],
-    ])
-}
-
-fn parse_snapshot_combat_power(packet: &[u8]) -> Option<u64> {
-    let marker_idx = last_index_of(packet, &COMBAT_POWER_MARKER)?;
-    let mut offset = marker_idx + 11;
-
-    while offset + 8 <= packet.len() {
-        let combat_power = parse_u32_le(packet, offset) as u64;
-        let trailing_zero = parse_u32_le(packet, offset + 4) == 0;
-        if (1..=10_000_000).contains(&combat_power) && trailing_zero {
-            return Some(combat_power);
-        }
-
-        offset += 1;
-    }
-
-    None
-}
-
-fn job_to_actor_class(job: u8) -> Option<&'static str> {
-    match job {
-        5..=8 => Some("GLADIATOR"),
-        9..=12 => Some("TEMPLAR"),
-        13..=16 => Some("RANGER"),
-        17..=20 => Some("ASSASSIN"),
-        21..=24 => Some("ELEMENTALIST"),
-        25..=28 => Some("SORCERER"),
-        29..=32 => Some("CLERIC"),
-        33..=36 => Some("CHANTER"),
-        45..=48 => Some("FIGHTER"),
-        _ => None,
-    }
-}
-
-fn normalize_skill_id(raw: u32) -> u32 {
-    if (30_000_000..=30_999_999).contains(&raw) {
-        raw
-    } else {
-        raw - (raw % 10_000)
-    }
-}
-
-#[derive(Debug, Default)]
-struct RepeatedMultiHit {
-    count: u32,
-    damage: u64,
-    per_hit_values: Vec<u32>,
-    next_offset: usize,
-}
-
-fn parse_repeated_multi_hit(packet: &[u8], offset: usize) -> RepeatedMultiHit {
-    let Some(count) = read_varint_u32(packet, offset) else {
-        return RepeatedMultiHit {
-            next_offset: offset,
-            ..Default::default()
-        };
-    };
-    if !(1..=25).contains(&count) {
-        return RepeatedMultiHit {
-            next_offset: offset,
-            ..Default::default()
-        };
-    }
-
-    let mut cursor = offset + read_varint(packet, offset).length;
-    let mut per_hit_values = Vec::with_capacity(count as usize);
-    let mut first_hit = None;
-
-    for _ in 0..count {
-        let Some(hit) = read_varint_u32(packet, cursor) else {
-            return RepeatedMultiHit {
-                next_offset: offset,
-                ..Default::default()
-            };
-        };
-        if hit == 0 || first_hit.is_some_and(|first| first != hit) {
-            return RepeatedMultiHit {
-                next_offset: offset,
-                ..Default::default()
-            };
-        }
-
-        first_hit = Some(hit);
-        per_hit_values.push(hit);
-        cursor += read_varint(packet, cursor).length;
-    }
-
-    RepeatedMultiHit {
-        count,
-        damage: per_hit_values.iter().map(|value| u64::from(*value)).sum(),
-        per_hit_values,
-        next_offset: cursor,
-    }
-}
-
-fn read_varint_u32(data: &[u8], offset: usize) -> Option<u32> {
-    let out = read_varint(data, offset);
-    if !out.is_valid() {
-        return None;
-    }
-
-    u32::try_from(out.value).ok()
-}
-
-fn collect_varints(data: &[u8], start: usize, max_count: usize) -> Vec<i64> {
-    let mut values = Vec::new();
-    let mut offset = start;
-
-    while offset < data.len() && values.len() < max_count {
-        let out = read_varint(data, offset);
-        if !out.is_valid() {
-            break;
-        }
-
-        values.push(out.value);
-        offset += out.length;
-    }
-
-    values
-}
-
-fn find_bytes(haystack: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
-    haystack
-        .get(start..)
-        .and_then(|slice| {
-            slice
-                .windows(needle.len())
-                .position(|window| window == needle)
-        })
-        .map(|pos| start + pos)
-}
-
-fn last_index_of(haystack: &[u8], needle: &[u8]) -> Option<usize> {
-    if needle.is_empty() || haystack.len() < needle.len() {
-        return None;
-    }
-
-    haystack
-        .windows(needle.len())
-        .rposition(|window| window == needle)
-}
-
-fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes
-        .iter()
-        .map(|byte| format!("{byte:02X}"))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn parse_hex_bytes(hex: &str) -> Option<Vec<u8>> {
-    let compact: String = hex.chars().filter(|ch| !ch.is_whitespace()).collect();
-    if compact.is_empty() || compact.len() % 2 != 0 {
-        return None;
-    }
-
-    let mut bytes = Vec::with_capacity(compact.len() / 2);
-    for index in (0..compact.len()).step_by(2) {
-        let byte = u8::from_str_radix(&compact[index..index + 2], 16).ok()?;
-        bytes.push(byte);
-    }
-
-    Some(bytes)
-}
-
-fn find_server_id(payload: &[u8], server_base: usize) -> Option<u32> {
-    let mut relative = 0usize;
-    let mut fallback_sid = None;
-
-    loop {
-        let offset = server_base + relative;
-        relative += 1;
-
-        if offset + 2 > payload.len() {
-            break;
-        }
-
-        let sid = u16::from_le_bytes([payload[offset], payload[offset + 1]]) as u32;
-        if !is_available_server_id(sid) {
-            continue;
-        }
-
-        if fallback_sid.is_none() {
-            fallback_sid = Some(sid);
-        }
-
-        let legion_length_offset = offset + 2;
-        if legion_length_offset >= payload.len() {
-            continue;
-        }
-
-        let legion_length_info = read_varint(payload, legion_length_offset);
-        if !legion_length_info.is_valid() {
-            continue;
-        }
-
-        let legion_length = legion_length_info.value as usize;
-        if legion_length > 24 {
-            continue;
-        }
-
-        let legion_start = legion_length_offset + legion_length_info.length;
-        let legion_end = legion_start + legion_length;
-        if legion_end > payload.len() {
-            continue;
-        }
-
-        if legion_length == 0 {
-            return Some(sid);
-        }
-
-        let Ok(legion_name) = std::str::from_utf8(&payload[legion_start..legion_end]) else {
-            continue;
-        };
-
-        if legion_name.trim().is_empty() || legion_name.chars().any(|ch| !ch.is_ascii_digit()) {
-            return Some(sid);
-        }
-    }
-
-    fallback_sid.or_else(|| find_sid_0011(payload, server_base))
-}
-
-fn is_available_server_id(sid: u32) -> bool {
-    (1001..=1021).contains(&sid) || (2001..=2021).contains(&sid)
-}
-
-fn find_sid_0011(payload: &[u8], search_start: usize) -> Option<u32> {
-    let search_end = payload.len().saturating_sub(1).min(search_start + 200);
-    let mut pos = search_start;
-
-    while pos < search_end {
-        let Some(idx) = find_bytes(payload, pos, &[0x11, 0x11]) else {
-            break;
-        };
-        if idx < 4 {
-            break;
-        }
-        if payload[idx - 4] == 0x00 && payload[idx - 3] == 0x02 {
-            let sid = u16::from_le_bytes([payload[idx - 3], payload[idx - 2]]) as u32;
-            if is_available_server_id(sid) {
-                return Some(sid);
-            }
-        }
-        pos = idx + 2;
-    }
-
-    None
-}
-
-fn sanitize_nickname(nickname: &str) -> Option<String> {
-    let sanitized = nickname.split('\0').next().unwrap_or_default().trim();
-    if sanitized.is_empty() {
-        return None;
-    }
-
-    let mut result = String::new();
-    let mut only_numbers = true;
-
-    for ch in sanitized.chars() {
-        let code = ch as u32;
-        if code < 32 || code == 127 || (0x80..=0x9F).contains(&code) || ch == '\u{FFFD}' {
-            continue;
-        }
-
-        let is_han = is_han_character(ch);
-        if ch.is_alphanumeric() || is_han {
-            result.push(ch);
-            if ch.is_alphabetic() || is_han {
-                only_numbers = false;
-            }
-        }
-    }
-
-    if result.is_empty() || only_numbers {
-        return None;
-    }
-    if result.chars().count() == 1 {
-        let character = result.chars().next()?;
-        if !is_han_character(character) && !is_hangul_syllable(character) {
-            return None;
-        }
-    }
-
-    Some(result)
-}
-
-fn is_hangul_syllable(ch: char) -> bool {
-    matches!(ch as u32, 0xAC00..=0xD7A3)
-}
-
-fn is_han_character(ch: char) -> bool {
-    let code = ch as u32;
-    matches!(
-        code,
-        0x3400..=0x4DBF
-            | 0x4E00..=0x9FFF
-            | 0xF900..=0xFAFF
-            | 0x20000..=0x2A6DF
-            | 0x2A700..=0x2B73F
-            | 0x2B740..=0x2B81F
-            | 0x2B820..=0x2CEAF
-            | 0x2CEB0..=0x2EBEF
-            | 0x2F800..=0x2FA1F
-            | 0x30000..=0x3134F
-            | 0x31350..=0x323AF
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::sanitize_nickname;
-
-    #[test]
-    fn sanitize_nickname_keeps_single_cjk_extension_character() {
-        assert_eq!(sanitize_nickname("𠮷"), Some("𠮷".to_string()));
-        assert_eq!(sanitize_nickname("𫠜"), Some("𫠜".to_string()));
-    }
-
-    #[test]
-    fn sanitize_nickname_still_rejects_single_ascii_letter() {
-        assert_eq!(sanitize_nickname("A"), None);
+    fn parser_context(&self) -> ParserContext<'_> {
+        ParserContext::new(&self.data_storage, &self.logger, &self.port)
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use super::utils::{current_timestamp_millis, read_u32_le, read_u64_le, read_varint};
+use super::context::ParserContext;
+use super::utils::{bytes_to_hex, current_timestamp_millis, read_u32_le, read_u64_le, read_varint};
 
 const TIMESTAMP_PAST_TOLERANCE_MS: u64 = 2 * 60 * 1000;
 const TIMESTAMP_FUTURE_LIMIT_MS: u64 = 8 * 24 * 60 * 60 * 1000;
@@ -111,6 +112,50 @@ pub struct FieldBossTimerTable {
 }
 
 pub struct FieldBossTimerParser;
+
+pub(crate) fn parse_packet(context: &ParserContext<'_>, packet: &[u8]) -> bool {
+    let Some(table) = FieldBossTimerParser::parse(packet, 2) else {
+        context.logger.info(format!(
+            "[{}] 0191 field boss timer packet could not be parsed packet_len={} packet_hex={}",
+            context.port,
+            packet.len(),
+            bytes_to_hex(packet)
+        ));
+        return false;
+    };
+
+    // context.logger.info(format!(
+    //     "[{}] 0191 field boss timer table map_id={} declared_entries={} parsed_entries={} packet_len={}",
+    //     context.port,
+    //     table.map_id,
+    //     table.declared_entry_count,
+    //     table.timers.len(),
+    //     packet.len()
+    // ));
+
+    for timer in &table.timers {
+        let remaining_ms = timer.target_ms.saturating_sub(current_timestamp_millis());
+        context.logger.debug(format!(
+            "[{}] 0191 field boss timer map_id={} wire_code={} mob_code={} target_ms={} remaining_ms={}",
+            context.port,
+            table.map_id,
+            timer.wire_code,
+            timer.mob_code,
+            timer.target_ms,
+            remaining_ms
+        ));
+    }
+
+    if table.timers.is_empty() {
+        context.logger.debug(format!(
+            "[{}] 0191 field boss timer table contained no recognized timestamps packet_hex={}",
+            context.port,
+            bytes_to_hex(packet)
+        ));
+    }
+
+    true
+}
 
 impl FieldBossTimerParser {
     pub fn parse(packet: &[u8], body_start: usize) -> Option<FieldBossTimerTable> {

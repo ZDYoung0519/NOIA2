@@ -3,15 +3,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { LanguageToggle } from "@/components/language-toggle";
-import { Moon, Sun, Monitor, Palette, Gamepad2, HeartHandshake, Info } from "lucide-react";
+import { Moon, Sun, Monitor, Palette, Gamepad2, HeartHandshake, Info, Network } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppTranslation } from "@/hooks/use-app-translation";
 import { Aion2Settings } from "@/components/aion2-settings";
 import { SupportAcknowledgementsSettings } from "@/components/support-acknowledgements-settings";
 import { AboutSettings } from "@/components/about-settings";
+import { TcpReassemblySettings } from "@/components/tcp-reassembly-settings";
 import { SettingsGroup, SettingsRow, SettingsSectionHeader } from "@/components/settings-layout";
 
-type SettingSection = "appearance" | "aion2" | "support" | "about";
+type SettingSection = "appearance" | "aion2" | "tcpReassembly" | "support" | "about";
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingSection>("appearance");
@@ -21,6 +22,7 @@ export default function SettingsPage() {
   const menuItems: { id: SettingSection; label: string; icon: typeof Palette }[] = [
     { id: "appearance", label: t("settings.appearance.title"), icon: Palette },
     { id: "aion2", label: t("settings.aion2.title"), icon: Gamepad2 },
+    { id: "tcpReassembly", label: t("settings.tcpReassembly.title"), icon: Network },
     { id: "support", label: "支持与鸣谢", icon: HeartHandshake },
     { id: "about", label: "关于", icon: Info },
   ];
@@ -106,6 +108,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "aion2" && <Aion2Settings />}
+          {activeSection === "tcpReassembly" && <TcpReassemblySettings />}
           {activeSection === "support" && <SupportAcknowledgementsSettings />}
           {activeSection === "about" && <AboutSettings />}
         </div>

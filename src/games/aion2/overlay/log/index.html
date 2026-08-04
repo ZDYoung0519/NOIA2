@@ -26,13 +26,30 @@
       <div class="log-empty">Waiting for log events...</div>
     </div>
     <div class="log-footer" id="log-footer">
-      <span class="log-footer__item"
-        >Device: <span class="log-footer__val" id="footer-device">--</span></span
-      >
-      <span class="log-footer__item"
-        >Port: <span class="log-footer__val" id="footer-port">--</span></span
-      >
-      <span class="log-footer__sizes" id="footer-sizes"></span>
+      <div class="log-footer__summary">
+        <span class="log-footer__item">
+          <span class="log-footer__label">Device</span>
+          <span class="log-footer__val" id="footer-device">--</span>
+        </span>
+        <span class="log-footer__item">
+          <span class="log-footer__label">Combat</span>
+          <span class="log-footer__val" id="footer-port">--</span>
+        </span>
+        <span class="log-footer__item">
+          <span class="log-footer__label">Channel</span>
+          <span class="log-footer__val" id="footer-channel">0</span>
+        </span>
+      </div>
+      <div class="assembler-table">
+        <div class="assembler-table__header">
+          <span>Connection</span>
+          <span>Parser</span>
+          <span>Nickname</span>
+        </div>
+        <div class="assembler-table__body" id="assembler-rows">
+          <div class="assembler-table__empty">No assembler connections</div>
+        </div>
+      </div>
     </div>
     <script type="module" src="./main.js"></script>
   </body>

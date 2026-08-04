@@ -13,7 +13,6 @@ pub struct SkillStats {
     pub special_counts: HashMap<String, u32>,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PvpWatchInfo {

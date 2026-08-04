@@ -109,6 +109,26 @@
       "setSuccess": "Shortcut set to {{shortcut}}!",
       "cleared": "Shortcut cleared!"
     },
+    "tcpReassembly": {
+      "title": "TCP Reassembly",
+      "description": "Live TCP stream state before game protocol parsing.",
+      "refresh": "Refresh",
+      "loadFailed": "Failed to load TCP reassembly state",
+      "overview": "Overview",
+      "autoRefresh": "Refreshes every second while this page is open.",
+      "flowCount": "{{count}} flows",
+      "connections": "Connections",
+      "pending": "Pending segments",
+      "held": "Held data",
+      "retransmits": "Retransmits",
+      "gapSkips": "Gap skips",
+      "notDetected": "Combat connection not detected",
+      "flow": "TCP flow",
+      "nextSequence": "Next sequence",
+      "idle": "Idle",
+      "combat": "Combat",
+      "empty": "No TCP flows have been captured."
+    },
     "aion2": {
       "title": "Aion 2",
       "description": "DPS meter and overlay settings for Aion 2",

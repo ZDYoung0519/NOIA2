@@ -69,6 +69,18 @@ impl TcpReassembler {
         self.gap_skips
     }
 
+    pub fn next_sequence(&self) -> Option<u32> {
+        self.next_sequence
+    }
+
+    pub fn pending_segments(&self) -> usize {
+        self.pending.len()
+    }
+
+    pub fn held_bytes(&self) -> usize {
+        self.held_bytes
+    }
+
     fn advance_and_drain(&mut self, emitted: &mut Vec<Vec<u8>>) {
         if let Some(last) = emitted.last() {
             let next = self

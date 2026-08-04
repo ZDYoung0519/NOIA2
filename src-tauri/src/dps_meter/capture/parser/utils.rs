@@ -40,6 +40,43 @@ pub fn read_u64_le(data: &[u8], offset: usize) -> Option<u64> {
     Some(u64::from_le_bytes(bytes.try_into().ok()?))
 }
 
+pub fn read_u32_le_or_default(data: &[u8], offset: usize) -> u32 {
+    read_u32_le(data, offset).unwrap_or_default()
+}
+
+pub fn read_u64_le_or_default(data: &[u8], offset: usize) -> u64 {
+    read_u64_le(data, offset).unwrap_or_default()
+}
+
+pub fn find_bytes(haystack: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
+    haystack
+        .get(start..)
+        .and_then(|slice| {
+            slice
+                .windows(needle.len())
+                .position(|window| window == needle)
+        })
+        .map(|position| start + position)
+}
+
+pub fn last_index_of(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    if needle.is_empty() || haystack.len() < needle.len() {
+        return None;
+    }
+
+    haystack
+        .windows(needle.len())
+        .rposition(|window| window == needle)
+}
+
+pub fn bytes_to_hex(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|byte| format!("{byte:02X}"))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 pub fn current_timestamp_millis() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

@@ -119,12 +119,74 @@ async function initDebugToggle() {
 
 initDebugToggle();
 
-// Footer: capture info from dps-memory
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function renderAssemblerRows(packetSizes, combatConnection) {
+  const connections = new Map();
+
+  for (const [rawKey, rawSize] of Object.entries(packetSizes)) {
+    if (rawKey === "channel") continue;
+
+    const isNickname = rawKey.endsWith(":nickname");
+    const connection = isNickname ? rawKey.slice(0, -":nickname".length) : rawKey;
+    const row = connections.get(connection) || {
+      connection,
+      parserSize: 0,
+      nicknameSize: 0,
+    };
+
+    if (isNickname) {
+      row.nicknameSize = Number(rawSize) || 0;
+    } else {
+      row.parserSize = Number(rawSize) || 0;
+    }
+    connections.set(connection, row);
+  }
+
+  const rows = [...connections.values()].sort((left, right) => {
+    const leftCombat = left.connection === combatConnection;
+    const rightCombat = right.connection === combatConnection;
+    if (leftCombat !== rightCombat) return leftCombat ? -1 : 1;
+    return left.connection.localeCompare(right.connection);
+  });
+
+  const $rows = document.getElementById("assembler-rows");
+  if (!rows.length) {
+    $rows.innerHTML = `<div class="assembler-table__empty">No assembler connections</div>`;
+    return;
+  }
+
+  $rows.innerHTML = rows
+    .map((row) => {
+      const isCombat = row.connection === combatConnection;
+      const [source, destination] = row.connection.split("->");
+      const connectionText = destination
+        ? `<span>${esc(source)}</span><span class="assembler-row__arrow">→</span><span>${esc(destination)}</span>`
+        : `<span>${esc(row.connection)}</span>`;
+
+      return `<div class="assembler-row${isCombat ? " assembler-row--combat" : ""}">
+        <div class="assembler-row__connection">
+          ${isCombat ? '<span class="assembler-row__badge">COMBAT</span>' : ""}
+          <span class="assembler-row__address">${connectionText}</span>
+        </div>
+        <span class="assembler-row__size">${formatBytes(row.parserSize)}</span>
+        <span class="assembler-row__size">${formatBytes(row.nicknameSize)}</span>
+      </div>`;
+    })
+    .join("");
+}
+
+// Footer: capture and assembler information from dps-memory
 listen("dps-memory", (event) => {
   const d = event.payload;
   document.getElementById("footer-device").textContent = d.capDevice || "--";
   document.getElementById("footer-port").textContent = d.capPort || "--";
   const sizes = d.packetSizes || {};
-  const parts = Object.entries(sizes).map(([k, v]) => `${k}:${v}`);
-  document.getElementById("footer-sizes").textContent = parts.length ? parts.join(" ") : "";
+  document.getElementById("footer-channel").textContent = String(sizes.channel || 0);
+  renderAssemblerRows(sizes, d.capPort || "");
 });

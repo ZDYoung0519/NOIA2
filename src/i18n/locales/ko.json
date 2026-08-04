@@ -75,6 +75,26 @@
       "setSuccess": "Shortcut set to {{shortcut}}!",
       "cleared": "Shortcut cleared!"
     },
+    "tcpReassembly": {
+      "title": "TCP 재조립",
+      "description": "게임 프로토콜 분석 전 TCP 흐름의 실시간 상태입니다.",
+      "refresh": "새로 고침",
+      "loadFailed": "TCP 재조립 상태를 불러오지 못했습니다",
+      "overview": "상태 개요",
+      "autoRefresh": "이 페이지가 열려 있는 동안 1초마다 새로 고칩니다.",
+      "flowCount": "{{count}}개 흐름",
+      "connections": "연결 상세",
+      "pending": "보류 세그먼트",
+      "held": "보류 데이터",
+      "retransmits": "재전송",
+      "gapSkips": "간격 건너뜀",
+      "notDetected": "전투 연결이 감지되지 않음",
+      "flow": "TCP 흐름",
+      "nextSequence": "다음 시퀀스",
+      "idle": "유휴 시간",
+      "combat": "전투",
+      "empty": "캡처된 TCP 흐름이 없습니다."
+    },
     "aion2": {
       "title": "Aion 2",
       "description": "DPS meter and overlay settings for Aion 2",

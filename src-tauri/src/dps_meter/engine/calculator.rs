@@ -260,9 +260,9 @@ fn aggregate_main_actor_dealt_player_overview(
 
             let stats = actors.get(&main_actor_id)?;
             let max_hp = player_hp.get(target_id).map(|hp| hp.max_observed_hp);
-            let hp_damage_ratio =
-                max_hp.filter(|value| *value > 0)
-                    .map(|value| stats.total_damage as f64 / value as f64);
+            let hp_damage_ratio = max_hp
+                .filter(|value| *value > 0)
+                .map(|value| stats.total_damage as f64 / value as f64);
             let battle_start_time = target_infos
                 .get(target_id)
                 .and_then(|target| target.target_start_time.get(&main_actor_id))

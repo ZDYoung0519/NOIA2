@@ -84,6 +84,7 @@ pub fn run() {
             dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter,
             dps_meter::api::commands::check_dps_meter_state,
+            dps_meter::api::commands::get_tcp_reassembly_status,
             dps_meter::api::commands::get_last_snapshot,
             dps_meter::api::commands::get_history,
             dps_meter::api::commands::delete_all_history,
