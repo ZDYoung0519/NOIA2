@@ -68,11 +68,17 @@ interface BuffMonitorSettings {
   iconGap: number;
 }
 
+interface EventReminderSettings {
+  enabled: boolean;
+  showFieldBossTimers: boolean;
+}
+
 interface Aion2Settings {
   shortcuts: ShortcutSettings;
   backend: BackendSettings;
   overlay: OverlaySettings;
   buffMonitor: BuffMonitorSettings;
+  eventReminder: EventReminderSettings;
   autoHideEnabled: boolean;
   autoCloseMain: boolean;
 }
@@ -141,6 +147,10 @@ const DEFAULTS: AppConfig = {
       iconSize: 34,
       iconGap: 5,
     },
+    eventReminder: {
+      enabled: true,
+      showFieldBossTimers: true,
+    },
     autoHideEnabled: true,
     autoCloseMain: true,
   },
@@ -161,6 +171,9 @@ function loadConfig(): AppConfig {
         delete parsed.aion2.buffMonitor.preferencesByClass;
         delete parsed.aion2.buffMonitor.layoutsByClass;
       }
+      if (parsed?.aion2?.eventReminder) {
+        delete parsed.aion2.eventReminder.bossMobCodes;
+      }
       // Deep merge with defaults to fill missing keys from newer versions
       return deepMerge(DEFAULTS, parsed);
     }
@@ -177,6 +190,7 @@ function loadConfig(): AppConfig {
       buffMonitor: {
         ...DEFAULTS.aion2.buffMonitor,
       },
+      eventReminder: { ...DEFAULTS.aion2.eventReminder },
     },
   };
 }
@@ -273,6 +287,16 @@ export function useSettings() {
     }
   }, []);
 
+  const syncEventReminder = useCallback(async (cfg: AppConfig) => {
+    try {
+      await invoke("set_event_timer_enabled", {
+        enabled: cfg.aion2.eventReminder.enabled,
+      });
+    } catch (e) {
+      console.error("[useSettings] syncEventReminder failed:", e);
+    }
+  }, []);
+
   // Push shortcuts to Rust
   const syncShortcuts = useCallback(async (cfg: AppConfig) => {
     try {
@@ -302,6 +326,7 @@ export function useSettings() {
         await syncShortcuts(newConfig);
         await syncAutoHide(newConfig);
         await syncBuffMonitor(newConfig);
+        await syncEventReminder(newConfig);
       } else if (path.startsWith("aion2.backend")) {
         await syncBackend(newConfig);
       } else if (path.startsWith("aion2.overlay")) {
@@ -310,6 +335,8 @@ export function useSettings() {
         await syncShortcuts(newConfig);
       } else if (path.startsWith("aion2.buffMonitor")) {
         await syncBuffMonitor(newConfig);
+      } else if (path.startsWith("aion2.eventReminder")) {
+        await syncEventReminder(newConfig);
       } else if (path === "aion2.autoHideEnabled") {
         await syncAutoHide(newConfig);
         await syncLanguage(newConfig);
@@ -318,7 +345,15 @@ export function useSettings() {
       }
       // app.* only needs localStorage
     },
-    [syncBackend, syncOverlay, syncShortcuts, syncAutoHide, syncLanguage, syncBuffMonitor]
+    [
+      syncBackend,
+      syncOverlay,
+      syncShortcuts,
+      syncAutoHide,
+      syncLanguage,
+      syncBuffMonitor,
+      syncEventReminder,
+    ]
   );
 
   // Update a single key or whole section by path

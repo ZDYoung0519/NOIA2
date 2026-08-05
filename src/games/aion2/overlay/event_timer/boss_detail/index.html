@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NoiA | Field Boss Timers</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="detail-panel">
+      <header class="detail-header">
+        <div>
+          <h1 data-i18n="title">地图 Boss</h1>
+          <p data-i18n="description">实时刷新首领倒计时</p>
+        </div>
+        <button id="close-button" class="close-button" type="button" aria-label="关闭">×</button>
+      </header>
+      <section id="boss-list" class="boss-list" aria-live="polite"></section>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

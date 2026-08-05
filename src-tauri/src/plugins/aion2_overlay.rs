@@ -3,7 +3,8 @@ use std::sync::RwLock;
 use serde_json::Value;
 use tauri::{
     plugin::{Builder, TauriPlugin},
-    AppHandle, Emitter, Manager, Runtime, State, WebviewUrl, WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, PhysicalPosition, Runtime, State, WebviewUrl,
+    WebviewWindowBuilder,
 };
 
 use crate::dps_meter::engine::meter::DpsMeter;
@@ -11,6 +12,14 @@ use crate::dps_meter::engine::meter::DpsMeter;
 const DPS_OVERLAY_LABEL: &str = "dps-overlay";
 const PVP_OVERLAY_LABEL: &str = "dps-overlay-pvp";
 const BUFF_OVERLAY_LABEL: &str = "dps-overlay-buff";
+const EVENT_TIMER_LABEL: &str = "aion2-event-timer";
+const EVENT_TIMER_BOSS_LABEL: &str = "aion2-event-timer-boss";
+const EVENT_TIMER_WIDTH: f64 = 280.0;
+const EVENT_TIMER_HEIGHT: f64 = 112.0;
+const EVENT_TIMER_MARGIN: f64 = 16.0;
+const EVENT_TIMER_BOSS_WIDTH: f64 = 340.0;
+const EVENT_TIMER_BOSS_HEIGHT: f64 = 260.0;
+const EVENT_TIMER_BOSS_GAP: i32 = 8;
 
 /// Create the DPS overlay window and start the DPS meter.
 /// If the window already exists, it will be shown instead of creating a new one.
@@ -22,6 +31,10 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     // If window already exists, just show it
     if let Some(window) = app.get_webview_window(DPS_OVERLAY_LABEL) {
         window.show().map_err(|e| e.to_string())?;
+        DPS_OVERLAY_ACTIVE.store(true, Ordering::Relaxed);
+        if EVENT_TIMER_ENABLED.load(Ordering::Relaxed) {
+            create_event_timer_window(&app)?;
+        }
         if BUFF_MONITOR_ENABLED.load(Ordering::Relaxed) {
             create_dps_buff(app).await?;
         }
@@ -47,6 +60,10 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
     .map_err(|e| e.to_string())?;
 
     window.show().map_err(|e| e.to_string())?;
+    DPS_OVERLAY_ACTIVE.store(true, Ordering::Relaxed);
+    if EVENT_TIMER_ENABLED.load(Ordering::Relaxed) {
+        create_event_timer_window(&app)?;
+    }
     set_dps_overlay_locked_for_app(&app, OVERLAY_LOCKED.load(Ordering::Relaxed))?;
 
     // Start the DPS meter when overlay opens
@@ -63,6 +80,8 @@ pub async fn create_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), Str
 /// Destroy the DPS overlay window and stop the DPS meter.
 #[tauri::command]
 pub fn destroy_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    DPS_OVERLAY_ACTIVE.store(false, Ordering::Relaxed);
+
     // Stop the DPS meter first
     let meter = app.state::<DpsMeter>();
     meter.stop_dps_meter();
@@ -76,6 +95,7 @@ pub fn destroy_dps_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> 
     if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
         window.destroy().map_err(|e| e.to_string())?;
     }
+    destroy_event_timer_window(&app)?;
     Ok(())
 }
 
@@ -256,7 +276,9 @@ pub fn set_detail_selection(
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static OVERLAY_LOCKED: AtomicBool = AtomicBool::new(false);
+static DPS_OVERLAY_ACTIVE: AtomicBool = AtomicBool::new(false);
 static BUFF_MONITOR_ENABLED: AtomicBool = AtomicBool::new(false);
+static EVENT_TIMER_ENABLED: AtomicBool = AtomicBool::new(true);
 
 #[tauri::command]
 pub async fn set_buff_monitor_enabled<R: Runtime>(
@@ -266,7 +288,7 @@ pub async fn set_buff_monitor_enabled<R: Runtime>(
     BUFF_MONITOR_ENABLED.store(enabled, Ordering::Relaxed);
 
     if enabled {
-        if app.get_webview_window(DPS_OVERLAY_LABEL).is_some() {
+        if is_dps_overlay_active(&app) {
             create_dps_buff(app).await?;
         }
     } else if let Some(window) = app.get_webview_window(BUFF_OVERLAY_LABEL) {
@@ -279,6 +301,153 @@ pub async fn set_buff_monitor_enabled<R: Runtime>(
 #[tauri::command]
 pub fn get_buff_monitor_enabled() -> bool {
     BUFF_MONITOR_ENABLED.load(Ordering::Relaxed)
+}
+
+#[tauri::command]
+pub async fn set_event_timer_enabled<R: Runtime>(
+    app: AppHandle<R>,
+    enabled: bool,
+) -> Result<(), String> {
+    EVENT_TIMER_ENABLED.store(enabled, Ordering::Relaxed);
+
+    if enabled {
+        if is_dps_overlay_active(&app) {
+            create_event_timer_window(&app)?;
+        }
+    } else {
+        destroy_event_timer_window(&app)?;
+    }
+
+    Ok(())
+}
+
+fn is_dps_overlay_active<R: Runtime>(app: &AppHandle<R>) -> bool {
+    DPS_OVERLAY_ACTIVE.load(Ordering::Relaxed)
+        || app.get_webview_window(DPS_OVERLAY_LABEL).is_some()
+}
+
+fn create_event_timer_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(EVENT_TIMER_LABEL) {
+        window.show().map_err(|error| error.to_string())?;
+        window.unminimize().map_err(|error| error.to_string())?;
+        return Ok(());
+    }
+
+    let window = WebviewWindowBuilder::new(
+        app,
+        EVENT_TIMER_LABEL,
+        WebviewUrl::App("src/games/aion2/overlay/event_timer/index.html".into()),
+    )
+    .title("NoiA | Event Timer")
+    .inner_size(EVENT_TIMER_WIDTH, EVENT_TIMER_HEIGHT)
+    .resizable(false)
+    .maximizable(false)
+    .minimizable(false)
+    .decorations(false)
+    .shadow(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .focused(false)
+    .focusable(false)
+    .visible(false)
+    .build()
+    .map_err(|error| error.to_string())?;
+
+    position_event_timer_window(&window).map_err(|error| error.to_string())?;
+    window.show().map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+fn destroy_event_timer_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(EVENT_TIMER_BOSS_LABEL) {
+        window.destroy().map_err(|error| error.to_string())?;
+    }
+    if let Some(window) = app.get_webview_window(EVENT_TIMER_LABEL) {
+        window.destroy().map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn toggle_event_timer_boss_window<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(EVENT_TIMER_BOSS_LABEL) {
+        window.destroy().map_err(|error| error.to_string())?;
+        return Ok(());
+    }
+
+    let window = WebviewWindowBuilder::new(
+        &app,
+        EVENT_TIMER_BOSS_LABEL,
+        WebviewUrl::App("src/games/aion2/overlay/event_timer/boss_detail/index.html".into()),
+    )
+    .title("NoiA | Field Boss Timers")
+    .inner_size(EVENT_TIMER_BOSS_WIDTH, EVENT_TIMER_BOSS_HEIGHT)
+    .resizable(false)
+    .maximizable(false)
+    .minimizable(false)
+    .decorations(false)
+    .shadow(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .focused(false)
+    .focusable(false)
+    .visible(false)
+    .build()
+    .map_err(|error| error.to_string())?;
+
+    position_event_timer_boss_window(&app)?;
+    window.show().map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+fn position_event_timer_boss_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let Some(parent) = app.get_webview_window(EVENT_TIMER_LABEL) else {
+        return Ok(());
+    };
+    let Some(detail) = app.get_webview_window(EVENT_TIMER_BOSS_LABEL) else {
+        return Ok(());
+    };
+
+    let parent_position = parent.outer_position().map_err(|error| error.to_string())?;
+    let parent_size = parent.outer_size().map_err(|error| error.to_string())?;
+    let detail_size = detail.outer_size().map_err(|error| error.to_string())?;
+    let mut x = parent_position.x + parent_size.width as i32 - detail_size.width as i32;
+    let mut y = parent_position.y - detail_size.height as i32 - EVENT_TIMER_BOSS_GAP;
+
+    if let Some(monitor) = parent
+        .current_monitor()
+        .map_err(|error| error.to_string())?
+    {
+        let work_area = monitor.work_area();
+        let min_x = work_area.position.x;
+        let min_y = work_area.position.y;
+        let max_x = min_x + work_area.size.width as i32 - detail_size.width as i32;
+        let max_y = min_y + work_area.size.height as i32 - detail_size.height as i32;
+        x = x.clamp(min_x, max_x.max(min_x));
+        y = y.clamp(min_y, max_y.max(min_y));
+    }
+
+    detail
+        .set_position(PhysicalPosition::new(x, y))
+        .map_err(|error| error.to_string())
+}
+
+fn position_event_timer_window<R: Runtime>(window: &tauri::WebviewWindow<R>) -> tauri::Result<()> {
+    if let Some(monitor) = window.primary_monitor()? {
+        let scale_factor = monitor.scale_factor();
+        let margin = (EVENT_TIMER_MARGIN * scale_factor).round() as i32;
+        let work_area = monitor.work_area();
+        let window_size = window.outer_size()?;
+        let x =
+            work_area.position.x + work_area.size.width as i32 - window_size.width as i32 - margin;
+        let y = work_area.position.y + work_area.size.height as i32
+            - window_size.height as i32
+            - margin;
+        window.set_position(PhysicalPosition::new(x, y))?;
+    }
+    Ok(())
 }
 
 fn apply_buff_monitor_locked_for_app<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {

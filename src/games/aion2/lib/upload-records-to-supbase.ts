@@ -36,6 +36,7 @@ type QueueUploadPayload = {
   party_total_damage: number;
   team_dps: number;
   players: QueueUploadPlayer[];
+  player_skill_details: Record<string, Record<string, BackendSkillStats>>;
 };
 
 type QueueUploadPlayer = {
@@ -178,7 +179,7 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
   const teamBattleLastTime = getMaxTime(battleLastTime);
   const teamBattleDuration = getDuration(teamBattleStartTime, teamBattleLastTime);
 
-  const isMuzhuang = EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES.includes(targetMobCode.toString())
+  const isMuzhuang = EXTRA_ALLOWED_DPS_UPLOAD_MOB_CODES.includes(targetMobCode.toString());
 
   if (isMuzhuang && teamBattleDuration < 60) {
     return skipRecord(
@@ -243,6 +244,7 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
       party_total_damage: partyTotalDamage,
       team_dps: teamDps,
       players,
+      player_skill_details: record.playerSkillStats ?? {},
     },
   };
 }

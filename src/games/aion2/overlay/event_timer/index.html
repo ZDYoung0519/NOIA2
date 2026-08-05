@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NoiA | Event Timer</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="event-panel">
+      <div class="drag-handle" data-tauri-drag-region title="拖拽移动" aria-label="拖拽移动">
+        <span data-tauri-drag-region></span>
+        <span data-tauri-drag-region></span>
+        <span data-tauri-drag-region></span>
+      </div>
+
+      <button id="boss-row" class="activity-item boss-item" type="button">
+        <img class="activity-icon boss-icon" src="/aion2/bossIcon.png" alt="" />
+        <span id="boss-name" class="activity-name">地图 Boss</span>
+        <time id="boss-time" class="activity-time">--:--:--</time>
+      </button>
+
+      <div class="activity-item">
+        <span class="activity-icon placeholder-icon placeholder-green" aria-hidden="true">树</span>
+        <span class="activity-name" data-i18n="shugoFestival">树古庆典</span>
+        <time id="shugo-time" class="activity-time">--:--:--</time>
+      </div>
+
+      <div class="activity-item">
+        <span class="activity-icon placeholder-icon placeholder-purple" aria-hidden="true">次</span>
+        <span class="activity-name" data-i18n="dimensionalInvasion">次元入侵</span>
+        <time id="invasion-time" class="activity-time">--:--:--</time>
+      </div>
+
+      <div class="activity-item">
+        <span class="activity-icon placeholder-icon placeholder-blue" aria-hidden="true">裂</span>
+        <span class="activity-name" data-i18n="spaceTimeRift">时空裂缝</span>
+        <time id="rift-time" class="activity-time">--:--:--</time>
+      </div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

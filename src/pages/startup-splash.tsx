@@ -42,7 +42,7 @@ type RepairResult = {
 
 type CheckState = "checking" | "ready" | "warning";
 
-const WEBP_REPLAY_INTERVAL_MS = 3500;
+const WEBP_REPLAY_INTERVAL_MS = 1000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));

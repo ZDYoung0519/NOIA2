@@ -7,7 +7,7 @@ use crate::dps_meter::engine::meter::DpsMeter;
 use crate::dps_meter::history::HistoryRecord;
 use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::DpsMeterState;
-use crate::dps_meter::storage::data_storage::BuffOverlayContext;
+use crate::dps_meter::storage::data_storage::{BuffOverlayContext, FieldBossTimerSnapshot};
 
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -77,6 +77,13 @@ pub fn clear_pvp_combat_stats(meter: State<'_, DpsMeter>) -> Result<(), String> 
 #[tauri::command]
 pub fn get_buff_overlay_context(meter: State<'_, DpsMeter>) -> Result<BuffOverlayContext, String> {
     Ok(meter.get_buff_overlay_context())
+}
+
+#[tauri::command]
+pub fn get_field_boss_timers(
+    meter: State<'_, DpsMeter>,
+) -> Result<Vec<FieldBossTimerSnapshot>, String> {
+    Ok(meter.get_field_boss_timers())
 }
 
 #[tauri::command]

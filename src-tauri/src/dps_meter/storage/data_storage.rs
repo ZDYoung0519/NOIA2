@@ -140,6 +140,7 @@ struct DataStorageInner {
     pvp_last_attacker_by_target: HashMap<u32, PvpPlayerKey>,
     pvp_combat_stats: HashMap<PvpPlayerKey, PvpCombatStats>,
     pvp_dead_players: HashSet<PvpPlayerKey>,
+    field_boss_timers: HashMap<(u32, u32), u64>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -177,6 +178,7 @@ impl Default for DataStorageInner {
             pvp_last_attacker_by_target: HashMap::new(),
             pvp_combat_stats: HashMap::new(),
             pvp_dead_players: HashSet::new(),
+            field_boss_timers: HashMap::new(),
         }
     }
 }
@@ -208,6 +210,16 @@ pub struct BuffOverlayContext {
     pub actor_class: Option<String>,
     pub self_buff_candidate_skill_codes: Vec<u32>,
     pub self_buff_candidate_skill_codes_by_class: HashMap<String, Vec<u32>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldBossTimerSnapshot {
+    pub map_id: u32,
+    pub mob_code: u32,
+    pub name: String,
+    pub target_ms: u64,
+    pub remaining_ms: u64,
 }
 
 impl DataStorage {
@@ -242,6 +254,7 @@ impl DataStorage {
         let pvp_last_attacker_by_target = inner.pvp_last_attacker_by_target.clone();
         let pvp_combat_stats = inner.pvp_combat_stats.clone();
         let pvp_dead_players = inner.pvp_dead_players.clone();
+        let field_boss_timers = inner.field_boss_timers.clone();
         // let summon_owner_map = inner.summon_owner_map.clone();
         let dot_skill_list = inner.dot_skill_list.clone();
 
@@ -262,6 +275,7 @@ impl DataStorage {
         inner.pvp_last_attacker_by_target = pvp_last_attacker_by_target;
         inner.pvp_combat_stats = pvp_combat_stats;
         inner.pvp_dead_players = pvp_dead_players;
+        inner.field_boss_timers = field_boss_timers;
         // inner.summon_owner_map = summon_owner_map;
         inner.dot_skill_list = dot_skill_list;
     }
@@ -924,6 +938,43 @@ impl DataStorage {
 
     pub fn mob_code_name_snapshot(&self) -> HashMap<u32, String> {
         self.mob_code_name_map.clone()
+    }
+
+    pub fn replace_field_boss_timers<I>(&self, map_id: u32, timers: I)
+    where
+        I: IntoIterator<Item = (u32, u64)>,
+    {
+        let mut inner = self.inner.write().unwrap();
+        inner
+            .field_boss_timers
+            .retain(|(existing_map_id, _), _| *existing_map_id != map_id);
+        for (mob_code, target_ms) in timers {
+            inner
+                .field_boss_timers
+                .insert((map_id, mob_code), target_ms);
+        }
+    }
+
+    pub fn field_boss_timer_snapshot(&self) -> Vec<FieldBossTimerSnapshot> {
+        let now = current_timestamp_millis();
+        let inner = self.inner.read().unwrap();
+        let mut timers = inner
+            .field_boss_timers
+            .iter()
+            .map(|(&(map_id, mob_code), &target_ms)| FieldBossTimerSnapshot {
+                map_id,
+                mob_code,
+                name: self
+                    .mob_code_name_map
+                    .get(&mob_code)
+                    .cloned()
+                    .unwrap_or_else(|| format!("Boss {mob_code}")),
+                target_ms,
+                remaining_ms: target_ms.saturating_sub(now),
+            })
+            .collect::<Vec<_>>();
+        timers.sort_unstable_by_key(|timer| (timer.target_ms, timer.map_id, timer.mob_code));
+        timers
     }
 
     pub fn boss_code_list_snapshot(&self) -> Vec<u32> {

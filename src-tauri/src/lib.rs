@@ -41,7 +41,13 @@ pub fn run() {
         .plugin(
             tauri_plugin_window_state::Builder::new()
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
-                .with_filter(|label| !matches!(label, "splashscreen" | "dps-overlay-pvp"))
+                .with_filter(|label| {
+                    !matches!(
+                        label,
+                        "splashscreen"| "dps-overlay-pvp"| "aion2-event-timer-boss"
+                            // | "aion2-event-timer"
+                    )
+                })
                 .build(),
         )
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -80,6 +86,7 @@ pub fn run() {
             dps_meter::api::commands::get_pvp_combat_stats,
             dps_meter::api::commands::clear_pvp_combat_stats,
             dps_meter::api::commands::get_buff_overlay_context,
+            dps_meter::api::commands::get_field_boss_timers,
             dps_meter::api::commands::get_dps_meter_status,
             dps_meter::api::commands::reset_dps_meter,
             dps_meter::api::commands::stop_dps_meter,
@@ -100,6 +107,8 @@ pub fn run() {
             plugins::aion2_overlay::create_dps_buff,
             plugins::aion2_overlay::set_buff_monitor_enabled,
             plugins::aion2_overlay::get_buff_monitor_enabled,
+            plugins::aion2_overlay::set_event_timer_enabled,
+            plugins::aion2_overlay::toggle_event_timer_boss_window,
             plugins::aion2_overlay::create_dps_history,
             plugins::aion2_overlay::toggle_dps_overlay_locked,
             plugins::aion2_overlay::set_dps_overlay_locked,

@@ -20,7 +20,7 @@ import { SettingsGroup, SettingsRow as BaseSettingsRow } from "@/components/sett
 import skillsZhCN from "@/i18n/locales/aion2skills/zh-CN.json";
 
 type RGBA = [number, number, number, number];
-type Aion2Tab = "shortcuts" | "overlay" | "buff" | "backend";
+type Aion2Tab = "shortcuts" | "overlay" | "buff" | "eventReminder" | "backend";
 type BuffSlotType = "selfBuff" | "bossDebuff" | "empty";
 type ActorClass =
   | "GLADIATOR"
@@ -262,6 +262,7 @@ export function Aion2Settings() {
     { id: "shortcuts", label: t("settings.aion2.shortcuts") },
     { id: "overlay", label: t("settings.aion2.overlay") },
     { id: "buff", label: t("settings.aion2.buffMonitor") },
+    { id: "eventReminder", label: t("settings.aion2.eventReminder") },
     { id: "backend", label: t("settings.aion2.backend") },
   ];
   const activeBuffLayout =
@@ -1192,6 +1193,40 @@ export function Aion2Settings() {
                 {t("settings.aion2.buffMonitorStorageDesc")}
               </div>
             </div>
+          </SettingsGroup>
+        </div>
+      )}
+
+      {tab === "eventReminder" && (
+        <div className="flex flex-col gap-4">
+          <SettingsGroup title={t("settings.aion2.eventReminder")}>
+            <SettingRow
+              title={t("settings.aion2.eventReminderEnabled")}
+              description={t("settings.aion2.eventReminderEnabledDesc")}
+            >
+              <Switch
+                checked={config.aion2.eventReminder.enabled}
+                onCheckedChange={(enabled) =>
+                  updateSettings("aion2.eventReminder.enabled", enabled)
+                }
+                aria-label={t("settings.aion2.eventReminderEnabled")}
+              />
+            </SettingRow>
+          </SettingsGroup>
+
+          <SettingsGroup title={t("settings.aion2.fieldBossTimers")}>
+            <SettingRow
+              title={t("settings.aion2.fieldBossTimersEnabled")}
+              description={t("settings.aion2.fieldBossTimersEnabledDesc")}
+            >
+              <Switch
+                checked={config.aion2.eventReminder.showFieldBossTimers}
+                onCheckedChange={(enabled) =>
+                  updateSettings("aion2.eventReminder.showFieldBossTimers", enabled)
+                }
+                aria-label={t("settings.aion2.fieldBossTimersEnabled")}
+              />
+            </SettingRow>
           </SettingsGroup>
         </div>
       )}

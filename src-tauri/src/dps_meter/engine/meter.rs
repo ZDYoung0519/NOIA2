@@ -19,7 +19,7 @@ use crate::dps_meter::engine::calculator::DpsCalculator;
 use crate::dps_meter::history::HistoryStore;
 use crate::dps_meter::models::combat::{CombatSnapshot, PvpCombatStatsRow, PvpWatchInfoResponse};
 use crate::dps_meter::models::diagnostics::{DpsMeterState, MemorySnapshot};
-use crate::dps_meter::storage::data_storage::DataStorage;
+use crate::dps_meter::storage::data_storage::{DataStorage, FieldBossTimerSnapshot};
 use crate::plugins::logger::AppLogger;
 
 const STALE_ASSEMBLER_IDLE_SECS: u64 = 30;
@@ -375,6 +375,15 @@ impl DpsMeter {
         &self,
     ) -> crate::dps_meter::storage::data_storage::BuffOverlayContext {
         self.data_storage.get_buff_overlay_context()
+    }
+
+    pub fn get_field_boss_timers(&self) -> Vec<FieldBossTimerSnapshot> {
+        let timers = self.data_storage.field_boss_timer_snapshot();
+        self.logger.debug(format!(
+            "field boss timers queried timer_count={}",
+            timers.len()
+        ));
+        timers
     }
 
     fn start_snapshot_loop(&self) {

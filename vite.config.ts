@@ -66,6 +66,14 @@ export default defineConfig(async () => ({
           __dirname,
           "src/games/aion2/overlay/detail/index.html"
         ),
+        "src/games/aion2/overlay/event_timer/index": path.resolve(
+          __dirname,
+          "src/games/aion2/overlay/event_timer/index.html"
+        ),
+        "src/games/aion2/overlay/event_timer/boss_detail/index": path.resolve(
+          __dirname,
+          "src/games/aion2/overlay/event_timer/boss_detail/index.html"
+        ),
       },
     },
   },

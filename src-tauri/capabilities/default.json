@@ -13,7 +13,9 @@
     "dps-history",
     "dps-detail",
     "dps-settings",
-    "dps-log"
+    "dps-log",
+    "aion2-event-timer",
+    "aion2-event-timer-boss"
   ],
   "permissions": [
     "core:default",

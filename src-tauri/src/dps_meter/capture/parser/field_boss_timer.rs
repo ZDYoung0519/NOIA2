@@ -152,6 +152,20 @@ pub(crate) fn parse_packet(context: &ParserContext<'_>, packet: &[u8]) -> bool {
             context.port,
             bytes_to_hex(packet)
         ));
+    } else {
+        context.data_storage.replace_field_boss_timers(
+            table.map_id,
+            table
+                .timers
+                .iter()
+                .map(|timer| (timer.mob_code, timer.target_ms)),
+        );
+        context.logger.debug(format!(
+            "[{}] 0191 field boss timers stored map_id={} timer_count={}",
+            context.port,
+            table.map_id,
+            table.timers.len()
+        ));
     }
 
     true
