@@ -776,19 +776,22 @@ export default function CharacterViewPage() {
     setDpsRankLoading(true);
     try {
       const query = supabase
-        .from("dps_rank")
+        .from("dps_leaderboard_v2")
         .select(
-          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name,main_actor_server_id,main_actor_class,main_actor_damage,main_actor_battle_duration,main_actor_dps,party_total_damage,team_dps"
+          "record_id,battle_ended_at,target_name,target_mob_code,main_actor_name:actor_name,main_actor_server_id:server_id,main_actor_class:actor_class,main_actor_damage:damage,main_actor_battle_duration:duration_ms,main_actor_dps:dps,party_total_damage,team_dps"
         )
-        .eq("main_actor_name", characterName.trim())
-        .eq("main_actor_server_id", serverId.trim())
-        .order("main_actor_dps", { ascending: false, nullsFirst: false })
+        .eq("actor_name", characterName.trim())
+        .eq("server_id", serverId.trim())
+        .order("dps", { ascending: false, nullsFirst: false })
         .limit(200);
 
       const { data, error } = await query;
       if (error) throw error;
 
-      const rankRows = (data ?? []) as HistoryBattleRow[];
+      const rankRows = (data ?? []).map((row) => ({
+        ...row,
+        main_actor_battle_duration: Number(row.main_actor_battle_duration ?? 0) / 1000,
+      })) as HistoryBattleRow[];
       const rankRowsWithRank = await Promise.all(
         rankRows.map(async (row): Promise<CharacterRankRow> => {
           if (row.target_mob_code == null) {
@@ -796,10 +799,10 @@ export default function CharacterViewPage() {
           }
 
           const { count, error } = await supabase
-            .from("dps_rank")
+            .from("dps_leaderboard_v2")
             .select("record_id", { count: "exact", head: true })
             .eq("target_mob_code", row.target_mob_code)
-            .gt("main_actor_dps", Number(row.main_actor_dps ?? 0));
+            .gt("dps", Number(row.main_actor_dps ?? 0));
 
           if (error) {
             console.error("failed to load dps rank position:", error);

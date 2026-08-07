@@ -124,6 +124,14 @@ body {
 .history-footer__btn:hover:not(:disabled) {
   background: rgba(74, 222, 128, 0.2);
 }
+.history-footer__btn.is-reupload {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+}
+.history-footer__btn.is-reupload:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.2);
+}
 .history-footer__btn:disabled {
   opacity: 0.3;
   cursor: default;
@@ -156,6 +164,97 @@ body {
   background: rgba(255, 60, 60, 0.4);
 }
 
+.upload-progress {
+  display: none;
+  flex-shrink: 0;
+  margin: 0 0 8px;
+  padding: 10px 11px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(96, 165, 250, 0.12), transparent 44%),
+    rgba(10, 15, 24, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 8px 22px rgba(0, 0, 0, 0.18);
+}
+.upload-progress.is-visible {
+  display: block;
+}
+.upload-progress__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.upload-progress__label {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-progress__percent {
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.upload-progress__track {
+  height: 6px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+.upload-progress__fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #38bdf8, #60a5fa 48%, #a78bfa);
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.5);
+  transition: width 0.28s ease;
+}
+.upload-progress__stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+}
+.upload-progress__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.upload-progress__stats i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.upload-progress__stats i.is-success {
+  background: #4ade80;
+}
+.upload-progress__stats i.is-skipped {
+  background: #fbbf24;
+}
+.upload-progress__stats i.is-failed {
+  background: #fb7185;
+}
+.upload-progress__stats b {
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.upload-progress__stats em {
+  font-style: normal;
+}
+
 .upload-status {
   display: none;
   flex-shrink: 0;
@@ -167,18 +266,6 @@ body {
   color: #cbd5e1;
   font-size: 11px;
   line-height: 1.35;
-}
-.upload-status.is-uploading {
-  animation: statusPulse 1.2s ease-in-out infinite;
-}
-@keyframes statusPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
 }
 .upload-status.is-success {
   color: #86efac;
@@ -216,8 +303,7 @@ body {
 
 .record-row {
   position: relative;
-  padding: 8px;
-  padding-right: 30px;
+  padding: 7px 30px 7px 9px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
     rgba(10, 12, 16, 0.72);
@@ -244,68 +330,18 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .record-row__name {
   color: #f3f4f6;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
-  line-height: 1.2;
-}
-
-.record-row__boss {
-  font-size: 10px;
-  padding: 2px 5px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  font-weight: 700;
-}
-.record-row__boss.is-boss {
-  color: #ffb4a8;
-  background: rgba(255, 107, 107, 0.11);
-  border: 1px solid rgba(255, 107, 107, 0.16);
-}
-.record-row__boss.is-not-boss {
-  color: #a0a8b3;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.record-row__dungeon {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  margin: -1px 0 6px;
-  color: #aeb7c3;
-  font-size: 11px;
   line-height: 1.25;
-}
-
-.record-row__dungeon-name {
-  min-width: 0;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #cfd6df;
-  font-weight: 650;
-}
-
-.record-row__dungeon-difficulty {
-  flex-shrink: 0;
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #f5d78a;
-  background: rgba(245, 215, 138, 0.08);
-  border: 1px solid rgba(245, 215, 138, 0.12);
-  font-size: 10px;
-  font-weight: 700;
 }
 
 .record-row__delete {
@@ -331,21 +367,21 @@ body {
   background: rgba(255, 60, 60, 0.15);
 }
 
-.record-row__meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px;
+.record-row__damage {
+  color: #d9c58f;
+  font-family: "Consolas", "Cascadia Mono", monospace;
   font-size: 11px;
-  margin-bottom: 5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.record-row__damage {
-  color: #f5d78a;
-  font-family: "Consolas", "Cascadia Mono", monospace;
-  font-size: 12px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.record-row__damage em {
+  color: #727b87;
+  font-family: inherit;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
 }
 
 .record-row__time {
@@ -359,7 +395,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .record-row__players {
@@ -368,13 +404,13 @@ body {
   line-height: 1.3;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   min-width: 0;
 }
 
 .record-row__main-player {
   color: #f5d78a;
-  max-width: 118px;
+  max-width: 110px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -390,22 +426,10 @@ body {
   min-width: 0;
 }
 
-.record-row__uploaded {
-  font-size: 10px;
-  line-height: 1;
-  white-space: nowrap;
-}
-.record-row__uploaded.is-uploaded {
-  color: #86efac;
-}
-.record-row__uploaded.is-pending {
-  color: #9ca3af;
-}
-
 .record-row__upload {
   cursor: pointer;
-  height: 20px;
-  padding: 0 7px;
+  height: 22px;
+  padding: 0 8px;
   border: 1px solid rgba(74, 222, 128, 0.28);
   border-radius: 4px;
   background: rgba(74, 222, 128, 0.08);

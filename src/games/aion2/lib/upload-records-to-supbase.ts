@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import { getKnownBossMobCodes } from "@/games/aion2/lib/npc-names";
-import type { CombatInfos, PlayerOverviewStat, TargetInfo } from "@/games/aion2/types/aion2dps";
+import type {
+  BuffSummary,
+  CombatInfos,
+  PlayerOverviewStat,
+  TargetInfo,
+} from "@/games/aion2/types/aion2dps";
 
 type BackendSkillStats = {
   counts: number;
@@ -18,36 +23,38 @@ type BackendHistoryRecord = {
   combatInfos: CombatInfos;
   playerSkillStats: Record<string, Record<string, BackendSkillStats>>;
   playerStats: Record<string, PlayerOverviewStat>;
+  useBuffsByTarget?: Record<string, BuffSummary[]>;
   createdAt: number;
   uploaded?: boolean;
 };
 
-type QueueUploadPayload = {
-  record_id: string;
-  created_at: string;
-  battle_ended_at: string | null;
-  target_mob_code: number;
-  target_name: string | null;
-  is_boss: boolean;
-  target_max_hp: number | null;
-  battle_start_time: Record<string, number>;
-  battle_last_time: Record<string, number>;
-  team_battle_duration: number;
-  party_total_damage: number;
-  team_dps: number;
-  players: QueueUploadPlayer[];
-  player_skill_details: Record<string, Record<string, BackendSkillStats>>;
+type PartyDpsPlayer = {
+  actor_id: number;
+  actor_name: string;
+  server_id: string;
+  actor_class: string;
+  damage: number;
+  duration_ms: number;
+  dps: number;
 };
 
-type QueueUploadPlayer = {
-  actor_id: number;
-  actor_name: string | null | undefined;
-  actor_server_id: string | null | undefined;
-  actor_class: string | null | undefined;
+type LeaderboardUploadPayload = {
+  record_id: string;
+  target_mob_code: number;
+  target_name: string | null;
+  actor_name: string;
+  server_id: string;
+  actor_class: string;
   combat_power: number | null;
   damage: number;
-  battle_duration: number;
-  dps: number;
+  duration_ms: number;
+  party_total_damage: number;
+  team_dps: number;
+  battle_ended_at: string;
+  skill_details: Record<string, BackendSkillStats>;
+  player_buffs: BuffSummary[];
+  boss_buffs: BuffSummary[];
+  party_dps: PartyDpsPlayer[];
 };
 
 type UploadFailure = {
@@ -64,7 +71,7 @@ type UploadSkip = {
 
 type UploadBuildResult =
   | {
-      payload: QueueUploadPayload;
+      payloads: LeaderboardUploadPayload[];
     }
   | {
       skip: UploadSkip;
@@ -157,7 +164,7 @@ function skipRecord(
   };
 }
 
-function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResult {
+function buildLeaderboardUploadPayloads(record: BackendHistoryRecord): UploadBuildResult {
   const targetInfo = getTargetInfo(record);
   const targetMobCode = targetInfo?.targetMobCode;
 
@@ -201,51 +208,91 @@ function buildQueueUploadPayload(record: BackendHistoryRecord): UploadBuildResul
   if (!isMuzhuang && currentHp > 0) {
     return skipRecord(record, targetInfo, `boss is still alive, currentHp=${currentHp}`);
   }
+
+  const totalDamageContribution = Object.values(record.playerStats ?? {}).reduce((sum, stats) => {
+    const contribution = Number(stats?.damageContribution ?? 0);
+    return Number.isFinite(contribution) && contribution > 0 ? sum + contribution : sum;
+  }, 0);
+  if (totalDamageContribution < 0.9) {
+    return skipRecord(
+      record,
+      targetInfo,
+      `total player damage contribution is less than 90%: ${(totalDamageContribution * 100).toFixed(1)}%`
+    );
+  }
+
   const partyTotalDamage = Object.values(record.playerStats ?? {}).reduce(
     (sum, stats) => sum + Number(stats?.totalDamage ?? 0),
     0
   );
   const teamDps = teamBattleDuration > 0 ? partyTotalDamage / teamBattleDuration : 0;
-  const players = Object.values(record.combatInfos.actorInfos ?? {}).map((actor) => {
-    const actorId = actor.id;
-    const actorIdKey = String(actorId);
-    const damage = Number(record.playerStats?.[actorIdKey]?.totalDamage ?? 0);
-    const actorBattleStartTime = Number(battleStartTime[actorIdKey] ?? 0);
-    const actorBattleLastTime = Number(battleLastTime[actorIdKey] ?? 0);
-    const battleDuration = getDuration(actorBattleStartTime, actorBattleLastTime);
+  const partyDps = Object.values(record.combatInfos.actorInfos ?? {})
+    .map((actor): PartyDpsPlayer | null => {
+      const id = String(actor.id);
+      const actorDamage = Math.round(Number(record.playerStats?.[id]?.totalDamage ?? 0));
+      const duration = getDuration(
+        Number(battleStartTime[id] ?? 0),
+        Number(battleLastTime[id] ?? 0)
+      );
+      const name = actor.actorName?.trim();
+      const actorServerId = String(actor.actorServerId ?? "").trim();
+      const actorClassCode = actor.actorClass?.trim();
+      if (!name || !actorServerId || !actorClassCode || actorDamage <= 0 || duration <= 0) {
+        return null;
+      }
+      return {
+        actor_id: actor.id,
+        actor_name: name,
+        server_id: actorServerId,
+        actor_class: actorClassCode,
+        damage: actorDamage,
+        duration_ms: Math.round(duration * 1000),
+        dps: Math.round(actorDamage / duration),
+      };
+    })
+    .filter((player): player is PartyDpsPlayer => player !== null)
+    .sort((left, right) => right.damage - left.damage);
 
+  if (partyDps.length === 0) {
+    return skipRecord(record, targetInfo, "no valid players are available");
+  }
+
+  const eligiblePlayers = partyDps.filter(
+    (player) => player.duration_ms / 1000 >= teamBattleDuration - 5
+  );
+  if (eligiblePlayers.length === 0) {
+    return skipRecord(record, targetInfo, "no players meet the battle duration requirement");
+  }
+
+  const bossBuffs = record.useBuffsByTarget?.[String(record.targetId)] ?? [];
+  const battleEndedAt = new Date(teamBattleLastTime * 1000).toISOString();
+  const payloads = eligiblePlayers.map((player): LeaderboardUploadPayload => {
+    const actorIdKey = String(player.actor_id);
+    const actor = record.combatInfos.actorInfos[actorIdKey];
     return {
-      actor_id: actorId,
-      actor_name: actor.actorName ?? null,
-      actor_server_id: actor.actorServerId ?? null,
-      actor_class: actor.actorClass ?? null,
+      record_id: `${record.id}:${player.actor_id}`,
+      target_mob_code: targetMobCode,
+      target_name: targetInfo?.targetName ?? null,
+      actor_name: player.actor_name,
+      server_id: player.server_id,
+      actor_class: player.actor_class,
       combat_power: normalizeCombatPower(
-        actor.combatPower ?? record.playerStats?.[actorIdKey]?.combatPower
+        actor?.combatPower ?? record.playerStats?.[actorIdKey]?.combatPower
       ),
-      damage,
-      battle_duration: battleDuration,
-      dps: battleDuration > 0 ? damage / battleDuration : 0,
+      damage: player.damage,
+      duration_ms: player.duration_ms,
+      party_total_damage: Math.round(partyTotalDamage),
+      team_dps: Math.round(teamDps),
+      battle_ended_at: battleEndedAt,
+      skill_details: record.playerSkillStats?.[actorIdKey] ?? {},
+      player_buffs: record.useBuffsByTarget?.[actorIdKey] ?? [],
+      boss_buffs: bossBuffs,
+      party_dps: partyDps,
     };
   });
 
   return {
-    payload: {
-      record_id: record.id,
-      created_at: new Date().toISOString(),
-      battle_ended_at:
-        teamBattleLastTime > 0 ? new Date(teamBattleLastTime * 1000).toISOString() : null,
-      target_mob_code: targetMobCode,
-      target_name: targetInfo?.targetName ?? null,
-      is_boss: targetInfo?.isBoss ?? false,
-      target_max_hp: targetInfo?.maxHp ?? null,
-      battle_start_time: battleStartTime,
-      battle_last_time: battleLastTime,
-      team_battle_duration: teamBattleDuration,
-      party_total_damage: partyTotalDamage,
-      team_dps: teamDps,
-      players,
-      player_skill_details: record.playerSkillStats ?? {},
-    },
+    payloads,
   };
 }
 
@@ -271,7 +318,7 @@ export async function uploadDpsDataBatch(
 
   for (const [index, record] of records.entries()) {
     const current = index + 1;
-    const result = buildQueueUploadPayload(record);
+    const result = buildLeaderboardUploadPayloads(record);
 
     if ("skip" in result) {
       skips.push(result.skip);
@@ -287,29 +334,36 @@ export async function uploadDpsDataBatch(
       continue;
     }
 
-    const payload = result.payload;
     let status: UploadProgress["status"] = "queued";
-    try {
-      const { error } = await supabase.rpc("upload_to_records_process_queue", {
-        p_payload: payload,
-      });
+    let recordFailed = false;
 
-      if (error) {
+    for (const payload of result.payloads) {
+      try {
+        const { error } = await supabase.rpc("submit_dps_leaderboard_v2", {
+          p_payload: payload,
+        });
+
+        if (!error) continue;
+
         failures.push({
           recordId: payload.record_id,
           reason: getErrorMessage(error),
         });
-        status = "failed";
-      } else {
-        queued += 1;
-        uploadedRecordIds.push(payload.record_id);
+        recordFailed = true;
+      } catch (error) {
+        failures.push({
+          recordId: payload.record_id,
+          reason: getErrorMessage(error),
+        });
+        recordFailed = true;
       }
-    } catch (error) {
-      failures.push({
-        recordId: payload.record_id,
-        reason: getErrorMessage(error),
-      });
+    }
+
+    if (recordFailed) {
       status = "failed";
+    } else {
+      queued += 1;
+      uploadedRecordIds.push(record.id);
     }
 
     options.onProgress?.({

@@ -2,19 +2,23 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { uploadDpsDataBatch, isUserLoggedIn } from "@/games/aion2/lib/upload-records-to-supbase";
-import {
-  getDungeonDifficultyByMobCode,
-  getDungeonNameByMobCode,
-  getNpcName,
-} from "@/games/aion2/lib/npc-names";
-import { t, setLanguage, getLanguage } from "../../i18n.js";
+import { getNpcName } from "@/games/aion2/lib/npc-names";
+import { t, setLanguage } from "../../i18n.js";
 
 // ── DOM ──
 const $list = document.getElementById("record-list");
 const $count = document.getElementById("header-count");
 const $empty = document.getElementById("empty");
 const $upload = document.getElementById("upload-btn");
+const $reupload = document.getElementById("reupload-btn");
 const $uploadStatus = document.getElementById("upload-status");
+const $uploadProgress = document.getElementById("upload-progress");
+const $uploadProgressLabel = document.getElementById("upload-progress-label");
+const $uploadProgressPercent = document.getElementById("upload-progress-percent");
+const $uploadProgressFill = document.getElementById("upload-progress-fill");
+const $uploadProgressQueued = document.getElementById("upload-progress-queued");
+const $uploadProgressSkipped = document.getElementById("upload-progress-skipped");
+const $uploadProgressFailed = document.getElementById("upload-progress-failed");
 const $targetFilter = document.getElementById("target-filter");
 const $actorFilter = document.getElementById("actor-filter");
 const $targetFilterLabel = document.getElementById("target-filter-label");
@@ -38,8 +42,35 @@ function setUploadStatus(message, type = "") {
   $uploadStatus.style.display = message ? "block" : "none";
 }
 
+function updateUploadProgress({ current, total, queued = 0, skipped = 0, failed = 0 }) {
+  const safeTotal = Math.max(1, Number(total) || 1);
+  const safeCurrent = Math.max(0, Math.min(safeTotal, Number(current) || 0));
+  const percent = Math.round((safeCurrent / safeTotal) * 100);
+  $uploadProgress.classList.add("is-visible");
+  $uploadProgressLabel.textContent = t("dps-history.uploading", {
+    current: safeCurrent,
+    total: safeTotal,
+  });
+  $uploadProgressPercent.textContent = `${percent}%`;
+  $uploadProgressFill.style.width = `${percent}%`;
+  $uploadProgressQueued.textContent = String(queued);
+  $uploadProgressSkipped.textContent = String(skipped);
+  $uploadProgressFailed.textContent = String(failed);
+}
+
+function hideUploadProgress() {
+  $uploadProgress.classList.remove("is-visible");
+}
+
+function updateUploadProgressLabels() {
+  document.getElementById("upload-progress-queued-label").textContent = t("dps-history.queued");
+  document.getElementById("upload-progress-skipped-label").textContent = t("dps-history.skipped");
+  document.getElementById("upload-progress-failed-label").textContent = t("dps-history.failed");
+}
+
 function setUploadControlsDisabled(disabled) {
   $upload.disabled = disabled || allRecords.length === 0;
+  $reupload.disabled = disabled || allRecords.length === 0;
   document.getElementById("delete-all-btn").disabled = disabled || allRecords.length === 0;
   document.querySelectorAll("[data-upload]").forEach((button) => {
     button.disabled = disabled || button.dataset.uploaded === "true";
@@ -68,21 +99,14 @@ async function uploadRecords(records, emptyMessage) {
   isUploading = true;
   setUploadControlsDisabled(true);
   $upload.textContent = t("dps-history.queueing");
-  setUploadStatus(t("dps-history.uploading", { current: 0, total: records.length }), "uploading");
+  $reupload.textContent = t("dps-history.queueing");
+  setUploadStatus("");
+  updateUploadProgress({ current: 0, total: records.length });
 
   try {
     const result = await uploadDpsDataBatch(records, {
       onProgress(progress) {
-        setUploadStatus(
-          t("dps-history.uploadingProgress", {
-            current: progress.current,
-            total: progress.total,
-            queued: progress.queued,
-            skipped: progress.skipped,
-            failed: progress.failed,
-          }),
-          "uploading"
-        );
+        updateUploadProgress(progress);
       },
     });
     const marked = await markUploaded(result.uploadedRecordIds);
@@ -101,7 +125,10 @@ async function uploadRecords(records, emptyMessage) {
     setUploadStatus(error?.message || t("dps-history.uploadFailed"), "error");
   } finally {
     isUploading = false;
-    $upload.textContent = t("dps-history.upload");
+    hideUploadProgress();
+    $upload.textContent = t("dps-history.uploadPending");
+    $reupload.textContent = t("dps-history.reuploadAll");
+    updateUploadProgressLabels();
     setUploadControlsDisabled(false);
   }
 }
@@ -129,6 +156,14 @@ $upload.addEventListener("click", async () => {
     allRecords.filter((record) => !record.uploaded),
     t("dps-history.noUnuploadedRecords")
   );
+});
+
+$reupload.addEventListener("click", async () => {
+  if (!(await isUserLoggedIn())) {
+    setUploadStatus(t("dps-history.loginRequired"), "error");
+    return;
+  }
+  await uploadRecords(allRecords, t("dps-history.noRecordToQueue"));
 });
 
 // ── Formatters ──
@@ -194,22 +229,6 @@ function getTargetName(r) {
 
   const targetLabel = t("dps-history.unknownTarget", { id: r.targetId });
   return mobCode ? `${targetLabel} (${mobCode})` : targetLabel;
-}
-function getDungeonInfo(r) {
-  const mobCode = getTargetMobCode(r);
-  if (!mobCode) {
-    return {
-      name: t("dps-history.unknownDungeon"),
-      difficulty: t("dps-history.unknownDifficulty"),
-    };
-  }
-
-  const language = getLanguage();
-  return {
-    name: getDungeonNameByMobCode(mobCode, language) || t("dps-history.unknownDungeon"),
-    difficulty:
-      getDungeonDifficultyByMobCode(mobCode, language) || t("dps-history.unknownDifficulty"),
-  };
 }
 function getClassIcon(c) {
   return c ? "/aion2/class/" + c.toLowerCase() + ".png" : "";
@@ -321,9 +340,6 @@ function render(records) {
   let html = "";
   for (const r of sortedRecords) {
     const name = getTargetName(r);
-    const targetInfo = getTargetInfo(r);
-    const isBoss = targetInfo?.isBoss;
-    const dungeonInfo = getDungeonInfo(r);
     const playerCount = getRecognizedPlayers(r).length;
     const mainPlayerName = getMainPlayerName(r);
     const uploaded = r.uploaded === true;
@@ -332,23 +348,15 @@ function render(records) {
         <button class="record-row__delete" data-delete="${r.id}" title="Delete">&times;</button>
         <div class="record-row__header">
           <span class="record-row__name">${esc(name)}</span>
-          <span class="record-row__boss ${isBoss ? "is-boss" : "is-not-boss"}">${isBoss ? t("dps-history.boss") : t("dps-history.mob")}</span>
-        </div>
-        <div class="record-row__dungeon">
-          <span class="record-row__dungeon-name">${esc(dungeonInfo.name)}</span>
-          <span class="record-row__dungeon-difficulty">${esc(dungeonInfo.difficulty)}</span>
-        </div>
-        <div class="record-row__meta">
-          <span class="record-row__damage">${fmtDamage(r.totalDamage)}</span>
           <span class="record-row__time">${fmtTime(r.createdAt)}</span>
         </div>
         <div class="record-row__footer">
           <div class="record-row__players">
             ${mainPlayerName ? `<span class="record-row__main-player">${esc(mainPlayerName)}</span>` : ""}
             <span>${playerCount} ${playerCount === 1 ? t("dps-history.player") : t("dps-history.players")}</span>
+            <span class="record-row__damage"><em>${t("dps-overlay.totalDamage")}</em> ${fmtDamage(r.totalDamage)}</span>
           </div>
           <div class="record-row__actions">
-            <span class="record-row__uploaded ${uploaded ? "is-uploaded" : "is-pending"}">${uploaded ? t("dps-history.uploaded") : t("dps-history.notUploaded")}</span>
             <button class="record-row__upload" data-upload="${r.id}" data-uploaded="${uploaded}" ${uploaded ? "disabled" : ""}>${uploaded ? t("dps-history.uploaded") : t("dps-history.upload")}</button>
           </div>
         </div>
@@ -483,12 +491,18 @@ $list.addEventListener("click", async (e) => {
 
   listen("language-changed", (event) => {
     setLanguage(event.payload.language);
+    $upload.textContent = t("dps-history.uploadPending");
+    $reupload.textContent = t("dps-history.reuploadAll");
+    updateUploadProgressLabels();
     setEmptyText();
     refreshFilterOptions();
     applyFilters();
   });
 
   await load();
+  $upload.textContent = t("dps-history.uploadPending");
+  $reupload.textContent = t("dps-history.reuploadAll");
+  updateUploadProgressLabels();
   await uploadRecords(
     allRecords.filter((record) => !record.uploaded),
     ""

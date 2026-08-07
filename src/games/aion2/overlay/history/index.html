@@ -23,11 +23,35 @@
           <select id="actor-filter"></select>
         </label>
       </div>
+      <div class="upload-progress" id="upload-progress" aria-live="polite">
+        <div class="upload-progress__header">
+          <span class="upload-progress__label" id="upload-progress-label">Uploading</span>
+          <span class="upload-progress__percent" id="upload-progress-percent">0%</span>
+        </div>
+        <div class="upload-progress__track">
+          <div class="upload-progress__fill" id="upload-progress-fill"></div>
+        </div>
+        <div class="upload-progress__stats">
+          <span
+            ><i class="is-success"></i><b id="upload-progress-queued">0</b>
+            <em id="upload-progress-queued-label">Queued</em></span
+          >
+          <span
+            ><i class="is-skipped"></i><b id="upload-progress-skipped">0</b>
+            <em id="upload-progress-skipped-label">Skipped</em></span
+          >
+          <span
+            ><i class="is-failed"></i><b id="upload-progress-failed">0</b>
+            <em id="upload-progress-failed-label">Failed</em></span
+          >
+        </div>
+      </div>
       <div class="upload-status" id="upload-status"></div>
       <div class="record-list" id="record-list"></div>
       <div class="empty" id="empty">No records yet — press Reset to save combat data</div>
       <div class="history-footer">
-        <button class="history-footer__btn" id="upload-btn">Upload All</button>
+        <button class="history-footer__btn" id="upload-btn">Upload Pending</button>
+        <button class="history-footer__btn is-reupload" id="reupload-btn">Re-upload All</button>
         <button class="history-footer__btn is-danger" id="delete-all-btn">Delete All</button>
       </div>
     </div>

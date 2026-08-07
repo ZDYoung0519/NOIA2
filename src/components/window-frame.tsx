@@ -201,7 +201,7 @@ export function WindowFrame({
       )}
       <div className="via-background/35 to-background/45 pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent" />
       <div className="from-background/55 to-background/60 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent" />
-      <div className="bg-background/68 pointer-events-none absolute inset-0" />
+      <div className="bg-background/20 pointer-events-none absolute inset-0" />
 
       {isHomePage && gameConfig?.bgVideo ? (
         <video
