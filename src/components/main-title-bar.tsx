@@ -26,13 +26,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 type ExternalAction = {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   content?: React.ReactNode;
 };
 
 const EXTERNAL_ACTIONS: ExternalAction[] = [
-  { label: "官网", href: "https://tw.ncsoft.com/aion2", icon: Globe },
+  { label: "官网", href: "https://noia2.top/", icon: Globe },
 
   // {
   //   label: "Discord",
@@ -62,17 +62,18 @@ const EXTERNAL_ACTIONS: ExternalAction[] = [
   },
   {
     label: "QQ",
-    href: "https://qm.qq.com/q/YikHNL9U6y",
     icon: FaQq,
     content: (
-      <div className="flex w-[168px] flex-col items-center gap-2 text-center">
-        <div className="text-xs font-medium">扫码加入QQ群</div>
-        <img
-          src="/images/qr/qq.jpg"
-          alt="QQ QR"
-          className="h-[136px] w-[136px] rounded-xl border border-white/10 object-cover"
-          draggable={false}
-        />
+      <div className="flex w-[250px] flex-col gap-2 p-1">
+        <div className="px-1 text-xs font-semibold">NoiA 水表交流群</div>
+        <div className="border-border/60 bg-muted/25 rounded-lg border px-3 py-2">
+          <div className="text-xs font-medium">NoiA 水表千人交流大群</div>
+          <div className="text-muted-foreground mt-0.5 font-mono text-xs">1095050342</div>
+        </div>
+        <div className="border-border/60 bg-muted/25 rounded-lg border px-3 py-2">
+          <div className="text-xs font-medium">NoiA 水表意见和测试群</div>
+          <div className="text-muted-foreground mt-0.5 font-mono text-xs">1093399101</div>
+        </div>
       </div>
     ),
   },
@@ -277,7 +278,9 @@ export function MainTitleBar() {
                   <TitleActionButton
                     key={label}
                     label={label}
-                    onClick={() => void openUrl(href)}
+                    onClick={() => {
+                      if (href) void openUrl(href);
+                    }}
                     content={content}
                   >
                     <Icon size={16} />

@@ -1,5 +1,6 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ExternalLink, HeartHandshake } from "lucide-react";
+import { FaQq } from "react-icons/fa";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,9 @@ import { SettingsGroup, SettingsSectionHeader } from "@/components/settings-layo
 type SupportMethod = {
   title: string;
   description: string;
-  imageSrc: string;
-  imageAlt: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  groups?: Array<{ name: string; number: string }>;
 };
 
 type CreditItem = {
@@ -36,10 +38,12 @@ const SUPPORT_METHODS: SupportMethod[] = [
     imageAlt: "微信赞赏二维码",
   },
   {
-    title: "交流群",
-    description: "加入群聊反馈问题、讨论功能，或者看看最近大家在折腾什么。",
-    imageSrc: "/images/qr/qq.jpg",
-    imageAlt: "QQ 交流群二维码",
+    title: "QQ 交流群",
+    description: "加入群聊反馈问题、讨论功能，或者参与新功能测试。",
+    groups: [
+      { name: "NoiA 水表千人交流大群", number: "1095050342" },
+      { name: "NoiA 水表意见和测试群", number: "1093399101" },
+    ],
   },
 ];
 
@@ -77,16 +81,28 @@ function openExternalLink(href: string) {
 function SupportMethodCard({ method }: { method: SupportMethod }) {
   return (
     <div className="flex items-center gap-4 rounded-md border p-4">
-      <div className="bg-muted/30 size-28 shrink-0 overflow-hidden rounded-md border">
-        <img
-          src={method.imageSrc}
-          alt={method.imageAlt}
-          className="aspect-square size-full object-cover"
-        />
-      </div>
+      {method.imageSrc ? (
+        <div className="bg-muted/30 size-28 shrink-0 overflow-hidden rounded-md border">
+          <img
+            src={method.imageSrc}
+            alt={method.imageAlt}
+            className="aspect-square size-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="bg-muted/30 flex size-28 shrink-0 items-center justify-center rounded-md border">
+          <FaQq className="text-muted-foreground size-10" />
+        </div>
+      )}
       <div className="flex min-w-0 flex-col gap-1">
         <div className="text-sm font-semibold">{method.title}</div>
         <p className="text-muted-foreground text-xs leading-5">{method.description}</p>
+        {method.groups?.map((group) => (
+          <div key={group.number} className="mt-1 min-w-0">
+            <div className="truncate text-xs font-medium">{group.name}</div>
+            <div className="text-muted-foreground font-mono text-xs">{group.number}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

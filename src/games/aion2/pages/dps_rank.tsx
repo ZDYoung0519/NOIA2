@@ -85,6 +85,7 @@ type RankRow = {
   main_actor_damage: number;
   main_actor_battle_duration: number;
   main_actor_dps: number;
+  party_total_damage: number | null;
   team_dps: number | null;
 };
 
@@ -516,6 +517,7 @@ async function loadMyRankForActor(
         "main_actor_damage:damage",
         "main_actor_battle_duration:duration_ms",
         "main_actor_dps:dps",
+        "party_total_damage",
         "team_dps",
       ].join(",")
     )
@@ -825,10 +827,11 @@ function SkillDetailsButton({ row }: { row: RankRow }) {
             </aside>
 
             <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto pr-1">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-6 gap-2">
                 {[
                   ["伤害", formatNumber(row.main_actor_damage), "text-white/90"],
                   ["DPS", formatNumber(row.main_actor_dps), "text-emerald-300"],
+                  ["队伍总伤害", formatNumber(row.party_total_damage), "text-white/90"],
                   ["队伍 DPS", formatNumber(row.team_dps), "text-cyan-300"],
                   ["战斗", formatDurationMs(row.main_actor_battle_duration), "text-white/90"],
                   ["命中", formatNumber(totalHits), "text-white/90"],
@@ -1019,6 +1022,7 @@ function BossRankCard({
               "main_actor_damage:damage",
               "main_actor_battle_duration:duration_ms",
               "main_actor_dps:dps",
+              "party_total_damage",
               "team_dps",
             ].join(",")
           )
@@ -1181,20 +1185,21 @@ function BossRankCard({
         </div>
       ) : (
         <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-y-2 text-sm">
+          <table className="w-full min-w-[1080px] border-separate border-spacing-y-2 text-sm">
             <thead className="text-[11px] tracking-[0.12em] text-white/35 uppercase">
               <tr>
                 <th className="w-16 px-4 py-1 text-left">排名</th>
                 <th className="px-4 py-1 text-left">角色</th>
                 <th className="px-4 py-1 text-right">DPS</th>
-                <th className="px-4 py-1 text-right">总伤害</th>
+                <th className="px-4 py-1 text-right">个人伤害</th>
+                <th className="px-4 py-1 text-right">队伍总伤害</th>
                 <th className="px-4 py-1 text-right">战斗记录</th>
               </tr>
             </thead>
             <tbody>
               {state.rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-8 text-center text-sm text-white/40">
+                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-white/40">
                     暂无排行记录
                   </td>
                 </tr>
@@ -1243,6 +1248,9 @@ function BossRankCard({
                   <td className="border-y border-white/8 bg-white/[0.025] px-4 py-3.5 text-right text-white/70 tabular-nums backdrop-blur-md transition group-hover:bg-white/[0.06]">
                     {formatNumber(row.main_actor_damage)}
                   </td>
+                  <td className="border-y border-white/8 bg-white/[0.025] px-4 py-3.5 text-right font-medium text-white/55 tabular-nums backdrop-blur-md transition group-hover:bg-white/[0.06]">
+                    {formatNumber(row.party_total_damage)}
+                  </td>
                   <td className="rounded-r-lg border-y border-r border-white/8 bg-white/[0.025] px-4 py-3.5 text-right text-white/45 tabular-nums backdrop-blur-md transition group-hover:bg-white/[0.06]">
                     <div className="flex flex-col items-end gap-1">
                       <span>{formatDate(row.battle_ended_at)}</span>
@@ -1254,7 +1262,7 @@ function BossRankCard({
 
               <tr className="border-t border-[#F4C06A]/25 bg-[#F4C06A]/[0.08]">
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-3 py-2 text-[11px] font-semibold tracking-[0.08em] text-[#F4C06A]/85 uppercase"
                 >
                   我的排名
@@ -1263,7 +1271,7 @@ function BossRankCard({
 
               {myRankState.loading ? (
                 <tr className="border-t border-[#F4C06A]/15 bg-[#F4C06A]/[0.045]">
-                  <td colSpan={5} className="px-3 py-3 text-sm text-white/50">
+                  <td colSpan={6} className="px-3 py-3 text-sm text-white/50">
                     <span className="inline-flex items-center">
                       <LoaderCircle className="mr-2 size-4 animate-spin" />
                       正在查询角色排名...
@@ -1272,13 +1280,13 @@ function BossRankCard({
                 </tr>
               ) : myRankState.error ? (
                 <tr className="border-t border-[#F4C06A]/15 bg-[#F4C06A]/[0.045]">
-                  <td colSpan={5} className="px-3 py-3 text-sm text-red-200">
+                  <td colSpan={6} className="px-3 py-3 text-sm text-red-200">
                     {myRankState.error}
                   </td>
                 </tr>
               ) : myRankState.rows.length === 0 ? (
                 <tr className="border-t border-[#F4C06A]/15 bg-[#F4C06A]/[0.045]">
-                  <td colSpan={5} className="px-3 py-3 text-sm text-white/45">
+                  <td colSpan={6} className="px-3 py-3 text-sm text-white/45">
                     无
                   </td>
                 </tr>
@@ -1323,7 +1331,7 @@ function BossRankCard({
                       </div>
                     </td>
                     {myRank.error ? (
-                      <td colSpan={3} className="px-1 py-2.5 text-right text-red-200">
+                      <td colSpan={4} className="px-1 py-2.5 text-right text-red-200">
                         加载失败
                       </td>
                     ) : (
@@ -1333,6 +1341,9 @@ function BossRankCard({
                         </td>
                         <td className="px-1 py-2.5 text-right text-white/70 tabular-nums">
                           {formatNumber(myRank.row?.main_actor_damage)}
+                        </td>
+                        <td className="px-1 py-2.5 text-right text-white/55 tabular-nums">
+                          {formatNumber(myRank.row?.party_total_damage)}
                         </td>
                         <td className="px-1 py-2.5 text-right text-white/45 tabular-nums">
                           <div className="flex flex-col items-end gap-1">

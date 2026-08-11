@@ -1205,9 +1205,9 @@ export function Aion2Settings() {
               description={t("settings.aion2.eventReminderEnabledDesc")}
             >
               <Switch
-                checked={config.aion2.eventReminder.enabled}
+                checked={config.aion2.eventReminder.showEventTimer}
                 onCheckedChange={(enabled) =>
-                  updateSettings("aion2.eventReminder.enabled", enabled)
+                  updateSettings("aion2.eventReminder.showEventTimer", enabled)
                 }
                 aria-label={t("settings.aion2.eventReminderEnabled")}
               />

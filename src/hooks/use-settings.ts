@@ -69,7 +69,7 @@ interface BuffMonitorSettings {
 }
 
 interface EventReminderSettings {
-  enabled: boolean;
+  showEventTimer: boolean;
   showFieldBossTimers: boolean;
 }
 
@@ -148,7 +148,7 @@ const DEFAULTS: AppConfig = {
       iconGap: 5,
     },
     eventReminder: {
-      enabled: true,
+      showEventTimer: false,
       showFieldBossTimers: true,
     },
     autoHideEnabled: true,
@@ -173,6 +173,7 @@ function loadConfig(): AppConfig {
       }
       if (parsed?.aion2?.eventReminder) {
         delete parsed.aion2.eventReminder.bossMobCodes;
+        delete parsed.aion2.eventReminder.enabled;
       }
       // Deep merge with defaults to fill missing keys from newer versions
       return deepMerge(DEFAULTS, parsed);
@@ -290,7 +291,7 @@ export function useSettings() {
   const syncEventReminder = useCallback(async (cfg: AppConfig) => {
     try {
       await invoke("set_event_timer_enabled", {
-        enabled: cfg.aion2.eventReminder.enabled,
+        enabled: cfg.aion2.eventReminder.showEventTimer,
       });
     } catch (e) {
       console.error("[useSettings] syncEventReminder failed:", e);
