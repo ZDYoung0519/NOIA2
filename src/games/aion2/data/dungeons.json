@@ -49,6 +49,22 @@
     "boss_ids": [2301721, 2301722, 2301723]
   },
   {
+    "dungeon_id": "00020",
+    "name": {
+      "zh-CN": "被叠食的德烏斯研究基地",
+      "zh-TW": "被叠食的德烏斯研究基地",
+      "en": "Devourer's Research Base",
+      "ko": "Devourer's Research Base"
+    },
+    "difficulty": {
+      "zh-CN": "困难",
+      "zh-TW": "困难",
+      "en": "Hard",
+      "ko": "Hard"
+    },
+    "boss_ids": [2300555, 2300556, 2300481]
+  },
+  {
     "dungeon_id": "10014",
     "name": {
       "zh-CN": "绯红羁绊之镜",
@@ -79,6 +95,22 @@
       "ko": "Phase 4"
     },
     "boss_ids": [2300544, 2300545, 2300546]
+  },
+  {
+    "dungeon_id": "10034",
+    "name": {
+      "zh-CN": "诺伊阑隐藏的遗产",
+      "zh-TW": "诺伊阑隐藏的遗产",
+      "en": "Hidden Legacy of Noi Lan",
+      "ko": "Hidden Legacy of Noi Lan"
+    },
+    "difficulty": {
+      "zh-CN": "4阶段",
+      "zh-TW": "4階段",
+      "en": "Phase 4",
+      "ko": "Phase 4"
+    },
+    "boss_ids": [2300446, 2300447, 2300445]
   },
   {
     "dungeon_id": "20001",
