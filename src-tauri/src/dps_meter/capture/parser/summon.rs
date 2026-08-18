@@ -311,16 +311,16 @@ impl StreamProcessor {
             return true;
         }
 
-        self.logger.debug(format!(
-            "[{}] remain hp target not player target={} current_hp={} known_actor={} mob_code={:?}",
-            self.port,
-            target_id,
-            target_hp,
-            self.data_storage
-                .actor_id_name_snapshot()
-                .contains_key(&target_id),
-            self.data_storage.get_mob_code(target_id)
-        ));
+        // self.logger.debug(format!(
+        //     "[{}] remain hp target not player target={} current_hp={} known_actor={} mob_code={:?}",
+        //     self.port,
+        //     target_id,
+        //     target_hp,
+        //     self.data_storage
+        //         .actor_id_name_snapshot()
+        //         .contains_key(&target_id),
+        //     self.data_storage.get_mob_code(target_id)
+        // ));
 
         // Skip non-boss targets hp changes when boss_only is enabled
         {

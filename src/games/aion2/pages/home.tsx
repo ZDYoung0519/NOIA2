@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { Menu, ScrollText, ShieldCheck } from "lucide-react";
+import { ExternalLink, Menu, Rocket, ScrollText, ShieldCheck } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { DpsMeterLauncherButton } from "@/games/aion2/components/dps-meter-launcher-button";
 import { DpsLightGuideDialog } from "@/games/aion2/components/dps-light-guide-dialog";
 import { HomeCharacterCarousel } from "../components/home-character-carousel";
@@ -18,6 +28,7 @@ import {
 
 export default function HomePage() {
   const [showLightDialog, setShowLightDialog] = useState(false);
+  const [showUpgradeNotice, setShowUpgradeNotice] = useState(true);
   const { t } = useAppTranslation();
   const { config, updateSettings } = useSettings();
   const navigate = useNavigate();
@@ -123,6 +134,45 @@ export default function HomePage() {
       </section>
 
       <DpsLightGuideDialog open={showLightDialog} onOpenChange={setShowLightDialog} />
+
+      <Dialog open={showUpgradeNotice} onOpenChange={setShowUpgradeNotice}>
+        <DialogContent className="border-primary/40 bg-background/90 overflow-hidden shadow-2xl backdrop-blur-2xl sm:max-w-lg">
+          <DialogHeader className="gap-4 text-left">
+            <div className="flex items-start gap-4">
+              <div className="bg-primary/15 text-primary flex size-12 shrink-0 items-center justify-center rounded-xl">
+                <Rocket className="size-6" />
+              </div>
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <DialogTitle className="text-2xl">NoiA 5.0 已全面升级</DialogTitle>
+                <DialogDescription className="text-sm leading-6">
+                  由于架构发生变化，当前渠道无法自动更新至 5.0。请前往官网下载安装最新版本。
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="bg-muted/40 flex flex-col gap-3 rounded-lg border p-4 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">官方网站</span>
+              <span className="font-medium">noia2.top</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">意见和测试群</span>
+              <span className="font-medium tabular-nums">1093399101</span>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpgradeNotice(false)}>
+              稍后处理
+            </Button>
+            <Button onClick={() => void openUrl("https://noia2.top/")}>
+              <ExternalLink data-icon="inline-start" />
+              前往官网下载
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

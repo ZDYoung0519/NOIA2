@@ -379,10 +379,10 @@ impl DpsMeter {
 
     pub fn get_field_boss_timers(&self) -> Vec<FieldBossTimerSnapshot> {
         let timers = self.data_storage.field_boss_timer_snapshot();
-        self.logger.debug(format!(
-            "field boss timers queried timer_count={}",
-            timers.len()
-        ));
+        // self.logger.debug(format!(
+        //     "field boss timers queried timer_count={}",
+        //     timers.len()
+        // ));
         timers
     }
 
