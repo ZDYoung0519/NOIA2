@@ -15,7 +15,14 @@ An elegant desktop companion for AION2 players, built around a lightweight real-
 [简体中文](./README.zh-CN.md) · English
 
 </div>
-
+> [!IMPORTANT]
+> This repository contains the source code of the **legacy NoiA 4.0 branch**.
+> Since **NoiA 5.0**, the project is no longer publicly maintained due to user data privacy concerns.
+> A future **NoiA 5.0 release without private data** will be made available later.
+>
+> 本仓库为 **NoiA 4.0 旧分支源码**。
+> 自 **5.0 起**，出于用户数据隐私考虑，项目暂时停止公开维护。
+> 后续将开放 **不包含隐私数据的 NoiA 5.0 版本**。
 ---
 
 ## What Is NOIA2?
