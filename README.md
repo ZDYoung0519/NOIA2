@@ -15,14 +15,15 @@ An elegant desktop companion for AION2 players, built around a lightweight real-
 [简体中文](./README.zh-CN.md) · English
 
 </div>
-> [!IMPORTANT]
-> This repository contains the source code of the **legacy NoiA 4.0 branch**.
-> Since **NoiA 5.0**, the project is no longer publicly maintained due to user data privacy concerns.
-> A future **NoiA 5.0 release without private data** will be made available later.
+An elegant desktop companion for AION2 players, built around a lightweight real-time DPS overlay, battle history, rankings, and multi-window combat analysis.
+
+> **Notice**
 >
-> 本仓库为 **NoiA 4.0 旧分支源码**。
-> 自 **5.0 起**，出于用户数据隐私考虑，项目暂时停止公开维护。
-> 后续将开放 **不包含隐私数据的 NoiA 5.0 版本**。
+> 这是 **NoiA 4.0 旧分支的源码**。
+> 从 **5.0 起**，由于用户数据的隐私性，项目暂时不再公开维护。
+> 之后会开放 **不含隐私数据的 NoiA 5.0 版本**，敬请期待。
+
+目前已支持 **Steam 服务器**，官网：[noia2.top](https://noia2.top)
 ---
 
 ## What Is NOIA2?
