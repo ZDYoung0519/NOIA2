@@ -16,16 +16,16 @@ An elegant desktop companion for AION2 players, built around a lightweight real-
 
 </div>
 
-> **版本说明**
+> **Version Notice**
 >
-> 本仓库为 **NoiA 4.0 旧分支的源码**。
-> 从 **5.0 起**，出于对用户数据隐私的保护，项目暂时不再公开维护。
-> 后续将开放 **不含隐私数据的 NoiA 5.0 版本**，敬请期待。
+> This repository contains the source code for the **legacy NoiA 4.0 branch**.
+> Starting with **5.0**, public development and maintenance have been temporarily suspended to protect user data privacy.
+> A **NoiA 5.0 version without private user data** will be made publicly available in the future. Stay tuned!
 
-- **NoiA 5.0 发布版本**：[noia-releases](https://github.com/ZDYoung0519/noia-releases)
-- **网站主页**：[noia2.top](https://noia2.top)
+- **NoiA 5.0 Releases**: [noia-releases](https://github.com/ZDYoung0519/noia-releases)
+- **Official Website**: [noia2.top](https://noia2.top)
 
-目前已支持 **Steam 服务器**。
+**Steam servers** are now supported.
 
 ---
 
